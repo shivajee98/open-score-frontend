@@ -100,7 +100,7 @@ export default function CustomerHome() {
                 <div className="snap-center shrink-0 w-[85%] bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 text-white text-left relative overflow-hidden h-40 flex flex-col justify-center shadow-lg shadow-purple-900/20">
                     <div className="relative z-10">
                         <p className="text-[10px] font-bold bg-white/20 inline-block px-2 py-1 rounded-lg mb-2">LIMITED OFFER</p>
-                        <h3 className="font-black text-lg leading-tight">Instant Cash<br />From Credit Card</h3>
+                        <h3 className="font-black text-lg leading-tight">Get Instant Cashback<br />On Daily Emi Upto 50 Rs</h3>
                     </div>
                     <CreditCard className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 rotate-12" />
                 </div>
