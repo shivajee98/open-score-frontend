@@ -60,10 +60,9 @@ export default function LoanDetail() {
 
         setLoading(true);
         try {
-            // Use direct fetch to hit local Next.js API route instead of external backend
-            const res = await fetch('/api/loan/apply', {
+            // Use real backend API
+            const res = await apiFetch('/loans/apply', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     amount: plan.amount,
                     tenure,
@@ -72,12 +71,12 @@ export default function LoanDetail() {
                 })
             });
 
+            // apiFetch returns JSON data directly, or throws error
+            const data = res;
 
-            if (!res.ok) throw new Error('Failed to submit application');
-
-            const data = await res.json();
             toast.success('Loan application submitted!');
-            router.push(`/customer/loan/status/${data.loan_id || 'L-10293'}`); // Redirect to status page with ID
+            // Backend returns 201 created with loan object
+            router.push(`/customer/loan/status/${data.id || data.loan_id || 'L-10293'}`);
         } catch (e: any) {
             toast.error(e.message || 'Application failed');
         } finally {

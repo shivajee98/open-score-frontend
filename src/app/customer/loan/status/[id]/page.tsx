@@ -2,14 +2,51 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Check, Lightbulb } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api'; // Assuming apiFetch is available from this path
 
 export default function LoanStatus() {
     const router = useRouter();
     const params = useParams();
     const loanId = params.id as string;
     const [isDetailsOpen, setIsDetailsOpen] = useState(true);
+    const [loan, setLoan] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchLoan = async () => {
+            try {
+                // Fetch all loans and find the matching one
+                // Future optimization: Backend endpoint getting specific loan /loans/{id}
+                const loans = await apiFetch('/loans');
+                const found = loans.find((l: any) => l.id == loanId || l.loan_id == loanId);
+
+                if (found) {
+                    setLoan(found);
+                } else {
+                    // Fallback for "L-10293" demo ID if not found in real DB
+                    if (loanId === 'L-10293') {
+                        setLoan({
+                            id: 'L-10293',
+                            amount: 9056,
+                            status: 'APPROVED',
+                            tenure: 3,
+                            created_at: '2019-08-15'
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to fetch status", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLoan();
+    }, [loanId]);
+
+    if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div></div>;
+    if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loan not found</div>;
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
@@ -30,9 +67,12 @@ export default function LoanStatus() {
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Loan Amount</p>
-                                <h2 className="text-3xl font-black text-slate-900">₹ 9,056</h2>
+                                <h2 className="text-3xl font-black text-slate-900">₹ {Number(loan.amount).toLocaleString()}</h2>
                             </div>
-                            <span className="bg-emerald-100 text-emerald-600 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wide">Approved</span>
+                            <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wide ${loan.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
+                                loan.status === 'REJECTED' ? 'bg-rose-100 text-rose-600' :
+                                    'bg-amber-100 text-amber-600'
+                                }`}>{loan.status}</span>
                         </div>
 
                         <div className={`space-y-3 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -85,17 +125,25 @@ export default function LoanStatus() {
 
                         {/* Steps */}
                         {[
-                            { label: 'Submitted', date: '15-Aug-19', status: 'done' },
-                            { label: 'Approved', date: '15-Aug-19', status: 'done' },
-                            { label: 'Disbursed', date: '', status: 'current' },
+                            { label: 'Submitted', date: new Date(loan.created_at).toLocaleDateString(), status: 'done' },
+                            {
+                                label: 'Approved',
+                                date: loan.approved_at ? new Date(loan.approved_at).toLocaleDateString() : '',
+                                status: loan.status === 'APPROVED' ? 'done' : loan.status === 'REJECTED' ? 'error' : 'current'
+                            },
+                            { label: 'Disbursed', date: '', status: loan.status === 'APPROVED' ? 'current' : 'pending' },
                             { label: 'Repayment', date: '', status: 'pending' },
                         ].map((step, i) => (
                             <div key={i} className="relative z-10 flex flex-col items-center gap-2">
                                 <div className={`w-8 h-8 rounded-full border-4 flex items-center justify-center transition-all ${step.status === 'done' ? 'bg-emerald-500 border-white text-white' :
-                                        step.status === 'current' ? 'bg-emerald-500 border-emerald-100 text-white shadow-lg shadow-emerald-500/30' :
-                                            'bg-slate-100 border-white text-slate-300'
+                                        step.status === 'error' ? 'bg-rose-500 border-white text-white' :
+                                            step.status === 'current' ? 'bg-emerald-500 border-emerald-100 text-white shadow-lg shadow-emerald-500/30' :
+                                                'bg-slate-100 border-white text-slate-300'
                                     }`}>
-                                    {step.status === 'done' || step.status === 'current' ? <Check size={14} strokeWidth={4} /> : <div className="w-2 h-2 rounded-full bg-slate-300" />}
+                                    {step.status === 'done' ? <Check size={14} strokeWidth={4} /> :
+                                        step.status === 'error' ? <Ban size={14} strokeWidth={4} /> :
+                                            step.status === 'current' ? <div className="w-2 h-2 rounded-full bg-white animate-pulse" /> :
+                                                <div className="w-2 h-2 rounded-full bg-slate-300" />}
                                 </div>
                                 <div className="text-center">
                                     <p className={`text-[10px] font-bold uppercase tracking-wide ${step.status === 'current' ? 'text-blue-600' : 'text-slate-400'}`}>{step.label}</p>
