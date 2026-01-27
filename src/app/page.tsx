@@ -182,7 +182,7 @@ export default function Home() {
           <h1 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">
             OpenScore
           </h1>
-          <p className="text-slate-500 font-medium text-sm">Next-Gen Financial ecosystem</p>
+          <p className="text-slate-500 font-medium text-sm">Powered by MSME Shakti</p>
         </div>
 
         {error && <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold text-center border border-red-100 mb-6">{error}</div>}

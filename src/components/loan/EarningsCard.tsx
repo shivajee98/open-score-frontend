@@ -12,7 +12,7 @@ export default function EarningsCard({ plan, tenure, payout }: EarningsCardProps
     const { total, breakdown } = payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-' };
 
     return (
-        <div className="bg-slate-900 text-white rounded-[2rem] p-6 shadow-xl sticky top-4 z-10 mb-8 border border-slate-800">
+        <div className="bg-slate-900 text-white rounded-[2rem] p-6 shadow-xl relative mb-8 border border-slate-800 overflow-hidden">
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Loan Amount</p>

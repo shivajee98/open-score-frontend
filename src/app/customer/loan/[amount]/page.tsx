@@ -60,8 +60,10 @@ export default function LoanDetail() {
 
         setLoading(true);
         try {
-            await apiFetch('/loan/apply', {
+            // Use direct fetch to hit local Next.js API route instead of external backend
+            const res = await fetch('/api/loan/apply', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     amount: plan.amount,
                     tenure,
@@ -69,6 +71,8 @@ export default function LoanDetail() {
                     payout_option_id: payout.id
                 })
             });
+
+            if (!res.ok) throw new Error('Failed to submit application');
             toast.success('Loan application submitted!');
             router.push('/customer/loan/apply'); // Navigate to confirmation or dashboard
         } catch (e: any) {
@@ -156,12 +160,17 @@ export default function LoanDetail() {
                 </div>
             </div>
 
-            {/* Fixed CTA */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-6 z-50 safe-area-bottom">
+            {/* Fixed CTA - Floating above content but below nav (if z-50). Actually nav is z-50.
+                User wants bottom buttons visible.
+                If I put it at bottom-0, it covers nav.
+                I will make it float ABOVE the nav.
+                MobileNav is ~60-70px high.
+            */}
+            <div className="fixed bottom-[90px] left-6 right-6 z-40">
                 <button
                     onClick={handleConfirm}
                     disabled={!payout || loading}
-                    className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {loading ? 'Processing...' : `Confirm ₹${plan.amount.toLocaleString()} Loan`}
                 </button>

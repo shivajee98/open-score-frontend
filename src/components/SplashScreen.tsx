@@ -14,7 +14,7 @@ export default function SplashScreen() {
                 OpenScore
             </h1>
             <p className="text-slate-400 font-bold text-xs uppercase tracking-widest animate-in slide-in-from-bottom-4 fade-in duration-700 delay-500">
-                Financial Operating System
+                Powered by MSME Shakti
             </p>
 
             <div className="absolute bottom-10 w-full flex justify-center">

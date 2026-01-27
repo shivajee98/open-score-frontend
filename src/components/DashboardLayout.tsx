@@ -63,7 +63,7 @@ export default function DashboardLayout({
                             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-xl">O</div>
                             <h1 className="text-2xl font-black tracking-tight text-slate-900">OpenScore</h1>
                         </div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-11">Financial Ecosystem</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-11">Powered by MSME Shakti</p>
                     </div>
 
                     <nav className="flex-1 px-4 space-y-2">

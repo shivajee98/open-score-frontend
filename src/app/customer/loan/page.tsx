@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronRight, Zap } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Zap, Clock } from 'lucide-react';
 import { LOAN_PLANS } from '@/lib/loanUtils';
 
 export default function LoanList() {
@@ -53,6 +53,22 @@ export default function LoanList() {
                         </div>
                     </div>
                 ))}
+
+                <div
+                    onClick={() => router.push('/customer/loan/history')}
+                    className="bg-slate-100 rounded-[2rem] p-6 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors flex items-center justify-between group"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                            <Clock size={20} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></Clock>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black text-slate-900">Loan History</h3>
+                            <p className="text-xs font-bold text-slate-500">View past applications</p>
+                        </div>
+                    </div>
+                    <ChevronRight className="text-slate-400 group-hover:text-slate-900" />
+                </div>
             </div>
         </div>
     );
