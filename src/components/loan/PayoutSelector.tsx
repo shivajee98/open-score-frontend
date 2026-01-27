@@ -13,7 +13,7 @@ interface PayoutSelectorProps {
 export default function PayoutSelector({ options, selected, onChange, planAmount, tenure }: PayoutSelectorProps) {
     return (
         <div className="mb-8">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Select Payout Cycle</h3>
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Select Repayment Schedule</h3>
             <div className="space-y-3">
                 {options.map(option => {
                     const { total } = calculateEarnings(planAmount, tenure, option);

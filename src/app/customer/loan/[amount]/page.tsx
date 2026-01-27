@@ -154,7 +154,7 @@ export default function LoanDetail() {
                                     <span className="font-bold text-slate-900">₹ {plan.amount.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500 font-medium">Payout Rate/Fixed</span>
+                                    <span className="text-slate-500 font-medium">Installment Amount</span>
                                     <span className="font-bold text-emerald-600">{breakdown}</span>
                                 </div>
                                 <div className="flex justify-between text-sm pt-2 border-t border-slate-50">
@@ -173,7 +173,7 @@ export default function LoanDetail() {
                         <h4 className="font-black text-xs uppercase tracking-widest">Important Terms</h4>
                     </div>
                     <ul className="space-y-3">
-                        {['Earnings credited to wallet only.', 'Early closure cancels future payouts.', 'Payout option locks after disbursal.'].map((term, i) => (
+                        {['Earnings credited to wallet only.', 'Early closure cancels future payouts.', 'Repayment schedule locks after disbursal.'].map((term, i) => (
                             <li key={i} className="flex gap-3 text-sm font-medium text-slate-600">
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-300 mt-2 shrink-0" />
                                 {term}

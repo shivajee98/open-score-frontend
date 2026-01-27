@@ -156,7 +156,7 @@ export function calculateRepayment(amount: number, tenureMonths: number, option:
         // Or just "Earn ₹25 Cashback" if 0%? 
         // User prompt for 50k says: "Daily 0% cashback Rs 10". So show both.
 
-        const breakdownText = `${parts.join(" • ")} • ₹${emi.toLocaleString()}/payout`;
+        const breakdownText = `${parts.join(" • ")} • ₹${emi.toLocaleString()} / installment`;
 
         return {
             total,
