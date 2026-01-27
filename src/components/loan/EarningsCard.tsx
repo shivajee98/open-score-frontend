@@ -43,7 +43,7 @@ export default function EarningsCard({ plan, tenure, payout }: EarningsCardProps
             <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
                 <div className="flex justify-between items-end">
                     <div>
-                        <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1">Expected Earnings</p>
+                        <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Repayment</p>
                         <p className="text-2xl font-black text-emerald-400">₹ {total.toLocaleString('en-IN')}</p>
                     </div>
                     <div className="text-right">

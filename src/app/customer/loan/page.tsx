@@ -64,7 +64,7 @@ export default function LoanList() {
                                 <Clock className="text-blue-400 w-4 h-4" />
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">Last Application</span>
                             </div>
-                            <h3 className="text-xl font-black mb-1">₹ 20,000 Loan</h3>
+                            <h3 className="text-xl font-black mb-1">₹ 30,000 Loan</h3>
                             <p className="text-xs font-medium text-slate-400">Applied on 24 Jan • <span className="text-emerald-400">Approved</span></p>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-all">
