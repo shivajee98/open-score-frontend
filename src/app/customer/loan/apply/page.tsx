@@ -11,6 +11,8 @@ export default function LoanApplication() {
     const [loading, setLoading] = useState(false);
 
     // Form Data
+    const [isWhatsappSame, setIsWhatsappSame] = useState(true);
+    const [selectedOffer, setSelectedOffer] = useState<any>(null);
     const [formData, setFormData] = useState({
         fullName: '',
         dob: '',
@@ -40,6 +42,9 @@ export default function LoanApplication() {
             amount: '10,000',
             type: 'Credit',
             details: '10 Minutes • ₹500 Platform Fee',
+            fees: '₹500 Processing Fee',
+            tenure: '1 Month',
+            interest: '0%',
             bestFor: 'Urgent',
             color: 'bg-emerald-500'
         },
@@ -47,6 +52,9 @@ export default function LoanApplication() {
             amount: '30,000',
             type: 'Credit',
             details: '0% Interest (3 Months)',
+            fees: 'No Processing Fee',
+            tenure: '3 Months',
+            interest: '0%',
             bestFor: 'Short Term',
             color: 'bg-blue-500'
         },
@@ -54,6 +62,9 @@ export default function LoanApplication() {
             amount: '50,000',
             type: 'Credit',
             details: '6% Monthly (3 Months) • One Time 16%',
+            fees: '16% One Time if paid early',
+            tenure: '3 Months',
+            interest: '6% Monthly',
             bestFor: 'Medium Term',
             color: 'bg-purple-500'
         },
@@ -61,6 +72,9 @@ export default function LoanApplication() {
             amount: '50,000',
             type: 'Credit',
             details: '12% Monthly (6 Months) • Half Yearly 18%',
+            fees: '18% Half Yearly',
+            tenure: '6 Months',
+            interest: '12% Monthly',
             bestFor: 'Long Term',
             color: 'bg-indigo-500'
         }
@@ -149,6 +163,31 @@ export default function LoanApplication() {
                                 />
                             </div>
 
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-bold text-slate-500">Is this your WhatsApp Number?</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsWhatsappSame(!isWhatsappSame)}
+                                        className={`w-10 h-6 rounded-full p-1 transition-colors ${isWhatsappSame ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                    >
+                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${isWhatsappSame ? 'translate-x-4' : ''}`}></div>
+                                    </button>
+                                </div>
+                                {!isWhatsappSame && (
+                                    <div className="mt-2 animate-in fade-in slide-in-from-top-2">
+                                        <input
+                                            type="tel"
+                                            name="whatsappTicket"
+                                            value={formData.whatsappTicket}
+                                            onChange={handleInputChange}
+                                            className="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                            placeholder="Enter WhatsApp Number"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Alternate Mobile No</label>
                                 <input
@@ -159,18 +198,6 @@ export default function LoanApplication() {
                                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
                                     placeholder="+91"
                                     required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">WhatsApp Ticket (Optional)</label>
-                                <input
-                                    type="text"
-                                    name="whatsappTicket"
-                                    value={formData.whatsappTicket}
-                                    onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                    placeholder="#TICKET123"
                                 />
                             </div>
 
@@ -197,7 +224,7 @@ export default function LoanApplication() {
                             </div>
 
                             {offers.map((offer, index) => (
-                                <div key={index} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 relative group overflow-hidden transition-all hover:border-slate-300">
+                                <div onClick={() => setSelectedOffer(offer)} key={index} className="cursor-pointer bg-slate-50 border border-slate-200 rounded-2xl p-5 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]">
                                     <div className={`absolute top-0 left-0 w-1 h-full ${offer.color}`}></div>
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
@@ -211,7 +238,7 @@ export default function LoanApplication() {
                                     <p className="text-slate-600 font-medium text-xs mb-4">{offer.details}</p>
 
                                     <div className="grid grid-cols-2 gap-2">
-                                        <button className="py-2.5 bg-slate-200 text-slate-700 rounded-xl font-bold text-xs hover:bg-slate-300 transition-colors">
+                                        <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-xl font-bold text-xs hover:bg-slate-300 transition-colors">
                                             Details
                                         </button>
                                         <button className={`py-2.5 text-white rounded-xl font-bold text-xs shadow-lg transition-colors ${offer.color}`}>
@@ -230,7 +257,46 @@ export default function LoanApplication() {
                     </p>
                 </div>
             </div>
+
+            {/* Offer Details Modal */}
+            {selectedOffer && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl relative animate-in slide-in-from-bottom-10 duration-300">
+                        <button
+                            onClick={() => setSelectedOffer(null)}
+                            className="absolute top-6 right-6 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200"
+                        >
+                            ✕
+                        </button>
+
+                        <div className={`w-16 h-16 rounded-2xl ${selectedOffer.color} flex items-center justify-center text-white mb-6 shadow-xl`}>
+                            <CreditCard className="w-8 h-8" />
+                        </div>
+
+                        <h3 className="text-3xl font-black text-slate-900 mb-1">₹ {selectedOffer.amount}</h3>
+                        <p className="text-slate-500 font-bold text-sm mb-6">{selectedOffer.type} Offer</p>
+
+                        <div className="space-y-4 mb-8">
+                            <div className="flex justify-between border-b border-slate-50 pb-3">
+                                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Interest Rate</span>
+                                <span className="text-slate-800 font-bold text-sm">{selectedOffer.interest}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-50 pb-3">
+                                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Tenure</span>
+                                <span className="text-slate-800 font-bold text-sm">{selectedOffer.tenure}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-slate-50 pb-3">
+                                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Fees</span>
+                                <span className="text-slate-800 font-bold text-sm">{selectedOffer.fees}</span>
+                            </div>
+                        </div>
+
+                        <button className={`w-full py-4 text-white rounded-2xl font-black text-lg shadow-xl hover:opacity-90 transition-opacity ${selectedOffer.color}`}>
+                            Confirm & Apply
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
-

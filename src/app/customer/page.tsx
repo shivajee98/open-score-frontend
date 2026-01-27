@@ -74,18 +74,41 @@ export default function CustomerHome() {
 
             {/* Banners */}
             <div className="px-6 mb-8 overflow-x-auto flex gap-4 no-scrollbar snap-x">
-                <div className="snap-center shrink-0 w-[85%] bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 text-white text-left relative overflow-hidden h-32 flex flex-col justify-center shadow-lg shadow-purple-900/20">
+                {/* 0% Loan Banner (Moved here) */}
+                <div
+                    onClick={() => window.location.href = '/customer/loan/apply'}
+                    className="snap-center shrink-0 w-[85%] bg-slate-900 rounded-2xl p-6 relative overflow-hidden h-40 flex flex-col justify-center shadow-lg shadow-blue-900/20 group cursor-pointer"
+                >
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/30 transition-colors"></div>
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 className="text-white font-black text-xl">Get 0% Personal Loan</h3>
+                                <p className="text-blue-200 text-[10px] font-bold uppercase tracking-widest mt-1">Quick Approval</p>
+                            </div>
+                            <div className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/10">
+                                <Zap className="text-yellow-400 fill-yellow-400 w-5 h-5" />
+                            </div>
+                        </div>
+                        <div className="flex items-baseline gap-1 mt-2">
+                            <span className="text-white/60 text-xs font-bold">Up to</span>
+                            <span className="text-3xl font-black text-white">₹5,00,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="snap-center shrink-0 w-[85%] bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 text-white text-left relative overflow-hidden h-40 flex flex-col justify-center shadow-lg shadow-purple-900/20">
                     <div className="relative z-10">
                         <p className="text-[10px] font-bold bg-white/20 inline-block px-2 py-1 rounded-lg mb-2">LIMITED OFFER</p>
-                        <h3 className="font-black text-lg leading-tight">Get 0% Interest<br />Personal Loan</h3>
+                        <h3 className="font-black text-lg leading-tight">Instant Cash<br />From Credit Card</h3>
                     </div>
                     <CreditCard className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 rotate-12" />
                 </div>
 
-                <div className="snap-center shrink-0 w-[85%] bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white text-left relative overflow-hidden h-32 flex flex-col justify-center shadow-lg shadow-emerald-900/20">
+                <div className="snap-center shrink-0 w-[85%] bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white text-left relative overflow-hidden h-40 flex flex-col justify-center shadow-lg shadow-emerald-900/20">
                     <div className="relative z-10">
                         <p className="text-[10px] font-bold bg-white/20 inline-block px-2 py-1 rounded-lg mb-2">NEW FEATURE</p>
-                        <h3 className="font-black text-lg leading-tight">Instant Cash<br />From Credit Card</h3>
+                        <h3 className="font-black text-lg leading-tight">Pay Rent<br />via Credit Card</h3>
                     </div>
                     <Zap className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 rotate-12" />
                 </div>
@@ -119,11 +142,10 @@ export default function CustomerHome() {
             </div>
 
             {/* Financial Services */}
-            <div className="px-6 mb-8">
+            <div className="px-6 mb-24">
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Financial Services</h3>
-                <div className="bg-white rounded-2xl p-1 border border-slate-100 shadow-sm mb-8">
+                <div className="bg-white rounded-2xl p-1 border border-slate-100 shadow-sm">
                     {[
-                        { title: 'Personal Loan', sub: 'Instant approval up to ₹5L', icon: <CreditCard className="text-purple-500" /> },
                         { title: 'Digital Gold', sub: 'Start investing with ₹10', icon: <Landmark className="text-amber-500" /> },
                         { title: 'Insurance', sub: 'Life, Health & Motor', icon: <ShieldCheck className="text-emerald-500" /> },
                     ].map((item, i) => (
@@ -135,45 +157,11 @@ export default function CustomerHome() {
                                 <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
                                 <p className="text-xs text-slate-400 font-medium">{item.sub}</p>
                             </div>
-                            {i !== 0 && (
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 text-rose-500 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm shadow-rose-100 animate-pulse">
-                                    Coming Soon
-                                </div>
-                            )}
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 text-rose-500 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm shadow-rose-100 animate-pulse">
+                                Coming Soon
+                            </div>
                         </div>
                     ))}
-                </div>
-
-                {/* New Loan Section (KreditBee Style) */}
-                <div className="pb-8">
-                    <div className="relative overflow-hidden rounded-3xl p-6 bg-slate-900 shadow-2xl shadow-blue-900/20 group">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/30 transition-colors"></div>
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl -ml-16 -mb-16 group-hover:bg-purple-500/30 transition-colors"></div>
-
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className="text-white font-black text-xl">Get 0% Personal Loan</h3>
-                                    <p className="text-blue-200 text-xs font-bold uppercase tracking-widest mt-1">Quick Approval</p>
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/10">
-                                    <Zap className="text-yellow-400 fill-yellow-400 w-6 h-6" />
-                                </div>
-                            </div>
-
-                            <div className="flex items-baseline gap-1 mb-6">
-                                <span className="text-white/60 text-sm font-bold">Up to</span>
-                                <span className="text-4xl font-black text-white">₹5,00,000</span>
-                            </div>
-
-                            <button
-                                onClick={() => window.location.href = '/customer/loan/apply'}
-                                className="w-full py-4 bg-white text-slate-900 rounded-xl font-black text-base hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
-                            >
-                                Apply Now <ArrowUpRight className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
