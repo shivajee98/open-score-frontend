@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api';
 import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
+import { useAuthProtection } from '@/hooks/useAuthProtection';
 
 export default function Profile() {
     const [user, setUser] = useState<any>(null);
@@ -15,6 +16,7 @@ export default function Profile() {
     const [hasPin, setHasPin] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const router = useRouter();
+    const isAuthenticated = useAuthProtection();
 
     useEffect(() => {
         apiFetch('/auth/me').then(data => {
@@ -96,7 +98,7 @@ export default function Profile() {
         }
     };
 
-    if (!user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-400 font-bold uppercase text-xs animate-pulse">Loading Profile...</div>;
+    if (!isAuthenticated || !user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-400 font-bold uppercase text-xs animate-pulse">Loading Profile...</div>;
 
     return (
         <div className="min-h-screen bg-slate-50 p-6 selection:bg-blue-100 selection:text-blue-900 font-sans">

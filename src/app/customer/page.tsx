@@ -54,11 +54,10 @@ export default function CustomerHome() {
 
             {/* Quick Actions - Overlapping Header */}
             <div className="px-6 -mt-8 mb-8">
-                <div className="bg-white p-4 rounded-2xl shadow-xl shadow-blue-900/5 border border-slate-100 grid grid-cols-4 gap-2">
+                <div className="bg-white p-4 rounded-2xl shadow-xl shadow-blue-900/5 border border-slate-100 grid grid-cols-3 gap-2">
                     {[
                         { label: 'Scan QR', icon: <ScanBarcode size={24} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })) },
-                        { label: 'Pay ID', icon: <Send size={24} />, href: '/customer/transfer' },
-                        { label: 'Self', icon: <UserTransferIcon />, href: '/customer/self' }, // Placeholder icon below
+                        { label: 'Pay ID', icon: <Send size={24} />, href: '/customer/pay' },
                         { label: 'History', icon: <History size={24} />, href: '/customer/transactions' },
                     ].map((item, i) => (
                         <div key={i} onClick={item.action} className="flex flex-col items-center gap-2 p-2 rounded-xl active:bg-slate-50 transition-colors">
@@ -133,7 +132,7 @@ export default function CustomerHome() {
                                 <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
                                 <p className="text-xs text-slate-400 font-medium">{item.sub}</p>
                             </div>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg uppercase">
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 text-rose-500 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm shadow-rose-100 animate-pulse">
                                 Coming Soon
                             </div>
                         </div>
