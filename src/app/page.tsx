@@ -15,9 +15,21 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  }, []);
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === 'ADMIN') router.push('/admin');
+        else if (user.role === 'MERCHANT') router.push('/merchant');
+        else router.push('/customer');
+      } catch (e) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+  }, [router]);
 
   const handleSendOtp = async () => {
     setLoading(true);
@@ -46,6 +58,15 @@ export default function Home() {
 
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Sync with Native App
+      if ((window as any).ReactNativeWebView) {
+        (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'LOGIN',
+          token: data.access_token,
+          user: data.user
+        }));
+      }
 
       // Check Onboarding Status
       if (data.onboarding_status === 'REQUIRED' || data.onboarding_status === 'NEW_USER') {

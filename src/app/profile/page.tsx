@@ -46,7 +46,10 @@ export default function Profile() {
         try {
             await apiFetch('/auth/set-pin', {
                 method: 'POST',
-                body: JSON.stringify({ pin })
+                body: JSON.stringify({
+                    pin,
+                    pin_confirmation: pin
+                })
             });
             toast.success('PIN updated successfully!');
         } catch (e: any) {
@@ -149,6 +152,11 @@ export default function Profile() {
                         onClick={() => {
                             localStorage.removeItem('token');
                             localStorage.removeItem('user');
+
+                            if ((window as any).ReactNativeWebView) {
+                                (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOGOUT' }));
+                            }
+
                             router.push('/');
                         }}
                         className="text-xs font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors"
