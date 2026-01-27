@@ -140,7 +140,7 @@ export default function CustomerDashboard() {
                             <Smartphone className="w-5 h-5 text-blue-600" /> Quick Actions
                         </h4>
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="p-6 rounded-2xl bg-blue-50 border border-blue-100 hover:border-blue-300 transition-colors cursor-pointer group" onClick={() => window.location.href = '/customer/pay'}>
+                            <div className="p-6 rounded-2xl bg-blue-50 border border-blue-100 hover:border-blue-300 transition-colors cursor-pointer group" onClick={() => router.push('/customer/pay')}>
                                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform">
                                     <Smartphone className="w-5 h-5" />
                                 </div>

@@ -125,30 +125,8 @@ export default function DashboardLayout({
                     )}
                 </div>
 
-                {/* Mobile Bottom Nav */}
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 md:hidden z-50 px-6 pb-6 pt-4 flex justify-between items-end shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className="flex flex-col items-center gap-1.5 min-w-[60px] group"
-                        >
-                            <div className="p-2 rounded-xl group-hover:bg-blue-50 transition-colors text-slate-400 group-hover:text-blue-600">
-                                <span className="text-2xl">{typeof item.icon === 'string' ? item.icon : item.icon}</span>
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 group-hover:text-slate-900">{item.label.split(' ')[0]}</span>
-                        </Link>
-                    ))}
-                    <button
-                        onClick={handleLogout}
-                        className="flex flex-col items-center gap-1.5 min-w-[60px] group"
-                    >
-                        <div className="p-2 rounded-xl group-hover:bg-red-50 transition-colors text-slate-400 group-hover:text-red-500">
-                            <span className="text-2xl">🛑</span>
-                        </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-red-400/70 group-hover:text-red-600">Exit</span>
-                    </button>
-                </div>
+                {/* Mobile Bottom Nav Removed - Using Global MobileNav */}
+
             </main>
         </div>
     );
