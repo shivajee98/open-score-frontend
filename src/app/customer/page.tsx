@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CustomerHome() {
@@ -46,9 +46,6 @@ export default function CustomerHome() {
                             <p className="text-xl font-black text-white">₹ {balance}</p>
                         </div>
                     </div>
-                    <button className="px-4 py-2 bg-white text-blue-600 rounded-xl text-xs font-black uppercase tracking-wide hover:bg-blue-50 transition-colors">
-                        Add Money
-                    </button>
                 </div>
             </div>
 
@@ -105,11 +102,18 @@ export default function CustomerHome() {
                         { label: 'Water', icon: <DropletIcon /> },
                         { label: 'More', icon: <GridIcon /> },
                     ].map((item, i) => (
-                        <div key={i} className="flex flex-col items-center gap-2 group">
-                            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200 transition-all shadow-sm">
+                        <div key={i} className="flex flex-col items-center gap-2 group relative">
+                            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200 transition-all shadow-sm relative overflow-hidden">
                                 {item.icon}
+                                <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-[8px] font-black uppercase text-slate-900 -rotate-12 bg-slate-100 px-1 rounded">Soon</span>
+                                </div>
                             </div>
                             <span className="text-[10px] font-bold text-slate-500 group-hover:text-blue-600 text-center">{item.label}</span>
+                            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -118,7 +122,7 @@ export default function CustomerHome() {
             {/* Financial Services */}
             <div className="px-6 mb-8">
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Financial Services</h3>
-                <div className="bg-white rounded-2xl p-1 border border-slate-100 shadow-sm">
+                <div className="bg-white rounded-2xl p-1 border border-slate-100 shadow-sm mb-8">
                     {[
                         { title: 'Personal Loan', sub: 'Instant approval up to ₹5L', icon: <CreditCard className="text-purple-500" /> },
                         { title: 'Digital Gold', sub: 'Start investing with ₹10', icon: <Landmark className="text-amber-500" /> },
@@ -132,11 +136,42 @@ export default function CustomerHome() {
                                 <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
                                 <p className="text-xs text-slate-400 font-medium">{item.sub}</p>
                             </div>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 text-rose-500 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm shadow-rose-100 animate-pulse">
-                                Coming Soon
-                            </div>
+                            {i !== 0 && (
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 text-rose-500 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm shadow-rose-100 animate-pulse">
+                                    Coming Soon
+                                </div>
+                            )}
                         </div>
                     ))}
+                </div>
+
+                {/* New Loan Section (KreditBee Style) */}
+                <div className="pb-8">
+                    <div className="relative overflow-hidden rounded-3xl p-6 bg-slate-900 shadow-2xl shadow-blue-900/20 group">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/30 transition-colors"></div>
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl -ml-16 -mb-16 group-hover:bg-purple-500/30 transition-colors"></div>
+
+                        <div className="relative z-10">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 className="text-white font-black text-xl">Instant Personal Loan</h3>
+                                    <p className="text-blue-200 text-xs font-bold uppercase tracking-widest mt-1">Quick Approval</p>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/10">
+                                    <Zap className="text-yellow-400 fill-yellow-400 w-6 h-6" />
+                                </div>
+                            </div>
+
+                            <div className="flex items-baseline gap-1 mb-6">
+                                <span className="text-white/60 text-sm font-bold">Up to</span>
+                                <span className="text-4xl font-black text-white">₹5,00,000</span>
+                            </div>
+
+                            <button className="w-full py-4 bg-white text-slate-900 rounded-xl font-black text-base hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-lg">
+                                Apply Now <ArrowUpRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
