@@ -166,7 +166,10 @@ export default function CustomerHome() {
                                 <span className="text-4xl font-black text-white">₹5,00,000</span>
                             </div>
 
-                            <button className="w-full py-4 bg-white text-slate-900 rounded-xl font-black text-base hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-lg">
+                            <button
+                                onClick={() => window.location.href = '/customer/loan/apply'}
+                                className="w-full py-4 bg-white text-slate-900 rounded-xl font-black text-base hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
+                            >
                                 Apply Now <ArrowUpRight className="w-5 h-5" />
                             </button>
                         </div>

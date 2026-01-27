@@ -13,8 +13,17 @@ export default function CustomerQR() {
 
     useEffect(() => {
         apiFetch('/payment/qr').then(data => setQrData(data.qr_data));
+
         const stored = localStorage.getItem('user');
-        if (stored) setUser(JSON.parse(stored));
+        if (stored) {
+            setUser(JSON.parse(stored));
+        } else {
+            // Fallback: Fetch user if not in local storage
+            apiFetch('/auth/me').then(u => {
+                setUser(u);
+                localStorage.setItem('user', JSON.stringify(u));
+            }).catch(e => console.error('Failed to load user', e));
+        }
     }, []);
 
     const navItems = [
