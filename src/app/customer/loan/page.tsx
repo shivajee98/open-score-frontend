@@ -10,9 +10,14 @@ export default function LoanList() {
 
     return (
         <div className="min-h-screen bg-slate-50 p-6">
-            <button onClick={() => router.push('/customer')} className="mb-6 flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
-                <ArrowLeft className="w-4 h-4" /> Back
-            </button>
+            <div className="flex justify-between items-center mb-6">
+                <button onClick={() => router.push('/customer')} className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
+                    <ArrowLeft className="w-4 h-4" /> Back
+                </button>
+                <button onClick={() => router.push('/customer/loan/history')} className="text-blue-600 font-bold text-xs uppercase tracking-widest hover:text-blue-700 transition-colors bg-blue-50 px-3 py-1 rounded-full">
+                    History
+                </button>
+            </div>
 
             <h1 className="text-3xl font-black text-slate-900 mb-2">Select Loan Plan</h1>
             <p className="text-slate-500 font-medium mb-8">Choose a plan that fits your business needs.</p>

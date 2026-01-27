@@ -116,11 +116,14 @@ export default function CustomerHome() {
 
             {/* Services Grid (Recharge & Bills) */}
             <div className="px-6 mb-8">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Recharge & Bills</h3>
+                <div className="flex justify-between items-end mb-4">
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recharge & Bills</h3>
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">Coming Soon</span>
+                </div>
                 <div className="grid grid-cols-4 gap-4">
                     {[
                         { label: 'Mobile', icon: <Smartphone size={20} /> },
-                        { label: 'Electricity', icon: <Zap size={20} /> },
+                        { label: 'Electricity', icon: <Zap size={20} className="text-yellow-500 fill-yellow-500" />, highlight: true },
                         { label: 'DTH', icon: <TvIcon /> },
                         { label: 'FASTag', icon: <CarIcon /> },
                         { label: 'Broadband', icon: <WifiIcon /> },
@@ -128,14 +131,14 @@ export default function CustomerHome() {
                         { label: 'Water', icon: <DropletIcon /> },
                         { label: 'More', icon: <GridIcon /> },
                     ].map((item, i) => (
-                        <div key={i} className="flex flex-col items-center gap-2 group relative opacity-50">
-                            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200 transition-all shadow-sm relative overflow-hidden">
+                        <div key={i} className="flex flex-col items-center gap-2 group relative">
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm relative overflow-hidden ${item.highlight
+                                    ? 'bg-yellow-50 border-2 border-yellow-200 text-yellow-600 shadow-yellow-200'
+                                    : 'bg-white border border-slate-100 text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200'
+                                }`}>
                                 {item.icon}
                             </div>
-                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-blue-600 text-center">{item.label}</span>
-                            <div className="absolute top-10 bg-slate-100 px-1 rounded border border-slate-200">
-                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">Soon</span>
-                            </div>
+                            <span className={`text-[10px] font-bold text-center ${item.highlight ? 'text-yellow-700' : 'text-slate-500 group-hover:text-blue-600'}`}>{item.label}</span>
                         </div>
                     ))}
                 </div>

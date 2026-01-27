@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Wallet, User } from 'lucide-react';
+import { LayoutDashboard, Wallet, User, Zap } from 'lucide-react';
 
 export default function MobileNav() {
     const pathname = usePathname();
@@ -18,10 +18,17 @@ export default function MobileNav() {
             </Link>
 
             {role === 'customer' && (
-                <Link href={`/${role}/transactions`} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname.includes('transactions') ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
-                    <Wallet size={24} strokeWidth={pathname.includes('transactions') ? 3 : 2} />
-                    <span className="text-[10px] font-bold uppercase tracking-wide">Wallet</span>
-                </Link>
+                <>
+                    <Link href="/customer/loan" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname.includes('/customer/loan') ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
+                        <Zap size={24} strokeWidth={pathname.includes('/customer/loan') ? 3 : 2} />
+                        <span className="text-[10px] font-bold uppercase tracking-wide">Loans</span>
+                    </Link>
+
+                    <Link href={`/${role}/transactions`} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname.includes('transactions') ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
+                        <Wallet size={24} strokeWidth={pathname.includes('transactions') ? 3 : 2} />
+                        <span className="text-[10px] font-bold uppercase tracking-wide">Wallet</span>
+                    </Link>
+                </>
             )}
 
             {/* Profile button removed as requested */}
