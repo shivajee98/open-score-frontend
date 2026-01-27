@@ -7,7 +7,10 @@ import PinModal from '@/components/PinModal';
 import { Home, Smartphone, QrCode, Receipt, TrendingUp, CreditCard, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 
+import { useRouter } from 'next/navigation';
+
 export default function CustomerDashboard() {
+    const router = useRouter(); // Instantiated router
     const [balance, setBalance] = useState(0);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -86,10 +89,10 @@ export default function CustomerDashboard() {
                         </h3>
 
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                            <button onClick={() => window.location.href = '/customer/pay'} className="px-6 py-4 sm:py-3 bg-white text-slate-900 rounded-2xl font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <button onClick={() => router.push('/customer/pay')} className="px-6 py-4 sm:py-3 bg-white text-slate-900 rounded-2xl font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
                                 <Smartphone className="w-4 h-4" /> Scan to Pay
                             </button>
-                            <button onClick={() => window.location.href = '/customer/qr'} className="px-6 py-4 sm:py-3 bg-white/10 text-white rounded-2xl font-bold text-sm backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <button onClick={() => router.push('/customer/qr')} className="px-6 py-4 sm:py-3 bg-white/10 text-white rounded-2xl font-bold text-sm backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2">
                                 <QrCode className="w-4 h-4" /> Receive Money
                             </button>
                         </div>
@@ -103,7 +106,7 @@ export default function CustomerDashboard() {
                             <h4 className="text-lg font-black text-slate-900 flex items-center gap-2">
                                 <TrendingUp className="w-5 h-5 text-blue-600" /> Recent Activity
                             </h4>
-                            <button onClick={() => window.location.href = '/customer/transactions'} className="text-xs font-bold text-blue-600 hover:underline">View All</button>
+                            <button onClick={() => router.push('/customer/transactions')} className="text-xs font-bold text-blue-600 hover:underline">View All</button>
                         </div>
 
                         <div className="space-y-4">
@@ -147,7 +150,7 @@ export default function CustomerDashboard() {
                                 <h5 className="font-bold text-slate-900">Scan QR</h5>
                                 <p className="text-xs text-slate-500 mt-1">Pay friends or shops</p>
                             </div>
-                            <div className="p-6 rounded-2xl bg-purple-50 border border-purple-100 hover:border-purple-300 transition-colors cursor-pointer group" onClick={() => window.location.href = '/customer/qr'}>
+                            <div className="p-6 rounded-2xl bg-purple-50 border border-purple-100 hover:border-purple-300 transition-colors cursor-pointer group" onClick={() => router.push('/customer/qr')}>
                                 <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform">
                                     <QrCode className="w-5 h-5" />
                                 </div>
