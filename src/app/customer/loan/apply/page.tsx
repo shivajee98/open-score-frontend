@@ -222,7 +222,7 @@ export default function LoanApplication() {
                                 disabled={loading}
                                 className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-base shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
                             >
-                                {loading ? 'Checking Eligibility...' : 'Virtual Credit'} <Zap className="w-4 h-4 text-yellow-400" />
+                                {loading ? 'Checking Eligibility...' : 'Submit For Loan Approval'} <Zap className="w-4 h-4 text-yellow-400" />
                             </button>
                         </form>
                     )}
