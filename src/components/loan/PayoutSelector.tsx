@@ -52,7 +52,13 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                         {option.label}
                                     </p>
                                     <p className="text-xs font-bold text-slate-400">
-                                        {option.returnPercentage ? `${option.returnPercentage}% Return` : `Fixed ₹${option.fixedAmount}`}
+                                        {option.cashback
+                                            ? <span className="text-emerald-500">Cashback Earn ₹{option.cashback}</span>
+                                            : (option.interestRate !== undefined
+                                                ? (option.interestRate === 0 ? '0% Interest' : `${option.interestRate}% Interest`)
+                                                : `Fixed ₹{option.fixedAmount}`
+                                            )
+                                        }
                                     </p>
                                 </div>
                             </div>
