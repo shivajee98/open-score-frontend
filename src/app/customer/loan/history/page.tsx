@@ -12,38 +12,10 @@ export default function LoanHistory() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Mocking API call for now or using real endpoint if available
-        // In reality: apiFetch('/loan/history')
         const fetchLoans = async () => {
             try {
-                // Determine if we can fetch real data or need mock
-                // Let's try to fetch, if 404/fail, we use mock for demo
-                // Assuming the API might not exist yet based on user request "maintain a history" which implies creating it.
-                // But as frontend dev, I should try to fetch or fallback.
-
-                // MOCK DATA for "maintain a history" demonstration
-                const mockLoans = [
-                    {
-                        id: 'L-10239',
-                        amount: 50000,
-                        status: 'ACTIVE',
-                        tenure: 6,
-                        payout_frequency: 'Monthly',
-                        created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
-                    },
-                    {
-                        id: 'L-9921',
-                        amount: 20000,
-                        status: 'COMPLETED',
-                        tenure: 3,
-                        payout_frequency: 'Daily',
-                        created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 100).toISOString(), // 100 days ago
-                    }
-                ];
-
-                // Simulate network
-                await new Promise(r => setTimeout(r, 800));
-                setLoans(mockLoans);
+                const data = await apiFetch('/loans');
+                setLoans(data);
             } catch (e) {
                 console.error(e);
             } finally {
@@ -75,7 +47,10 @@ export default function LoanHistory() {
                         >
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${loan.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${loan.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
+                                        loan.status === 'PENDING' ? 'bg-amber-100 text-amber-600' :
+                                            loan.status === 'REJECTED' ? 'bg-rose-100 text-rose-600' :
+                                                'bg-slate-100 text-slate-500'
                                         }`}>
                                         {loan.status}
                                     </span>
@@ -89,7 +64,7 @@ export default function LoanHistory() {
                                 </p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
-                                {loan.status === 'ACTIVE' ? <Clock size={20} className="text-emerald-500" /> : <CheckCircle size={20} />}
+                                {loan.status === 'APPROVED' ? <CheckCircle size={20} className="text-emerald-500" /> : <Clock size={20} className="text-amber-500" />}
                             </div>
                         </div>
                     ))}

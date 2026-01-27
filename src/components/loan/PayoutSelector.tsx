@@ -51,14 +51,14 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                     <p className={cn("font-bold text-base", isSelected ? "text-slate-900" : "text-slate-600")}>
                                         {option.label}
                                     </p>
-                                    <p className="text-xs font-bold text-slate-400 flex flex-col gap-0.5">
+                                    <p className="text-xs font-medium text-slate-500 flex flex-col gap-0.5">
                                         {option.interestRate !== undefined && (
                                             <span className={option.interestRate === 0 ? "text-emerald-600" : "text-slate-500"}>
                                                 {option.interestRate === 0 ? '0% Interest' : `${option.interestRate}% Interest`}
                                             </span>
                                         )}
                                         {option.cashback && (
-                                            <span className="text-emerald-500">Wallet Cashback ₹{option.cashback}</span>
+                                            <span className="text-emerald-600 font-semibold">Wallet Cashback ₹{option.cashback}</span>
                                         )}
                                         {!option.cashback && option.interestRate === undefined && (
                                             <span>Total ₹{option.fixedAmount}</span>
