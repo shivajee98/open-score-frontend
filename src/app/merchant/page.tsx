@@ -5,7 +5,10 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import { LayoutDashboard, Smartphone, QrCode, History, ArrowDownLeft, Store } from 'lucide-react';
 
+import { useRouter } from 'next/navigation';
+
 export default function MerchantDashboard() {
+    const router = useRouter(); // Instantiated router
     const [balance, setBalance] = useState(0);
     const [qrData, setQrData] = useState('');
     const [loading, setLoading] = useState(true);
@@ -54,7 +57,7 @@ export default function MerchantDashboard() {
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Active
                             </p>
                         </div>
-                        <button onClick={() => window.location.href = '/merchant/pay'} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/40">Pay Others</button>
+                        <button onClick={() => router.push('/merchant/pay')} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/40">Pay Others</button>
                     </div>
 
                     <div className="p-8 rounded-[2rem] bg-white border border-slate-100 shadow-sm flex flex-col justify-center">
@@ -84,7 +87,7 @@ export default function MerchantDashboard() {
                         </p>
                         <div className="flex gap-4 pt-4">
                             <button
-                                onClick={() => window.location.href = '/merchant/qr'}
+                                onClick={() => router.push('/merchant/qr')}
                                 className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center gap-2"
                             >
                                 <ArrowDownLeft className="w-5 h-5" /> Download QR

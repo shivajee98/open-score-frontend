@@ -143,8 +143,18 @@ export default function Profile() {
                     </div>
                 </div>
 
-                <div className="text-center mt-8">
+                <div className="text-center mt-8 space-y-4">
                     <p className="text-xs text-slate-300 font-bold uppercase tracking-widest">Member since {new Date(user.created_at).getFullYear()}</p>
+                    <button
+                        onClick={() => {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('user');
+                            router.push('/');
+                        }}
+                        className="text-xs font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors"
+                    >
+                        Sign Out
+                    </button>
                 </div>
             </div>
 

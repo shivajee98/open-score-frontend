@@ -7,7 +7,10 @@ import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import PinModal from '@/components/PinModal';
 import { Scan, X, ArrowRight, Smartphone, Search, Home, QrCode, Receipt } from 'lucide-react';
 
+import { useRouter } from 'next/navigation';
+
 export default function CustomerPay() {
+    const router = useRouter(); // Instantiated router
     const [step, setStep] = useState(1);
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -140,7 +143,7 @@ export default function CustomerPay() {
                     amount={successData?.amount || '0'}
                     payeeName={successData?.payeeName || ''}
                     transactionRef={successData?.ref || ''}
-                    onClose={() => window.location.href = '/customer'}
+                    onClose={() => router.push('/customer')}
                 />
 
                 <PinModal

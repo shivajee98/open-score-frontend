@@ -84,15 +84,8 @@ export default function DashboardLayout({
                     })}
                 </nav>
 
-                <div className="p-6 border-t border-slate-100">
-                    <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-6 py-4 rounded-2xl hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all group font-bold mb-4"
-                    >
-                        <span>🛑</span>
-                        <span className="text-sm">Log Out</span>
-                    </button>
 
+                <div className="p-6 border-t border-slate-100">
                     <Link href="/profile" className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer group">
                         <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-sm group-hover:scale-110 transition-transform">
                             {user?.name?.[0] || 'U'}
@@ -103,10 +96,10 @@ export default function DashboardLayout({
                         </div>
                     </Link>
                 </div>
-            </aside>
+            </aside >
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden relative pb-[5.5rem] md:pb-0 bg-slate-50">
+            < main className="flex-1 flex flex-col overflow-hidden relative pb-[5.5rem] md:pb-0 bg-slate-50" >
                 <header className="px-6 py-4 md:py-6 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
                     <h2 className="text-xl md:text-3xl font-black tracking-tight text-slate-900">{title}</h2>
                     <div className="flex items-center gap-3 md:hidden">
@@ -127,7 +120,7 @@ export default function DashboardLayout({
 
                 {/* Mobile Bottom Nav Removed - Using Global MobileNav */}
 
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }

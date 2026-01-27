@@ -6,7 +6,10 @@ import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import { Scan, X, Smartphone, Store, QrCode, History } from 'lucide-react';
 
+import { useRouter } from 'next/navigation';
+
 export default function MerchantPay() {
+    const router = useRouter(); // Instantiated router
     const [step, setStep] = useState(1);
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -118,7 +121,7 @@ export default function MerchantPay() {
                     amount={successData?.amount || '0'}
                     payeeName={successData?.payeeName || ''}
                     transactionRef={successData?.ref || ''}
-                    onClose={() => window.location.href = '/merchant'}
+                    onClose={() => router.push('/merchant')}
                 />
 
                 {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold text-center border border-red-100">{error}</div>}
