@@ -4,9 +4,25 @@
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronRight, Zap, Clock } from 'lucide-react';
 import { LOAN_PLANS } from '@/lib/loanUtils';
+import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api';
 
 export default function LoanList() {
     const router = useRouter();
+
+    const [recentLoan, setRecentLoan] = useState<any>(null);
+
+    useEffect(() => {
+        apiFetch('/loans').then((loans: any[]) => {
+            if (loans && loans.length > 0) {
+                // Sort by created_at desc (just in case API doesn't)
+                const sorted = loans.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                setRecentLoan(sorted[0]);
+            }
+        }).catch(err => {
+            console.error("Failed to fetch recent loan activity", err);
+        });
+    }, []);
 
     return (
         <div className="min-h-screen bg-slate-50 p-6 pb-24">
@@ -46,33 +62,47 @@ export default function LoanList() {
             </div>
 
             {/* Recent Activity / History Highlight */}
-            <div className="mb-8">
-                <div className="flex justify-between items-end mb-4">
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Activity</h3>
-                    <button onClick={() => router.push('/customer/loan/history')} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:underline">View All</button>
-                </div>
+            {recentLoan ? (
+                <div className="mb-8 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="flex justify-between items-end mb-4">
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Recent Activity</h3>
+                        <button onClick={() => router.push('/customer/loan/history')} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:underline">View All</button>
+                    </div>
 
-                <div
-                    onClick={() => router.push('/customer/loan/history')}
-                    className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl shadow-slate-900/20 relative overflow-hidden group cursor-pointer"
-                >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/10 transition-colors"></div>
+                    <div
+                        onClick={() => router.push('/customer/loan/history')}
+                        className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl shadow-slate-900/20 relative overflow-hidden group cursor-pointer"
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/10 transition-colors"></div>
 
-                    <div className="relative z-10 flex justify-between items-center">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <Clock className="text-blue-400 w-4 h-4" />
-                                <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">Last Application</span>
+                        <div className="relative z-10 flex justify-between items-center">
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Clock className="text-blue-400 w-4 h-4" />
+                                    <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">Last Application</span>
+                                </div>
+                                <h3 className="text-xl font-black mb-1">₹ {recentLoan.amount.toLocaleString()} Loan</h3>
+                                <p className="text-xs font-medium text-slate-400">
+                                    Applied on {new Date(recentLoan.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} •
+                                    <span className={`ml-1 ${recentLoan.status === 'APPROVED' ? 'text-emerald-400' : recentLoan.status === 'REJECTED' ? 'text-rose-400' : 'text-amber-400'}`}>
+                                        {recentLoan.status}
+                                    </span>
+                                </p>
                             </div>
-                            <h3 className="text-xl font-black mb-1">₹ 30,000 Loan</h3>
-                            <p className="text-xs font-medium text-slate-400">Applied on 24 Jan • <span className="text-emerald-400">Approved</span></p>
-                        </div>
-                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-all">
-                            <ChevronRight size={20} />
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-all">
+                                <ChevronRight size={20} />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            ) : (
+                <div className="mb-8">
+                    {/* Placeholder or empty state if we want to encourage activity, or just hidden. 
+                         For now, hiding it is cleanest since we have "More Options" below. 
+                         Or we can show a banner "Apply for your first loan".
+                         User said "keep real data only", so hiding if empty is best.*/}
+                </div>
+            )}
 
             {/* Other Loans */}
             <div>
