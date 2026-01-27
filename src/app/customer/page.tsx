@@ -1,167 +1,168 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import PinModal from '@/components/PinModal';
-import { Home, Smartphone, QrCode, Receipt, TrendingUp, CreditCard, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
-import { toast } from '@/components/ui/Toast';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 
-import { useRouter } from 'next/navigation';
-
-export default function CustomerDashboard() {
-    const router = useRouter(); // Instantiated router
-    const [balance, setBalance] = useState(0);
-    const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    const [showPinModal, setShowPinModal] = useState(false);
+export default function CustomerHome() {
+    const [balance, setBalance] = useState('...');
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        const fetchData = async () => {
+        const loadData = async () => {
             try {
-                // Check PIN Status
-                const pinStatus = await apiFetch('/wallet/check-pin');
-                if (!pinStatus.has_pin) setShowPinModal(true);
-
-                const balanceData = await apiFetch('/wallet/balance');
-                setBalance(balanceData.balance);
-                const txData = await apiFetch('/wallet/transactions');
-                setTransactions(txData.data ? txData.data.slice(0, 5) : []);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                setUser(u);
+                const w = await apiFetch('/wallet/balance');
+                setBalance(w.balance);
+            } catch (e) { }
         };
-        fetchData();
+        loadData();
     }, []);
 
-    const handlePinSet = async (pin: string) => {
-        try {
-            await apiFetch('/wallet/set-pin', {
-                method: 'POST',
-                body: JSON.stringify({ pin, pin_confirmation: pin })
-            });
-            setShowPinModal(false);
-            alert("Security PIN set successfully!");
-        } catch (err: any) {
-            alert(err.message || "Failed to set PIN");
-        }
-    };
-
-    const navItems = [
-        { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
-        { label: 'Scan & Pay', href: '/customer/pay', icon: <Smartphone className="w-5 h-5" /> },
-        { label: 'My QR', href: '/customer/qr', icon: <QrCode className="w-5 h-5" /> },
-        { label: 'Activity', href: '/customer/transactions', icon: <Receipt className="w-5 h-5" /> },
-    ];
-
-    if (loading) return (
-        <DashboardLayout title="Overview" navItems={navItems}>
-            <div className="flex items-center justify-center p-20">
-                <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Loading Financial Data...</p>
-            </div>
-        </DashboardLayout>
-    );
-
     return (
-        <DashboardLayout title="My Finances" navItems={navItems}>
-            <PinModal
-                isOpen={showPinModal}
-                mode="SET"
-                title="Setup Wallet PIN"
-                onComplete={handlePinSet}
-            />
-            <div className="space-y-8 max-w-5xl mx-auto">
-                {/* Balance Card */}
-                <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white p-6 md:p-12 shadow-2xl shadow-blue-900/20 group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500 rounded-full blur-[80px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
-
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-2 opacity-70">
-                            <CreditCard className="w-4 h-4" />
-                            <span className="text-xs font-bold uppercase tracking-widest">Total Balance</span>
-                        </div>
-                        <h3 className="text-5xl md:text-7xl font-black tracking-tighter mb-8">
-                            ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </h3>
-
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                            <button onClick={() => router.push('/customer/pay')} className="px-6 py-4 sm:py-3 bg-white text-slate-900 rounded-2xl font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
-                                <Smartphone className="w-4 h-4" /> Scan to Pay
-                            </button>
-                            <button onClick={() => router.push('/customer/qr')} className="px-6 py-4 sm:py-3 bg-white/10 text-white rounded-2xl font-bold text-sm backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2">
-                                <QrCode className="w-4 h-4" /> Receive Money
-                            </button>
-                        </div>
+        <div className="min-h-screen bg-slate-50 pb-24">
+            {/* Header */}
+            <div className="bg-blue-600 p-6 pt-12 pb-16 rounded-b-[2rem] shadow-xl shadow-blue-900/10">
+                <div className="flex justify-between items-center text-white mb-6">
+                    <div>
+                        <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Welcome Back</p>
+                        <h1 className="text-2xl font-black">{user?.name || 'Customer'}</h1>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-blue-500 border border-blue-400 flex items-center justify-center font-bold text-lg">
+                        {user?.name?.[0] || 'U'}
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8">
-                    {/* Recent Transactions */}
-                    <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
-                        <div className="flex items-center justify-between mb-6">
-                            <h4 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-blue-600" /> Recent Activity
-                            </h4>
-                            <button onClick={() => router.push('/customer/transactions')} className="text-xs font-bold text-blue-600 hover:underline">View All</button>
+                {/* Balance Card - Small but Premium */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white text-blue-600 flex items-center justify-center">
+                            <Wallet size={20} />
                         </div>
-
-                        <div className="space-y-4">
-                            {transactions.length > 0 ? (
-                                transactions.map((t: any) => (
-                                    <div key={t.id} className="flex items-center justify-between group p-3 rounded-2xl hover:bg-slate-50 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                                                {t.type === 'CREDIT' ? <ArrowDownLeft className="w-6 h-6 stroke-[3]" /> : <ArrowUpRight className="w-6 h-6 stroke-[3]" />}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-slate-900 text-sm truncate max-w-[120px]">{t.type === 'CREDIT' ? 'Received' : 'Paid'}</p>
-                                                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                                                    {new Date(t.created_at).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <p className={`font-black text-sm ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
-                                            {t.type === 'CREDIT' ? '+' : '-'}₹{parseFloat(t.amount).toLocaleString('en-IN')}
-                                        </p>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="text-center py-12">
-                                    <p className="text-slate-400 text-sm font-medium">No transactions yet</p>
-                                </div>
-                            )}
+                        <div>
+                            <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Account Balance</p>
+                            <p className="text-xl font-black text-white">₹ {balance}</p>
                         </div>
                     </div>
-
-                    {/* Quick Features */}
-                    <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
-                        <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
-                            <Smartphone className="w-5 h-5 text-blue-600" /> Quick Actions
-                        </h4>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-6 rounded-2xl bg-blue-50 border border-blue-100 hover:border-blue-300 transition-colors cursor-pointer group" onClick={() => router.push('/customer/pay')}>
-                                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform">
-                                    <Smartphone className="w-5 h-5" />
-                                </div>
-                                <h5 className="font-bold text-slate-900">Scan QR</h5>
-                                <p className="text-xs text-slate-500 mt-1">Pay friends or shops</p>
-                            </div>
-                            <div className="p-6 rounded-2xl bg-purple-50 border border-purple-100 hover:border-purple-300 transition-colors cursor-pointer group" onClick={() => router.push('/customer/qr')}>
-                                <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform">
-                                    <QrCode className="w-5 h-5" />
-                                </div>
-                                <h5 className="font-bold text-slate-900">Show QR</h5>
-                                <p className="text-xs text-slate-500 mt-1">Receive payments</p>
-                            </div>
-                        </div>
-                    </div>
+                    <button className="px-4 py-2 bg-white text-blue-600 rounded-xl text-xs font-black uppercase tracking-wide hover:bg-blue-50 transition-colors">
+                        Add Money
+                    </button>
                 </div>
             </div>
-            <div className="h-24 md:hidden"></div>
-        </DashboardLayout>
+
+            {/* Quick Actions - Overlapping Header */}
+            <div className="px-6 -mt-8 mb-8">
+                <div className="bg-white p-4 rounded-2xl shadow-xl shadow-blue-900/5 border border-slate-100 grid grid-cols-4 gap-2">
+                    {[
+                        { label: 'Scan QR', icon: <ScanBarcode size={24} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })) },
+                        { label: 'Pay ID', icon: <Send size={24} />, href: '/customer/transfer' },
+                        { label: 'Self', icon: <UserTransferIcon />, href: '/customer/self' }, // Placeholder icon below
+                        { label: 'History', icon: <History size={24} />, href: '/customer/transactions' },
+                    ].map((item, i) => (
+                        <div key={i} onClick={item.action} className="flex flex-col items-center gap-2 p-2 rounded-xl active:bg-slate-50 transition-colors">
+                            <Link href={item.href || '#'} onClick={item.action} className="contents">
+                                <div className="w-12 h-12 rounded-2xl bg-slate-50 text-blue-600 flex items-center justify-center border border-slate-100 shadow-sm">
+                                    {item.icon}
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">{item.label}</span>
+                            </Link>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Banners */}
+            <div className="px-6 mb-8 overflow-x-auto flex gap-4 no-scrollbar snap-x">
+                <div className="snap-center shrink-0 w-[85%] bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 text-white text-left relative overflow-hidden h-32 flex flex-col justify-center shadow-lg shadow-purple-900/20">
+                    <div className="relative z-10">
+                        <p className="text-[10px] font-bold bg-white/20 inline-block px-2 py-1 rounded-lg mb-2">LIMITED OFFER</p>
+                        <h3 className="font-black text-lg leading-tight">Get 0% Interest<br />Personal Loan</h3>
+                    </div>
+                    <CreditCard className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 rotate-12" />
+                </div>
+
+                <div className="snap-center shrink-0 w-[85%] bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white text-left relative overflow-hidden h-32 flex flex-col justify-center shadow-lg shadow-emerald-900/20">
+                    <div className="relative z-10">
+                        <p className="text-[10px] font-bold bg-white/20 inline-block px-2 py-1 rounded-lg mb-2">NEW FEATURE</p>
+                        <h3 className="font-black text-lg leading-tight">Instant Cash<br />From Credit Card</h3>
+                    </div>
+                    <Zap className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 rotate-12" />
+                </div>
+            </div>
+
+            {/* Services Grid (Recharge & Bills) */}
+            <div className="px-6 mb-8">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Recharge & Bills</h3>
+                <div className="grid grid-cols-4 gap-4">
+                    {[
+                        { label: 'Mobile', icon: <Smartphone size={20} /> },
+                        { label: 'Electricity', icon: <Zap size={20} /> },
+                        { label: 'DTH', icon: <TvIcon /> },
+                        { label: 'FASTag', icon: <CarIcon /> },
+                        { label: 'Broadband', icon: <WifiIcon /> },
+                        { label: 'Cylinder', icon: <FlameIcon /> },
+                        { label: 'Water', icon: <DropletIcon /> },
+                        { label: 'More', icon: <GridIcon /> },
+                    ].map((item, i) => (
+                        <div key={i} className="flex flex-col items-center gap-2 group">
+                            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200 transition-all shadow-sm">
+                                {item.icon}
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-500 group-hover:text-blue-600 text-center">{item.label}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Financial Services */}
+            <div className="px-6 mb-8">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Financial Services</h3>
+                <div className="bg-white rounded-2xl p-1 border border-slate-100 shadow-sm">
+                    {[
+                        { title: 'Personal Loan', sub: 'Instant approval up to ₹5L', icon: <CreditCard className="text-purple-500" /> },
+                        { title: 'Digital Gold', sub: 'Start investing with ₹10', icon: <Landmark className="text-amber-500" /> },
+                        { title: 'Insurance', sub: 'Life, Health & Motor', icon: <ShieldCheck className="text-emerald-500" /> },
+                    ].map((item, i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors rounded-xl relative overflow-hidden group">
+                            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                {item.icon}
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
+                                <p className="text-xs text-slate-400 font-medium">{item.sub}</p>
+                            </div>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg uppercase">
+                                Coming Soon
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
     );
 }
+
+// Icons
+const UserTransferIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" /></svg>
+);
+const TvIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" /></svg>
+);
+const CarIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2" /><circle cx="6.5" cy="16.5" r="2.5" /><circle cx="16.5" cy="16.5" r="2.5" /></svg>
+);
+const WifiIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12.01" y2="20" /></svg>
+);
+const FlameIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-2.246-5.318-3.093-6.6a4.408 4.408 0 0 1-.303-1.9c0-1.127.8-2.5 2.5-2.5 1.7 0 2.5 1.373 2.5 2.5a5.83 5.83 0 0 0 .303 1.9c.847 1.282 2.02 4.457 3.093 6.6.5 1 1 1.62 1 3a2.5 2.5 0 0 0 2.5 2.5" /><path d="M12 22v-4" /></svg>
+);
+const DropletIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
+);
+const GridIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+);

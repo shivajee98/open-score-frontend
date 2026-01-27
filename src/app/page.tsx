@@ -3,14 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { Smartphone, Store, ArrowRight, ShieldCheck, User } from 'lucide-react';
+import { Smartphone, Store, ArrowRight, ShieldCheck, User as UserIcon, Check, BadgeCheck } from 'lucide-react';
 import SplashScreen from '@/components/SplashScreen';
 
 export default function Home() {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
-  const [role, setRole] = useState('CUSTOMER');
-  const [step, setStep] = useState(0); // 0: Role, 1: Mobile, 2: OTP
+
+  // Registration Details
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | null>(null);
+
+  // Steps: 0=Phone, 1=OTP, 2=Details, 3=Role
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showSplash, setShowSplash] = useState(true);
@@ -18,9 +24,7 @@ export default function Home() {
 
   useEffect(() => {
     const checkSession = async () => {
-      // Wait at least 2 seconds for splash effect
       const minSplashTime = new Promise(resolve => setTimeout(resolve, 2000));
-
       const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
 
@@ -28,10 +32,7 @@ export default function Home() {
         if (token && userStr) {
           const user = JSON.parse(userStr);
           await minSplashTime;
-
-          if (user.role === 'ADMIN') router.push('/admin');
-          else if (user.role === 'MERCHANT') router.push('/merchant');
-          else router.push('/customer');
+          redirectUser(user);
         } else {
           throw new Error('No session');
         }
@@ -42,9 +43,23 @@ export default function Home() {
         setShowSplash(false);
       }
     };
-
     checkSession();
   }, [router]);
+
+  const redirectUser = (user: any) => {
+    // Sync with Native App
+    if ((window as any).ReactNativeWebView) {
+      (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'LOGIN',
+        token: localStorage.getItem('token'),
+        user: user
+      }));
+    }
+
+    if (user.role === 'ADMIN') router.push('/admin');
+    else if (user.role === 'MERCHANT') router.push('/merchant');
+    else router.push('/customer');
+  };
 
   const handleSendOtp = async () => {
     setLoading(true);
@@ -54,7 +69,7 @@ export default function Home() {
         method: 'POST',
         body: JSON.stringify({ mobile_number: mobile }),
       });
-      setStep(2);
+      setStep(1);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -62,38 +77,64 @@ export default function Home() {
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerifyOtp = async () => {
     setLoading(true);
     setError('');
     try {
+      // First try to login without role (checks existence)
       const data = await apiFetch('/auth/verify', {
+        method: 'POST',
+        body: JSON.stringify({ mobile_number: mobile, otp }),
+      });
+
+      if (data.status === 'NEW_USER') {
+        // User not found -> Proceed to Registration Flow
+        setStep(2); // Ask Details
+      } else {
+        // User found -> Login
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        if (data.onboarding_status === 'REQUIRED') {
+          // Edge case: User exists but not onboarded?
+          // We can just redirect to onboarding page if implemented, or handle here.
+          // For simplicity, we assume if they exist they are good or we redirect.
+          // But if we want to support partial onboarding, we might need logic.
+          // Let's assume if they have a token, we redirect.
+        }
+        redirectUser(data.user);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!role) return;
+    setLoading(true);
+    setError('');
+    try {
+      // 1. Create User (Verify with Role)
+      const authData = await apiFetch('/auth/verify', {
         method: 'POST',
         body: JSON.stringify({ mobile_number: mobile, otp, role }),
       });
 
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', authData.access_token);
 
-      // Sync with Native App
-      if ((window as any).ReactNativeWebView) {
-        (window as any).ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'LOGIN',
-          token: data.access_token,
-          user: data.user
-        }));
-      }
+      // 2. Update Details
+      await apiFetch('/auth/onboarding', {
+        method: 'POST',
+        body: JSON.stringify({ name, email }),
+        headers: { 'Authorization': `Bearer ${authData.access_token}` }
+      });
 
-      // Check Onboarding Status
-      if (data.onboarding_status === 'REQUIRED' || data.onboarding_status === 'NEW_USER') {
-        router.push('/auth/onboarding');
-        return;
-      }
+      const user = { ...authData.user, name, email, is_onboarded: true };
+      localStorage.setItem('user', JSON.stringify(user));
 
-      // Redirect based on role
-      const userRole = data.user.role;
-      if (userRole === 'ADMIN') router.push('/admin');
-      else if (userRole === 'MERCHANT') router.push('/merchant');
-      else router.push('/customer');
+      redirectUser(user);
 
     } catch (err: any) {
       setError(err.message);
@@ -108,7 +149,6 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
       <div className="w-full max-w-md bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-blue-900/5 relative overflow-hidden">
 
-        {/* Decorative Top Line */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
         <div className="text-center mb-10">
@@ -118,47 +158,12 @@ export default function Home() {
           <h1 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">
             OpenScore
           </h1>
-          <p className="text-slate-500 font-medium text-sm">Next-Gen Financial Ecosystem</p>
+          <p className="text-slate-500 font-medium text-sm">Next-Gen Financial ecosystem</p>
         </div>
 
         {error && <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold text-center border border-red-100 mb-6">{error}</div>}
 
-        {step === 0 ? (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-6">Choose Account Type</h2>
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { id: 'CUSTOMER', label: 'Personal', sub: 'Spend & Transfer', icon: <User className="w-5 h-5" /> },
-                { id: 'MERCHANT', label: 'Merchant', sub: 'Power your payments', icon: <Store className="w-5 h-5" /> },
-              ].map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => { setRole(item.id); setStep(1); }}
-                  className="w-full p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-900/5 transition-all group relative text-left active:scale-[0.98]"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
-                      {item.icon}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-base">{item.label}</h4>
-                      <p className="text-xs text-slate-500 font-medium">{item.sub}</p>
-                    </div>
-                  </div>
-                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all">
-                    <ArrowRight className="w-5 h-5" />
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-                <ShieldCheck className="w-3 h-3 inline mr-1 -mt-0.5" /> Secure Banking Protocol
-              </p>
-            </div>
-          </div>
-        ) : step === 1 ? (
+        {step === 0 && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
             <div>
               <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Mobile Number</label>
@@ -180,18 +185,14 @@ export default function Home() {
             <button
               onClick={handleSendOtp}
               disabled={loading || mobile.length < 10}
-              className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+              className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : <>Continue <ArrowRight className="w-5 h-5" /></>}
-            </button>
-            <button
-              onClick={() => setStep(0)}
-              className="w-full text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest pt-2"
-            >
-              Change Role
+              {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : <>Continue <ArrowRight className="w-5 h-5" /></>}
             </button>
           </div>
-        ) : (
+        )}
+
+        {step === 1 && (
           <div className="space-y-8 animate-in slide-in-from-right-8 fade-in duration-300 text-center">
             <div>
               <h3 className="text-xl font-black text-slate-900 mb-2">Verify Identity</h3>
@@ -199,15 +200,6 @@ export default function Home() {
             </div>
 
             <div className="relative max-w-xs mx-auto">
-              <div className="flex justify-center gap-2">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className={`w-12 h-16 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${otp.length > i ? 'border-blue-600 bg-blue-50 text-blue-600 shadow-lg shadow-blue-100' : 'border-slate-100 bg-slate-50 text-slate-300'}`}>
-                    <span className="text-2xl font-black">{otp[i] || ''}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Hidden Input for OTP */}
               <input
                 type="tel"
                 autoFocus
@@ -216,28 +208,111 @@ export default function Home() {
                   const val = e.target.value.replace(/[^0-9]/g, '');
                   if (val.length <= 6) setOtp(val);
                 }}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                className="w-full text-center bg-slate-50 border border-slate-200 rounded-[1.2rem] p-4 font-black text-2xl tracking-[0.5em] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all placeholder:text-slate-300"
+                placeholder="••••••"
               />
             </div>
 
             <button
-              onClick={handleVerify}
+              onClick={handleVerifyOtp}
               disabled={loading || otp.length < 6}
               className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Verify & Login'}
+              {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Verify'}
             </button>
 
+            <button onClick={() => setStep(0)} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">Change Number</button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-black text-slate-900">Tell us about yourself</h3>
+              <p className="text-slate-500 text-sm">We need a few details to set up your account.</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Full Name (As per Aadhaar)</label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-[1.2rem] p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all"
+                placeholder="e.g. Rahul Sharma"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-[1.2rem] p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all"
+                placeholder="rahul@example.com"
+              />
+            </div>
+
             <button
-              onClick={() => { setStep(1); setOtp(''); }}
-              className="w-full text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
+              onClick={() => {
+                if (name && email.includes('@')) setStep(3);
+                else setError('Please fill all details correctly.');
+              }}
+              className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              Use Different Number
+              Continue <ArrowRight size={20} />
             </button>
           </div>
         )}
+
+        {step === 3 && (
+          <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-black text-slate-900">Choose Account Type</h3>
+              <p className="text-slate-500 text-sm">How will you use OpenScore?</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {[
+                { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon className="w-5 h-5" /> },
+                { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store className="w-5 h-5" /> },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setRole(item.id as any)}
+                  className={`w-full p-5 rounded-2xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${role === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-100 text-slate-400'}`}>
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-base">{item.label}</h4>
+                      <p className="text-xs text-slate-500 font-medium">{item.sub}</p>
+                    </div>
+                  </div>
+                  {role === item.id && (
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-600">
+                      <BadgeCheck className="w-6 h-6 fill-blue-100" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={handleRegister}
+              disabled={loading || !role}
+              className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
+            >
+              {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Create Account'}
+            </button>
+          </div>
+        )}
+
       </div>
-      <p className="mt-8 text-slate-400 text-xs font-bold uppercase tracking-widest opacity-50">© 2026 OpenScore Financial</p>
+      <p className="mt-8 text-slate-400 text-xs font-bold uppercase tracking-widest opacity-50">Secure by OpenScore Protocol</p>
     </main>
   );
 }
