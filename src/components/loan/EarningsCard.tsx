@@ -8,11 +8,12 @@ interface EarningsCardProps {
     payout: PayoutOption | null;
     isRepayment?: boolean;
     totalRepayment?: number;
+    breakdown?: string;
 }
 
-export default function EarningsCard({ plan, tenure, payout, isRepayment, totalRepayment }: EarningsCardProps) {
+export default function EarningsCard({ plan, tenure, payout, isRepayment, totalRepayment, breakdown: propBreakdown }: EarningsCardProps) {
     const { total, breakdown } = isRepayment && totalRepayment !== undefined
-        ? { total: totalRepayment, breakdown: payout ? `₹${payout.fixedAmount} x ${Math.round(totalRepayment / (payout.fixedAmount || 1))} Payments` : '-' }
+        ? { total: totalRepayment, breakdown: propBreakdown || (payout ? `₹${payout.fixedAmount} x ${Math.round(totalRepayment / (payout.fixedAmount || 1))} Payments` : '-') }
         : (payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-' });
 
     return (

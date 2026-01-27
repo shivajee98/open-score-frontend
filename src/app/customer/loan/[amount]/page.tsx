@@ -106,7 +106,14 @@ export default function LoanDetail() {
             <div className="px-6 -mt-20">
                 {/* We need to update EarningsCard to handle Repayment props or just pass Plan */}
                 {/* Ideally we should rename EarningsCard to LoanSummaryCard. For now let's pass new props if component supports, or we update component next. */}
-                <RepaymentCard plan={plan} tenure={tenure} payout={payout} isRepayment={true} totalRepayment={total} />
+                <RepaymentCard
+                    plan={plan}
+                    tenure={tenure}
+                    payout={payout}
+                    isRepayment={true}
+                    totalRepayment={total}
+                    breakdown={breakdown}
+                />
 
                 <TenureSelector
                     options={plan.tenures}
