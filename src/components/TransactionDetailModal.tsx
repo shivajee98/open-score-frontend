@@ -64,7 +64,7 @@ export default function TransactionDetailModal({ isOpen, transaction, onClose }:
                                 const element = document.getElementById('receipt-content');
                                 if (!element) return;
 
-                                const canvas = await html2canvas(element, { background: '#ffffff', scale: 2 });
+                                const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 } as any);
                                 canvas.toBlob(async (blob) => {
                                     if (!blob) {
                                         alert('Failed to generate receipt image.');
