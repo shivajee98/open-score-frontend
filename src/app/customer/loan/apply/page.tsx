@@ -11,6 +11,8 @@ export default function LoanApplication() {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
 
+    const [showExcitement, setShowExcitement] = useState(false);
+
     // Form Data
     const [isWhatsappSame, setIsWhatsappSame] = useState(true);
     const [selectedOffer, setSelectedOffer] = useState<any>(null);
@@ -50,6 +52,7 @@ export default function LoanApplication() {
         setTimeout(() => {
             setLoading(false);
             setStep(2);
+            setShowExcitement(true);
         }, 1500);
     };
 
@@ -229,16 +232,7 @@ export default function LoanApplication() {
 
                     {step === 2 && (
                         <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-                            <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-center gap-3 mb-6">
-                                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
-                                    <Check className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <p className="text-emerald-800 font-bold text-sm">Congratulations!</p>
-                                    <p className="text-emerald-600 text-xs font-medium">You are eligible for the following offers.</p>
-                                </div>
-                            </div>
-
+                            {/* Offers List */}
                             {offers.map((offer, index) => (
                                 <div onClick={() => setSelectedOffer(offer)} key={index} className="cursor-pointer bg-slate-50 border border-slate-200 rounded-2xl p-5 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]">
                                     <div className={`absolute top-0 left-0 w-1 h-full ${offer.color}`}></div>
@@ -273,6 +267,38 @@ export default function LoanApplication() {
                     </p>
                 </div>
             </div>
+
+            {/* Excitement Modal */}
+            {showExcitement && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-md animate-in fade-in duration-500">
+                    <div className="relative w-full max-w-sm mx-auto p-6 text-center">
+                        {/* Animated Background Blobs */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 animate-pulse"></div>
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500 rounded-full blur-[80px] opacity-20 animate-pulse delay-75"></div>
+
+                        <div className="relative z-10 animate-in zoom-in-50 duration-500 slide-in-from-bottom-10">
+                            <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/40 animate-bounce">
+                                <Check className="w-12 h-12 text-white stroke-[4]" />
+                            </div>
+
+                            <h2 className="text-4xl font-black text-white mb-2 tracking-tight">Approved!</h2>
+                            <p className="text-emerald-200 font-medium text-lg mb-8">You are eligible for special offers.</p>
+
+                            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 mb-8">
+                                <p className="text-slate-300 text-xs font-bold uppercase tracking-widest mb-1">Credit Limit Unlocked</p>
+                                <p className="text-4xl font-black text-white">₹ 50,000</p>
+                            </div>
+
+                            <button
+                                onClick={() => setShowExcitement(false)}
+                                className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-lg shadow-xl shadow-white/10 hover:bg-slate-100 transition-all active:scale-95"
+                            >
+                                View My Offers
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Offer Details Modal */}
             {selectedOffer && (
