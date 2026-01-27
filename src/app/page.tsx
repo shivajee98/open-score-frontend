@@ -91,7 +91,7 @@ export default function Home() {
             <div className="grid grid-cols-1 gap-4">
               {[
                 { id: 'CUSTOMER', label: 'Personal', sub: 'Spend & Transfer', icon: <User className="w-5 h-5" /> },
-                { id: 'MERCHANT', label: 'Business', sub: 'Accept Payments', icon: <Store className="w-5 h-5" /> },
+                { id: 'MERCHANT', label: 'Merchant', sub: 'Power your payments', icon: <Store className="w-5 h-5" /> },
               ].map(item => (
                 <button
                   key={item.id}

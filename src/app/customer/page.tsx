@@ -72,7 +72,7 @@ export default function CustomerDashboard() {
             />
             <div className="space-y-8 max-w-5xl mx-auto">
                 {/* Balance Card */}
-                <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white p-8 md:p-12 shadow-2xl shadow-blue-900/20 group">
+                <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white p-6 md:p-12 shadow-2xl shadow-blue-900/20 group">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500 rounded-full blur-[80px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
 
@@ -85,11 +85,11 @@ export default function CustomerDashboard() {
                             ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </h3>
 
-                        <div className="flex flex-wrap items-center gap-4">
-                            <button onClick={() => window.location.href = '/customer/pay'} className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                            <button onClick={() => window.location.href = '/customer/pay'} className="px-6 py-4 sm:py-3 bg-white text-slate-900 rounded-2xl font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2">
                                 <Smartphone className="w-4 h-4" /> Scan to Pay
                             </button>
-                            <button onClick={() => window.location.href = '/customer/qr'} className="px-6 py-3 bg-white/10 text-white rounded-2xl font-bold text-sm backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all flex items-center gap-2">
+                            <button onClick={() => window.location.href = '/customer/qr'} className="px-6 py-4 sm:py-3 bg-white/10 text-white rounded-2xl font-bold text-sm backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-2">
                                 <QrCode className="w-4 h-4" /> Receive Money
                             </button>
                         </div>
@@ -158,6 +158,7 @@ export default function CustomerDashboard() {
                     </div>
                 </div>
             </div>
+            <div className="h-24 md:hidden"></div>
         </DashboardLayout>
     );
 }

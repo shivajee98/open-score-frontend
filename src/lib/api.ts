@@ -4,7 +4,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     let token = null;
     if (typeof window !== 'undefined') {
-        token = localStorage.getItem('access_token');
+        token = localStorage.getItem('token');
     }
 
     const headers: HeadersInit = {
