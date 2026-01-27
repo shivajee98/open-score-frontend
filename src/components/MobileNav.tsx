@@ -24,10 +24,7 @@ export default function MobileNav() {
                 </Link>
             )}
 
-            <Link href="/profile" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname === '/profile' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
-                <User size={24} strokeWidth={pathname === '/profile' ? 3 : 2} />
-                <span className="text-[10px] font-bold uppercase tracking-wide">Profile</span>
-            </Link>
+            {/* Profile button removed as requested */}
         </div>
     );
 }

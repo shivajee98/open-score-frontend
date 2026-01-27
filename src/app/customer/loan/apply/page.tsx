@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Check, Zap, CreditCard, Calendar } from 'lucide-react';
+import { toast } from '@/components/ui/Toast';
 import Link from 'next/link';
 
 export default function LoanApplication() {
@@ -29,6 +30,21 @@ export default function LoanApplication() {
 
     const handleFormSubmit = (e: any) => {
         e.preventDefault();
+
+        // Age Validation
+        const today = new Date();
+        const birthDate = new Date(formData.dob);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        if (age < 18) {
+            toast.error('You must be at least 18 years old to apply for a loan.');
+            return;
+        }
+
         setLoading(true);
         // Simulate API check
         setTimeout(() => {

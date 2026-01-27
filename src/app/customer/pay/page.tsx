@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import PinModal from '@/components/PinModal';
 import { Scan, X, ArrowRight, Smartphone, Search, Home, QrCode, Receipt } from 'lucide-react';
+import { toast } from '@/components/ui/Toast';
 
 import { useRouter } from 'next/navigation';
 
@@ -57,6 +58,7 @@ export default function CustomerPay() {
                 setError("Camera access failed. Please ensure permissions are granted.");
                 setScanning(false);
                 setScannerInstance(null);
+                toast.error("Camera access failed. Please ensure permissions are granted.");
             }
         }, 100);
     };
@@ -80,6 +82,7 @@ export default function CustomerPay() {
     function onScanSuccess(decodedText: string) {
         stopScanner();
         // Identify if it is a VPA or UUID
+        console.log("Scanned QR:", decodedText);
         fetchPayeeDetails(decodedText);
     }
 
@@ -92,7 +95,9 @@ export default function CustomerPay() {
             setPayee(data);
             setStep(2);
         } catch (err) {
+            console.error("Payee fetch error:", err);
             setError('Invalid QR or User Not Found');
+            toast.error('Invalid QR or User Not Found');
         } finally {
             setLoading(false);
         }
@@ -130,6 +135,7 @@ export default function CustomerPay() {
         } catch (err: any) {
             setError(err.message);
             // Re-open if incorrect PIN? For now just show error
+            toast.error(err.message || 'Payment failed');
         } finally {
             setLoading(false);
         }

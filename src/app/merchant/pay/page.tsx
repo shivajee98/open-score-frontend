@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import { Scan, X, Smartphone, Store, QrCode, History } from 'lucide-react';
+import { toast } from '@/components/ui/Toast';
 
 import { useRouter } from 'next/navigation';
 
@@ -79,11 +80,26 @@ export default function MerchantPay() {
     const fetchPayeeDetails = async (id: string) => {
         setLoading(true);
         try {
+            // First try to resolve as a Payee
             const data = await apiFetch(`/payment/payee/${id}`);
             setPayee(data);
             setStep(2);
         } catch (err) {
-            setError('User Not Found');
+            // If failed, try to link as a new QR (Merchant Onboarding)
+            try {
+                await apiFetch('/merchant/link-qr', {
+                    method: 'POST',
+                    body: JSON.stringify({ code: id })
+                });
+                toast.success('QR Code Linked Successfully! Device Activated.');
+                // Redirect to dashboard after simplified success message
+                setTimeout(() => router.push('/merchant'), 2000);
+            } catch (linkErr) {
+                console.error("Payee fetch error:", err);
+                console.error("Link error:", linkErr);
+                setError('Invalid QR. Not a valid Payee or Activation Code.');
+                toast.error('Invalid QR code');
+            }
         } finally {
             setLoading(false);
         }
