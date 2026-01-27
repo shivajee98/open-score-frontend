@@ -55,7 +55,7 @@ export default function CustomerHome() {
             <div className="px-6 -mt-8 mb-8">
                 <div className="bg-white p-4 rounded-2xl shadow-xl shadow-blue-900/5 border border-slate-100 grid grid-cols-4 gap-2">
                     {[
-                        { label: 'Scan QR', icon: <ScanBarcode size={24} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })) },
+                        { label: 'Scan QR', icon: <ScanBarcode size={24} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })), href: '/customer/pay' },
                         { label: 'Pay ID', icon: <Send size={24} />, href: '/customer/pay' },
                         { label: 'Show QR', icon: <QrCode size={24} />, href: '/customer/qr' },
                         { label: 'History', icon: <History size={24} />, href: '/customer/transactions' },
@@ -83,7 +83,7 @@ export default function CustomerHome() {
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-2">
                             <div>
-                                <h3 className="text-white font-black text-xl">Get 0% Personal Loan</h3>
+                                <h3 className="text-white font-black text-xl">Get 0% Instant Loan</h3>
                                 <p className="text-blue-200 text-[10px] font-bold uppercase tracking-widest mt-1">Quick Approval</p>
                             </div>
                             <div className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/10">

@@ -44,6 +44,9 @@ export default function CustomerPay() {
 
         setTimeout(async () => {
             try {
+                if (!document.getElementById("reader")) {
+                    throw new Error("Scanner element not found");
+                }
                 const instance = new Html5Qrcode("reader");
                 setScannerInstance(instance);
 
@@ -55,12 +58,16 @@ export default function CustomerPay() {
                 );
             } catch (err: any) {
                 console.error("Scanner Error:", err);
-                setError("Camera access failed. Please ensure permissions are granted.");
+                const errorMessage = err?.name === 'NotAllowedError'
+                    ? "Camera permission denied"
+                    : (err?.message || "Failed to start camera");
+
+                toast.error(errorMessage);
+                setError(errorMessage);
                 setScanning(false);
                 setScannerInstance(null);
-                toast.error("Camera access failed. Please ensure permissions are granted.");
             }
-        }, 100);
+        }, 300);
     };
 
     const stopScanner = async () => {
