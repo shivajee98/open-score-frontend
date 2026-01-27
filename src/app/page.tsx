@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { Smartphone, Store, ArrowRight, ShieldCheck, User } from 'lucide-react';
+import SplashScreen from '@/components/SplashScreen';
 
 export default function Home() {
   const [mobile, setMobile] = useState('');
@@ -12,23 +13,37 @@ export default function Home() {
   const [step, setStep] = useState(0); // 0: Role, 1: Mobile, 2: OTP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSplash, setShowSplash] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
+    const checkSession = async () => {
+      // Wait at least 2 seconds for splash effect
+      const minSplashTime = new Promise(resolve => setTimeout(resolve, 2000));
 
-    if (token && userStr) {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+
       try {
-        const user = JSON.parse(userStr);
-        if (user.role === 'ADMIN') router.push('/admin');
-        else if (user.role === 'MERCHANT') router.push('/merchant');
-        else router.push('/customer');
+        if (token && userStr) {
+          const user = JSON.parse(userStr);
+          await minSplashTime;
+
+          if (user.role === 'ADMIN') router.push('/admin');
+          else if (user.role === 'MERCHANT') router.push('/merchant');
+          else router.push('/customer');
+        } else {
+          throw new Error('No session');
+        }
       } catch (e) {
+        await minSplashTime;
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        setShowSplash(false);
       }
-    }
+    };
+
+    checkSession();
   }, [router]);
 
   const handleSendOtp = async () => {
@@ -86,6 +101,8 @@ export default function Home() {
       setLoading(false);
     }
   };
+
+  if (showSplash) return <SplashScreen />;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">

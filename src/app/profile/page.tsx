@@ -12,6 +12,8 @@ export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '' });
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+    const [hasPin, setHasPin] = useState(false);
+    const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const router = useRouter();
 
     useEffect(() => {
@@ -19,6 +21,10 @@ export default function Profile() {
             setUser(data);
             setFormData({ name: data.name, email: data.email || '' });
         }).catch(console.error);
+
+        apiFetch('/wallet/check-pin').then(data => {
+            setHasPin(data.has_pin);
+        }).catch(() => setHasPin(false));
     }, []);
 
     const handleBack = () => {
@@ -42,18 +48,51 @@ export default function Profile() {
         }
     };
 
-    const handleSetPin = async (pin: string) => {
-        try {
-            await apiFetch('/auth/set-pin', {
-                method: 'POST',
-                body: JSON.stringify({
-                    pin,
-                    pin_confirmation: pin
-                })
-            });
-            toast.success('PIN updated successfully!');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to update PIN');
+    const handleChangePinClick = () => {
+        if (hasPin) {
+            setPinModalMode('VERIFY');
+            setIsPinModalOpen(true);
+        } else {
+            setPinModalMode('SET');
+            setIsPinModalOpen(true);
+        }
+    };
+
+    const handlePinComplete = async (pin: string) => {
+        if (pinModalMode === 'VERIFY') {
+            try {
+                const res = await apiFetch('/wallet/verify-pin', {
+                    method: 'POST',
+                    body: JSON.stringify({ pin })
+                });
+                if (res.valid) {
+                    setIsPinModalOpen(false);
+                    setTimeout(() => {
+                        setPinModalMode('SET');
+                        setIsPinModalOpen(true);
+                    }, 200);
+                } else {
+                    toast.error('Incorrect PIN');
+                }
+            } catch (e) {
+                toast.error('Failed to verify PIN');
+            }
+        } else {
+            // Set new PIN
+            try {
+                await apiFetch('/auth/set-pin', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        pin,
+                        pin_confirmation: pin
+                    })
+                });
+                toast.success('PIN updated successfully!');
+                setHasPin(true);
+                setIsPinModalOpen(false);
+            } catch (e: any) {
+                toast.error(e.message || 'Failed to update PIN');
+            }
         }
     };
 
@@ -99,7 +138,7 @@ export default function Profile() {
 
                         <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex items-center gap-4">
                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 shadow-sm"><Mail className="w-5 h-5" /></div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Email Address</p>
                                 {isEditing ? (
                                     <input
@@ -109,7 +148,7 @@ export default function Profile() {
                                         className="text-lg font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-blue-500 focus:outline-none w-full"
                                     />
                                 ) : (
-                                    <p className="text-lg font-black text-slate-900">{user.email || 'Not verified'}</p>
+                                    <p className="text-lg font-black text-slate-900 truncate" title={user.email}>{user.email || 'Not verified'}</p>
                                 )}
                             </div>
                         </div>
@@ -139,7 +178,7 @@ export default function Profile() {
                                     <Edit2 className="w-4 h-4" /> Edit Profile
                                 </button>
                             )}
-                            <button onClick={() => setIsPinModalOpen(true)} className="flex-1 bg-blue-500 text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <button onClick={handleChangePinClick} className="flex-1 bg-blue-500 text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
                                 <Lock className="w-4 h-4" /> Change PIN
                             </button>
                         </div>
@@ -169,8 +208,9 @@ export default function Profile() {
             <PinModal
                 isOpen={isPinModalOpen}
                 onClose={() => setIsPinModalOpen(false)}
-                onComplete={handleSetPin}
-                title="Set New PIN"
+                onComplete={handlePinComplete}
+                mode={pinModalMode}
+                title={pinModalMode === 'VERIFY' ? 'Enter Current PIN' : 'Set New PIN'}
             />
         </div>
     );
