@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import { QrCode, ArrowDownLeft, ArrowUpRight, Copy, Wallet } from 'lucide-react';
+import Link from 'next/link';
 
 export default function MerchantHome() {
     const [balance, setBalance] = useState('...');
@@ -69,9 +70,11 @@ export default function MerchantHome() {
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Merchant Dashboard</p>
                         <h1 className="text-2xl font-black">{user?.business_name || user?.name || 'Merchant'}</h1>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-lg">
-                        {user?.name?.[0] || 'M'}
-                    </div>
+                    <Link href="/customer/profile">
+                        <div className="w-10 h-10 rounded-full bg-blue-500 border border-blue-400 flex items-center justify-center font-bold text-lg">
+                            {user?.name?.[0] || 'M'}
+                        </div>
+                    </Link>
                 </div>
 
                 {/* Balance Card */}
