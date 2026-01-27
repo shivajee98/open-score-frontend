@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
+import QRCode from 'react-qr-code';
+import { Share2, Copy, Check, Store, Smartphone, History, Printer, QrCode } from 'lucide-react';
 
 export default function MerchantQR() {
     const [qrData, setQrData] = useState('');
     const [user, setUser] = useState<any>(null);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         apiFetch('/merchant/qr').then(data => setQrData(data.qr_data));
@@ -15,55 +18,45 @@ export default function MerchantQR() {
     }, []);
 
     const navItems = [
-        { label: 'Sales Overview', href: '/merchant', icon: '📊' },
-        { label: 'My QR Code', href: '/merchant/qr', icon: '📱' },
-        { label: 'Withdrawal', href: '/merchant/withdraw', icon: '🏦' },
-        { label: 'History', href: '/merchant/history', icon: '🕒' },
+        { label: 'Store Overview', href: '/merchant', icon: <Store className="w-5 h-5" /> },
+        { label: 'Pay Mobile/QR', href: '/merchant/pay', icon: <Smartphone className="w-5 h-5" /> },
+        { label: 'Receive QR', href: '/merchant/qr', icon: <QrCode className="w-5 h-5" /> },
+        { label: 'Sales History', href: '/merchant/history', icon: <History className="w-5 h-5" /> },
     ];
 
     return (
-        <DashboardLayout title="Store Payment Terminal" navItems={navItems}>
+        <DashboardLayout title="Store QR Code" navItems={navItems}>
             <div className="max-w-2xl mx-auto space-y-8">
-                <div className="bg-white rounded-[3rem] p-12 text-center shadow-2xl relative overflow-hidden group">
-                    <h3 className="text-3xl font-black text-slate-900 mb-2">{user?.name || 'Store'}</h3>
-                    <p className="text-slate-500 font-medium mb-12 uppercase tracking-tighter">Accept ₹ with CreditLoop</p>
+                <div className="bg-white rounded-[2.5rem] p-8 md:p-12 text-center shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden print:shadow-none print:border-2">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
 
-                    <div className="relative mx-auto w-64 h-64 bg-slate-50 rounded-3xl p-6 border-8 border-slate-50 shadow-inner mb-12">
-                        <div className="absolute inset-0 border-2 border-dashed border-sky-500/30 rounded-3xl animate-pulse"></div>
-                        <div className="w-full h-full relative opacity-90 transition-opacity group-hover:opacity-100">
-                            <div className="grid grid-cols-7 gap-1">
-                                {Array.from({ length: 49 }).map((_, i) => (
-                                    <div key={i} className={`aspect-square ${Math.random() > 0.4 ? 'bg-slate-900' : 'bg-transparent'} rounded-sm`}></div>
-                                ))}
-                            </div>
-                        </div>
+                    <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{user?.name}</h3>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-8">Official Payment Terminal</p>
+
+                    <div className="relative mx-auto w-72 h-72 bg-white rounded-[2rem] p-6 border-4 border-slate-900 shadow-2xl flex items-center justify-center mb-8">
+                        {qrData ? (
+                            <QRCode
+                                value={qrData}
+                                size={256}
+                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                viewBox={`0 0 256 256`}
+                            />
+                        ) : (
+                            <div className="animate-pulse w-full h-full bg-slate-50 rounded-xl"></div>
+                        )}
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="p-6 bg-slate-50 rounded-3xl inline-block border border-slate-100 max-w-full overflow-hidden">
-                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1">Merchant Wallet UUID</p>
-                            <p className="text-sm font-bold text-slate-900 tracking-wider truncate">{qrData}</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <button className="py-4 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-900/40 hover:scale-[1.02] transition-transform">Download PNG</button>
-                            <button className="py-4 border-2 border-slate-100 bg-white text-slate-900 rounded-2xl font-black hover:bg-slate-50 transition-colors">Print Poster</button>
-                        </div>
+                    <div className="flex justify-center items-center gap-2 text-slate-900 font-black text-xl bg-slate-50 py-3 rounded-xl max-w-xs mx-auto mb-8 border border-slate-100">
+                        {user?.mobile_number}@openscore
                     </div>
-                </div>
 
-                <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800">
-                    <h4 className="font-bold mb-4">Payment Tips</h4>
-                    <div className="grid grid-cols-2 gap-6">
-                        {[
-                            { t: 'Instant Settlement', d: 'Funds are credited to your merchant wallet immediately.' },
-                            { t: 'Secure & Encrypted', d: 'All customer data is protected via dynamic QR hashing.' }
-                        ].map((item, i) => (
-                            <div key={i}>
-                                <p className="text-sky-400 text-xs font-black uppercase mb-1">{item.t}</p>
-                                <p className="text-slate-400 text-[10px] leading-relaxed">{item.d}</p>
-                            </div>
-                        ))}
+                    <div className="grid grid-cols-2 gap-4 print:hidden">
+                        <button onClick={() => window.print()} className="py-4 bg-slate-100 text-slate-900 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                            <Printer className="w-5 h-5" /> Print Standee
+                        </button>
+                        <button className="py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+                            <Share2 className="w-5 h-5" /> Share Link
+                        </button>
                     </div>
                 </div>
             </div>

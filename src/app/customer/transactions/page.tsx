@@ -3,68 +3,107 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
+import TransactionDetailModal from '@/components/TransactionDetailModal';
+import { Home, Smartphone, QrCode, Receipt, ArrowDownLeft, ArrowUpRight, Search, Calendar, Filter } from 'lucide-react';
 
 export default function CustomerTransactions() {
     const [transactions, setTransactions] = useState([]);
+    const [selectedTx, setSelectedTx] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    const navItems = [
-        { label: 'Overview', href: '/customer', icon: '🏠' },
-        { label: 'Pay Merchant', href: '/customer/pay', icon: '💳' },
-        { label: 'Loans', href: '/customer/loans', icon: '💰' },
-        { label: 'Transactions', href: '/customer/transactions', icon: '📜' },
-    ];
-
     useEffect(() => {
-        const fetchTransactions = async () => {
-            try {
-                const data = await apiFetch('/wallet/transactions');
-                setTransactions(data.data || []);
-            } catch (err) {
-                console.error('Failed to fetch transactions', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchTransactions();
+        apiFetch('/wallet/transactions')
+            .then(data => setTransactions(data.data || []))
+            .catch(console.error)
+            .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <div className="p-8 text-center text-white">Loading Transactions...</div>;
+    const navItems = [
+        { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
+        { label: 'Scan & Pay', href: '/customer/pay', icon: <Smartphone className="w-5 h-5" /> },
+        { label: 'My QR', href: '/customer/qr', icon: <QrCode className="w-5 h-5" /> },
+        { label: 'Activity', href: '/customer/transactions', icon: <Receipt className="w-5 h-5" /> },
+    ];
+
+    const groupTransactionsByDate = (txs: any[]) => {
+        if (!Array.isArray(txs)) return {};
+        const groups: any = {};
+
+        const today = new Date().toLocaleDateString();
+        const yesterday = new Date(Date.now() - 86400000).toLocaleDateString();
+
+        txs.forEach(tx => {
+            const d = new Date(tx.created_at);
+            const dateStr = d.toLocaleDateString();
+
+            let label = dateStr;
+            if (dateStr === today) label = 'Today';
+            else if (dateStr === yesterday) label = 'Yesterday';
+            else label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+            if (!groups[label]) groups[label] = [];
+            groups[label].push(tx);
+        });
+        return groups;
+    };
+
+    const grouped = groupTransactionsByDate(transactions);
 
     return (
-        <DashboardLayout title="Transaction Ledger" navItems={navItems}>
-            <div className="space-y-6">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-                    <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-                        <h4 className="text-xl font-extrabold uppercase tracking-tighter text-sky-400">Activity History</h4>
-                        <span className="text-[10px] font-black bg-slate-800 px-3 py-1 rounded text-slate-500">{transactions.length} Records</span>
-                    </div>
-                    <div className="divide-y divide-slate-800">
-                        {transactions.length > 0 ? transactions.map((tx: any) => (
-                            <div key={tx.id} className="flex items-center justify-between p-6 hover:bg-white/5 transition-all group">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                                        {tx.type === 'CREDIT' ? '💰' : '💳'}
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-100">{tx.description || tx.source_type}</p>
-                                        <p className="text-xs text-slate-500">{new Date(tx.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className={`text-lg font-black ${tx.type === 'DEBIT' ? 'text-red-400' : 'text-emerald-400'}`}>
-                                        {tx.type === 'DEBIT' ? '-' : '+'}₹{parseFloat(tx.amount).toLocaleString('en-IN')}
-                                    </p>
-                                    <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">{tx.type}</p>
-                                </div>
-                            </div>
-                        )) : (
-                            <div className="p-20 text-center">
-                                <p className="text-slate-500 font-medium">No transactions found in your ledger.</p>
-                            </div>
-                        )}
+        <DashboardLayout title="Activity" navItems={navItems}>
+            <TransactionDetailModal
+                isOpen={!!selectedTx}
+                transaction={selectedTx}
+                onClose={() => setSelectedTx(null)}
+            />
+
+            <div className="max-w-4xl mx-auto space-y-6">
+                {/* Filters */}
+                <div className="flex flex-col md:flex-row gap-4 mb-8">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input type="text" placeholder="Search payments..." className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-slate-100 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-100 outline-none" />
                     </div>
                 </div>
+
+                {loading ? (
+                    <div className="space-y-4">
+                        {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-200 rounded-2xl animate-pulse"></div>)}
+                    </div>
+                ) : Object.keys(grouped).length > 0 ? (
+                    Object.keys(grouped).map(date => (
+                        <div key={date} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-2">{date}</h5>
+                            <div className="bg-white rounded-[2rem] p-2 shadow-sm border border-slate-100 space-y-1">
+                                {grouped[date].map((t: any) => (
+                                    <div key={t.id} onClick={() => setSelectedTx(t)} className="flex justify-between items-center p-4 hover:bg-slate-50 rounded-2xl transition-all group cursor-pointer active:scale-[0.98]">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                {t.type === 'CREDIT' ? <ArrowDownLeft className="w-6 h-6 stroke-[3]" /> : <ArrowUpRight className="w-6 h-6 stroke-[3]" />}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-900 text-sm">
+                                                    {t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`}
+                                                </p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">
+                                                    {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {t.counterparty_vpa || 'Wallet Transfer'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`font-black text-base ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                                {t.type === 'CREDIT' ? '+' : '-'}₹{parseFloat(t.amount).toLocaleString('en-IN')}
+                                            </p>
+                                            <p className="text-[10px] text-slate-300 font-medium">TxID: ...{String(t.description).split('Ref: ')[1]?.substring(0, 6) || String(t.id)}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center py-20 text-slate-400 font-bold">No transactions found.</div>
+                )}
             </div>
         </DashboardLayout>
     );

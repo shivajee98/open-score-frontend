@@ -4,15 +4,13 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
-import PinModal from '@/components/PinModal';
-import { Scan, X, ArrowRight, Smartphone, Search, Home, QrCode, Receipt } from 'lucide-react';
+import { Scan, X, Smartphone, Store, QrCode, History } from 'lucide-react';
 
-export default function CustomerPay() {
+export default function MerchantPay() {
     const [step, setStep] = useState(1);
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [balance, setBalance] = useState(0);
-    const [payees, setPayees] = useState([]);
     const [payee, setPayee] = useState<any>(null);
     const [error, setError] = useState('');
     const [scanning, setScanning] = useState(false);
@@ -20,29 +18,25 @@ export default function CustomerPay() {
     const [successData, setSuccessData] = useState<any>(null);
 
     const navItems = [
-        { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
-        { label: 'Scan & Pay', href: '/customer/pay', icon: <Smartphone className="w-5 h-5" /> },
-        { label: 'My QR', href: '/customer/qr', icon: <QrCode className="w-5 h-5" /> },
-        { label: 'Activity', href: '/customer/transactions', icon: <Receipt className="w-5 h-5" /> },
+        { label: 'Store Overview', href: '/merchant', icon: <Store className="w-5 h-5" /> },
+        { label: 'Pay Mobile/QR', href: '/merchant/pay', icon: <Smartphone className="w-5 h-5" /> },
+        { label: 'Receive QR', href: '/merchant/qr', icon: <QrCode className="w-5 h-5" /> },
+        { label: 'Sales History', href: '/merchant/history', icon: <History className="w-5 h-5" /> },
     ];
 
     useEffect(() => {
         apiFetch('/wallet/balance').then(data => setBalance(data.balance));
-        // We might want to list recent payees here in future
     }, []);
 
     const startScanner = async () => {
         setScanning(true);
         setError('');
-
-        // Dynamic import to avoid SSR issues
         const { Html5Qrcode } = await import('html5-qrcode');
 
         setTimeout(async () => {
             try {
                 const instance = new Html5Qrcode("reader");
                 setScannerInstance(instance);
-
                 await instance.start(
                     { facingMode: "environment" },
                     { fps: 15, qrbox: { width: 250, height: 250 } },
@@ -51,7 +45,7 @@ export default function CustomerPay() {
                 );
             } catch (err: any) {
                 console.error("Scanner Error:", err);
-                setError("Camera access failed. Please ensure permissions are granted.");
+                setError("Camera access user permission denied.");
                 setScanning(false);
                 setScannerInstance(null);
             }
@@ -68,15 +62,12 @@ export default function CustomerPay() {
 
     useEffect(() => {
         return () => {
-            if (scannerInstance?.isScanning) {
-                scannerInstance.stop().catch(() => { });
-            }
+            if (scannerInstance?.isScanning) scannerInstance.stop().catch(() => { });
         }
     }, [scannerInstance]);
 
     function onScanSuccess(decodedText: string) {
         stopScanner();
-        // Identify if it is a VPA or UUID
         fetchPayeeDetails(decodedText);
     }
 
@@ -89,25 +80,14 @@ export default function CustomerPay() {
             setPayee(data);
             setStep(2);
         } catch (err) {
-            setError('Invalid QR or User Not Found');
+            setError('User Not Found');
         } finally {
             setLoading(false);
         }
     }
 
-    const [pinModalOpen, setPinModalOpen] = useState(false);
-
-    const handleInitiatePay = () => {
+    const handlePay = async () => {
         if (!amount || parseFloat(amount) <= 0) return;
-        if (parseFloat(amount) > balance) {
-            setError('Insufficient wallet balance');
-            return;
-        }
-        setPinModalOpen(true);
-    };
-
-    const handlePay = async (pin: string) => {
-        setPinModalOpen(false);
         setLoading(true);
         setError('');
         try {
@@ -115,8 +95,7 @@ export default function CustomerPay() {
                 method: 'POST',
                 body: JSON.stringify({
                     payee_wallet_uuid: payee.payee_wallet_uuid,
-                    amount: parseFloat(amount),
-                    pin: pin
+                    amount: parseFloat(amount)
                 })
             });
             setSuccessData({
@@ -126,28 +105,20 @@ export default function CustomerPay() {
             });
         } catch (err: any) {
             setError(err.message);
-            // Re-open if incorrect PIN? For now just show error
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <DashboardLayout title="Scan & Pay" navItems={navItems}>
+        <DashboardLayout title="Business Payment" navItems={navItems}>
             <div className="max-w-xl mx-auto">
                 <PaymentSuccessModal
                     isOpen={!!successData}
                     amount={successData?.amount || '0'}
                     payeeName={successData?.payeeName || ''}
                     transactionRef={successData?.ref || ''}
-                    onClose={() => window.location.href = '/customer'}
-                />
-
-                <PinModal
-                    isOpen={pinModalOpen}
-                    title={`Pay ₹${amount}`}
-                    onComplete={handlePay}
-                    onClose={() => setPinModalOpen(false)}
+                    onClose={() => window.location.href = '/merchant'}
                 />
 
                 {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold text-center border border-red-100">{error}</div>}
@@ -157,35 +128,28 @@ export default function CustomerPay() {
                         {scanning ? (
                             <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
                                 <div id="reader" className="w-full max-w-sm overflow-hidden rounded-3xl border-4 border-white/20"></div>
-                                <button
-                                    onClick={stopScanner}
-                                    className="mt-8 px-8 py-3 bg-white text-black rounded-full font-bold flex items-center gap-2"
-                                >
-                                    <X className="w-5 h-5" /> Cancel Scan
-                                </button>
-                                <p className="text-white/50 text-xs mt-4 uppercase tracking-widest font-bold">Align QR code within frame</p>
+                                <button onClick={stopScanner} className="mt-8 px-8 py-3 bg-white text-black rounded-full font-bold flex items-center gap-2"><X className="w-5 h-5" /> Cancel</button>
                             </div>
                         ) : (
                             <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-slate-200 border border-slate-100 text-center relative overflow-hidden group">
-                                <div className="absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                                <div className="absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
 
                                 <div className="w-24 h-24 mx-auto mb-8 relative">
-                                    <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-20"></div>
                                     <button
                                         onClick={startScanner}
-                                        className="relative w-full h-full bg-blue-600 text-white rounded-[2.5rem] flex items-center justify-center shadow-lg shadow-blue-600/30 hover:scale-110 active:scale-95 transition-all group-hover:rotate-12"
+                                        className="relative w-full h-full bg-slate-900 text-white rounded-[2.5rem] flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
                                     >
                                         <Scan className="w-10 h-10" />
                                     </button>
                                 </div>
-                                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Scan QR Code</h3>
-                                <p className="text-slate-500 font-medium mb-8">Point camera at any OpenScore QR to pay instantly.</p>
+                                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Scan Customer QR</h3>
+                                <p className="text-slate-500 font-medium mb-8">Pay suppliers or refund customers instantly.</p>
 
                                 <button
                                     onClick={startScanner}
-                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95"
+                                    className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-200 transition-all active:scale-95"
                                 >
-                                    <Smartphone className="w-5 h-5" /> Open Scanner
+                                    <Smartphone className="w-5 h-5" /> Start Camera
                                 </button>
                             </div>
                         )}
@@ -197,35 +161,31 @@ export default function CustomerPay() {
                                 {payee?.name?.[0]}
                             </div>
                             <h4 className="text-2xl font-black text-slate-900 tracking-tight">{payee?.name}</h4>
-                            <p className="text-blue-600 font-bold text-sm bg-blue-50 inline-block px-3 py-1 rounded-full mt-2">{payee?.vpa || 'Verified Merchant'}</p>
+                            <p className="text-emerald-600 font-bold text-sm bg-emerald-50 inline-block px-3 py-1 rounded-full mt-2">{payee?.role}</p>
                         </div>
 
                         <div className="space-y-6">
-                            <div className="relative">
-                                <span className="absolute left-8 top-1/2 -translate-y-1/2 text-4xl font-black text-slate-300">₹</span>
-                                <input
-                                    type="number"
-                                    autoFocus
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    className="w-full bg-slate-50 rounded-3xl p-8 pl-16 text-5xl font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 border border-slate-200 transition-all text-center"
-                                    placeholder="0"
-                                />
-                            </div>
-
+                            <input
+                                type="number"
+                                autoFocus
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="w-full bg-slate-50 rounded-3xl p-8 text-5xl font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 border border-slate-200 transition-all text-center"
+                                placeholder="₹0"
+                            />
                             <div className="flex justify-between items-center px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <span className="text-xs font-bold uppercase text-slate-400">Paying From</span>
-                                <span className="text-sm font-black text-slate-900">Wallet (₹{balance.toLocaleString('en-IN')})</span>
+                                <span className="text-xs font-bold uppercase text-slate-400">Business Balance</span>
+                                <span className="text-sm font-black text-slate-900">₹{balance.toLocaleString('en-IN')}</span>
                             </div>
 
                             <button
-                                onClick={handleInitiatePay}
+                                onClick={handlePay}
                                 disabled={loading || !amount}
-                                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-5 bg-emerald-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-emerald-600/30 hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {loading ? 'Processing...' : 'Proceed to Pay'}
+                                {loading ? 'Processing...' : 'Confirm Transfer'}
                             </button>
-                            <button onClick={() => setStep(1)} className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-all">Cancel Transaction</button>
+                            <button onClick={() => setStep(1)} className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-all">Cancel</button>
                         </div>
                     </div>
                 )}

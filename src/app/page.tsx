@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { Smartphone, Store, ArrowRight, ShieldCheck, User } from 'lucide-react';
 
 export default function Home() {
   const [mobile, setMobile] = useState('');
@@ -46,6 +47,12 @@ export default function Home() {
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
+      // Check Onboarding Status
+      if (data.onboarding_status === 'REQUIRED' || data.onboarding_status === 'NEW_USER') {
+        router.push('/auth/onboarding');
+        return;
+      }
+
       // Redirect based on role
       const userRole = data.user.role;
       if (userRole === 'ADMIN') router.push('/admin');
@@ -60,68 +67,74 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-950 to-black p-6 text-white font-sans selection:bg-pink-500 selection:text-white">
-      <div className="w-full max-w-md rounded-[2.5rem] bg-white/5 p-8 backdrop-blur-xl border border-white/10 shadow-2xl relative overflow-hidden">
-        {/* Background blobs */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-40 h-40 bg-pink-500 blur-3xl opacity-20 rounded-full pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-40 h-40 bg-blue-500 blur-3xl opacity-20 rounded-full pointer-events-none"></div>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+      <div className="w-full max-w-md bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-blue-900/5 relative overflow-hidden">
 
-        <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-center bg-gradient-to-r from-pink-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-sm">
-          CreditLoop
-        </h1>
-        <p className="text-center text-gray-400 mb-8 text-sm">Secure Digital Wallet Ecosystem</p>
+        {/* Decorative Top Line */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
-        <div className="mb-6 p-4 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-[10px] text-sky-400 font-medium text-center">
-          <p className="uppercase tracking-widest font-black mb-1 opacity-70">Demo Access Enabled</p>
-          Enter any mobile number and any 6-digit OTP to continue.
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white font-black text-2xl mb-4 shadow-lg shadow-blue-600/20">
+            O
+          </div>
+          <h1 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">
+            OpenScore
+          </h1>
+          <p className="text-slate-500 font-medium text-sm">Next-Gen Financial Ecosystem</p>
         </div>
 
-        {error && <p className="text-red-400 text-xs text-center mb-4 bg-red-400/10 py-2 rounded-lg border border-red-400/20">{error}</p>}
+        {error && <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold text-center border border-red-100 mb-6">{error}</div>}
 
         {step === 0 ? (
-          <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
-            <h2 className="text-xs font-black text-slate-500 uppercase tracking-widest text-center mb-6">Select Account Type</h2>
-            <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-6">Choose Account Type</h2>
+            <div className="grid grid-cols-1 gap-4">
               {[
-                { id: 'CUSTOMER', label: 'Customer', sub: 'Spend credit via QR', icon: '👤' },
-                { id: 'MERCHANT', label: 'Merchant', sub: 'Accept credit payments', icon: '🏢' },
-                { id: 'ADMIN', label: 'Administrator', sub: 'Manage loans & system', icon: '🛡️' }
+                { id: 'CUSTOMER', label: 'Personal', sub: 'Spend & Transfer', icon: <User className="w-5 h-5" /> },
+                { id: 'MERCHANT', label: 'Business', sub: 'Accept Payments', icon: <Store className="w-5 h-5" /> },
               ].map(item => (
                 <button
                   key={item.id}
                   onClick={() => { setRole(item.id); setStep(1); }}
-                  className="w-full text-left p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-pink-500/50 hover:bg-pink-500/5 transition-all group relative overflow-hidden active:scale-95"
+                  className="w-full p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-blue-900/5 transition-all group relative text-left active:scale-[0.98]"
                 >
-                  <div className="flex items-center gap-4 relative z-10">
-                    <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">{item.icon}</div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
+                      {item.icon}
+                    </div>
                     <div>
-                      <h4 className="font-black text-sm tracking-tight">{item.label}</h4>
-                      <p className="text-[10px] text-slate-500 font-medium">{item.sub}</p>
+                      <h4 className="font-bold text-slate-900 text-base">{item.label}</h4>
+                      <p className="text-xs text-slate-500 font-medium">{item.sub}</p>
                     </div>
                   </div>
-                  <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-pink-500">→</span>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all">
+                    <ArrowRight className="w-5 h-5" />
                   </div>
                 </button>
               ))}
             </div>
+
+            <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">
+                <ShieldCheck className="w-3 h-3 inline mr-1 -mt-0.5" /> Secure Banking Protocol
+              </p>
+            </div>
           </div>
         ) : step === 1 ? (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-            <div className="group">
-              <label className="block text-xs font-semibold uppercase text-gray-400 mb-1 ml-1 group-focus-within:text-pink-400 transition-colors">Mobile Number (10 Digits)</label>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Mobile Number</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">+91</span>
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm select-none border-r border-slate-200 pr-3 mr-3">+91</div>
                 <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  type="tel"
+                  autoFocus
                   value={mobile}
                   onChange={(e) => {
                     const val = e.target.value.replace(/[^0-9]/g, '');
                     if (val.length <= 10) setMobile(val);
                   }}
-                  className="w-full rounded-xl bg-black/20 border border-white/10 pl-14 pr-5 py-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 transition-all shadow-inner font-bold tracking-widest"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-[1.2rem] p-5 pl-[4.5rem] font-bold text-slate-900 text-lg focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all placeholder:text-slate-300 tracking-widest"
                   placeholder="00000 00000"
                 />
               </div>
@@ -129,56 +142,64 @@ export default function Home() {
             <button
               onClick={handleSendOtp}
               disabled={loading || mobile.length < 10}
-              className="w-full rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 py-4 font-bold shadow-lg shadow-purple-900/40 hover:from-pink-500 hover:to-purple-500 hover:shadow-purple-900/60 transition-all active:scale-[0.98] active:shadow-none disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
             >
-              {loading ? 'Sending...' : 'Continue Securely'}
+              {loading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : <>Continue <ArrowRight className="w-5 h-5" /></>}
             </button>
             <button
               onClick={() => setStep(0)}
-              className="w-full text-[10px] text-gray-500 hover:text-white transition-colors py-2 uppercase font-black tracking-[0.2em]"
+              className="w-full text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest pt-2"
             >
-              ← Back to roles
+              Change Role
             </button>
           </div>
         ) : (
-          <div className="space-y-6 animate-in slide-in-from-right-8 fade-in duration-300">
-            <div className="group text-center relative p-4">
-              <label className="block text-xs font-semibold uppercase text-gray-400 mb-4 group-focus-within:text-emerald-400 transition-colors">Enter 6-Digit Verification Code</label>
-              <div className="flex justify-center gap-2 relative z-10 pointer-events-none">
+          <div className="space-y-8 animate-in slide-in-from-right-8 fade-in duration-300 text-center">
+            <div>
+              <h3 className="text-xl font-black text-slate-900 mb-2">Verify Identity</h3>
+              <p className="text-slate-500 text-sm">Enter the code sent to +91 {mobile}</p>
+            </div>
+
+            <div className="relative max-w-xs mx-auto">
+              <div className="flex justify-center gap-2">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className={`w-10 h-14 rounded-xl flex items-center justify-center border-2 transition-all ${otp.length > i ? 'border-emerald-500 bg-emerald-500/10' : 'border-white/10 bg-black/20'}`}>
-                    <span className="text-xl font-black text-white">{otp[i] || ''}</span>
+                  <div key={i} className={`w-12 h-16 rounded-xl flex items-center justify-center border-2 transition-all duration-300 ${otp.length > i ? 'border-blue-600 bg-blue-50 text-blue-600 shadow-lg shadow-blue-100' : 'border-slate-100 bg-slate-50 text-slate-300'}`}>
+                    <span className="text-2xl font-black">{otp[i] || ''}</span>
                   </div>
                 ))}
               </div>
+
+              {/* Hidden Input for OTP */}
               <input
-                type="text"
-                inputMode="numeric"
+                type="tel"
                 autoFocus
                 value={otp}
                 onChange={(e) => {
                   const val = e.target.value.replace(/[^0-9]/g, '');
                   if (val.length <= 6) setOtp(val);
                 }}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-text z-20"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
+
             <button
               onClick={handleVerify}
               disabled={loading || otp.length < 6}
-              className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-4 font-bold shadow-lg shadow-emerald-900/40 hover:from-emerald-400 hover:to-teal-400 hover:shadow-emerald-900/60 transition-all active:scale-[0.98] active:shadow-none disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Verifying...' : 'Verify & Login'}
+              {loading ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : 'Verify & Login'}
             </button>
+
             <button
               onClick={() => { setStep(1); setOtp(''); }}
-              className="w-full text-xs text-gray-500 hover:text-white transition-colors py-2 uppercase font-black tracking-widest"
+              className="w-full text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
             >
-              ← Edit Number
+              Use Different Number
             </button>
           </div>
         )}
       </div>
+      <p className="mt-8 text-slate-400 text-xs font-bold uppercase tracking-widest opacity-50">© 2026 OpenScore Financial</p>
     </main>
   );
 }

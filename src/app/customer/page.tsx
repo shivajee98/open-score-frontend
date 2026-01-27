@@ -3,22 +3,29 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
+import PinModal from '@/components/PinModal';
+import { Home, Smartphone, QrCode, Receipt, TrendingUp, CreditCard, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
 export default function CustomerDashboard() {
     const [balance, setBalance] = useState(0);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [showPinModal, setShowPinModal] = useState(false);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Check PIN Status
+                const pinStatus = await apiFetch('/wallet/check-pin');
+                if (!pinStatus.has_pin) setShowPinModal(true);
+
                 const balanceData = await apiFetch('/wallet/balance');
                 setBalance(balanceData.balance);
-
-                const transData = await apiFetch('/wallet/transactions');
-                setTransactions(transData.data || []);
+                const txData = await apiFetch('/wallet/transactions');
+                setTransactions(txData.data ? txData.data.slice(0, 5) : []);
             } catch (err) {
-                console.error('Failed to fetch dashboard data', err);
+                console.error(err);
             } finally {
                 setLoading(false);
             }
@@ -26,73 +33,126 @@ export default function CustomerDashboard() {
         fetchData();
     }, []);
 
+    const handlePinSet = async (pin: string) => {
+        try {
+            await apiFetch('/wallet/set-pin', {
+                method: 'POST',
+                body: JSON.stringify({ pin, pin_confirmation: pin })
+            });
+            setShowPinModal(false);
+            alert("Security PIN set successfully!");
+        } catch (err: any) {
+            alert(err.message || "Failed to set PIN");
+        }
+    };
+
     const navItems = [
-        { label: 'Overview', href: '/customer', icon: '🏠' },
-        { label: 'Pay Merchant', href: '/customer/pay', icon: '💳' },
-        { label: 'Loans', href: '/customer/loans', icon: '💰' },
-        { label: 'Transactions', href: '/customer/transactions', icon: '📜' },
+        { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
+        { label: 'Scan & Pay', href: '/customer/pay', icon: <Smartphone className="w-5 h-5" /> },
+        { label: 'My QR', href: '/customer/qr', icon: <QrCode className="w-5 h-5" /> },
+        { label: 'Activity', href: '/customer/transactions', icon: <Receipt className="w-5 h-5" /> },
     ];
 
-    if (loading) return <div className="p-8 text-center">Loading Dashboard...</div>;
+    if (loading) return (
+        <DashboardLayout title="Overview" navItems={navItems}>
+            <div className="flex items-center justify-center p-20">
+                <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Loading Financial Data...</p>
+            </div>
+        </DashboardLayout>
+    );
 
     return (
-        <DashboardLayout title="Customer Dashboard" navItems={navItems}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Wallet Card */}
-                <div className="lg:col-span-2 relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-6 md:p-8 shadow-xl shadow-indigo-500/20 group">
-                    <div className="absolute top-0 right-0 p-6 md:p-8 transform group-hover:scale-110 transition-transform hidden sm:block">
-                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <DashboardLayout title="My Finances" navItems={navItems}>
+            <PinModal
+                isOpen={showPinModal}
+                mode="SET"
+                title="Setup Wallet PIN"
+                onComplete={handlePinSet}
+            />
+            <div className="space-y-8 max-w-5xl mx-auto">
+                {/* Balance Card */}
+                <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white p-8 md:p-12 shadow-2xl shadow-blue-900/20 group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500 rounded-full blur-[80px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
+
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-2 opacity-70">
+                            <CreditCard className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase tracking-widest">Total Balance</span>
                         </div>
-                    </div>
-                    <p className="text-white/70 text-[10px] md:text-sm font-black uppercase tracking-[0.2em] mb-1">Available Credit</p>
-                    <h3 className="text-4xl md:text-6xl font-black text-white mb-6 md:mb-8 tracking-tighter transition-all">₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h3>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <button onClick={() => window.location.href = '/customer/pay'} className="px-5 py-2.5 md:px-8 md:py-3 bg-white text-indigo-600 rounded-2xl font-black text-xs md:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all">Quick Pay</button>
-                        <button className="px-5 py-2.5 md:px-8 md:py-3 bg-white/10 text-white rounded-2xl font-black text-xs md:text-sm backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all">Add Limit</button>
+                        <h3 className="text-5xl md:text-7xl font-black tracking-tighter mb-8">
+                            ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </h3>
+
+                        <div className="flex flex-wrap items-center gap-4">
+                            <button onClick={() => window.location.href = '/customer/pay'} className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                                <Smartphone className="w-4 h-4" /> Scan to Pay
+                            </button>
+                            <button onClick={() => window.location.href = '/customer/qr'} className="px-6 py-3 bg-white/10 text-white rounded-2xl font-bold text-sm backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all flex items-center gap-2">
+                                <QrCode className="w-4 h-4" /> Receive Money
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Loan Status Card */}
-                <div className="rounded-3xl bg-slate-900 border border-slate-800 p-8 flex flex-col justify-between">
-                    <div>
-                        <h4 className="text-lg font-bold mb-4">Loan Requests</h4>
+                <div className="grid md:grid-cols-2 gap-8">
+                    {/* Recent Transactions */}
+                    <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                            <h4 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-blue-600" /> Recent Activity
+                            </h4>
+                            <button onClick={() => window.location.href = '/customer/transactions'} className="text-xs font-bold text-blue-600 hover:underline">View All</button>
+                        </div>
+
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-800/40">
-                                <div>
-                                    <p className="font-semibold text-slate-400">No pending loans</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <button className="w-full mt-6 py-3 border border-slate-700 rounded-2xl text-sm font-medium hover:bg-slate-800 transition-all text-slate-400">View All Applications</button>
-                </div>
-
-                {/* Recent Transactions */}
-                <div className="lg:col-span-3 mt-4">
-                    <h4 className="text-xl font-bold mb-6 px-2">Recent Activity</h4>
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
-                        <div className="divide-y divide-slate-800">
-                            {transactions.length > 0 ? transactions.map((tx: any) => (
-                                <div key={tx.id} className="flex items-center justify-between p-6 hover:bg-slate-800/30 transition-all cursor-pointer group">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                                            {tx.type === 'CREDIT' ? '💰' : '💳'}
+                            {transactions.length > 0 ? (
+                                transactions.map((t: any) => (
+                                    <div key={t.id} className="flex items-center justify-between group p-3 rounded-2xl hover:bg-slate-50 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                {t.type === 'CREDIT' ? <ArrowDownLeft className="w-6 h-6 stroke-[3]" /> : <ArrowUpRight className="w-6 h-6 stroke-[3]" />}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-900 text-sm truncate max-w-[120px]">{t.type === 'CREDIT' ? 'Received' : 'Paid'}</p>
+                                                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                                                    {new Date(t.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-bold">{tx.description || tx.source_type}</p>
-                                            <p className="text-sm text-slate-500">{new Date(tx.created_at).toLocaleString()}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className={`font-bold ${tx.type === 'DEBIT' ? 'text-red-400' : 'text-emerald-400'}`}>
-                                            {tx.type === 'DEBIT' ? '-' : '+'}₹{parseFloat(tx.amount).toLocaleString('en-IN')}
+                                        <p className={`font-black text-sm ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                            {t.type === 'CREDIT' ? '+' : '-'}₹{parseFloat(t.amount).toLocaleString('en-IN')}
                                         </p>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-12">
+                                    <p className="text-slate-400 text-sm font-medium">No transactions yet</p>
                                 </div>
-                            )) : (
-                                <div className="p-8 text-center text-slate-500">No transactions found.</div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Quick Features */}
+                    <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
+                        <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                            <Smartphone className="w-5 h-5 text-blue-600" /> Quick Actions
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-6 rounded-2xl bg-blue-50 border border-blue-100 hover:border-blue-300 transition-colors cursor-pointer group" onClick={() => window.location.href = '/customer/pay'}>
+                                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform">
+                                    <Smartphone className="w-5 h-5" />
+                                </div>
+                                <h5 className="font-bold text-slate-900">Scan QR</h5>
+                                <p className="text-xs text-slate-500 mt-1">Pay friends or shops</p>
+                            </div>
+                            <div className="p-6 rounded-2xl bg-purple-50 border border-purple-100 hover:border-purple-300 transition-colors cursor-pointer group" onClick={() => window.location.href = '/customer/qr'}>
+                                <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform">
+                                    <QrCode className="w-5 h-5" />
+                                </div>
+                                <h5 className="font-bold text-slate-900">Show QR</h5>
+                                <p className="text-xs text-slate-500 mt-1">Receive payments</p>
+                            </div>
                         </div>
                     </div>
                 </div>

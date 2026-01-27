@@ -1,108 +1,172 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import AdminLayout from './layout';
+import { BadgeCheck, Ban, Clock, TrendingUp, Users, Wallet } from 'lucide-react';
 
 export default function AdminDashboard() {
-    const [pendingLoans, setPendingLoans] = useState([]);
+    const [stats, setStats] = useState({ totalUsers: 0, systemBalance: 0, pendingCount: 0 });
+    const [pendingTx, setPendingTx] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchPending = async () => {
+    const loadData = async () => {
         try {
-            const data = await apiFetch('/admin/loans');
-            setPendingLoans(data);
-        } catch (err) {
-            console.error(err);
+            const [usersRes, pendingRes] = await Promise.all([
+                apiFetch('/admin/users'),
+                apiFetch('/admin/funds/pending')
+            ]);
+
+            const users = await usersRes.json();
+            const pending = await pendingRes.json();
+
+            // Calculate stats
+            const totalBalance = users.reduce((acc: number, user: any) => acc + parseFloat(user.wallet_balance), 0);
+
+            setStats({
+                totalUsers: users.length,
+                systemBalance: totalBalance,
+                pendingCount: pending.length
+            });
+            setPendingTx(pending);
+        } catch (error) {
+            console.error('Failed to load admin data', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchPending();
+        loadData();
     }, []);
 
     const handleApprove = async (id: number) => {
+        if (!confirm('Approve this transaction?')) return;
         try {
-            await apiFetch(`/admin/loans/${id}/approve`, { method: 'POST' });
-            alert('Loan Approved & Disbursed');
-            fetchPending();
-        } catch (err: any) {
-            alert(err.message);
+            const res = await apiFetch(`/admin/funds/${id}/approve`, { method: 'POST' });
+            if (res.ok) {
+                alert('Funds Approved!');
+                loadData();
+            }
+        } catch (e) {
+            alert('Approval failed');
         }
     };
 
-    const navItems = [
-        { label: 'System Health', href: '/admin', icon: '🛡️' },
-        { label: 'Loan Approvals', href: '/admin/loans', icon: '📝' },
-        { label: 'Merchant Payouts', href: '/admin/payouts', icon: '💸' },
-        { label: 'Audit Logs', href: '/admin/logs', icon: '📋' },
-    ];
+    const handleReject = async (id: number) => {
+        if (!confirm('Reject this transaction?')) return;
+        try {
+            const res = await apiFetch(`/admin/funds/${id}/reject`, { method: 'POST' });
+            if (res.ok) {
+                alert('Request Rejected');
+                loadData();
+            }
+        } catch (e) {
+            alert('Rejection failed');
+        }
+    };
 
     return (
-        <DashboardLayout title="System Administration" navItems={navItems}>
-            <div className="space-y-8">
-                {/* Global Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800">
-                        <p className="text-slate-500 text-xs font-bold uppercase mb-2">System Credit Exposure</p>
-                        <h4 className="text-2xl font-black text-white">₹0</h4>
+        <AdminLayout title="System Overview">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
+                        <Users className="w-7 h-7" />
                     </div>
-                    <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800">
-                        <p className="text-slate-500 text-xs font-bold uppercase mb-2">Active Defaults</p>
-                        <h4 className="text-2xl font-black text-red-500">0.0%</h4>
-                    </div>
-                    <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800">
-                        <p className="text-slate-500 text-xs font-bold uppercase mb-2">Daily Volume</p>
-                        <h4 className="text-2xl font-black">₹0</h4>
-                    </div>
-                    <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800">
-                        <p className="text-slate-500 text-xs font-bold uppercase mb-2">New Applications</p>
-                        <h4 className="text-2xl font-black text-sky-400">{pendingLoans.length}</h4>
+                    <div>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Users</p>
+                        <p className="text-3xl font-black text-slate-900">{stats.totalUsers}</p>
                     </div>
                 </div>
 
-                {/* Action Queues */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Loan Queue */}
-                    <div className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden">
-                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                            <h4 className="font-bold">Pending Loans</h4>
-                            <span className="bg-sky-500 text-[10px] font-black px-2 py-1 rounded text-white uppercase">Urgent</span>
-                        </div>
-                        <div className="divide-y divide-slate-800">
-                            {pendingLoans.length > 0 ? pendingLoans.map((loan: any) => (
-                                <div key={loan.id} className="p-6 flex items-center justify-between hover:bg-white/5 transition-all">
-                                    <div>
-                                        <p className="font-bold">{loan.user?.name} <span className="text-slate-500 text-xs font-normal">#UID{loan.user_id}</span></p>
-                                        <p className="text-xl font-black mt-1">₹{parseFloat(loan.amount).toLocaleString('en-IN')}</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleApprove(loan.id)}
-                                            className="px-4 py-2 bg-emerald-600 rounded-xl text-xs font-bold hover:bg-emerald-500 transition-colors"
-                                        >
-                                            Approve
-                                        </button>
-                                        <button className="px-4 py-2 bg-red-600/20 text-red-500 border border-red-500/20 rounded-xl text-xs font-bold hover:bg-red-600 hover:text-white transition-all">Reject</button>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="p-12 text-center text-slate-500 italic">No pending applications for review.</div>
-                            )}
-                        </div>
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
+                        <Wallet className="w-7 h-7" />
                     </div>
+                    <div>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">System Float</p>
+                        <p className="text-3xl font-black text-slate-900">₹{stats.systemBalance.toLocaleString('en-IN')}</p>
+                    </div>
+                </div>
 
-                    {/* Payout Queue (Placeholder) */}
-                    <div className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden opacity-50">
-                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                            <h4 className="font-bold">Withdrawal Requests</h4>
-                        </div>
-                        <div className="p-12 text-center text-slate-500 italic">No merchant withdrawals pending.</div>
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center">
+                        <Clock className="w-7 h-7" />
+                    </div>
+                    <div>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Pending Approvals</p>
+                        <p className="text-3xl font-black text-slate-900">{stats.pendingCount}</p>
                     </div>
                 </div>
             </div>
-        </DashboardLayout>
+
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                <div className="p-8 border-b border-slate-100 flex justify-between items-center">
+                    <div>
+                        <h3 className="text-xl font-black text-slate-900">Pending Fund Approvals</h3>
+                        <p className="text-slate-500 font-medium text-sm mt-1">Review and approve manual fund additions.</p>
+                    </div>
+                    {loading && <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full" />}
+                </div>
+
+                {pendingTx.length === 0 ? (
+                    <div className="p-12 text-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <BadgeCheck className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <p className="text-slate-500 font-bold">No pending approvals</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-50/50">
+                                <tr>
+                                    <th className="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">User</th>
+                                    <th className="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
+                                    <th className="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
+                                    <th className="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {pendingTx.map((tx: any) => (
+                                    <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <td className="p-6">
+                                            <p className="font-bold text-slate-900">{tx.user_name}</p>
+                                            <p className="text-xs font-medium text-slate-500">{tx.user_mobile}</p>
+                                        </td>
+                                        <td className="p-6">
+                                            <span className="font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">
+                                                +₹{parseFloat(tx.amount).toLocaleString('en-IN')}
+                                            </span>
+                                        </td>
+                                        <td className="p-6 font-medium text-slate-500 text-sm">
+                                            {new Date(tx.created_at).toLocaleString()}
+                                        </td>
+                                        <td className="p-6 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleReject(tx.id)}
+                                                    className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                                    title="Reject"
+                                                >
+                                                    <Ban className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleApprove(tx.id)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+                                                >
+                                                    <BadgeCheck className="w-4 h-4" />
+                                                    Approve
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        </AdminLayout>
     );
 }

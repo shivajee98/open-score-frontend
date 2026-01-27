@@ -55,77 +55,98 @@ export default function DashboardLayout({
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-screen bg-[#020617] text-slate-100 overflow-hidden font-sans">
-            {/* Desktop Sidebar (Hidden on Mobile) */}
-            <aside className="w-64 border-r border-slate-800/50 bg-[#0f172a]/30 backdrop-blur-xl hidden md:flex flex-col">
-                <div className="p-6">
-                    <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">CreditLoop</h1>
+        <div className="flex flex-col md:flex-row h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans selection:bg-blue-100 selection:text-blue-900">
+            {/* Desktop Sidebar */}
+            <aside className="w-72 border-r border-slate-200 bg-white hidden md:flex flex-col shadow-xl z-20">
+                <div className="p-8">
+                    <div className="flex items-center gap-3 mb-1">
+                        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-xl">O</div>
+                        <h1 className="text-2xl font-black tracking-tight text-slate-900">OpenScore</h1>
+                    </div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-11">Financial Ecosystem</p>
                 </div>
-                <nav className="flex-1 px-4 space-y-1">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/50 transition-all text-slate-400 hover:text-white group"
-                        >
-                            <span className="group-hover:text-sky-400 transition-colors">{item.icon}</span>
-                            <span className="font-bold text-sm tracking-tight">{item.label}</span>
-                        </Link>
-                    ))}
+
+                <nav className="flex-1 px-4 space-y-2">
+                    {navItems.map((item) => {
+                        const Icon = item.icon as any; // Expecting Lucide component or node
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className="flex items-center gap-4 px-6 py-4 rounded-2xl hover:bg-slate-50 transition-all text-slate-500 hover:text-blue-600 group font-bold"
+                            >
+                                <span className="group-hover:scale-110 transition-transform text-xl">
+                                    {typeof item.icon === 'string' ? item.icon : item.icon}
+                                </span>
+                                <span className="text-sm">{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </nav>
+
+                <div className="p-6 border-t border-slate-100">
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 transition-all text-slate-400 hover:text-red-400 group mt-4 text-left"
+                        className="w-full flex items-center gap-3 px-6 py-4 rounded-2xl hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all group font-bold mb-4"
                     >
-                        <span>🚪</span>
-                        <span className="font-bold text-sm tracking-tight">Logout</span>
+                        <span>🛑</span>
+                        <span className="text-sm">Log Out</span>
                     </button>
-                </nav>
-                <div className="p-4 border-t border-slate-800/50">
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800/20 border border-slate-700/30">
-                        <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400 font-black text-xs">
+
+                    <Link href="/profile" className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer group">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-sm group-hover:scale-110 transition-transform">
                             {user?.name?.[0] || 'U'}
                         </div>
                         <div className="flex-1 overflow-hidden">
-                            <p className="text-xs font-black truncate">{user?.name || 'System User'}</p>
-                            <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase truncate">{user?.role || 'Guest'}</p>
+                            <p className="text-sm font-bold truncate text-slate-900">{user?.name || 'User'}</p>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">{user?.vpa || user?.mobile_number || 'Guest'}</p>
                         </div>
-                    </div>
+                    </Link>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
-            <main className="flex-1 flex flex-col overflow-hidden relative pb-[4.5rem] md:pb-0">
-                <header className="px-6 py-6 md:py-8 flex justify-between items-center border-b border-slate-800/50 md:border-none bg-[#020617]/50 backdrop-blur-md md:bg-transparent sticky top-0 z-40">
-                    <h2 className="text-xl md:text-3xl font-black tracking-tighter">{title}</h2>
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col overflow-hidden relative pb-[5.5rem] md:pb-0 bg-slate-50">
+                <header className="px-6 py-4 md:py-6 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
+                    <h2 className="text-xl md:text-3xl font-black tracking-tight text-slate-900">{title}</h2>
                     <div className="flex items-center gap-3 md:hidden">
-                        <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400 font-black text-xs">
+                        <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-sm border border-blue-200">
                             {user?.name?.[0] || 'U'}
                         </div>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar scroll-smooth">
-                    {user ? children : <div className="p-8 text-center text-slate-500 uppercase tracking-widest font-black text-xs animate-pulse">Authenticating Session...</div>}
+                <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar scroll-smooth">
+                    {user ? children : (
+                        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Verifying Session...</p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Mobile Bottom Navigation (Visible only on Mobile) */}
-                <div className="fixed bottom-0 left-0 right-0 bg-[#0f172a]/90 backdrop-blur-2xl border-t border-slate-800/50 md:hidden z-50 px-2 pb-6 pt-3 flex justify-around items-center">
+                {/* Mobile Bottom Nav */}
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 md:hidden z-50 px-6 pb-6 pt-4 flex justify-between items-end shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
                     {navItems.map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="flex flex-col items-center gap-1 px-3 min-w-[50px]"
+                            className="flex flex-col items-center gap-1.5 min-w-[60px] group"
                         >
-                            <span className="text-xl">{item.icon}</span>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{item.label.split(' ')[0]}</span>
+                            <div className="p-2 rounded-xl group-hover:bg-blue-50 transition-colors text-slate-400 group-hover:text-blue-600">
+                                <span className="text-2xl">{typeof item.icon === 'string' ? item.icon : item.icon}</span>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 group-hover:text-slate-900">{item.label.split(' ')[0]}</span>
                         </Link>
                     ))}
                     <button
                         onClick={handleLogout}
-                        className="flex flex-col items-center gap-1 px-3 min-w-[50px]"
+                        className="flex flex-col items-center gap-1.5 min-w-[60px] group"
                     >
-                        <span className="text-xl">🚪</span>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-red-500/70">Exit</span>
+                        <div className="p-2 rounded-xl group-hover:bg-red-50 transition-colors text-slate-400 group-hover:text-red-500">
+                            <span className="text-2xl">🛑</span>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-red-400/70 group-hover:text-red-600">Exit</span>
                     </button>
                 </div>
             </main>
