@@ -107,26 +107,6 @@ export default function Home() {
     }
   };
 
-  const handleRegisterWithRole = async (selectedRole: 'CUSTOMER' | 'MERCHANT') => {
-    setLoading(true);
-    setError('');
-    try {
-      const authData = await apiFetch('/auth/verify', {
-        method: 'POST',
-        body: JSON.stringify({ mobile_number: mobile, otp, role: selectedRole }),
-      });
-
-      localStorage.setItem('token', authData.access_token);
-      localStorage.setItem('user', JSON.stringify(authData.user));
-
-      redirectUser(authData.user);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRegister = async () => {
     if (!role) return;
     setLoading(true);
@@ -256,7 +236,8 @@ export default function Home() {
                 <button
                   key={item.id}
                   onClick={() => {
-                    handleRegisterWithRole(item.id as any);
+                    setRole(item.id as any);
+                    setStep(2); // Go to details after role
                   }}
                   className={`w-full p-5 rounded-2xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
                 >
