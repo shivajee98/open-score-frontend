@@ -29,8 +29,8 @@ export interface LoanPlan {
 // --- Configuration ---
 
 export const LOAN_PLANS: Record<number, LoanPlan> = {
-    20000: {
-        amount: 20000,
+    30000: {
+        amount: 30000,
         title: "Micro Start",
         description: "Quick funding for small needs",
         tenures: [3],
