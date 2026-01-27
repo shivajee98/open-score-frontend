@@ -32,6 +32,13 @@ export default function Home() {
         if (token && userStr) {
           const user = JSON.parse(userStr);
           await minSplashTime;
+
+          // Check if onboarding is required
+          if (!user.is_onboarded) {
+            router.push('/auth/onboarding');
+            return;
+          }
+
           redirectUser(user);
         } else {
           throw new Error('No session');
@@ -40,6 +47,9 @@ export default function Home() {
         await minSplashTime;
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        // Clear cookies as well
+        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
         setShowSplash(false);
       }
     };
@@ -54,6 +64,18 @@ export default function Home() {
         token: localStorage.getItem('token'),
         user: user
       }));
+    }
+
+    // Set cookies for middleware
+    const token = localStorage.getItem('token');
+    if (token) {
+      document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
+      document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=86400; SameSite=Lax`;
+    }
+
+    if (!user.is_onboarded) {
+      router.push('/auth/onboarding');
+      return;
     }
 
     if (user.role === 'ADMIN') router.push('/admin');
@@ -96,8 +118,12 @@ export default function Home() {
         localStorage.setItem('user', JSON.stringify(data.user));
 
         if (data.onboarding_status === 'REQUIRED') {
-          // Edge case handling if needed
+          data.user.is_onboarded = false;
+        } else {
+          data.user.is_onboarded = true;
         }
+
+        localStorage.setItem('user', JSON.stringify(data.user));
         redirectUser(data.user);
       }
     } catch (err: any) {

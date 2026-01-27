@@ -3,19 +3,36 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { Check, User, Briefcase, Mail, ArrowRight } from 'lucide-react';
+import { User, Briefcase, Mail, ArrowRight } from 'lucide-react';
 
 export default function Onboarding() {
-    const [step, setStep] = useState(1);
     const [role, setRole] = useState('CUSTOMER');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [businessName, setBusinessName] = useState('');
     const [errors, setErrors] = useState<any>({});
     const [loading, setLoading] = useState(false);
+    const [checkingAuth, setCheckingAuth] = useState(true);
 
-    // We assume token is already set in localStorage from AuthController.verifyOtp logic
     const router = useRouter();
+
+    useState(() => {
+        if (typeof window !== 'undefined') {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                setRole(user.role || 'CUSTOMER');
+                if (user.is_onboarded) {
+                    if (user.role === 'CUSTOMER') router.push('/customer');
+                    else if (user.role === 'MERCHANT') router.push('/merchant');
+                    else router.push('/admin');
+                }
+            } else {
+                router.push('/');
+            }
+            setCheckingAuth(false);
+        }
+    });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,7 +50,15 @@ export default function Onboarding() {
             });
 
             // On success, update stored user and redirect
-            localStorage.setItem('user', JSON.stringify(res.user));
+            const updatedUser = { ...res.user, is_onboarded: true };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+
+            // Update cookies for middleware
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
+                document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/; max-age=86400; SameSite=Lax`;
+            }
 
             if (role === 'CUSTOMER') router.push('/customer');
             else if (role === 'MERCHANT') router.push('/merchant');
@@ -44,6 +69,8 @@ export default function Onboarding() {
             setLoading(false);
         }
     };
+
+    if (checkingAuth) return null;
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -97,8 +124,6 @@ export default function Onboarding() {
                                 </div>
                             </div>
 
-                            {/* Role Toggle for context (though effectively determined at OTP, we can let them confirm or add business details if merchant) */}
-                            {/* For simplicity we trust the role from previous step, but let's assume we need business name if Merchant */}
                             {role === 'MERCHANT' && (
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Business Name</label>
