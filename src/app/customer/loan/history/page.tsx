@@ -68,7 +68,11 @@ export default function LoanHistory() {
             ) : loans.length > 0 ? (
                 <div className="space-y-4">
                     {loans.map((loan) => (
-                        <div key={loan.id} className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-all">
+                        <div
+                            key={loan.id}
+                            onClick={() => router.push(`/customer/loan/status/${loan.id}`)}
+                            className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-all cursor-pointer active:scale-[0.98]"
+                        >
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${loan.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'
