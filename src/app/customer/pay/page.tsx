@@ -125,15 +125,21 @@ export default function CustomerPay() {
         setPinModalOpen(false);
         setLoading(true);
         setError('');
+
         try {
-            const res = await apiFetch('/payment/pay', {
-                method: 'POST',
-                body: JSON.stringify({
-                    payee_wallet_uuid: payee.payee_wallet_uuid,
-                    amount: parseFloat(amount),
-                    pin: pin
-                })
-            });
+            // Artificial delay to prevent button flickering and provide feedback
+            const [res] = await Promise.all([
+                apiFetch('/payment/pay', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        payee_wallet_uuid: payee.payee_wallet_uuid,
+                        amount: parseFloat(amount),
+                        pin: pin
+                    })
+                }),
+                new Promise(resolve => setTimeout(resolve, 1500)) // Minimum 1.5s loading
+            ]);
+
             setSuccessData({
                 amount: amount,
                 payeeName: payee.name,
@@ -141,7 +147,6 @@ export default function CustomerPay() {
             });
         } catch (err: any) {
             setError(err.message);
-            // Re-open if incorrect PIN? For now just show error
             toast.error(err.message || 'Payment failed');
         } finally {
             setLoading(false);
@@ -237,7 +242,7 @@ export default function CustomerPay() {
                             <button
                                 onClick={handleInitiatePay}
                                 disabled={loading || !amount}
-                                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full h-[4.5rem] bg-blue-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? 'Processing...' : 'Proceed to Pay'}
                             </button>
