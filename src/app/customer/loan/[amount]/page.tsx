@@ -94,7 +94,7 @@ export default function LoanDetail() {
     if (!plan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6"><div className="animate-pulse w-full max-w-md h-96 bg-slate-200 rounded-3xl"></div></div>;
 
     const currentOptions = plan.payoutOptions(tenure);
-    const { total, breakdown, count } = payout ? calculateRepayment(plan.amount, tenure, payout) : { total: 0, breakdown: '-', count: 0 };
+    const { total, breakdown, count, emi } = payout ? calculateRepayment(plan.amount, tenure, payout) : { total: 0, breakdown: '-', count: 0, emi: 0 };
 
     // Calculate Breakdown Details
     // Principal: plan.amount
@@ -153,13 +153,30 @@ export default function LoanDetail() {
                                     <span className="text-slate-500 font-medium">Principal Amount</span>
                                     <span className="font-bold text-slate-900">₹ {plan.amount.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500 font-medium">Installment Amount</span>
-                                    <span className="font-bold text-emerald-600">{breakdown}</span>
+
+                                <div className="flex justify-between items-start text-sm pt-4 border-t border-slate-50 border-dashed">
+                                    <span className="text-slate-500 font-medium mt-1">Installment Amount</span>
+                                    <div className="text-right">
+                                        <div className="font-black text-xl text-slate-900">
+                                            ₹ {emi.toLocaleString()}
+                                            <span className="text-xs font-bold text-slate-400 ml-1 uppercase">/ installment</span>
+                                        </div>
+                                        {payout && (
+                                            <div className="text-xs font-bold text-emerald-600 mt-1 flex flex-col items-end">
+                                                {payout.interestRate !== undefined && (
+                                                    <span>{payout.interestRate === 0 ? '0% Interest Applied' : `${payout.interestRate}% Interest Applied`}</span>
+                                                )}
+                                                {payout.cashback && (
+                                                    <span>Earn ₹{payout.cashback} Cashback</span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex justify-between text-sm pt-2 border-t border-slate-50">
+
+                                <div className="flex justify-between text-sm pt-4 border-t border-slate-100">
                                     <span className="text-slate-900 font-black">Total Repayment</span>
-                                    <span className="font-black text-emerald-600">₹ {total.toLocaleString()}</span>
+                                    <span className="font-black text-emerald-600 text-lg">₹ {total.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -200,6 +217,6 @@ export default function LoanDetail() {
             </div>
 
             <LoadingOverlay isVisible={showOverlay} />
-        </div>
+        </div >
     );
 }
