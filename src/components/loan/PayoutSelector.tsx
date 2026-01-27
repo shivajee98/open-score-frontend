@@ -58,7 +58,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                             </span>
                                         )}
                                         {option.cashback && (
-                                            <span className="text-emerald-600 font-semibold">Wallet Cashback ₹{option.cashback}</span>
+                                            <span className="text-emerald-600">Wallet Cashback ₹{option.cashback}</span>
                                         )}
                                         {!option.cashback && option.interestRate === undefined && (
                                             <span>Total ₹{option.fixedAmount}</span>
