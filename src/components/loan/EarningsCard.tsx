@@ -6,10 +6,14 @@ interface EarningsCardProps {
     plan: LoanPlan;
     tenure: TenureMonths;
     payout: PayoutOption | null;
+    isRepayment?: boolean;
+    totalRepayment?: number;
 }
 
-export default function EarningsCard({ plan, tenure, payout }: EarningsCardProps) {
-    const { total, breakdown } = payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-' };
+export default function EarningsCard({ plan, tenure, payout, isRepayment, totalRepayment }: EarningsCardProps) {
+    const { total, breakdown } = isRepayment && totalRepayment !== undefined
+        ? { total: totalRepayment, breakdown: payout ? `₹${payout.fixedAmount} x ${Math.round(totalRepayment / (payout.fixedAmount || 1))} Payments` : '-' }
+        : (payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-' });
 
     return (
         <div className="bg-slate-900 text-white rounded-[2rem] p-6 shadow-xl relative mb-8 border border-slate-800 overflow-hidden">

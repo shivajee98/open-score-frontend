@@ -30,9 +30,13 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                     : "border-slate-100 bg-white hover:border-slate-200"
                             )}
                         >
-                            {option.isBestValue && (
-                                <div className="absolute -top-3 left-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black uppercase px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
-                                    <Flame size={10} fill="white" /> Best Value
+                            {(option.isBestValue || option.val) && (
+                                <div className={cn(
+                                    "absolute -top-3 left-4 text-white text-[10px] font-black uppercase px-2 py-1 rounded-full shadow-lg flex items-center gap-1",
+                                    option.isBestValue ? "bg-gradient-to-r from-orange-500 to-red-500" : "bg-gradient-to-r from-blue-500 to-indigo-500"
+                                )}>
+                                    {option.isBestValue && <Flame size={10} fill="white" />}
+                                    {option.val || (option.isBestValue ? 'Best Value' : '')}
                                 </div>
                             )}
 
@@ -57,7 +61,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                 <p className={cn("font-black text-lg", isSelected ? "text-emerald-600" : "text-slate-900")}>
                                     ₹ {total.toLocaleString('en-IN')}
                                 </p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Earn</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Repay</p>
                             </div>
                         </div>
                     );

@@ -22,7 +22,8 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     });
 
     if (response.status === 401 && typeof window !== 'undefined') {
-        // Optional: Redirect to login
+        localStorage.removeItem('token');
+        window.location.href = '/login';
     }
 
     if (!response.ok) {

@@ -8,9 +8,9 @@ import {
     LOAN_PLANS,
     TenureMonths,
     PayoutOption,
-    calculateEarnings
+    calculateRepayment
 } from '@/lib/loanUtils';
-import EarningsCard from '@/components/loan/EarningsCard';
+import RepaymentCard from '@/components/loan/EarningsCard'; // We'll rename the component later or alias it for now
 import TenureSelector from '@/components/loan/TenureSelector';
 import PayoutSelector from '@/components/loan/PayoutSelector';
 import { toast } from '@/components/ui/Toast';
@@ -87,7 +87,12 @@ export default function LoanDetail() {
     if (!plan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6"><div className="animate-pulse w-full max-w-md h-96 bg-slate-200 rounded-3xl"></div></div>;
 
     const currentOptions = plan.payoutOptions(tenure);
-    const { total, breakdown } = payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-' };
+    const { total, breakdown, count } = payout ? calculateRepayment(plan.amount, tenure, payout) : { total: 0, breakdown: '-', count: 0 };
+
+    // Calculate Breakdown Details
+    // Principal: plan.amount
+    // Interest + Fees: Total - Principal
+    const interest = total > plan.amount ? total - plan.amount : 0;
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-32">
@@ -99,7 +104,9 @@ export default function LoanDetail() {
             </div>
 
             <div className="px-6 -mt-20">
-                <EarningsCard plan={plan} tenure={tenure} payout={payout} />
+                {/* We need to update EarningsCard to handle Repayment props or just pass Plan */}
+                {/* Ideally we should rename EarningsCard to LoanSummaryCard. For now let's pass new props if component supports, or we update component next. */}
+                <RepaymentCard plan={plan} tenure={tenure} payout={payout} isRepayment={true} totalRepayment={total} />
 
                 <TenureSelector
                     options={plan.tenures}
@@ -121,7 +128,7 @@ export default function LoanDetail() {
                         onClick={() => setIsBreakdownOpen(!isBreakdownOpen)}
                         className="w-full flex justify-between items-center p-6 text-left active:bg-slate-50 transition-colors"
                     >
-                        <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Earnings Breakdown</span>
+                        <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Detailed EMI Payment</span>
                         {isBreakdownOpen ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
                     </button>
 
@@ -137,7 +144,7 @@ export default function LoanDetail() {
                                     <span className="font-bold text-emerald-600">{breakdown}</span>
                                 </div>
                                 <div className="flex justify-between text-sm pt-2 border-t border-slate-50">
-                                    <span className="text-slate-900 font-black">Total Expected</span>
+                                    <span className="text-slate-900 font-black">Total Repayment</span>
                                     <span className="font-black text-emerald-600">₹ {total.toLocaleString()}</span>
                                 </div>
                             </div>

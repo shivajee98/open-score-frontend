@@ -12,9 +12,10 @@ export interface PayoutOption {
     id: string;
     label: string; // e.g. "Daily"
     frequency: PayoutFrequency;
-    returnPercentage?: number; // For 50k loan
-    fixedAmount?: number;      // For 20k loan
+    returnPercentage?: number; // Deprecated in favor of calculation logic, but kept for type compat if needed
+    fixedAmount?: number;      // Fixed EMI amount
     isBestValue?: boolean;
+    val?: string; // e.g. "Best Value", "Recommended"
 }
 
 export interface LoanPlan {
@@ -36,33 +37,38 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
         tenures: [3],
         color: "from-emerald-500 to-teal-600",
         payoutOptions: (tenure) => [
-            { id: 'daily', label: 'Daily', frequency: 'Daily', fixedAmount: 25 },
-            { id: '7days', label: 'Every 7 Days', frequency: '7 Days', fixedAmount: 30 },
-            { id: '10days', label: 'Every 10 Days', frequency: '10 Days', fixedAmount: 40 },
-            { id: 'monthly', label: 'Monthly', frequency: 'Monthly', fixedAmount: 50, isBestValue: true },
+            // Loan: 30k. Tenure: 3 months (~90 days).
+            // Total Repayment Target: ~36,000 (20% flat interest)
+            // Daily: 36000 / 90 = 400
+            // Weekly: 36000 / 12 = 3000
+            // 10 Days: 36000 / 9 = 4000
+            // Monthly: 36000 / 3 = 12000
+            { id: 'daily', label: 'Daily', frequency: 'Daily', fixedAmount: 400, val: 'Recommended' },
+            { id: '7days', label: 'Every 7 Days', frequency: '7 Days', fixedAmount: 3000 },
+            { id: '10days', label: 'Every 10 Days', frequency: '10 Days', fixedAmount: 4000 },
+            { id: 'monthly', label: 'Monthly', frequency: 'Monthly', fixedAmount: 12050, isBestValue: true, val: 'Best Value' },
         ]
     },
     50000: {
         amount: 50000,
         title: "Growth Pro",
-        description: "Expansion capital with high returns",
+        description: "Expansion capital",
         tenures: [3, 6],
         color: "from-blue-600 to-indigo-700",
         payoutOptions: (tenure) => {
+            // Loan: 50k. 
+            // 3 Months Target: ~60k.
+            // 6 Months Target: ~70k.
             if (tenure === 3) {
                 return [
-                    { id: 'daily', label: 'Daily', frequency: 'Daily', returnPercentage: 0 }, // 0% interest? "0% Interest (3 Months)" from previous prompt? 
-                    // Wait, the prompt says "Show payout options dynamically... Percentage return". 
-                    // Prompt example for 50k: "Show payout options... Percentage return".
-                    // Let's assume some mock percentages based on "Best Plan Highlight".
-                    { id: 'daily', label: 'Daily', frequency: 'Daily', returnPercentage: 2 },
-                    { id: 'monthly', label: 'Monthly', frequency: 'Monthly', returnPercentage: 6, isBestValue: true },
+                    { id: 'daily', label: 'Daily', frequency: 'Daily', fixedAmount: 670, val: 'Fast Track' },
+                    { id: 'monthly', label: 'Monthly', frequency: 'Monthly', fixedAmount: 20000, isBestValue: true, val: 'Best Value' },
                 ];
             } else {
                 return [
-                    { id: 'daily', label: 'Daily', frequency: 'Daily', returnPercentage: 3 },
-                    { id: 'monthly', label: 'Monthly', frequency: 'Monthly', returnPercentage: 12, isBestValue: true },
-                    { id: 'halfyearly', label: 'Half Yearly', frequency: 'Half Yearly', returnPercentage: 18 },
+                    { id: 'daily', label: 'Daily', frequency: 'Daily', fixedAmount: 390 },
+                    { id: 'monthly', label: 'Monthly', frequency: 'Monthly', fixedAmount: 11800, isBestValue: true },
+                    { id: 'halfyearly', label: 'Half Yearly', frequency: 'Half Yearly', fixedAmount: 70000 }, // One shot?
                 ];
             }
         }
@@ -71,59 +77,37 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
 
 // --- Utilities ---
 
-export function calculateEarnings(amount: number, tenureMonths: number, option: PayoutOption): { total: number, breakdown: string } {
+export function calculateRepayment(amount: number, tenureMonths: number, option: PayoutOption): { total: number, breakdown: string, count: number } {
+    let count = 0;
+    const days = tenureMonths * 30;
+
+    switch (option.frequency) {
+        case 'Daily': count = days; break;
+        case '7 Days': count = Math.floor(days / 7); break; // ~12
+        case '10 Days': count = Math.floor(days / 10); break; // 9
+        case '15 Days': count = Math.floor(days / 15); break; // 6
+        case 'Monthly': count = tenureMonths; break; // 3
+        case 'Quarterly': count = Math.floor(tenureMonths / 3); break;
+        case 'Half Yearly': count = Math.floor(tenureMonths / 6); break;
+        default: count = 1;
+    }
+
     if (option.fixedAmount) {
-        // Calculation for fixed amount (e.g. 20k plan)
-        // Assume fixedAmount is PER PAYOUT? Or Total?
-        // Prompt says: "Daily -> ₹25". "Monthly -> ₹50". 
-        // Likely per payout?
-        // If Daily: 3 months = ~90 days. 90 * 25 = 2250.
-        // If Monthly: 3 months = 3 payouts. 3 * 50 = 150. 
-        // Allows earning comparison.
-
-        // Let's approximate days
-        const days = tenureMonths * 30;
-        let count = 0;
-        switch (option.frequency) {
-            case 'Daily': count = days; break;
-            case '7 Days': count = Math.floor(days / 7); break;
-            case '10 Days': count = Math.floor(days / 10); break;
-            case 'Monthly': count = tenureMonths; break;
-            default: count = 1;
-        }
         const total = count * option.fixedAmount;
-        return { total, breakdown: `₹${option.fixedAmount} x ${count} payments` };
+        return {
+            total,
+            breakdown: `₹${option.fixedAmount.toLocaleString()} x ${count}`,
+            count
+        };
     }
 
-    if (option.returnPercentage !== undefined) {
-        // Percentage return
-        // Is it % per month? or flat %?
-        // Prompt says: "6% Monthly", "12% Monthly", "18% Half Yearly".
-        // Let's assume the percentage provided IS the rate for that period? 
-        // Or annualized? 
-        // Let's assume it's "Return %" as flat of principal * occurences?
-        // Example: 6% Monthly = 6% of 50k * 3 months = 3000 * 3 = 9000.
-
-        const principal = amount;
-        let rate = option.returnPercentage;
-        let count = 0;
-
-        // Let's infer count based on frequency and tenure
-        if (option.frequency.includes('Monthly')) count = tenureMonths;
-        else if (option.frequency === 'Daily') count = tenureMonths * 30;
-        else if (option.frequency === 'Half Yearly') count = tenureMonths / 6;
-        else count = 1; // Default
-
-        // If rate is monthly, we multiply by count?
-        // Let's stick to the prompt's implied logic.
-        const earningsPerCycle = (principal * rate) / 100;
-        const total = earningsPerCycle * count;
-
-        return { total, breakdown: `${rate}% of ₹${principal} x ${count} cycles` };
-    }
-
-    return { total: 0, breakdown: '' };
+    // Fallback if no fixed amount (shouldn't happen with new config)
+    return { total: 0, breakdown: '-', count: 0 };
 }
+
+// Deprecated: Alias for backward compatibility during refactor if needed
+export const calculateEarnings = calculateRepayment;
+
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
