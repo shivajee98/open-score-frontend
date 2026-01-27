@@ -39,6 +39,9 @@ export default function MerchantPay() {
 
         setTimeout(async () => {
             try {
+                if (!document.getElementById("reader")) {
+                    throw new Error("Scanner element not found");
+                }
                 const instance = new Html5Qrcode("reader");
                 setScannerInstance(instance);
                 await instance.start(
@@ -49,11 +52,16 @@ export default function MerchantPay() {
                 );
             } catch (err: any) {
                 console.error("Scanner Error:", err);
-                setError("Camera access user permission denied.");
+                const errorMessage = err?.name === 'NotAllowedError'
+                    ? "Camera permission denied"
+                    : (err?.message || "Failed to start camera");
+
+                toast.error(errorMessage);
+                setError(errorMessage);
                 setScanning(false);
                 setScannerInstance(null);
             }
-        }, 100);
+        }, 300); // Increased timeout to ensure DOM render
     };
 
     const stopScanner = async () => {
