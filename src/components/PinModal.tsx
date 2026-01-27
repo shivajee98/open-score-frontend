@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, ShieldCheck, Lock } from 'lucide-react';
+import { X, Lock, Delete, ShieldCheck } from 'lucide-react';
+import { toast } from '@/components/ui/Toast';
 
 interface PinModalProps {
     isOpen: boolean;
@@ -53,7 +54,7 @@ export default function PinModal({ isOpen, title = 'Enter Wallet PIN', mode = 'V
                     if (fullPin === pin.join('')) {
                         onComplete(fullPin);
                     } else {
-                        alert("PINs do not match. Try again.");
+                        toast.error("PINs do not match. Try again."); // Replaced alert with toast.error
                         setConfirmPin(['', '', '', '', '', '']);
                         inputRefs.current[0]?.focus();
                     }

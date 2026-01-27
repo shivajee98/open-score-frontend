@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PinModal from '@/components/PinModal';
 import { Home, Smartphone, QrCode, Receipt, TrendingUp, CreditCard, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { toast } from '@/components/ui/Toast';
 
 export default function CustomerDashboard() {
     const [balance, setBalance] = useState(0);

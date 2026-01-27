@@ -1,6 +1,8 @@
 'use client';
 
-import { X, CheckCircle, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { X, Share2, Download, CheckCircle, Clock, Ban, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { toast } from '@/components/ui/Toast';
 
 interface TransactionDetailModalProps {
     isOpen: boolean;
@@ -67,27 +69,26 @@ export default function TransactionDetailModal({ isOpen, transaction, onClose }:
                                 const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 } as any);
                                 canvas.toBlob(async (blob) => {
                                     if (!blob) {
-                                        alert('Failed to generate receipt image.');
+                                        toast.error('Failed to generate receipt image.');
                                         return;
                                     }
                                     const file = new File([blob], `receipt_${transaction.id}.png`, { type: 'image/png' });
 
-                                    const shareData = {
-                                        title: 'OpenScore Receipt',
-                                        text: `Transaction Receipt for ₹${transaction.amount}`,
-                                        files: [file]
-                                    };
-
-                                    // Try native share
-                                    if (navigator.canShare && navigator.canShare(shareData)) {
+                                    // Use Web Share API
+                                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
                                         try {
-                                            await navigator.share(shareData);
-                                        } catch (shareError) {
-                                            console.warn('Native share failed, falling back to download', shareError);
-                                            downloadImage(canvas, transaction.id);
+                                            await navigator.share({
+                                                files: [file],
+                                                title: 'OpenScore Receipt',
+                                                text: 'Here is your payment receipt.'
+                                            });
+                                        } catch (error) {
+                                            console.error('Sharing failed', error);
+                                            downloadImage(canvas, transaction.id); // Fallback to download on share failure
                                         }
                                     } else {
-                                        downloadImage(canvas, transaction.id);
+                                        toast.error('Sharing not supported on this device.');
+                                        downloadImage(canvas, transaction.id); // Fallback to download if sharing not supported
                                     }
                                 });
                             } catch (err) {
