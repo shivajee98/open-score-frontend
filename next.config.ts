@@ -4,14 +4,16 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
   async rewrites() {
+    const adminUrl = process.env.ADMIN_PANEL_URL || 'http://127.0.0.1:3001';
+    const backendUrl = process.env.BACKEND_API_URL || 'http://127.0.0.1:8001';
     return [
       {
         source: '/admin/:path*',
-        destination: 'http://127.0.0.1:3001/admin/:path*',
+        destination: `${adminUrl}/admin/:path*`,
       },
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:8001/api/:path*',
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },
