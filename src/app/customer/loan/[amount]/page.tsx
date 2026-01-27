@@ -15,6 +15,7 @@ import TenureSelector from '@/components/loan/TenureSelector';
 import PayoutSelector from '@/components/loan/PayoutSelector';
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 
 export default function LoanDetail() {
     const params = useParams();
@@ -55,6 +56,8 @@ export default function LoanDetail() {
     }, [plan, tenure]);
 
 
+    const [showOverlay, setShowOverlay] = useState(false);
+
     const handleConfirm = async () => {
         if (!payout) return;
 
@@ -74,12 +77,16 @@ export default function LoanDetail() {
             // apiFetch returns JSON data directly, or throws error
             const data = res;
 
-            toast.success('Loan application submitted!');
-            // Backend returns 201 created with loan object
-            router.push(`/customer/loan/status/${data.id || data.loan_id || 'L-10293'}`);
+            // Show animation overlay
+            setShowOverlay(true);
+
+            // Wait 3 seconds before redirecting
+            setTimeout(() => {
+                router.push(`/customer/loan/status/${data.id || data.loan_id || 'L-10293'}`);
+            }, 3000);
+
         } catch (e: any) {
             toast.error(e.message || 'Application failed');
-        } finally {
             setLoading(false);
         }
     };
@@ -191,6 +198,8 @@ export default function LoanDetail() {
                     {loading ? 'Processing...' : `Confirm ₹${plan.amount.toLocaleString()} Loan`}
                 </button>
             </div>
+
+            <LoadingOverlay isVisible={showOverlay} />
         </div>
     );
 }
