@@ -88,19 +88,15 @@ export default function Home() {
       });
 
       if (data.status === 'NEW_USER') {
-        // User not found -> Proceed to Registration Flow
-        setStep(2); // Ask Details
+        // User not found -> Proceed to Role Selection first (User Request)
+        setStep(3);
       } else {
         // User found -> Login
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
         if (data.onboarding_status === 'REQUIRED') {
-          // Edge case: User exists but not onboarded?
-          // We can just redirect to onboarding page if implemented, or handle here.
-          // For simplicity, we assume if they exist they are good or we redirect.
-          // But if we want to support partial onboarding, we might need logic.
-          // Let's assume if they have a token, we redirect.
+          // Edge case handling if needed
         }
         redirectUser(data.user);
       }
@@ -116,7 +112,7 @@ export default function Home() {
     setLoading(true);
     setError('');
     try {
-      // 1. Create User (Verify with Role)
+      // 1. Create User
       const authData = await apiFetch('/auth/verify', {
         method: 'POST',
         body: JSON.stringify({ mobile_number: mobile, otp, role }),
@@ -225,6 +221,41 @@ export default function Home() {
           </div>
         )}
 
+        {step === 3 && (
+          <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-black text-slate-900">Choose Account Type</h3>
+              <p className="text-slate-500 text-sm">How will you use OpenScore?</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {[
+                { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon className="w-5 h-5" /> },
+                { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store className="w-5 h-5" /> },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setRole(item.id as any);
+                    setStep(2); // Go to details after role
+                  }}
+                  className={`w-full p-5 rounded-2xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${role === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-100 text-slate-400'}`}>
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-base">{item.label}</h4>
+                      <p className="text-xs text-slate-500 font-medium">{item.sub}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {step === 2 && (
           <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
             <div className="text-center mb-6">
@@ -256,55 +287,11 @@ export default function Home() {
 
             <button
               onClick={() => {
-                if (name && email.includes('@')) setStep(3);
+                if (name && email.includes('@')) handleRegister();
                 else setError('Please fill all details correctly.');
               }}
+              disabled={loading}
               className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              Continue <ArrowRight size={20} />
-            </button>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-black text-slate-900">Choose Account Type</h3>
-              <p className="text-slate-500 text-sm">How will you use OpenScore?</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon className="w-5 h-5" /> },
-                { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store className="w-5 h-5" /> },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setRole(item.id as any)}
-                  className={`w-full p-5 rounded-2xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${role === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-100 text-slate-400'}`}>
-                      {item.icon}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-base">{item.label}</h4>
-                      <p className="text-xs text-slate-500 font-medium">{item.sub}</p>
-                    </div>
-                  </div>
-                  {role === item.id && (
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-600">
-                      <BadgeCheck className="w-6 h-6 fill-blue-100" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={handleRegister}
-              disabled={loading || !role}
-              className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
             >
               {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Create Account'}
             </button>

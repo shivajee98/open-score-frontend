@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, ArrowUpRight, QrCode } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CustomerHome() {
@@ -30,9 +30,11 @@ export default function CustomerHome() {
                         <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Welcome Back</p>
                         <h1 className="text-2xl font-black">{user?.name || 'Customer'}</h1>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-blue-500 border border-blue-400 flex items-center justify-center font-bold text-lg">
-                        {user?.name?.[0] || 'U'}
-                    </div>
+                    <Link href="/customer/profile">
+                        <div className="w-10 h-10 rounded-full bg-blue-500 border border-blue-400 flex items-center justify-center font-bold text-lg">
+                            {user?.name?.[0] || 'U'}
+                        </div>
+                    </Link>
                 </div>
 
                 {/* Balance Card - Small but Premium */}
@@ -51,10 +53,11 @@ export default function CustomerHome() {
 
             {/* Quick Actions - Overlapping Header */}
             <div className="px-6 -mt-8 mb-8">
-                <div className="bg-white p-4 rounded-2xl shadow-xl shadow-blue-900/5 border border-slate-100 grid grid-cols-3 gap-2">
+                <div className="bg-white p-4 rounded-2xl shadow-xl shadow-blue-900/5 border border-slate-100 grid grid-cols-4 gap-2">
                     {[
                         { label: 'Scan QR', icon: <ScanBarcode size={24} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })) },
                         { label: 'Pay ID', icon: <Send size={24} />, href: '/customer/pay' },
+                        { label: 'Show QR', icon: <QrCode size={24} />, href: '/customer/qr' },
                         { label: 'History', icon: <History size={24} />, href: '/customer/transactions' },
                     ].map((item, i) => (
                         <div key={i} onClick={item.action} className="flex flex-col items-center gap-2 p-2 rounded-xl active:bg-slate-50 transition-colors">
@@ -102,18 +105,14 @@ export default function CustomerHome() {
                         { label: 'Water', icon: <DropletIcon /> },
                         { label: 'More', icon: <GridIcon /> },
                     ].map((item, i) => (
-                        <div key={i} className="flex flex-col items-center gap-2 group relative">
+                        <div key={i} className="flex flex-col items-center gap-2 group relative opacity-50">
                             <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200 transition-all shadow-sm relative overflow-hidden">
                                 {item.icon}
-                                <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="text-[8px] font-black uppercase text-slate-900 -rotate-12 bg-slate-100 px-1 rounded">Soon</span>
-                                </div>
                             </div>
                             <span className="text-[10px] font-bold text-slate-500 group-hover:text-blue-600 text-center">{item.label}</span>
-                            <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                            </span>
+                            <div className="absolute top-10 bg-slate-100 px-1 rounded border border-slate-200">
+                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">Soon</span>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -154,7 +153,7 @@ export default function CustomerHome() {
                         <div className="relative z-10">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 className="text-white font-black text-xl">Instant Personal Loan</h3>
+                                    <h3 className="text-white font-black text-xl">Get 0% Personal Loan</h3>
                                     <p className="text-blue-200 text-xs font-bold uppercase tracking-widest mt-1">Quick Approval</p>
                                 </div>
                                 <div className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/10">
