@@ -35,7 +35,8 @@ export default function Home() {
 
           // Check if onboarding is required
           if (!user.is_onboarded) {
-            router.push('/auth/onboarding');
+            setStep(3);
+            setShowSplash(false);
             return;
           }
 
@@ -119,12 +120,13 @@ export default function Home() {
 
         if (data.onboarding_status === 'REQUIRED') {
           data.user.is_onboarded = false;
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setStep(3); // Go to role selection instead of onboarding page immediately
         } else {
           data.user.is_onboarded = true;
+          localStorage.setItem('user', JSON.stringify(data.user));
+          redirectUser(data.user);
         }
-
-        localStorage.setItem('user', JSON.stringify(data.user));
-        redirectUser(data.user);
       }
     } catch (err: any) {
       setError(err.message);
