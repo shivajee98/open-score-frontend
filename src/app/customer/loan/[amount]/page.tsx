@@ -72,9 +72,12 @@ export default function LoanDetail() {
                 })
             });
 
+
             if (!res.ok) throw new Error('Failed to submit application');
+
+            const data = await res.json();
             toast.success('Loan application submitted!');
-            router.push('/customer/loan/apply'); // Navigate to confirmation or dashboard
+            router.push(`/customer/loan/status/${data.loan_id || 'L-10293'}`); // Redirect to status page with ID
         } catch (e: any) {
             toast.error(e.message || 'Application failed');
         } finally {
