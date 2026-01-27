@@ -1,28 +1,31 @@
 'use client';
-
-const API_BASE_URL = '/api';
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    let token = null;
+    if (typeof window !== 'undefined') {
+        token = localStorage.getItem('access_token');
+    }
 
-    const headers = {
+    const headers: HeadersInit = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
     };
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = endpoint.startsWith('/') ? `${BASE_URL}${endpoint}` : `${BASE_URL}/${endpoint}`;
+
+    const response = await fetch(url, {
         ...options,
         headers,
     });
 
+    if (response.status === 401 && typeof window !== 'undefined') {
+        // Optional: Redirect to login
+    }
+
     if (!response.ok) {
-        if (response.status === 401 && typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/';
-        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || errorData.message || 'API request failed');
     }
