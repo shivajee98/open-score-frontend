@@ -2,22 +2,26 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronRight, Zap, Clock } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Zap, Clock, ShieldCheck } from 'lucide-react';
 import { LOAN_PLANS } from '@/lib/loanUtils';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
 
 export default function LoanList() {
     const router = useRouter();
 
     const [recentLoan, setRecentLoan] = useState<any>(null);
+    const [kycLoan, setKycLoan] = useState<any>(null);
 
     useEffect(() => {
         apiFetch('/loans').then((loans: any[]) => {
             if (loans && loans.length > 0) {
-                // Sort by created_at desc (just in case API doesn't)
                 const sorted = loans.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 setRecentLoan(sorted[0]);
+
+                const pendingKyc = loans.find((l: any) => l.status === 'KYC_SENT');
+                if (pendingKyc) setKycLoan(pendingKyc);
             }
         }).catch(err => {
             console.error("Failed to fetch recent loan activity", err);
@@ -36,6 +40,24 @@ export default function LoanList() {
                 <h1 className="text-3xl font-black text-slate-900 mb-2">Select Loan Plan</h1>
                 <p className="text-slate-500 font-medium text-sm">Choose a plan that fits your business needs.</p>
             </div>
+
+            {/* KYC Alert/Import */}
+            {kycLoan && (
+                <div className="mb-8 animate-in fade-in slide-in-from-top-4">
+                    <Link href={`/customer/loan/status/${kycLoan.id}`}>
+                        <div className="p-5 rounded-[2rem] bg-indigo-50 border-2 border-indigo-100 flex items-center gap-4 active:scale-[0.98] transition-all">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0">
+                                <ShieldCheck size={24} />
+                            </div>
+                            <div>
+                                <h4 className="font-black text-indigo-900 text-sm uppercase tracking-tight">Important Action Needed</h4>
+                                <p className="text-indigo-600 text-[10px] font-bold uppercase tracking-widest leading-tight mt-0.5 opacity-80">Please complete KYC for your existing Loan #{kycLoan.id} before applying for a new one.</p>
+                            </div>
+                            <ChevronRight className="ml-auto text-indigo-400" size={20} />
+                        </div>
+                    </Link>
+                </div>
+            )}
 
             {/* Loan Plans Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8">

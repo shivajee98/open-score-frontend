@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, ArrowUpRight, QrCode } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, ArrowUpRight, QrCode, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CustomerHome() {
@@ -57,8 +57,30 @@ export default function CustomerHome() {
                 </div>
             </div>
 
+            {/* KYC High-Impact Banner */}
+            {kycLoan && (
+                <div className="px-6 -mt-8 mb-6">
+                    <Link href={`/customer/loan/status/${kycLoan.id}`}>
+                        <div className="bg-yellow-400 p-6 rounded-[2rem] shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-900 text-yellow-400 flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform">
+                                    <ShieldCheck size={32} />
+                                </div>
+                                <div>
+                                    <h3 className="text-slate-900 font-black text-lg leading-tight uppercase tracking-tight">Complete KYC Now</h3>
+                                    <p className="text-slate-800 text-xs font-bold leading-tight mt-0.5 opacity-80 uppercase tracking-widest">Necessary for Loan #{kycLoan.id}</p>
+                                </div>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-slate-900/10 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                                <ChevronRight className="text-slate-900 w-6 h-6" />
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+            )}
+
             {/* Quick Actions - Overlapping Header */}
-            <div className="px-6 -mt-8 mb-8">
+            <div className={`px-6 mb-8 ${kycLoan ? 'mt-0' : '-mt-8'}`}>
                 <div className="bg-white p-4 rounded-2xl shadow-xl shadow-blue-900/5 border border-slate-100 grid grid-cols-4 gap-2">
                     {[
                         { label: 'Scan QR', icon: <ScanBarcode size={24} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })), href: '/customer/pay' },
