@@ -16,7 +16,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Select Repayment Schedule</h3>
             <div className="space-y-3">
                 {options.map(option => {
-                    const { total } = calculateEarnings(planAmount, tenure, option);
+                    const { emi } = calculateEarnings(planAmount, tenure, option);
                     const isSelected = selected?.id === option.id;
 
                     return (
@@ -69,9 +69,9 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
 
                             <div className="text-right">
                                 <p className={cn("font-black text-lg", isSelected ? "text-emerald-600" : "text-slate-900")}>
-                                    ₹ {total.toLocaleString('en-IN')}
+                                    ₹ {emi.toLocaleString('en-IN')}
                                 </p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Repay</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Per Repayment</p>
                             </div>
                         </div>
                     );
