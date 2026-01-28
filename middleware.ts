@@ -16,42 +16,71 @@ export function middleware(request: NextRequest) {
     const isAuthRoute = pathname === '/' || pathname.startsWith('/auth');
     const isOnboardingRoute = pathname === '/auth/onboarding' || pathname === '/auth/merchant-onboarding';
 
+    // Protected routes require authentication
     if (isProtectedRoute) {
         if (!token) {
-            return NextResponse.redirect(new URL('/', request.url));
+            const response = NextResponse.redirect(new URL('/', request.url));
+            // Clear any stale cookies
+            response.cookies.delete('token');
+            response.cookies.delete('user');
+            return response;
         }
 
+        // Check if user data exists and is valid
         if (userStr) {
             try {
                 const user = JSON.parse(decodeURIComponent(userStr));
+
+                // Redirect to onboarding if not completed
                 if (!user.is_onboarded && !isOnboardingRoute) {
                     const onboardingPath = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
-                    return NextResponse.redirect(new URL(onboardingPath, request.url));
+
+                    // Prevent redirect loop
+                    if (pathname !== onboardingPath) {
+                        return NextResponse.redirect(new URL(onboardingPath, request.url));
+                    }
                 }
             } catch (e) {
-                // If user cookie is malformed, clear and redirect to login
+                // If user cookie is malformed, clear everything and redirect to login
+                console.error('Malformed user cookie:', e);
                 const response = NextResponse.redirect(new URL('/', request.url));
                 response.cookies.delete('token');
                 response.cookies.delete('user');
                 return response;
             }
+        } else if (token) {
+            // Token exists but no user data - clear token and redirect
+            const response = NextResponse.redirect(new URL('/', request.url));
+            response.cookies.delete('token');
+            response.cookies.delete('user');
+            return response;
         }
     }
 
-    // Redirect logged-in users away from auth/onboarding routes if already onboarded
-    if ((pathname === '/' || pathname.startsWith('/auth')) && token && userStr) {
+    // Redirect logged-in users away from auth routes
+    if (isAuthRoute && token && userStr) {
         try {
             const user = JSON.parse(decodeURIComponent(userStr));
+
             if (user.is_onboarded) {
-                if (user.role === 'ADMIN') return NextResponse.redirect(new URL('/admin', request.url));
-                return NextResponse.redirect(new URL('/customer', request.url));
+                // Redirect based on role
+                const targetPath = user.role === 'ADMIN' ? '/admin' : '/customer';
+
+                // Only redirect if not already on the target path
+                if (!pathname.startsWith(targetPath)) {
+                    return NextResponse.redirect(new URL(targetPath, request.url));
+                }
             } else if (pathname === '/') {
-                // If on root but not onboarded, redirect to correct onboarding flow
+                // Not onboarded, redirect to appropriate onboarding
                 const onboardingPath = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
                 return NextResponse.redirect(new URL(onboardingPath, request.url));
             }
         } catch (e) {
-            // parsing error, ignore
+            // Parsing error - clear cookies
+            const response = NextResponse.next();
+            response.cookies.delete('token');
+            response.cookies.delete('user');
+            return response;
         }
     }
 

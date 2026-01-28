@@ -149,64 +149,69 @@ export default function CustomerHome() {
                 </div>
             )}
 
-            {/* Action Grid */}
+            {/* Action Grid - Rotating Cards */}
             <div className={cn("px-6 mb-10", !isMerchant && !kycLoan && "-mt-8 relative z-20")}>
-                <div className="bg-white p-6 rounded-[2rem] shadow-xl shadow-slate-900/5 border border-slate-50 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-                    {isMerchant ? (
-                        <>
-                            <Link href="/customer/qr" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-emerald-600">
-                                    <QrCode size={24} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Show QR</span>
-                            </Link>
-                            <button onClick={() => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' }))} className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600">
-                                    <ScanBarcode size={24} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Scan & Pay</span>
-                            </button>
-                            <Link href="/customer/transactions" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-indigo-600">
-                                    <History size={24} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">History</span>
-                            </Link>
-                            <Link href="/customer/rewards" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-rose-500">
-                                    <PartyPopper size={24} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Rewards</span>
-                            </Link>
-                        </>
-                    ) : (
-                        <>
-                            <Link href="/customer/pay" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600">
-                                    <Send size={24} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Pay ID</span>
-                            </Link>
-                            <Link href="/customer/qr" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-purple-600">
-                                    <QrCode size={24} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Show QR</span>
-                            </Link>
-                            <Link href="/customer/repayments" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-emerald-600">
-                                    <CreditCard size={24} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Repay</span>
-                            </Link>
-                            <Link href="/customer/rewards" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-rose-500">
-                                    <PartyPopper size={24} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Rewards</span>
-                            </Link>
-                        </>
-                    )}
+                <div className="bg-white p-6 rounded-[2rem] shadow-xl shadow-slate-900/5 border border-slate-50">
+                    <div className="grid grid-cols-4 gap-4">
+                        {isMerchant ? (
+                            <>
+                                <Link href="/customer/pay" className="flex flex-col items-center gap-3 group">
+                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-active:scale-95">
+                                        <ScanBarcode size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">Scan QR</span>
+                                </Link>
+                                <Link href="/customer/pay" className="flex flex-col items-center gap-3 group">
+                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-active:scale-95">
+                                        <Send size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">Pay ID</span>
+                                </Link>
+                                <Link href="/customer/qr" className="flex flex-col items-center gap-3 group">
+                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-active:scale-95">
+                                        <QrCode size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">Show QR</span>
+                                </Link>
+                                <Link href="/customer/transactions" className="flex flex-col items-center gap-3 group">
+                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-active:scale-95">
+                                        <History size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">History</span>
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' }))}
+                                    className="flex flex-col items-center gap-3 group"
+                                >
+                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-active:scale-95">
+                                        <ScanBarcode size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">Scan QR</span>
+                                </button>
+                                <Link href="/customer/pay" className="flex flex-col items-center gap-3 group">
+                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-active:scale-95">
+                                        <Send size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">Pay ID</span>
+                                </Link>
+                                <Link href="/customer/qr" className="flex flex-col items-center gap-3 group">
+                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-active:scale-95">
+                                        <QrCode size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">Show QR</span>
+                                </Link>
+                                <Link href="/customer/transactions" className="flex flex-col items-center gap-3 group">
+                                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-lg group-active:scale-95">
+                                        <History size={28} strokeWidth={2.5} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">History</span>
+                                </Link>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
