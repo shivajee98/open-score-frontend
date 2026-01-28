@@ -24,6 +24,25 @@ export default function MerchantOnboarding() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [checkingAuth, setCheckingAuth] = useState(true);
+
+    useEffect(() => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user.is_onboarded) {
+                router.replace(user.role === 'ADMIN' ? '/admin' : '/customer');
+                return;
+            }
+            // Pre-fill form if data exists
+            if (user.name) setFormData(prev => ({ ...prev, name: user.name }));
+            if (user.email) setFormData(prev => ({ ...prev, email: user.email }));
+        } else {
+            router.replace('/');
+            return;
+        }
+        setCheckingAuth(false);
+    }, [router]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -54,9 +73,11 @@ export default function MerchantOnboarding() {
                 body: JSON.stringify(formData)
             });
 
-            // Sync user in local storage
+            // Sync user in local storage and cookies
             const updatedUser = await apiFetch('/auth/me');
-            localStorage.setItem('user', JSON.stringify({ ...updatedUser, is_onboarded: true }));
+            const user = { ...updatedUser, is_onboarded: true };
+            localStorage.setItem('user', JSON.stringify(user));
+            document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=2592000; SameSite=Lax`;
 
             setSuccess(true);
         } catch (err: any) {
@@ -83,6 +104,14 @@ export default function MerchantOnboarding() {
                         Go to Dashboard
                     </button>
                 </div>
+            </div>
+        );
+    }
+
+    if (checkingAuth) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }

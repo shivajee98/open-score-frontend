@@ -15,15 +15,18 @@ export default function CustomerHome() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        setUser(u);
+    }, []);
+
+    useEffect(() => {
         const loadData = async () => {
+            if (!user) return;
             try {
-                const u = JSON.parse(localStorage.getItem('user') || '{}');
-                setUser(u);
                 const w = await apiFetch('/wallet/balance');
                 setBalance(w.balance);
 
-                if (u.role === 'CUSTOMER') {
-                    // Check for KYC pending loans only for customers
+                if (user.role === 'CUSTOMER') {
                     const loans = await apiFetch('/loans');
                     const pendingKyc = loans.find((l: any) => l.status === 'KYC_SENT');
                     if (pendingKyc) setKycLoan(pendingKyc);
@@ -33,12 +36,21 @@ export default function CustomerHome() {
             }
         };
         loadData();
-    }, []);
+    }, [user]);
 
-    const isMerchant = user?.role === 'MERCHANT';
+    if (!user || loading) return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading Dashboard...</p>
+            </div>
+        </div>
+    );
+
+    const isMerchant = user.role === 'MERCHANT';
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
+        <div className="min-h-screen bg-slate-50 pb-32 font-sans selection:bg-blue-100 selection:text-blue-900">
             {/* Header */}
             <div className={cn(
                 "p-6 pt-12 pb-16 rounded-b-[2.5rem] shadow-xl shadow-blue-900/10 relative overflow-hidden",

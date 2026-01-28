@@ -5,6 +5,11 @@ export function middleware(request: NextRequest) {
     const userStr = request.cookies.get('user')?.value;
     const { pathname } = request.nextUrl;
 
+    // Handle legacy merchant routes
+    if (pathname.startsWith('/merchant')) {
+        return NextResponse.redirect(new URL('/customer', request.url));
+    }
+
     // Define protected and auth routes
     const isProtectedRoute = pathname.startsWith('/customer') ||
         pathname.startsWith('/admin');
@@ -33,19 +38,20 @@ export function middleware(request: NextRequest) {
         }
     }
 
-    // Redirect logged-in users away from the login page
-    if (pathname === '/' && token && userStr) {
+    // Redirect logged-in users away from auth/onboarding routes if already onboarded
+    if ((pathname === '/' || pathname.startsWith('/auth')) && token && userStr) {
         try {
             const user = JSON.parse(decodeURIComponent(userStr));
-            if (!user.is_onboarded) {
+            if (user.is_onboarded) {
+                if (user.role === 'ADMIN') return NextResponse.redirect(new URL('/admin', request.url));
+                return NextResponse.redirect(new URL('/customer', request.url));
+            } else if (pathname === '/') {
+                // If on root but not onboarded, redirect to correct onboarding flow
                 const onboardingPath = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
                 return NextResponse.redirect(new URL(onboardingPath, request.url));
             }
-
-            if (user.role === 'ADMIN') return NextResponse.redirect(new URL('/admin', request.url));
-            return NextResponse.redirect(new URL('/customer', request.url));
         } catch (e) {
-            // Allow the page to load if parsing fails, it will clear storage anyway
+            // parsing error, ignore
         }
     }
 

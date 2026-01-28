@@ -76,6 +76,7 @@ export default function Onboarding() {
             // On success, update stored user and redirect
             const updatedUser = { ...res.user, is_onboarded: true };
             localStorage.setItem('user', JSON.stringify(updatedUser));
+            document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/; max-age=2592000; SameSite=Lax`;
 
             // Update cookies for middleware
             const token = localStorage.getItem('token');
