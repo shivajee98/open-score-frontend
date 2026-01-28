@@ -1,6 +1,23 @@
 'use client';
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
+export const clearAuthState = () => {
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Clear cookies
+        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+
+        // Notify Native WebView
+        if ((window as any).ReactNativeWebView) {
+            (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'LOGOUT'
+            }));
+        }
+    }
+};
+
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     let token = null;
     if (typeof window !== 'undefined') {
@@ -22,8 +39,8 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
     });
 
     if (response.status === 401 && typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        clearAuthState();
+        window.location.href = '/';
     }
 
     if (!response.ok) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, clearAuthState } from '@/lib/api';
 import { Smartphone, Store, ArrowRight, ShieldCheck, User as UserIcon, Check, BadgeCheck } from 'lucide-react';
 import SplashScreen from '@/components/SplashScreen';
 
@@ -30,7 +30,11 @@ export default function Home() {
 
       try {
         if (token && userStr) {
+          // Verify token with backend
+          const userData = await apiFetch('/auth/me');
+
           const user = JSON.parse(userStr);
+          // Update user if backend data is refreshed or just proceed
           await minSplashTime;
 
           // Check if onboarding is required
@@ -46,11 +50,7 @@ export default function Home() {
         }
       } catch (e) {
         await minSplashTime;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        // Clear cookies as well
-        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-        document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        clearAuthState();
         setShowSplash(false);
       }
     };
@@ -67,11 +67,11 @@ export default function Home() {
       }));
     }
 
-    // Set cookies for middleware
+    // Set cookies for middleware - 30 days
     const token = localStorage.getItem('token');
     if (token) {
-      document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
-      document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=86400; SameSite=Lax`;
+      document.cookie = `token=${token}; path=/; max-age=2592000; SameSite=Lax`;
+      document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=2592000; SameSite=Lax`;
     }
 
     if (!user.is_onboarded) {

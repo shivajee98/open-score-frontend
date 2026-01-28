@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { clearAuthState } from '@/lib/api';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -14,6 +15,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             const userStr = localStorage.getItem('user');
 
             if (!token || !userStr) {
+                clearAuthState();
                 router.push('/');
                 return;
             }
@@ -40,8 +42,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
                 setAuthorized(true);
             } catch (e) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                clearAuthState();
                 router.push('/');
             }
         };
