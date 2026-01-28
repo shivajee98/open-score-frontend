@@ -63,8 +63,12 @@ export default function LoanHistory() {
                                     {loan.tenure} Months • {loan.payout_frequency} Payout
                                 </p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
-                                {loan.status === 'APPROVED' ? <CheckCircle size={20} className="text-emerald-500" /> : <Clock size={20} className="text-amber-500" />}
+                            <div className="text-right">
+                                {loan.status === 'DISBURSED' ? (
+                                    <span className="text-xs font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-600 hover:text-white transition-colors">Pay Now</span>
+                                ) : (
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">See Details</span>
+                                )}
                             </div>
                         </div>
                     ))}

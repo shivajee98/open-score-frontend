@@ -59,7 +59,7 @@ export default function CustomerQR() {
                         {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                     </div>
 
-                    <div className="relative mx-auto w-64 h-64 bg-white rounded-[2rem] p-4 border-2 border-slate-100 shadow-lg flex items-center justify-center mb-8 group hover:shadow-2xl hover:scale-105 transition-all duration-500">
+                    <div className="relative mx-auto w-48 h-48 bg-white rounded-[2rem] p-4 border-2 border-slate-100 shadow-lg flex items-center justify-center mb-8 group hover:shadow-2xl hover:scale-105 transition-all duration-500">
                         {qrData ? (
                             <QRCode
                                 value={qrData}

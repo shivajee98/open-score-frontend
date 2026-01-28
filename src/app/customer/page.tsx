@@ -13,38 +13,50 @@ export default function CustomerHome() {
     const [user, setUser] = useState<any>(null);
     const [kycLoan, setKycLoan] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [bannerIndex, setBannerIndex] = useState(0);
+    const [dynamicText, setDynamicText] = useState("Apply Now & Get 0% Interest Credit");
 
     const banners = [
         {
-            title: "Apply Now & Get 0% Interest Credit",
+            title: dynamicText,
             sub: "First Users Only!",
             color: "bg-slate-900",
             accent: "bg-blue-600",
-            amount: "₹5,00,000"
+            amount: "₹5,00,000",
+            label: "Limit Up to"
         },
         {
-            title: "First User Advantage",
-            sub: "Apply for Credit at 0% Interest",
+            title: "Experience Premium",
+            sub: "Upgrade your Status",
             color: "bg-indigo-950",
             accent: "bg-purple-600",
-            amount: "₹2,50,000"
+            amount: "Exclusive",
+            label: "Benefits"
         },
         {
-            title: "Unlock 0% Interest Credit",
-            sub: "First User Offer",
+            title: "Secure Transactions",
+            sub: "Bank-Grade Security",
             color: "bg-zinc-950",
             accent: "bg-emerald-600",
-            amount: "₹1,00,000"
+            amount: "100% Safe",
+            label: "Safety"
         }
     ];
 
+    // Dynamic Text Effect for First Banner
     useEffect(() => {
+        const texts = [
+            "Apply Now & Get 0% Interest Credit",
+            "Zero Cost EMI for New Users",
+            "Exclusive Launch Offer: 0% APR"
+        ];
+        let i = 0;
         const timer = setInterval(() => {
-            setBannerIndex((prev) => (prev + 1) % banners.length);
-        }, 3000);
+            i = (i + 1) % texts.length;
+            setDynamicText(texts[i]);
+        }, 2500);
         return () => clearInterval(timer);
     }, []);
+
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user') || '{}');
@@ -84,37 +96,34 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
-            {/* Header */}
-            <div className="bg-blue-600 p-6 pt-12 pb-16 rounded-b-[2.5rem] shadow-xl shadow-blue-900/10">
-                <div className="flex justify-between items-center text-white mb-6">
+            {/* Header Redesign */}
+            <div className="bg-[#1a73e8] px-6 pt-12 pb-24 relative overflow-hidden">
+                <div className="flex justify-between items-start text-white mb-8 relative z-10">
                     <div>
-                        <p className="text-blue-100 text-[10px] font-black uppercase tracking-[0.2em]">Welcome Back</p>
-                        <h1 className="text-2xl font-black tracking-tight">{isMerchant ? (user?.business_name || 'My Store') : (user?.name || 'Customer')}</h1>
+                        <p className="text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Welcome Back</p>
+                        <h1 className="text-3xl font-black tracking-tighter">{isMerchant ? (user?.business_name || 'My Store') : (user?.name || 'Customer')}</h1>
                     </div>
                     <Link href="/customer/profile">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-500 border border-blue-400 flex items-center justify-center font-black text-lg">
+                        <div className="w-10 h-10 rounded-xl bg-[#4285f4] border border-[#8ab4f8] flex items-center justify-center font-black text-sm shadow-lg active:scale-90 transition-transform cursor-pointer">
                             {user?.name?.[0] || 'U'}
                         </div>
                     </Link>
                 </div>
 
                 {/* Balance Card */}
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-[2rem] flex items-center justify-between relative z-10">
+                <div className="bg-[#4285f4] rounded-[2rem] p-6 flex items-center justify-between border border-[#8ab4f8]/30 shadow-2xl relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-white text-blue-600 flex items-center justify-center shadow-lg">
-                            <Wallet size={24} />
+                        <div className="w-12 h-12 rounded-2xl bg-white text-[#1a73e8] flex items-center justify-center shadow-lg transform -rotate-6">
+                            <Wallet size={24} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">Account Balance</p>
+                            <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-1">Account Balance</p>
                             <div className="flex items-center gap-3">
                                 <p className="text-3xl font-black text-white tracking-tighter">₹ {balance}</p>
                                 {Number(lockedBalance) > 0 && (
-                                    <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/10 shadow-inner group cursor-help">
-                                        <div className="relative">
-                                            <div className="absolute inset-0 bg-yellow-400 blur-sm opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                                            <Lock size={12} className="text-yellow-400 relative z-10" />
-                                        </div>
-                                        <span className="text-[11px] font-black text-white tracking-tight">₹{lockedBalance}</span>
+                                    <div className="flex items-center gap-1 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-lg border border-white/10 shadow-inner group cursor-help">
+                                        <Lock size={10} className="text-yellow-400" />
+                                        <span className="text-[10px] font-black text-white tracking-tight">₹{lockedBalance}</span>
                                     </div>
                                 )}
                             </div>
@@ -123,24 +132,25 @@ export default function CustomerHome() {
                 </div>
             </div>
 
-            {/* Quick Actions - Icons Box */}
-            <div className="px-6 -mt-8 mb-8 relative z-20">
-                <div className="bg-white p-6 rounded-[2rem] shadow-xl shadow-blue-900/5 border border-slate-50 grid grid-cols-4 gap-4">
-                    {[
-                        { label: 'Scan QR', icon: <ScanBarcode size={28} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })), href: '#' },
-                        { label: 'Pay ID', icon: <Send size={28} />, href: '/customer/pay' },
-                        { label: 'Show QR', icon: <QrCode size={28} />, href: '/customer/qr' },
-                        { label: 'History', icon: <History size={28} />, href: '/customer/transactions' },
-                    ].map((item, i) => (
-                        <div key={i} onClick={item.action} className="flex flex-col items-center gap-3 active:scale-95 transition-all">
-                            <Link href={item.href || '#'} className="contents">
-                                <div className="w-16 h-16 rounded-2xl bg-slate-50 text-blue-600 flex items-center justify-center border border-slate-100 shadow-sm">
-                                    {item.icon}
-                                </div>
-                                <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest text-center leading-tight">{item.label}</span>
-                            </Link>
-                        </div>
-                    ))}
+            {/* Quick Actions - Floating Card */}
+            <div className="px-6 -mt-12 relative z-20 mb-12">
+                <div className="bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50">
+                    <div className="grid grid-cols-3 gap-4">
+                        {[
+                            { label: 'Scan QR', icon: <ScanBarcode size={24} strokeWidth={2} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })), href: '#', color: 'text-indigo-600 bg-indigo-50' },
+                            { label: 'Pay ID', icon: <Send size={24} strokeWidth={2} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50' },
+                            { label: 'Show QR', icon: <QrCode size={24} strokeWidth={2} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50' },
+                        ].map((item, i) => (
+                            <div key={i} onClick={item.action} className="flex flex-col items-center gap-3 active:scale-95 transition-all cursor-pointer">
+                                <Link href={item.href || '#'} className="contents">
+                                    <div className={`w-14 h-14 rounded-[1.2rem] ${item.color} flex items-center justify-center`}>
+                                        {item.icon}
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center">{item.label}</span>
+                                </Link>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -163,47 +173,34 @@ export default function CustomerHome() {
                 </div>
             )}
 
-            {/* Banners - Animated Slide */}
-            <div className="px-6 mb-10 relative overflow-hidden">
-                <div
-                    className="flex gap-6 transition-transform duration-700 ease-in-out"
-                    style={{ transform: `translateX(calc(-${bannerIndex * 90}% - ${bannerIndex * 24}px))` }}
-                >
-                    {banners.map((banner, i) => (
-                        <div
-                            key={i}
-                            onClick={() => router.push('/customer/loan/apply')}
-                            className={`shrink-0 w-[90%] ${banner.color} rounded-[2.5rem] p-8 relative overflow-hidden h-48 flex flex-col justify-center shadow-2xl shadow-slate-900/20 group cursor-pointer border border-white/5`}
-                        >
-                            <div className={`absolute top-0 right-0 w-64 h-64 ${banner.accent}/10 rounded-full blur-3xl -mr-16 -mt-16 transition-colors`}></div>
-                            <div className="relative z-10">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="text-white font-black text-xl tracking-tight leading-tight max-w-[200px]">{banner.title}</h3>
-                                        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mt-2 group-hover:text-white/60 transition-colors">{banner.sub}</p>
-                                    </div>
-                                    <div className="bg-white/5 backdrop-blur-md p-3 rounded-2xl border border-white/10">
-                                        <Zap className="text-yellow-400 fill-yellow-400 w-6 h-6" />
-                                    </div>
+            {/* Banners - Static Scroll with Dynamic Text */}
+            <div className="px-6 mb-10 overflow-x-auto flex gap-5 no-scrollbar snap-x">
+                {banners.map((banner, i) => (
+                    <div
+                        key={i}
+                        onClick={() => router.push('/customer/loan/apply')}
+                        className={`snap-center shrink-0 w-[85%] ${banner.color} rounded-[2rem] p-6 relative overflow-hidden h-44 flex flex-col justify-center shadow-xl shadow-slate-900/10 group cursor-pointer border border-white/5`}
+                    >
+                        <div className={`absolute top-0 right-0 w-48 h-48 ${banner.accent}/20 rounded-full blur-3xl -mr-10 -mt-10 transition-colors`}></div>
+                        <div className="relative z-10">
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 className="text-white font-black text-lg tracking-tight leading-tight max-w-[200px] transition-all duration-300">
+                                        {banner.title}
+                                    </h3>
+                                    <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mt-2">{banner.sub}</p>
                                 </div>
-                                <div className="flex items-baseline gap-2 mt-2">
-                                    <span className="text-white/30 text-[9px] font-black uppercase tracking-widest">Limit Up to</span>
-                                    <span className="text-3xl font-black text-white tracking-tighter">{banner.amount}</span>
+                                <div className="bg-white/5 backdrop-blur-md p-2.5 rounded-xl border border-white/10">
+                                    <Zap className="text-yellow-400 fill-yellow-400 w-5 h-5 animate-pulse" />
                                 </div>
                             </div>
+                            <div className="flex items-end gap-2 mt-2">
+                                <span className="text-white/30 text-[9px] font-black uppercase tracking-widest mb-1">{(banner as any).label || 'Limit Up to'}</span>
+                                <span className="text-2xl font-black text-white tracking-tighter">{banner.amount}</span>
+                            </div>
                         </div>
-                    ))}
-                </div>
-
-                {/* Pagination Dots */}
-                <div className="flex justify-center gap-2 mt-4">
-                    {banners.map((_, i) => (
-                        <div
-                            key={i}
-                            className={`h-1 rounded-full transition-all duration-300 ${i === bannerIndex ? 'w-6 bg-blue-600' : 'w-1.5 bg-slate-200'}`}
-                        />
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
 
             {/* Recharge & Bills Section */}
@@ -214,17 +211,17 @@ export default function CustomerHome() {
                 </div>
                 <div className="grid grid-cols-4 gap-y-8 gap-x-4">
                     {[
-                        { label: 'Electricity', icon: <Zap size={24} className="text-amber-500 fill-amber-500" /> },
-                        { label: 'Mobile', icon: <Smartphone size={24} className="text-blue-500" /> },
+                        { label: 'Electricity', icon: <Zap size={24} className="text-amber-500 fill-amber-500 animate-pulse" /> },
+                        { label: 'Mobile', icon: <Smartphone size={24} className="text-blue-500 animate-[bounce_2s_infinite]" /> },
                         { label: 'DTH', icon: <Tv size={24} className="text-slate-900" /> },
-                        { label: 'Water', icon: <Droplets size={24} className="text-blue-500" /> },
-                        { label: 'Gas', icon: <Flame size={24} className="text-orange-500 fill-orange-500" /> },
-                        { label: 'Broadband', icon: <Wifi size={24} className="text-purple-500" /> },
+                        { label: 'Water', icon: <Droplets size={24} className="text-blue-500 animate-bounce delay-100" /> },
+                        { label: 'Gas', icon: <Flame size={24} className="text-orange-500 fill-orange-500 animate-pulse" /> },
+                        { label: 'Broadband', icon: <Wifi size={24} className="text-purple-500 animate-pulse" /> },
                         { label: 'Insurance', icon: <ShieldCheck size={24} className="text-emerald-500" /> },
                         { label: 'More', icon: <LayoutGrid size={24} className="text-slate-500" /> },
                     ].map((item, i) => (
                         <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer active:scale-95 transition-all">
-                            <div className="w-16 h-16 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden transition-all group-hover:shadow-md">
+                            <div className="w-16 h-16 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden transition-all group-hover:shadow-md group-hover:-translate-y-1">
                                 {item.icon}
                                 <div className="absolute inset-0 bg-slate-50/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>

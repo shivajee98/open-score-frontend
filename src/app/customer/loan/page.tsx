@@ -208,7 +208,7 @@ export default function LoanList() {
                                         {(plan.isLocked || activeLoan) && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeLoan ? 'Blocked' : 'Locked'}</span>}
                                     </div>
                                     <h3 className="text-xl font-black text-slate-900">
-                                        ₹ {plan.amount >= 100000 ? `${plan.amount / 100000}L` : plan.amount >= 1000 ? `${plan.amount / 1000}k` : plan.amount}
+                                        ₹ {plan.amount.toLocaleString()}
                                     </h3>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                         {plan.isLocked ? 'Building Eligibility...' : plan.description}

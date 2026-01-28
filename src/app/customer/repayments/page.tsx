@@ -126,7 +126,9 @@ export default function RepaymentsPage() {
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Loan #{loan.id}</p>
                                             <h3 className="text-xl font-black">₹{parseFloat(loan.amount).toLocaleString()}</h3>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest border border-emerald-100">Direct Pay</span>
+                                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest border border-emerald-100">
+                                                    Active
+                                                </span>
                                                 <span className="text-[10px] font-medium text-slate-400">• {loan.payout_frequency}</span>
                                             </div>
                                         </div>
@@ -250,12 +252,14 @@ export default function RepaymentsPage() {
                                                 </div>
                                             </div>
                                             {rep.status === 'PAID' ? (
-                                                <div className="flex items-center gap-1 text-emerald-600">
+                                                <div className="flex items-center gap-1 text-slate-400">
                                                     <CheckCircle2 size={16} />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">Success</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Paid</span>
                                                 </div>
                                             ) : (
-                                                selectedLoan.status === 'DISBURSED' && repayments.findIndex(r => r.status === 'PENDING') === idx ? (
+                                                selectedLoan.status === 'DISBURSED' && new Date(rep.due_date) < new Date() && rep.status === 'PENDING' ? (
+                                                    <span className="text-[10px] font-black text-red-600 uppercase tracking-widest font-bold">Overdue</span>
+                                                ) : selectedLoan.status === 'DISBURSED' && repayments.findIndex(r => r.status === 'PENDING') === idx ? (
                                                     <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest animate-pulse font-bold">Next Due</span>
                                                 ) : (
                                                     <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Pending</span>
