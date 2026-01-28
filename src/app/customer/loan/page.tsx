@@ -58,9 +58,52 @@ export default function LoanList() {
                 </div>
             )}
 
-            {/* Loan Plans Grid */}
+            {/* Virtual Credit - High Impact Highlight */}
+            <div className="mb-10">
+                {Object.values(LOAN_PLANS).filter((p: any) => p.amount === 5000).map((plan: any) => (
+                    <div
+                        key={plan.amount}
+                        onClick={() => router.push(`/customer/loan/${plan.amount}`)}
+                        className="bg-slate-900 rounded-[2.5rem] p-8 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all"
+                    >
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/30 rounded-full blur-[80px] -mr-20 -mt-20 group-hover:bg-indigo-600/40 transition-colors"></div>
+                        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl"></div>
+
+                        <div className="relative z-10 flex justify-between items-start">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="bg-indigo-500 p-2 rounded-xl">
+                                        <Zap size={18} className="text-white fill-white" />
+                                    </div>
+                                    <span className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em]">Priority Fast-Track</span>
+                                </div>
+                                <h2 className="text-3xl font-black text-white mb-2 tracking-tight">{plan.title}</h2>
+                                <p className="text-indigo-200/60 font-medium text-sm max-w-[200px] leading-relaxed mb-6">
+                                    {plan.description} • Get funds in seconds.
+                                </p>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-4xl font-black text-white">₹{plan.amount.toLocaleString()}</span>
+                                    <div className="h-8 w-[2px] bg-white/10 mx-1"></div>
+                                    <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Active Instantly</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all">
+                                <ChevronRight size={24} />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Loan Plans Grid Section */}
+            <div className="flex justify-between items-end mb-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Select Term Loan</h3>
+                <span className="text-[10px] font-bold text-slate-400">Fixed Tenure</span>
+            </div>
             <div className="grid grid-cols-2 gap-4 mb-8">
-                {Object.values(LOAN_PLANS).map((plan: any) => (
+                {Object.values(LOAN_PLANS).filter((p: any) => p.amount > 5000).map((plan: any) => (
                     <div
                         key={plan.amount}
                         onClick={() => {
