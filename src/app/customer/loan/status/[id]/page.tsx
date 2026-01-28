@@ -67,9 +67,9 @@ export default function LoanStatus() {
     if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loan not found</div>;
 
     const principal = Number(loan.amount);
-    const processingFee = 1200;
-    const loginFee = 200;
-    const fieldKycFee = 600;
+    const processingFee = principal === 10000 ? 0 : 1200;
+    const loginFee = principal === 10000 ? 300 : 200;
+    const fieldKycFee = principal === 10000 ? 500 : 600;
     const totalFeesBeforeGst = processingFee + loginFee + fieldKycFee;
     const gstRate = 0.18;
     const gst = Math.round(totalFeesBeforeGst * gstRate);
@@ -102,10 +102,10 @@ export default function LoanStatus() {
                             <div>
                                 <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-2">Loan Amount</p>
                                 <span className={`text-[10px] font-normal px-2 py-0.5 border rounded-full uppercase tracking-wide ${loan.status === 'DISBURSED' || loan.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-                                        loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-                                            loan.status === 'KYC_SENT' ? 'bg-amber-50 border-amber-100 text-amber-600' :
-                                                loan.status === 'FORM_SUBMITTED' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
-                                                    'bg-slate-50 border-slate-100 text-slate-600'
+                                    loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                        loan.status === 'KYC_SENT' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                                            loan.status === 'FORM_SUBMITTED' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
+                                                'bg-slate-50 border-slate-100 text-slate-600'
                                     }`}>{loan.status.replace('_', ' ')}</span>
                             </div>
                             <h2 className="text-2xl font-normal text-slate-900">₹ {Number(loan.amount).toLocaleString()}</h2>
@@ -182,10 +182,10 @@ export default function LoanStatus() {
                         {/* Connecting Line - Thinner and Elegant */}
                         <div className="absolute left-6 right-6 top-[20px] h-[2px] bg-slate-50 z-0 text-center">
                             <div className={`h-full bg-emerald-500 transition-all duration-1000 ${loan.status === 'DISBURSED' ? 'w-full' :
-                                    loan.status === 'APPROVED' ? 'w-[75%]' :
-                                        loan.status === 'FORM_SUBMITTED' ? 'w-[50%]' :
-                                            loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED' ? 'w-[25%]' :
-                                                'w-0'
+                                loan.status === 'APPROVED' ? 'w-[75%]' :
+                                    loan.status === 'FORM_SUBMITTED' ? 'w-[50%]' :
+                                        loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED' ? 'w-[25%]' :
+                                            'w-0'
                                 }`} />
                         </div>
 
