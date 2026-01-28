@@ -143,11 +143,6 @@ export function calculateRepayment(amount: number, tenureMonths: number, option:
             parts.push(`${option.interestRate}% Interest`);
         }
 
-        // Cashback Part
-        if (option.cashback) {
-            parts.push(`₹${option.cashback} Cashback`);
-        }
-
         const breakdownText = `${parts.join(" • ")} • ₹${emi.toLocaleString()} / repay`;
 
         return {

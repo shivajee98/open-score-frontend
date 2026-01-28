@@ -58,7 +58,7 @@ export default function EarningsCard({ plan, tenure, payout, isRepayment, totalR
                         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-400/10 px-2 py-1 rounded truncate max-w-full italic">{breakdown}</span>
                         {payout?.cashback && count > 0 && (
                             <span className="text-[9px] font-black text-emerald-300 uppercase tracking-tighter bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap">
-                                Cashback ₹{(payout.cashback * count).toLocaleString()}
+                                Cashback upto ₹{(payout.cashback * count).toLocaleString()}
                             </span>
                         )}
                     </div>
