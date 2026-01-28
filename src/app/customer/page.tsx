@@ -111,15 +111,15 @@ export default function CustomerHome() {
                 </div>
 
                 {/* Balance Card */}
-                <div className="bg-[#4285f4] rounded-[2rem] p-6 flex items-center justify-between border border-[#8ab4f8]/30 shadow-2xl relative z-10">
+                <div className="bg-[#4285f4] rounded-[1.5rem] p-4 flex items-center justify-between border border-[#8ab4f8]/30 shadow-2xl relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-white text-[#1a73e8] flex items-center justify-center shadow-lg transform -rotate-6">
-                            <Wallet size={24} strokeWidth={2.5} />
+                        <div className="w-10 h-10 rounded-xl bg-white text-[#1a73e8] flex items-center justify-center shadow-lg transform -rotate-6">
+                            <Wallet size={20} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-1">Account Balance</p>
+                            <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-0.5">Account Balance</p>
                             <div className="flex items-center gap-3">
-                                <p className="text-3xl font-black text-white tracking-tighter">₹ {balance}</p>
+                                <p className="text-2xl font-black text-white tracking-tighter">₹ {balance}</p>
                                 {Number(lockedBalance) > 0 && (
                                     <div className="flex items-center gap-1 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-lg border border-white/10 shadow-inner group cursor-help">
                                         <Lock size={10} className="text-yellow-400" />
