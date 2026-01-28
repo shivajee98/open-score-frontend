@@ -10,10 +10,13 @@ import {
     Clock,
     CheckCircle2,
     AlertCircle,
-    IndianRupee,
-    History,
     Calendar,
-    Zap
+    Zap,
+    History,
+    X,
+    TrendingUp,
+    IndianRupee,
+    ArrowUpRight
 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 
@@ -24,22 +27,17 @@ export default function RepaymentsPage() {
     const [repayments, setRepayments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
-    const [user, setUser] = useState<any>(null);
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) setUser(JSON.parse(storedUser));
         loadLoans();
     }, []);
 
     const loadLoans = async () => {
         try {
             const data = await apiFetch('/loans');
-            const ongoing = data.filter((l: any) => l.status === 'DISBURSED');
-            setLoans(ongoing);
-            if (ongoing.length > 0) {
-                handleSelectLoan(ongoing[0]);
-            }
+            // Include both DISBURSED and recently fully paid
+            setLoans(data.filter((l: any) => l.status === 'DISBURSED' || l.paid_amount >= l.amount));
         } catch (e) {
             console.error("Failed to load loans", e);
         } finally {
@@ -47,8 +45,9 @@ export default function RepaymentsPage() {
         }
     };
 
-    const handleSelectLoan = async (loan: any) => {
+    const handleOpenLoan = async (loan: any) => {
         setSelectedLoan(loan);
+        setShowModal(true);
         try {
             const data = await apiFetch(`/loans/${loan.id}/repayments`);
             setRepayments(data.repayments || []);
@@ -60,7 +59,6 @@ export default function RepaymentsPage() {
     const handleRepay = async () => {
         if (!selectedLoan) return;
 
-        // Find first pending repayment
         const pending = repayments.find(r => r.status === 'PENDING');
         if (!pending) {
             alert("No pending EMIs found for this loan.");
@@ -75,7 +73,7 @@ export default function RepaymentsPage() {
                 method: 'POST'
             });
             alert("Repayment successful!");
-            handleSelectLoan(selectedLoan); // Refresh repayments
+            handleOpenLoan(selectedLoan); // Refresh repayments
         } catch (e: any) {
             alert(e.message || "Repayment failed. Please check your wallet balance.");
         } finally {
@@ -86,170 +84,209 @@ export default function RepaymentsPage() {
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Loading your loans...</p>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Loading accounts...</p>
         </div>
     );
 
+    const activeLoans = loans.filter(l => l.status === 'DISBURSED');
+    const closedLoans = loans.filter(l => l.status !== 'DISBURSED');
+
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
-            {/* Header */}
-            <div className="bg-slate-900 p-6 pt-12 pb-20 rounded-b-[2.5rem] shadow-xl shadow-slate-900/10">
-                <button onClick={() => router.push('/customer')} className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors mb-6">
-                    <ArrowLeft size={16} /> Dashboard
-                </button>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-2xl font-black text-white leading-tight">Repayments</h1>
-                        <p className="text-slate-400 text-xs font-medium uppercase tracking-widest mt-1">Manage your active loans</p>
-                    </div>
-                    <div className="p-3 bg-white/10 rounded-2xl border border-white/10">
-                        <CreditCard className="text-blue-400" size={24} />
-                    </div>
+        <div className="min-h-screen bg-white pb-24 font-sans text-slate-900">
+            {/* Minimal Google-style Top Bar */}
+            <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-slate-100">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => router.push('/customer')} className="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
+                        <ArrowLeft size={20} className="text-slate-600" />
+                    </button>
+                    <h1 className="text-xl font-bold tracking-tight">Repayments</h1>
                 </div>
-            </div>
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
+                    <CreditCard size={18} />
+                </div>
+            </header>
 
-            {/* Content */}
-            <div className="px-6 -mt-10 space-y-6">
-
-                {/* Loan Selector / Summary */}
-                {loans.length === 0 ? (
-                    <div className="bg-white rounded-3xl p-10 text-center shadow-xl shadow-blue-900/5 border border-slate-100">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                            <History className="text-slate-300" size={32} />
-                        </div>
-                        <h3 className="text-slate-900 font-bold text-lg mb-2">No Active Loans</h3>
-                        <p className="text-slate-500 text-sm max-w-[200px] mx-auto leading-relaxed">You don't have any disbursed loans requiring repayment at this time.</p>
-                        <button
-                            onClick={() => router.push('/customer/loan')}
-                            className="mt-6 px-8 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
-                        >
-                            Apply for Loan
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        {/* Selected Loan Details */}
-                        <div className="bg-white rounded-3xl p-6 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-blue-600/10 transition-colors"></div>
-
-                            <div className="relative z-10">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Loan Amount</p>
-                                        <h2 className="text-3xl font-black text-slate-900">₹{parseFloat(selectedLoan?.amount).toLocaleString()}</h2>
-                                    </div>
-                                    <div className="bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Ongoing</span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
-                                    <div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tenure</p>
-                                        <div className="flex items-center gap-2 text-slate-900">
-                                            <Calendar size={14} className="text-blue-500" />
-                                            <span className="font-bold text-sm tracking-tight">{selectedLoan?.tenure} Months</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Frequency</p>
-                                        <div className="flex items-center gap-2 text-slate-900">
-                                            <Zap size={14} className="text-amber-500" />
-                                            <span className="font-bold text-sm tracking-tight">{selectedLoan?.payout_frequency}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={handleRepay}
-                                    disabled={actionLoading || !repayments.some(r => r.status === 'PENDING')}
-                                    className="w-full mt-6 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
-                                >
-                                    {actionLoading ? (
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    ) : (
-                                        <>Pay Next EMI <ChevronRight size={18} /></>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Repayment History List */}
+            <main className="p-6 space-y-8 animate-in fade-in duration-500">
+                {/* Active Accounts Section */}
+                <section>
+                    <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Active Accounts</h2>
+                    {activeLoans.length > 0 ? (
                         <div className="space-y-4">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Repayment Schedule</h3>
-                            <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-blue-900/5 overflow-hidden">
-                                {repayments.length > 0 ? (
-                                    <div className="divide-y divide-slate-50">
-                                        {repayments.map((rep, idx) => (
-                                            <div key={rep.id} className="p-5 flex items-center justify-between group hover:bg-slate-50 transition-colors">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={cn(
-                                                        "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs transition-colors",
-                                                        rep.status === 'PAID' ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"
-                                                    )}>
-                                                        {idx + 1}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-black text-slate-900 text-sm">₹{parseFloat(rep.amount).toLocaleString()}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                                                            Due: {new Date(rep.due_date).toLocaleDateString()}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    {rep.status === 'PAID' ? (
-                                                        <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full">
-                                                            <CheckCircle2 size={12} className="text-emerald-500" />
-                                                            <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Paid</span>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-full">
-                                                            <Clock size={12} className="text-slate-400" />
-                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-10 text-center">
-                                        <AlertCircle className="text-slate-200 mx-auto mb-2" size={32} />
-                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Loading schedule...</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </>
-                )}
-
-                {/* Multiple Loans Switcher (If many) */}
-                {loans.length > 1 && (
-                    <div className="space-y-4 pb-10">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Other Loans</h3>
-                        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 snap-x">
-                            {loans.map(loan => (
+                            {activeLoans.map((loan) => (
                                 <div
                                     key={loan.id}
-                                    onClick={() => handleSelectLoan(loan)}
-                                    className={cn(
-                                        "snap-center shrink-0 w-64 p-5 rounded-3xl border-2 transition-all cursor-pointer",
-                                        selectedLoan?.id === loan.id
-                                            ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20"
-                                            : "bg-white border-slate-100 text-slate-900 shadow-sm hover:border-blue-200"
-                                    )}
+                                    onClick={() => handleOpenLoan(loan)}
+                                    className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center justify-between group active:scale-[0.98] transition-all cursor-pointer hover:bg-white hover:shadow-xl hover:shadow-blue-900/5 hover:border-blue-100"
                                 >
-                                    <p className={cn(
-                                        "text-[9px] font-black uppercase tracking-widest mb-1",
-                                        selectedLoan?.id === loan.id ? "text-blue-200 opacity-80" : "text-slate-400"
-                                    )}>Loan #{loan.id}</p>
-                                    <h4 className="text-xl font-black">₹{parseFloat(loan.amount).toLocaleString()}</h4>
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600 border border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                            <TrendingUp size={24} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Loan #{loan.id}</p>
+                                            <h3 className="text-xl font-black">₹{parseFloat(loan.amount).toLocaleString()}</h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest border border-emerald-100">Direct Pay</span>
+                                                <span className="text-[10px] font-medium text-slate-400">• {loan.payout_frequency}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-300 group-hover:text-slate-900 group-hover:translate-x-1 transition-all border border-slate-100">
+                                        <ChevronRight size={20} />
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    ) : (
+                        <div className="p-10 text-center bg-slate-50/50 rounded-[2.5rem] border border-dashed border-slate-200">
+                            <AlertCircle className="mx-auto text-slate-300 mb-3" size={32} />
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No active loans found</p>
+                        </div>
+                    )}
+                </section>
+
+                {/* Closed Accounts Section */}
+                {closedLoans.length > 0 && (
+                    <section>
+                        <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 px-2">History</h2>
+                        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm divide-y divide-slate-50">
+                            {closedLoans.map((loan) => (
+                                <div key={loan.id} className="p-5 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center">
+                                            <CheckCircle2 size={20} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-sm text-slate-900">₹{parseFloat(loan.amount).toLocaleString()} Loan</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Application #{loan.id}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Paid Full</p>
+                                        <p className="text-[9px] text-slate-400 font-medium mt-0.5">{new Date(loan.updated_at).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
                 )}
-            </div>
+            </main>
+
+            {/* Google-style Detail Modal */}
+            {showModal && selectedLoan && (
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col relative overflow-hidden animate-in slide-in-from-bottom-10 duration-500">
+
+                        {/* Modal Header */}
+                        <div className="p-8 border-b border-slate-50 flex justify-between items-start sticky top-0 bg-white/90 backdrop-blur-md z-10">
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg uppercase tracking-widest">Loan Account</span>
+                                    <span className="text-[10px] font-bold text-slate-400">#{selectedLoan.id}</span>
+                                </div>
+                                <h2 className="text-3xl font-black text-slate-900">₹{parseFloat(selectedLoan.amount).toLocaleString()}</h2>
+                                <p className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-2">
+                                    {selectedLoan.status === 'DISBURSED' ? (
+                                        <><Clock size={14} className="text-amber-500" /> Repayment in progress</>
+                                    ) : (
+                                        <><CheckCircle2 size={14} className="text-emerald-500" /> Account fully closed</>
+                                    )}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="p-3 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-10">
+
+                            {/* Summary Stats */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-blue-600 mb-3 shadow-sm">
+                                        <Zap size={16} />
+                                    </div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Frequency</p>
+                                    <p className="text-sm font-black text-slate-900">{selectedLoan.payout_frequency}</p>
+                                </div>
+                                <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-blue-600 mb-3 shadow-sm">
+                                        <Calendar size={16} />
+                                    </div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tenure</p>
+                                    <p className="text-sm font-black text-slate-900">{selectedLoan.tenure} Months</p>
+                                </div>
+                            </div>
+
+                            {/* Repayment Schedule */}
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-end">
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Payment Schedule</h3>
+                                    <p className="text-[10px] font-bold text-slate-400">Total {repayments.length} EMIs</p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {repayments.map((rep, idx) => (
+                                        <div key={rep.id} className={cn(
+                                            "p-5 rounded-2xl flex items-center justify-between transition-all",
+                                            rep.status === 'PAID' ? "bg-emerald-50/30 border border-emerald-50" : "bg-white border border-slate-100"
+                                        )}>
+                                            <div className="flex items-center gap-4">
+                                                <div className={cn(
+                                                    "w-9 h-9 rounded-full flex items-center justify-center font-black text-xs",
+                                                    rep.status === 'PAID' ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"
+                                                )}>
+                                                    {idx + 1}
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-slate-900 text-sm">₹{parseFloat(rep.amount).toLocaleString()}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                                        {rep.status === 'PAID' ? `Paid on ${new Date(rep.paid_at || '').toLocaleDateString()}` : `Due: ${new Date(rep.due_date).toLocaleDateString()}`}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {rep.status === 'PAID' ? (
+                                                <div className="flex items-center gap-1 text-emerald-600">
+                                                    <CheckCircle2 size={16} />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">Success</span>
+                                                </div>
+                                            ) : (
+                                                selectedLoan.status === 'DISBURSED' && repayments.findIndex(r => r.status === 'PENDING') === idx ? (
+                                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest animate-pulse font-bold">Next Due</span>
+                                                ) : (
+                                                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Pending</span>
+                                                )
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer / CTA */}
+                        {selectedLoan.status === 'DISBURSED' && repayments.some(r => r.status === 'PENDING') && (
+                            <div className="p-8 border-t border-slate-50 bg-slate-50/50">
+                                <button
+                                    onClick={handleRepay}
+                                    disabled={actionLoading}
+                                    className="w-full py-5 bg-blue-600 text-white rounded-3xl font-black text-lg uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
+                                >
+                                    {actionLoading ? (
+                                        <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    ) : (
+                                        <>Make Payment <ArrowUpRight size={20} /></>
+                                    )}
+                                </button>
+                                <p className="text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest mt-4">Funds will be debited from your OpenScore wallet</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
