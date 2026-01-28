@@ -123,7 +123,7 @@ export default function LoanList() {
                         key={plan.amount}
                         onClick={() => {
                             if (activeLoan) {
-                                alert("Active Application Found: You already have a loan application in progress. Please complete or cancel your current application before applying for a new one.");
+                                alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
                                 return;
                             }
                             router.push(`/customer/loan/${plan.amount}`);
@@ -176,7 +176,7 @@ export default function LoanList() {
                             key={plan.amount}
                             onClick={() => {
                                 if (activeLoan) {
-                                    alert("Active Application Found: You already have a loan application in progress. Please complete or cancel your current application before applying for a new one.");
+                                    alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
                                     return;
                                 }
                                 if (plan.isLocked) {

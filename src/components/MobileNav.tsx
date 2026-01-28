@@ -54,8 +54,13 @@ export default function MobileNav() {
                         <span className="text-[9px] font-black uppercase tracking-widest">Wallet</span>
                     </Link>
 
+                    <Link href="/customer/loan/history" className={`flex flex-col items-center gap-1 p-2 min-w-[64px] rounded-2xl transition-all duration-300 ${pathname === '/customer/loan/history' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
+                        <History size={22} className={pathname === '/customer/loan/history' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/loan/history' ? 3 : 2} />
+                        <span className="text-[9px] font-black uppercase tracking-widest">Activity</span>
+                    </Link>
+
                     <Link href="/customer/repayments" className={`flex flex-col items-center gap-1 p-2 min-w-[64px] rounded-2xl transition-all duration-300 ${pathname === '/customer/repayments' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
-                        <History size={22} className={pathname === '/customer/repayments' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/repayments' ? 3 : 2} />
+                        <CreditCard size={22} className={pathname === '/customer/repayments' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/repayments' ? 3 : 2} />
                         <span className="text-[9px] font-black uppercase tracking-widest">Repay</span>
                     </Link>
                 </>
