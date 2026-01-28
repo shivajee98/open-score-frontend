@@ -29,7 +29,7 @@ export default function LoanStatus() {
                     if (loanId === 'L-10293') {
                         setLoan({
                             id: 'L-10293',
-                            amount: 9056,
+                            amount: 30000,
                             status: 'APPROVED',
                             tenure: 3,
                             created_at: '2019-08-15'
@@ -47,6 +47,21 @@ export default function LoanStatus() {
 
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div></div>;
     if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loan not found</div>;
+
+    const principal = Number(loan.amount);
+    const processingFee = 600;
+    const creditAssessmentFee = 200;
+    const kycPrice = 600;
+    const totalFeesBeforeGst = processingFee + creditAssessmentFee + kycPrice;
+    const gstRate = 0.18;
+    const gst = Math.round(totalFeesBeforeGst * gstRate);
+
+    // Interest calculation if available
+    const interestRate = Number(loan.interest_rate || 0);
+    const totalInterest = Math.round((principal * interestRate) / 100);
+
+    const totalDeductions = totalFeesBeforeGst + gst;
+    const disbursalAmount = principal - totalDeductions;
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
@@ -75,30 +90,40 @@ export default function LoanStatus() {
                                 }`}>{loan.status}</span>
                         </div>
 
-                        <div className={`space-y-3 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className={`space-y-3 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                             <div className="flex justify-between text-xs font-bold text-slate-500">
                                 <span>Processing Fee</span>
-                                <span className="text-slate-900">₹ 600</span>
+                                <span className="text-slate-900">₹ {processingFee.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-xs font-bold text-slate-500">
+                                <span>KYC Price</span>
+                                <span className="text-slate-900">₹ {kycPrice.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-xs font-bold text-slate-500">
                                 <span>Credit re-assessment Fees</span>
-                                <span className="text-slate-900">₹ 200</span>
+                                <span className="text-slate-900">₹ {creditAssessmentFee.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-xs font-bold text-slate-500">
                                 <span>GST (18% on all Fees)</span>
-                                <span className="text-slate-900">₹ 144</span>
+                                <span className="text-slate-900">₹ {gst.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-xs font-bold text-slate-500">
-                                <span>Total Interest @ 2.46%</span>
-                                <span className="text-slate-900">₹ 246</span>
-                            </div>
-                            <div className="flex justify-between text-xs font-bold text-slate-500">
-                                <span>Annualized Interest Rate</span>
-                                <span className="text-slate-900">29.95% p.a</span>
-                            </div>
+
+                            {interestRate > 0 && (
+                                <>
+                                    <div className="flex justify-between text-xs font-bold text-slate-500">
+                                        <span>Total Interest @ {interestRate}%</span>
+                                        <span className="text-slate-900">₹ {totalInterest.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-bold text-slate-500">
+                                        <span>Annualized Interest Rate</span>
+                                        <span className="text-slate-900">{(interestRate * 4).toFixed(2)}% p.a</span>
+                                    </div>
+                                </>
+                            )}
+
                             <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-100">
                                 <span>Disbursal Amount</span>
-                                <span>₹ 9,056</span>
+                                <span>₹ {disbursalAmount.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-xs font-bold text-slate-400 pt-1">
                                 <span>Loan ID</span>
@@ -136,9 +161,9 @@ export default function LoanStatus() {
                         ].map((step, i) => (
                             <div key={i} className="relative z-10 flex flex-col items-center gap-2">
                                 <div className={`w-8 h-8 rounded-full border-4 flex items-center justify-center transition-all ${step.status === 'done' ? 'bg-emerald-500 border-white text-white' :
-                                        step.status === 'error' ? 'bg-rose-500 border-white text-white' :
-                                            step.status === 'current' ? 'bg-emerald-500 border-emerald-100 text-white shadow-lg shadow-emerald-500/30' :
-                                                'bg-slate-100 border-white text-slate-300'
+                                    step.status === 'error' ? 'bg-rose-500 border-white text-white' :
+                                        step.status === 'current' ? 'bg-emerald-500 border-emerald-100 text-white shadow-lg shadow-emerald-500/30' :
+                                            'bg-slate-100 border-white text-slate-300'
                                     }`}>
                                     {step.status === 'done' ? <Check size={14} strokeWidth={4} /> :
                                         step.status === 'error' ? <Ban size={14} strokeWidth={4} /> :
