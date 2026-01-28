@@ -23,7 +23,7 @@ export default function LoanDetail() {
     const amount = Number(params.amount);
 
     const [plan, setPlan] = useState<any>(null);
-    const [tenure, setTenure] = useState<TenureMonths>(3);
+    const [tenure, setTenure] = useState<TenureMonths>(3); // Initial placeholder, updated in useEffect
     const [payout, setPayout] = useState<PayoutOption | null>(null);
     const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
     const [loading, setLoading] = useState(false);

@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 
 // --- Types ---
 
-export type TenureMonths = 3 | 6;
+export type TenureMonths = 1 | 3 | 6;
 
 export type PayoutFrequency = 'Daily' | '5 Days' | '7 Days' | '10 Days' | '15 Days' | '20 Days' | '25 Days' | 'Monthly' | 'Quarterly' | 'Half Yearly';
 
@@ -36,11 +36,12 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
         amount: 10000,
         title: "Virtual Credit",
         description: "Instant activation with nominal KYC",
-        tenures: [3],
+        tenures: [1],
         color: "from-indigo-500 to-purple-600",
         payoutOptions: (tenure) => [
-            { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 10, val: 'Instant Approval', isBestValue: true },
-            { id: 'monthly', label: 'Monthly', frequency: 'Monthly', interestRate: 0, cashback: 20 },
+            { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 5, val: 'Big Cashback', isBestValue: true },
+            { id: '7days', label: 'Every 7 Days', frequency: '7 Days', interestRate: 0, cashback: 10, val: 'Recommended' },
+            { id: '10days', label: 'Every 10 Days', frequency: '10 Days', interestRate: 0, cashback: 15, val: 'Recommended' },
         ]
     },
     20000: {
