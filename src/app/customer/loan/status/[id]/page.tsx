@@ -80,15 +80,15 @@ export default function LoanStatus() {
                 {/* Details Card */}
                 <div className="bg-white rounded-lg shadow-xl shadow-blue-900/5 overflow-hidden">
                     <div className="p-6 border-b border-slate-100">
-                        <div className="flex justify-between items-start mb-4">
+                        <div className="flex justify-between items-start mb-8">
                             <div>
-                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1">Loan Amount</p>
-                                <h2 className="text-3xl font-normal text-slate-900">₹ {Number(loan.amount).toLocaleString()}</h2>
+                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-2">Loan Amount</p>
+                                <span className={`text-[10px] font-normal px-2 py-0.5 border rounded-full uppercase tracking-wide ${loan.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                                    loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                        'bg-amber-50 border-amber-100 text-amber-600'
+                                    }`}>{loan.status}</span>
                             </div>
-                            <span className={`text-[10px] font-normal px-2 py-1 rounded-full uppercase tracking-wide ${loan.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
-                                loan.status === 'REJECTED' ? 'bg-rose-100 text-rose-600' :
-                                    'bg-amber-100 text-amber-600'
-                                }`}>{loan.status}</span>
+                            <h2 className="text-2xl font-normal text-slate-900">₹ {Number(loan.amount).toLocaleString()}</h2>
                         </div>
 
                         <div className={`space-y-4 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
