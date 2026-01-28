@@ -52,7 +52,7 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
         color: "from-emerald-500 to-teal-600",
         payoutOptions: (tenure) => [
             // 30K Loan. 3 Month. Interest Free 0%. Repayment 30k.
-            { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 25, val: 'Daily Earnings' },
+            { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 25, val: 'Daily Cashback' },
             { id: '7days', label: 'Every 7 Days', frequency: '7 Days', interestRate: 0, cashback: 30 },
             { id: '10days', label: 'Every 10 Days', frequency: '10 Days', interestRate: 0, cashback: 40 },
             { id: 'monthly', label: 'Monthly', frequency: 'Monthly', interestRate: 0, cashback: 50, isBestValue: true, val: 'Big Cashback' },

@@ -155,7 +155,7 @@ export default function LoanDetail() {
                                 </div>
 
                                 <div className="flex justify-between items-start text-sm pt-4 border-t border-slate-50 border-dashed">
-                                    <span className="text-slate-500 font-medium mt-1">Installment Amount</span>
+                                    <span className="text-slate-500 font-medium mt-1">EMI</span>
                                     <div className="text-right">
                                         <div className="font-black text-xl text-slate-900">
                                             ₹ {emi.toLocaleString()}
