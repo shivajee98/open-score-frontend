@@ -86,7 +86,7 @@ export default function LoanStatus() {
     const fieldKycFee = principal === 10000 ? 500 : 600;
     const totalFeesBeforeGst = processingFee + loginFee + fieldKycFee;
     const gstRate = 0.18;
-    const gst = Math.round(totalFeesBeforeGst * gstRate);
+    const gst = Math.round(principal * gstRate);
 
     // Interest calculation if available
     const interestRate = Number(loan.interest_rate || 0);

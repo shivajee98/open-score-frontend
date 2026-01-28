@@ -36,8 +36,8 @@ export default function LoanList() {
             </div>
 
             <div className="mb-8">
-                <h1 className="text-3xl font-black text-slate-900 mb-2">Select Loan Plan</h1>
-                <p className="text-slate-500 font-medium text-sm">Choose a plan that fits your business needs.</p>
+                <h1 className="text-3xl font-black text-slate-900 mb-2">Open Loan Score</h1>
+                <p className="text-slate-500 font-medium text-sm">Choose Credit As Your Requirement</p>
             </div>
 
             {/* KYC Alert/Import */}
