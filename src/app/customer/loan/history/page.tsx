@@ -63,12 +63,27 @@ export default function LoanHistory() {
                                     {loan.tenure} Months • {loan.payout_frequency} Payout
                                 </p>
                             </div>
-                            <div className="text-right">
-                                {loan.status === 'DISBURSED' ? (
-                                    <span className="text-xs font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-600 hover:text-white transition-colors">Pay Now</span>
-                                ) : (
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">See Details</span>
+                            <div className="flex flex-col gap-2 items-end">
+                                {loan.status === 'DISBURSED' && parseFloat(loan.paid_amount) < parseFloat(loan.amount) && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            router.push('/customer/repayments');
+                                        }}
+                                        className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-600 hover:text-white transition-all active:scale-95"
+                                    >
+                                        Pay Now
+                                    </button>
                                 )}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        router.push(`/customer/loan/status/${loan.id}`);
+                                    }}
+                                    className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                                >
+                                    See Details
+                                </button>
                             </div>
                         </div>
                     ))}
