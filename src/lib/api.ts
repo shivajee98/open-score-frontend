@@ -8,9 +8,12 @@ export const clearAuthState = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        // Clear cookies
-        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-        document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        // Clear cookies with all common attributes to ensure they are gone
+        const cookies = ['token', 'user'];
+        cookies.forEach(name => {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname};`;
+        });
 
         // Notify Native WebView
         if ((window as any).ReactNativeWebView) {
@@ -23,6 +26,7 @@ export const clearAuthState = () => {
 
 export const handleUnauthorized = () => {
     if (typeof window !== 'undefined' && !isRedirecting) {
+        console.warn('Handling unauthorized response - clearing state and redirecting to login');
         isRedirecting = true;
         clearAuthState();
 

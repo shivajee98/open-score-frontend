@@ -15,7 +15,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             const userStr = localStorage.getItem('user');
 
             if (!token || !userStr) {
-                clearAuthState();
                 router.push('/');
                 return;
             }
@@ -24,25 +23,24 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 const user = JSON.parse(userStr);
 
                 // Enforce onboarding
-                if (!user.is_onboarded && pathname !== '/auth/onboarding') {
-                    router.push('/auth/onboarding');
+                const isOnboardingPath = pathname === '/auth/onboarding' || pathname === '/auth/merchant-onboarding';
+                if (!user.is_onboarded && !isOnboardingPath) {
+                    router.push(user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding');
                     return;
                 }
 
                 // Prevent access to wrong roles
                 if (pathname.startsWith('/admin') && user.role !== 'ADMIN') {
-                    router.push(user.role === 'MERCHANT' ? '/merchant' : '/customer');
+                    router.push('/customer');
                     return;
                 }
 
-                if (pathname.startsWith('/merchant') && user.role !== 'MERCHANT') {
-                    router.push(user.role === 'ADMIN' ? '/admin' : '/customer');
-                    return;
-                }
+                // Both Customer and Merchant now use /customer unified path
+                // so no need to redirect away from it for merchants.
 
                 setAuthorized(true);
             } catch (e) {
-                clearAuthState();
+                console.error("AuthGuard parse error:", e);
                 router.push('/');
             }
         };

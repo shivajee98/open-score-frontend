@@ -49,11 +49,9 @@ export function middleware(request: NextRequest) {
                 return response;
             }
         } else if (token) {
-            // Token exists but no user data - clear token and redirect
-            const response = NextResponse.redirect(new URL('/', request.url));
-            response.cookies.delete('token');
-            response.cookies.delete('user');
-            return response;
+            // Token exists but no user data - don't clear token, just redirect to home
+            // where client-side checkSession can re-verify and sync cookies
+            return NextResponse.redirect(new URL('/', request.url));
         }
     }
 

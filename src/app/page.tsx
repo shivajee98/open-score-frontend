@@ -33,28 +33,33 @@ export default function Home() {
           // Verify token with backend
           const userData = await apiFetch('/auth/me');
 
-          const user = JSON.parse(userStr);
-          // Update user if backend data is refreshed or just proceed
+          // If successful, update user data and ensure cookies are synced
+          localStorage.setItem('user', JSON.stringify(userData));
+
+          // Refresh cookies for middleware - 30 days
+          document.cookie = `token=${token}; path=/; max-age=2592000; SameSite=Lax`;
+          document.cookie = `user=${encodeURIComponent(JSON.stringify(userData))}; path=/; max-age=2592000; SameSite=Lax`;
+
           await minSplashTime;
-
-          // Check if onboarding is required
-          if (!user.is_onboarded) {
-            if (user.role) {
-              redirectUser(user);
-            } else {
-              setStep(3);
-              setShowSplash(false);
-            }
-            return;
-          }
-
-          redirectUser(user);
+          redirectUser(userData);
         } else {
-          throw new Error('No session');
+          await minSplashTime;
+          setShowSplash(false);
         }
-      } catch (e) {
+      } catch (e: any) {
+        console.error("Session check failed:", e);
         await minSplashTime;
-        clearAuthState();
+
+        // Only clear if it's explicitly an auth error (401/403)
+        // handleUnauthorized() already calls clearAuthState()
+        if (e.message?.includes('expired') || e.message?.includes('login') || e.message?.includes('status 401')) {
+          // State already cleared by apiFetch -> handleUnauthorized
+        } else {
+          // Network error or other - don't log out, just show login screen
+          // If we have token, we might want to stay on splash or show "Retry"
+          // but for now let's just show login.
+          console.warn("Possible network error, staying on login screen without clearing state");
+        }
         setShowSplash(false);
       }
     };
