@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import KycForm from '@/components/loan/KycForm';
