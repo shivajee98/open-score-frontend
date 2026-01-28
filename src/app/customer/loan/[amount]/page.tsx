@@ -126,6 +126,7 @@ export default function LoanDetail() {
                     options={plan.tenures}
                     selected={tenure}
                     onChange={setTenure}
+                    payoutCount={payout ? count : undefined}
                 />
 
                 <PayoutSelector

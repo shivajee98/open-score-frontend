@@ -6,12 +6,13 @@ interface TenureSelectorProps {
     options: TenureMonths[];
     selected: TenureMonths;
     onChange: (t: TenureMonths) => void;
+    payoutCount?: number;
 }
 
-export default function TenureSelector({ options, selected, onChange }: TenureSelectorProps) {
+export default function TenureSelector({ options, selected, onChange, payoutCount }: TenureSelectorProps) {
     return (
         <div className="mb-8">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Select Tenure</h3>
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Selected Tenure</h3>
             <div className="flex gap-4">
                 {options.map(t => (
                     <button
@@ -25,6 +26,11 @@ export default function TenureSelector({ options, selected, onChange }: TenureSe
                         )}
                     >
                         {t} Months
+                        {payoutCount && selected === t && (
+                            <span className="block text-[10px] uppercase tracking-widest mt-1 opacity-60">
+                                {payoutCount} Total Repayments
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>
