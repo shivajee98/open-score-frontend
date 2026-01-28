@@ -8,6 +8,7 @@ import Link from 'next/link';
 export default function CustomerHome() {
     const [balance, setBalance] = useState('...');
     const [user, setUser] = useState<any>(null);
+    const [kycLoan, setKycLoan] = useState<any>(null);
 
     useEffect(() => {
         const loadData = async () => {
@@ -16,6 +17,11 @@ export default function CustomerHome() {
                 setUser(u);
                 const w = await apiFetch('/wallet/balance');
                 setBalance(w.balance);
+
+                // Check for KYC pending loans
+                const loans = await apiFetch('/loans');
+                const pendingKyc = loans.find((l: any) => l.status === 'KYC_SENT');
+                if (pendingKyc) setKycLoan(pendingKyc);
             } catch (e) { }
         };
         loadData();
@@ -133,8 +139,8 @@ export default function CustomerHome() {
                     ].map((item, i) => (
                         <div key={i} className="flex flex-col items-center gap-2 group relative">
                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm relative overflow-hidden ${item.highlight
-                                    ? 'bg-yellow-50 border-2 border-yellow-200 text-yellow-600 shadow-yellow-200'
-                                    : 'bg-white border border-slate-100 text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200'
+                                ? 'bg-yellow-50 border-2 border-yellow-200 text-yellow-600 shadow-yellow-200'
+                                : 'bg-white border border-slate-100 text-slate-400 group-hover:text-blue-600 group-hover:border-blue-200'
                                 }`}>
                                 {item.icon}
                             </div>
