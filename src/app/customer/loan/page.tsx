@@ -13,6 +13,7 @@ export default function LoanList() {
     const [recentLoan, setRecentLoan] = useState<any>(null);
     const [kycLoan, setKycLoan] = useState<any>(null);
     const [activeLoan, setActiveLoan] = useState<any>(null);
+    const [cooldown, setCooldown] = useState({ active: false, daysRemaining: 0 });
 
     const fetchLoans = () => {
         apiFetch('/loans').then((loans: any[]) => {
@@ -23,8 +24,22 @@ export default function LoanList() {
                 const pendingKyc = loans.find((l: any) => l.status === 'KYC_SENT');
                 if (pendingKyc) setKycLoan(pendingKyc);
 
-                const active = loans.find((l: any) => !['REJECTED', 'CANCELLED', 'DISBURSED'].includes(l.status));
+                const active = loans.find((l: any) => !['REJECTED', 'CANCELLED', 'DISBURSED', 'CLOSED'].includes(l.status));
                 setActiveLoan(active);
+
+                // Check for 15-day cooldown from last disbursement
+                const lastDisbursed = sorted.find((l: any) => l.disbursed_at);
+                if (lastDisbursed) {
+                    const disbursedDate = new Date(lastDisbursed.disbursed_at);
+                    const now = new Date();
+                    const diffTime = Math.abs(now.getTime() - disbursedDate.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Days elapsed since disbursement
+
+                    // If it's been less than 15 days (e.g. 1 day), we restrict.
+                    if (diffDays <= 15) {
+                        setCooldown({ active: true, daysRemaining: 16 - diffDays });
+                    }
+                }
             }
         }).catch(err => {
             console.error("Failed to fetch recent loan activity", err);
@@ -126,11 +141,15 @@ export default function LoanList() {
                                 alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
                                 return;
                             }
+                            if (cooldown.active) {
+                                alert(`Cool-down Period: You can apply for a new loan in ${cooldown.daysRemaining} days. We require a 15-day interval between loans.`);
+                                return;
+                            }
                             router.push(`/customer/loan/${plan.amount}`);
                         }}
                         className={cn(
                             "bg-slate-900 rounded-[2.5rem] p-6 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all",
-                            activeLoan && "opacity-75 grayscale-[0.5]"
+                            (activeLoan || cooldown.active) && "opacity-75 grayscale-[0.5]"
                         )}
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/30 rounded-full blur-[80px] -mr-20 -mt-20 group-hover:bg-indigo-600/40 transition-colors"></div>
@@ -157,7 +176,7 @@ export default function LoanList() {
                                 </div>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all">
-                                <ChevronRight size={20} />
+                                {cooldown.active ? <Lock size={20} /> : <ChevronRight size={20} />}
                             </div>
                         </div>
                     </div>
@@ -179,6 +198,10 @@ export default function LoanList() {
                                     alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
                                     return;
                                 }
+                                if (cooldown.active) {
+                                    alert(`Cool-down Period: You can apply for a new loan in ${cooldown.daysRemaining} days. We require a 15-day interval between loans.`);
+                                    return;
+                                }
                                 if (plan.isLocked) {
                                     alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} loan. Please build your eligibility by successfully repaying your current or previous smaller loans.`);
                                     return;
@@ -187,7 +210,7 @@ export default function LoanList() {
                             }}
                             className={cn(
                                 "bg-white rounded-[2rem] p-6 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between",
-                                (plan.isLocked || activeLoan) ? "opacity-75 grayscale-[0.5]" : "hover:border-blue-200"
+                                (plan.isLocked || activeLoan || cooldown.active) ? "opacity-75 grayscale-[0.5]" : "hover:border-blue-200"
                             )}
                         >
                             <div className={`absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b ${plan.color}`}></div>
