@@ -62,7 +62,7 @@ export default function LoanStatus() {
 
     const totalDeductions = totalFeesBeforeGst + gst;
     const disbursalAmount = principal; // "keep it the actual loan price"
-    const netPayableAmount = principal - totalDeductions; // "decreasing other taxes on it"
+    const netPayableAmount = principal + totalDeductions; // "users have to pay base + extra fee"
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
