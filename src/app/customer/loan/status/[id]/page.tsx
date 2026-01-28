@@ -49,10 +49,10 @@ export default function LoanStatus() {
     if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loan not found</div>;
 
     const principal = Number(loan.amount);
-    const processingFee = 600;
-    const creditAssessmentFee = 200;
-    const kycPrice = 600;
-    const totalFeesBeforeGst = processingFee + creditAssessmentFee + kycPrice;
+    const processingFee = 1200;
+    const loginFee = 200;
+    const fieldKycFee = 600;
+    const totalFeesBeforeGst = processingFee + loginFee + fieldKycFee;
     const gstRate = 0.18;
     const gst = Math.round(totalFeesBeforeGst * gstRate);
 
@@ -61,7 +61,8 @@ export default function LoanStatus() {
     const totalInterest = Math.round((principal * interestRate) / 100);
 
     const totalDeductions = totalFeesBeforeGst + gst;
-    const disbursalAmount = principal - totalDeductions;
+    const disbursalAmount = principal; // "keep it the actual loan price"
+    const netPayableAmount = principal - totalDeductions; // "decreasing other taxes on it"
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
@@ -81,51 +82,58 @@ export default function LoanStatus() {
                     <div className="p-6 border-b border-slate-100">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Loan Amount</p>
-                                <h2 className="text-3xl font-black text-slate-900">₹ {Number(loan.amount).toLocaleString()}</h2>
+                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1">Loan Amount</p>
+                                <h2 className="text-3xl font-normal text-slate-900">₹ {Number(loan.amount).toLocaleString()}</h2>
                             </div>
-                            <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wide ${loan.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
+                            <span className={`text-[10px] font-normal px-2 py-1 rounded-full uppercase tracking-wide ${loan.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
                                 loan.status === 'REJECTED' ? 'bg-rose-100 text-rose-600' :
                                     'bg-amber-100 text-amber-600'
                                 }`}>{loan.status}</span>
                         </div>
 
-                        <div className={`space-y-3 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className={`space-y-4 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                             <div className="flex justify-between text-xs text-slate-500">
                                 <span>Processing Fee</span>
                                 <span className="text-slate-900">₹ {processingFee.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-xs text-slate-500">
-                                <span>KYC Price</span>
-                                <span className="text-slate-900">₹ {kycPrice.toLocaleString()}</span>
+                                <span>Login Fee</span>
+                                <span className="text-slate-900">₹ {loginFee.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between text-xs text-slate-500">
-                                <span>Credit re-assessment Fees</span>
-                                <span className="text-slate-900">₹ {creditAssessmentFee.toLocaleString()}</span>
+                                <span>Field KYC Fee</span>
+                                <span className="text-slate-900">₹ {fieldKycFee.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-xs font-bold text-slate-500">
-                                <span>GST (18% on all Fees)</span>
+                            <div className="flex justify-between text-xs text-slate-500">
+                                <span>GST (18%)</span>
                                 <span className="text-slate-900">₹ {gst.toLocaleString()}</span>
                             </div>
 
                             {interestRate > 0 && (
                                 <>
-                                    <div className="flex justify-between text-xs font-bold text-slate-500">
+                                    <div className="flex justify-between text-xs text-slate-500">
                                         <span>Total Interest @ {interestRate}%</span>
                                         <span className="text-slate-900">₹ {totalInterest.toLocaleString()}</span>
                                     </div>
-                                    <div className="flex justify-between text-xs font-bold text-slate-500">
-                                        <span>Annualized Interest Rate</span>
+                                    <div className="flex justify-between text-xs text-slate-500">
+                                        <span>Annualized Rate</span>
                                         <span className="text-slate-900">{(interestRate * 4).toFixed(2)}% p.a</span>
                                     </div>
                                 </>
                             )}
 
-                            <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-100">
-                                <span>Disbursal Amount</span>
-                                <span>₹ {disbursalAmount.toLocaleString()}</span>
+                            <div className="pt-2 border-t border-slate-50 space-y-3">
+                                <div className="flex justify-between text-sm text-slate-900">
+                                    <span>Disbursal Amount</span>
+                                    <span>₹ {disbursalAmount.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-slate-900">
+                                    <span>Net Payable Amount</span>
+                                    <span>₹ {netPayableAmount.toLocaleString()}</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-xs font-bold text-slate-400 pt-1">
+
+                            <div className="flex justify-between text-[10px] text-slate-400 pt-1">
                                 <span>Loan ID</span>
                                 <span>{loanId}</span>
                             </div>
@@ -146,8 +154,8 @@ export default function LoanStatus() {
                         {/* Connecting Line - Thinner and Elegant */}
                         <div className="absolute left-6 right-6 top-[20px] h-[2px] bg-slate-50 z-0">
                             <div className={`h-full bg-emerald-500 transition-all duration-1000 ${loan.status === 'DISBURSED' ? 'w-full' :
-                                    loan.status === 'APPROVED' ? 'w-2/3' :
-                                        loan.status === 'PENDING' ? 'w-1/3' : 'w-0'
+                                loan.status === 'APPROVED' ? 'w-2/3' :
+                                    loan.status === 'PENDING' ? 'w-1/3' : 'w-0'
                                 }`} />
                         </div>
 
@@ -164,9 +172,9 @@ export default function LoanStatus() {
                         ].map((step, i) => (
                             <div key={i} className="relative z-10 flex flex-col items-center gap-4">
                                 <div className={`w-9 h-9 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 ${step.status === 'done' ? 'bg-emerald-500 border-white text-white shadow-lg shadow-emerald-500/10' :
-                                        step.status === 'error' ? 'bg-rose-500 border-white text-white' :
-                                            step.status === 'current' ? 'bg-white border-amber-400 text-amber-500 shadow-xl shadow-amber-400/5' :
-                                                'bg-slate-50 border-white text-slate-100'
+                                    step.status === 'error' ? 'bg-rose-500 border-white text-white' :
+                                        step.status === 'current' ? 'bg-white border-amber-400 text-amber-500 shadow-xl shadow-amber-400/5' :
+                                            'bg-slate-50 border-white text-slate-100'
                                     }`}>
                                     {step.status === 'done' ? <Check size={16} strokeWidth={4} /> :
                                         step.status === 'error' ? <Ban size={16} strokeWidth={4} /> :
