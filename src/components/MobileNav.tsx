@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Wallet, User, Zap, CreditCard, QrCode } from 'lucide-react';
+import { LayoutDashboard, Wallet, User, Zap, CreditCard, QrCode, History } from 'lucide-react';
 
 export default function MobileNav() {
     const pathname = usePathname();
@@ -54,9 +54,9 @@ export default function MobileNav() {
                         <span className="text-[9px] font-black uppercase tracking-widest">Wallet</span>
                     </Link>
 
-                    <Link href="/customer/profile" className={`flex flex-col items-center gap-1 p-2 min-w-[64px] rounded-2xl transition-all duration-300 ${pathname === '/customer/profile' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
-                        <User size={22} className={pathname === '/customer/profile' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/profile' ? 3 : 2} />
-                        <span className="text-[9px] font-black uppercase tracking-widest">Profile</span>
+                    <Link href="/customer/repayments" className={`flex flex-col items-center gap-1 p-2 min-w-[64px] rounded-2xl transition-all duration-300 ${pathname === '/customer/repayments' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
+                        <History size={22} className={pathname === '/customer/repayments' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/repayments' ? 3 : 2} />
+                        <span className="text-[9px] font-black uppercase tracking-widest">Repay</span>
                     </Link>
                 </>
             )}
