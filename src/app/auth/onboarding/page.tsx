@@ -25,7 +25,6 @@ export default function Onboarding() {
                 const user = JSON.parse(userStr);
                 if (user.is_onboarded) {
                     if (user.role === 'ADMIN') router.push('/admin');
-                    else if (user.role === 'MERCHANT') router.push('/merchant');
                     else router.push('/customer');
                     return;
                 }
@@ -82,7 +81,7 @@ export default function Onboarding() {
             }
 
             if (role === 'CUSTOMER') router.push('/customer');
-            else if (role === 'MERCHANT') router.push('/merchant');
+            else if (role === 'MERCHANT') router.push('/auth/merchant-onboarding');
             else router.push('/admin');
 
         } catch (err: any) {

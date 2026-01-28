@@ -75,13 +75,16 @@ export default function Home() {
     }
 
     if (!user.is_onboarded) {
-      router.push('/auth/onboarding');
+      if (user.role === 'MERCHANT') {
+        router.push('/auth/merchant-onboarding');
+      } else {
+        router.push('/auth/onboarding');
+      }
       return;
     }
 
     if (user.role === 'ADMIN') router.push('/admin');
-    else if (user.role === 'MERCHANT') router.push('/merchant');
-    else router.push('/customer');
+    else router.push('/customer'); // Unified dashboard for both
   };
 
   const handleSendOtp = async () => {

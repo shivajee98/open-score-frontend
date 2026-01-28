@@ -31,8 +31,7 @@ export default function Profile() {
 
     const handleBack = () => {
         if (user?.role === 'ADMIN') router.push('/admin');
-        else if (user?.role === 'MERCHANT') router.push('/merchant');
-        else router.push('/customer');
+        else router.push('/customer'); // Unified dashboard
     };
 
     const handleUpdateProfile = async () => {
