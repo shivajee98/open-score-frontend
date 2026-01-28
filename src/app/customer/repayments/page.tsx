@@ -19,6 +19,9 @@ import {
     ArrowUpRight
 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
+import PinModal from '@/components/PinModal';
+import PaymentSuccessModal from '@/components/PaymentSuccessModal';
+import { toast } from '@/components/ui/Toast';
 
 export default function RepaymentsPage() {
     const router = useRouter();
@@ -28,6 +31,8 @@ export default function RepaymentsPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [pinModalOpen, setPinModalOpen] = useState(false);
+    const [successData, setSuccessData] = useState<any>(null);
 
     useEffect(() => {
         loadLoans();
@@ -61,21 +66,35 @@ export default function RepaymentsPage() {
 
         const pending = repayments.find(r => r.status === 'PENDING');
         if (!pending) {
-            alert("No pending EMIs found for this loan.");
+            toast.error("No pending EMIs found for this loan.");
             return;
         }
 
-        if (!confirm(`Confirm EMI payment of ₹${pending.amount}? Amount will be debited from your wallet.`)) return;
+        setPinModalOpen(true);
+    };
+
+    const handleFinishRepay = async (pin: string) => {
+        setPinModalOpen(false);
+        const pending = repayments.find(r => r.status === 'PENDING');
+        if (!pending) return;
 
         setActionLoading(true);
         try {
-            await apiFetch(`/loans/${selectedLoan.id}/repay`, {
-                method: 'POST'
+            const res = await apiFetch(`/loans/${selectedLoan.id}/repay`, {
+                method: 'POST',
+                body: JSON.stringify({ pin })
             });
-            alert("Repayment successful!");
-            handleOpenLoan(selectedLoan); // Refresh repayments
+
+            setSuccessData({
+                amount: pending.amount,
+                payeeName: `Loan EMI - #${selectedLoan.id}`,
+                ref: res.ref
+            });
+
+            handleOpenLoan(selectedLoan); // Refresh repayments schedule in modal
+            loadLoans(); // Refresh main list balance/status
         } catch (e: any) {
-            alert(e.message || "Repayment failed. Please check your wallet balance.");
+            toast.error(e.message || "Repayment failed. Please check your wallet balance.");
         } finally {
             setActionLoading(false);
         }
@@ -93,6 +112,22 @@ export default function RepaymentsPage() {
 
     return (
         <div className="min-h-screen bg-white pb-24 font-sans text-slate-900">
+            {/* PIN and Success Modals */}
+            <PinModal
+                isOpen={pinModalOpen}
+                title={`Confirm EMI Payment`}
+                onComplete={handleFinishRepay}
+                onClose={() => setPinModalOpen(false)}
+            />
+
+            <PaymentSuccessModal
+                isOpen={!!successData}
+                amount={successData?.amount || '0'}
+                payeeName={successData?.payeeName || ''}
+                transactionRef={successData?.ref || ''}
+                onClose={() => setSuccessData(null)}
+            />
+
             {/* Minimal Google-style Top Bar */}
             <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-slate-100">
                 <div className="flex items-center gap-4">

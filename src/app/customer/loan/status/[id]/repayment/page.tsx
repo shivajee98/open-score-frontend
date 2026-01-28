@@ -5,6 +5,9 @@ import { ArrowLeft, CheckCircle2, AlertCircle, Calendar, IndianRupee, PieChart, 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/loanUtils';
+import PinModal from '@/components/PinModal';
+import PaymentSuccessModal from '@/components/PaymentSuccessModal';
+import { toast } from '@/components/ui/Toast';
 
 export default function RepaymentDashboard() {
     const router = useRouter();
@@ -16,6 +19,8 @@ export default function RepaymentDashboard() {
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [pinModalOpen, setPinModalOpen] = useState(false);
+    const [successData, setSuccessData] = useState<any>(null);
 
     const fetchData = async () => {
         try {
@@ -34,13 +39,33 @@ export default function RepaymentDashboard() {
     }, [loanId]);
 
     const handleRepay = async () => {
+        if (!pendingEmi) {
+            toast.error("No pending EMIs found.");
+            return;
+        }
+        setPinModalOpen(true);
+    };
+
+    const handleFinishRepay = async (pin: string) => {
+        setPinModalOpen(false);
+        if (!pendingEmi) return;
+
         setPaying(true);
         try {
-            await apiFetch(`/loans/${loanId}/repay`, { method: 'POST' });
-            alert("EMI Paid Successfully!");
+            const res = await apiFetch(`/loans/${loanId}/repay`, {
+                method: 'POST',
+                body: JSON.stringify({ pin })
+            });
+
+            setSuccessData({
+                amount: pendingEmi.amount,
+                payeeName: `Loan EMI - #${loanId}`,
+                ref: res.ref
+            });
+
             fetchData();
         } catch (e: any) {
-            alert(e.message || "Payment failed. Please check your wallet balance.");
+            toast.error(e.message || "Payment failed. Please check your wallet balance.");
         } finally {
             setPaying(false);
         }
@@ -73,6 +98,21 @@ export default function RepaymentDashboard() {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
+            <PinModal
+                isOpen={pinModalOpen}
+                title={`Confirm EMI Payment`}
+                onComplete={handleFinishRepay}
+                onClose={() => setPinModalOpen(false)}
+            />
+
+            <PaymentSuccessModal
+                isOpen={!!successData}
+                amount={successData?.amount || '0'}
+                payeeName={successData?.payeeName || ''}
+                transactionRef={successData?.ref || ''}
+                onClose={() => setSuccessData(null)}
+            />
+
             {/* Header Area */}
             <div className="bg-slate-900 pt-10 pb-20 px-6 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
