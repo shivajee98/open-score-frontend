@@ -279,7 +279,7 @@ export default function LoanStatus() {
                             <p className="text-blue-100 text-xs font-medium mt-1">We need a few more details to finalize your application.</p>
                         </div>
                         <button
-                            onClick={() => window.open(`https://open-score-kyc.vercel.app/form/${loan.kyc_token}`, '_blank')}
+                            onClick={() => window.open(`${process.env.NEXT_PUBLIC_KYC_URL || 'https://openscorekyc.galobyte.site'}/form/${loan.kyc_token}`, '_blank')}
                             className="w-full py-3 bg-white text-blue-600 rounded-xl font-black text-sm hover:bg-blue-50 transition-all uppercase tracking-widest shadow-lg"
                         >
                             Open Application Form
