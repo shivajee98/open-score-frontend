@@ -28,8 +28,12 @@ export default function Onboarding() {
                     else router.push('/customer');
                     return;
                 }
-                // If they have a role already, let's pre-set it but stay in step 1 if user wants to change
+                // If they have a role already, check if they should be in the merchant flow
                 if (user.role) {
+                    if (user.role === 'MERCHANT') {
+                        router.push('/auth/merchant-onboarding');
+                        return;
+                    }
                     setRole(user.role);
                 }
             } else {

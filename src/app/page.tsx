@@ -39,8 +39,12 @@ export default function Home() {
 
           // Check if onboarding is required
           if (!user.is_onboarded) {
-            setStep(3);
-            setShowSplash(false);
+            if (user.role) {
+              redirectUser(user);
+            } else {
+              setStep(3);
+              setShowSplash(false);
+            }
             return;
           }
 
@@ -130,7 +134,11 @@ export default function Home() {
         if (data.onboarding_status === 'REQUIRED') {
           data.user.is_onboarded = false;
           localStorage.setItem('user', JSON.stringify(data.user));
-          setStep(3); // Go to role selection instead of onboarding page immediately
+          if (data.user.role) {
+            redirectUser(data.user);
+          } else {
+            setStep(3); // Go to role selection instead of onboarding page immediately
+          }
         } else {
           data.user.is_onboarded = true;
           localStorage.setItem('user', JSON.stringify(data.user));
