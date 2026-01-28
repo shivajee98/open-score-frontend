@@ -32,15 +32,15 @@ export interface LoanPlan {
 // --- Configuration ---
 
 export const LOAN_PLANS: Record<number, LoanPlan> = {
-    5000: {
-        amount: 5000,
+    10000: {
+        amount: 10000,
         title: "Virtual Credit",
         description: "Instant activation with nominal KYC",
         tenures: [3],
         color: "from-indigo-500 to-purple-600",
         payoutOptions: (tenure) => [
-            { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 5, val: 'Instant Approval', isBestValue: true },
-            { id: 'monthly', label: 'Monthly', frequency: 'Monthly', interestRate: 0, cashback: 10 },
+            { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 10, val: 'Instant Approval', isBestValue: true },
+            { id: 'monthly', label: 'Monthly', frequency: 'Monthly', interestRate: 0, cashback: 20 },
         ]
     },
     20000: {

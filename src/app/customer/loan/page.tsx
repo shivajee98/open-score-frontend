@@ -60,7 +60,7 @@ export default function LoanList() {
 
             {/* Virtual Credit - High Impact Highlight */}
             <div className="mb-10">
-                {Object.values(LOAN_PLANS).filter((p: any) => p.amount === 5000).map((plan: any) => (
+                {Object.values(LOAN_PLANS).filter((p: any) => p.amount === 10000).map((plan: any) => (
                     <div
                         key={plan.amount}
                         onClick={() => router.push(`/customer/loan/${plan.amount}`)}
@@ -103,7 +103,7 @@ export default function LoanList() {
                 <span className="text-[10px] font-bold text-slate-400">Fixed Tenure</span>
             </div>
             <div className="grid grid-cols-2 gap-4 mb-8">
-                {Object.values(LOAN_PLANS).filter((p: any) => p.amount > 5000).map((plan: any) => (
+                {Object.values(LOAN_PLANS).filter((p: any) => p.amount > 10000).map((plan: any) => (
                     <div
                         key={plan.amount}
                         onClick={() => {
