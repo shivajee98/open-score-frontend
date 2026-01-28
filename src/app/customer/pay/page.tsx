@@ -23,6 +23,8 @@ export default function CustomerPay() {
     const [scanning, setScanning] = useState(false);
     const [scannerInstance, setScannerInstance] = useState<any>(null);
     const [successData, setSuccessData] = useState<any>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [recentPayees, setRecentPayees] = useState<any[]>([]);
 
     const navItems = [
         { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
@@ -35,6 +37,20 @@ export default function CustomerPay() {
         apiFetch('/wallet/balance').then(data => {
             setBalance(data.balance);
             setLockedBalance(data.locked_balance || 0);
+        });
+
+        apiFetch('/wallet/transactions').then(data => {
+            const transferPayees = data
+                .filter((tx: any) => tx.source_type === 'TRANSFER' && tx.type === 'DEBIT')
+                .map((tx: any) => ({
+                    name: tx.counterparty_name,
+                    vpa: tx.counterparty_vpa,
+                    id: tx.counterparty_vpa?.split('@')[0] || tx.reference_id
+                }));
+
+            // Deduplicate by VPA
+            const unique = Array.from(new Map(transferPayees.map((p: any) => [p.vpa, p])).values());
+            setRecentPayees(unique.slice(0, 4));
         });
     }, []);
 
@@ -201,21 +217,22 @@ export default function CustomerPay() {
                                     <Smartphone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
                                     <input
                                         type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Enter mobile number or Open Score ID"
                                         className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                                                fetchPayeeDetails(e.currentTarget.value.trim());
+                                            if (e.key === 'Enter' && searchQuery.trim()) {
+                                                fetchPayeeDetails(searchQuery.trim());
                                             }
                                         }}
                                     />
                                 </div>
 
                                 <button
-                                    onClick={(e) => {
-                                        const input = ((e.target as HTMLElement).previousElementSibling as HTMLInputElement);
-                                        if (input?.value.trim()) {
-                                            fetchPayeeDetails(input.value.trim());
+                                    onClick={() => {
+                                        if (searchQuery.trim()) {
+                                            fetchPayeeDetails(searchQuery.trim());
                                         }
                                     }}
                                     className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
@@ -223,6 +240,29 @@ export default function CustomerPay() {
                                     Continue <ArrowRight className="w-5 h-5" />
                                 </button>
                             </div>
+
+                            {recentPayees.length > 0 && (
+                                <div className="mb-8">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Recent Payees</h4>
+                                    <div className="grid grid-cols-4 gap-4">
+                                        {recentPayees.map((p, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => {
+                                                    setSearchQuery(p.id);
+                                                    fetchPayeeDetails(p.id);
+                                                }}
+                                                className="flex flex-col items-center gap-2 group cursor-pointer active:scale-95 transition-all"
+                                            >
+                                                <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-900 font-bold group-hover:bg-blue-50 group-hover:border-blue-100 group-hover:text-blue-600 transition-all">
+                                                    {p.name?.[0]}
+                                                </div>
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter text-center line-clamp-1">{p.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center">
