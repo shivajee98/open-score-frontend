@@ -206,7 +206,10 @@ export default function CustomerHome() {
             {/* Recharge & Bills Section */}
             <div className="px-6 mb-24">
                 <div className="flex justify-between items-center mb-6 px-2">
-                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Recharge & Bills</h3>
+                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center">
+                        Recharge & Bills
+                        <span className="ml-3 text-[8px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md animate-pulse border border-rose-100 shadow-sm tracking-widest">Coming Soon</span>
+                    </h3>
                     <div className="w-8 h-1 bg-slate-100 rounded-full"></div>
                 </div>
                 <div className="grid grid-cols-4 gap-y-8 gap-x-4">
@@ -258,7 +261,7 @@ export default function CustomerHome() {
                 </div>
             </div>
 
-        </div>
+        </div >
     );
 }
 
