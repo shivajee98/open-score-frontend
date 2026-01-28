@@ -145,18 +145,10 @@ export function calculateRepayment(amount: number, tenureMonths: number, option:
 
         // Cashback Part
         if (option.cashback) {
-            parts.push(`Earn ₹${option.cashback} Cashback`);
-        } else {
-            // Only add per/payout if no cashback or explicitly needed? 
-            // The prompt implies straightforward display.
-            // Let's keep it simple.
+            parts.push(`₹${option.cashback} Cashback`);
         }
 
-        // Combine: "0% Interest • Earn ₹25 Cashback"
-        // Or just "Earn ₹25 Cashback" if 0%? 
-        // User prompt for 50k says: "Daily 0% cashback Rs 10". So show both.
-
-        const breakdownText = `${parts.join(" • ")} • ₹${emi.toLocaleString()} / repayment`;
+        const breakdownText = `${parts.join(" • ")} • ₹${emi.toLocaleString()} / repay`;
 
         return {
             total,

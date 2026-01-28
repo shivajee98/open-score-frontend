@@ -149,39 +149,39 @@ export default function LoanDetail() {
                     </button>
 
                     {isBreakdownOpen && (
-                        <div className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2">
+                        <div className="px-6 pb-6 pt-0 animate-in slide-in-from-top-2 text-xs">
                             <div className="space-y-4 pt-4 border-t border-slate-50">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm font-black text-slate-400 uppercase tracking-widest">Principal Amount</span>
+                                    <span className="font-black text-slate-400 uppercase tracking-widest">Principal</span>
                                     <span className="font-bold text-slate-900">₹ {plan.amount.toLocaleString()}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm font-black text-slate-400 uppercase tracking-widest">EMI</span>
+                                    <span className="font-black text-slate-400 uppercase tracking-widest">EMI</span>
                                     <span className="font-black text-slate-900 text-lg">₹ {emi.toLocaleString()}</span>
                                 </div>
 
-                                <div className="flex justify-between items-center text-xs">
-                                    <span className="text-slate-500 font-bold uppercase tracking-wider">{payout?.label || 'Fixed'} Repayment Schedule</span>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-500 font-bold uppercase tracking-wider">{payout?.label || 'Fixed'} Repayments</span>
                                     <span className="text-slate-400 font-bold">{count} EMI</span>
                                 </div>
 
                                 {payout?.cashback ? (
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-emerald-600 font-black uppercase tracking-wider">Cash back (per installment)</span>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-emerald-600 font-black uppercase tracking-wider">Cashback/EMI</span>
                                         <span className="font-black text-emerald-600">₹ {payout.cashback}</span>
                                     </div>
                                 ) : null}
 
                                 <div className="pt-4 border-t border-slate-100 space-y-3">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Total Repayment</span>
+                                        <span className="font-black text-slate-900 uppercase tracking-widest">Total Pay</span>
                                         <span className="text-xl font-black text-slate-900">₹ {total.toLocaleString()}</span>
                                     </div>
 
                                     {((payout?.cashback || 0) * count) > 0 && (
                                         <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
-                                            <span className="text-xs font-black text-emerald-700 uppercase tracking-widest">Total CASHBACK</span>
+                                            <span className="font-black text-emerald-700 uppercase tracking-widest">Total Reward</span>
                                             <span className="text-xl font-black text-emerald-700">₹ {((payout?.cashback || 0) * count).toLocaleString()}</span>
                                         </div>
                                     )}
