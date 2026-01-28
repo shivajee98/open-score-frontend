@@ -23,6 +23,7 @@ export interface LoanPlan {
     amount: number;
     title: string;
     description: string;
+    isLocked?: boolean;
     tenures: TenureMonths[];
     payoutOptions: (tenure: TenureMonths) => PayoutOption[];
     color: string;
@@ -91,6 +92,33 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
                 ];
             }
         }
+    },
+    100000: {
+        amount: 100000,
+        title: "Empire Builder",
+        description: "Scale your operations to new heights",
+        isLocked: true,
+        tenures: [6],
+        color: "from-purple-600 to-indigo-800",
+        payoutOptions: () => []
+    },
+    200000: {
+        amount: 200000,
+        title: "Capital Expansion",
+        description: "Massive funding for big milestones",
+        isLocked: true,
+        tenures: [6],
+        color: "from-amber-600 to-orange-800",
+        payoutOptions: () => []
+    },
+    500000: {
+        amount: 500000,
+        title: "Venture Power",
+        description: "Ultimate plan for market domination",
+        isLocked: true,
+        tenures: [6],
+        color: "from-rose-600 to-pink-800",
+        payoutOptions: () => []
     }
 };
 

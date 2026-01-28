@@ -1,12 +1,11 @@
-
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronRight, Zap, Clock, ShieldCheck } from 'lucide-react';
-import { LOAN_PLANS } from '@/lib/loanUtils';
+import { ArrowLeft, ChevronRight, Zap, Clock, ShieldCheck, Lock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
+import { LOAN_PLANS, cn } from '@/lib/loanUtils';
 
 export default function LoanList() {
     const router = useRouter();
@@ -61,24 +60,41 @@ export default function LoanList() {
 
             {/* Loan Plans Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8">
-                {Object.values(LOAN_PLANS).map((plan) => (
+                {Object.values(LOAN_PLANS).map((plan: any) => (
                     <div
                         key={plan.amount}
-                        onClick={() => router.push(`/customer/loan/${plan.amount}`)}
-                        className="bg-white rounded-[2rem] p-5 pt-12 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer hover:border-blue-200 transition-all active:scale-[0.95]"
+                        onClick={() => {
+                            if (plan.isLocked) {
+                                alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} loan. Please build your eligibility by successfully repaying your current or previous smaller loans.`);
+                                return;
+                            }
+                            router.push(`/customer/loan/${plan.amount}`);
+                        }}
+                        className={cn(
+                            "bg-white rounded-[2rem] p-5 pt-12 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.95]",
+                            plan.isLocked ? "opacity-75 grayscale-[0.5]" : "hover:border-blue-200"
+                        )}
                     >
                         <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${plan.color}`}></div>
-                        <div className={`absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-colors`}>
-                            <ChevronRight size={16} />
+                        <div className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${plan.isLocked
+                            ? "bg-slate-100 text-slate-400"
+                            : "bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white"
+                            }`}>
+                            {plan.isLocked ? <Lock size={14} /> : <ChevronRight size={16} />}
                         </div>
 
                         <div className="mb-3">
-                            <span className={`text-[10px] font-bold text-white px-2 py-1 rounded-full bg-gradient-to-r ${plan.color} uppercase tracking-wide`}>
+                            <span className={`text-[10px] font-bold text-white px-2 py-1 rounded-full bg-gradient-to-r ${plan.color} uppercase tracking-wide flex items-center gap-1 w-fit`}>
+                                {plan.isLocked && <Lock size={8} fill="white" />}
                                 {plan.title}
                             </span>
                         </div>
-                        <h3 className="text-2xl font-black text-slate-900 mb-1">₹ {plan.amount >= 1000 ? `${plan.amount / 1000}k` : plan.amount}</h3>
-                        <p className="text-xs font-bold text-slate-400 line-clamp-1">{plan.description}</p>
+                        <h3 className="text-2xl font-black text-slate-900 mb-1">
+                            ₹ {plan.amount >= 100000 ? `${plan.amount / 100000}L` : plan.amount >= 1000 ? `${plan.amount / 1000}k` : plan.amount}
+                        </h3>
+                        <p className="text-xs font-bold text-slate-400 line-clamp-1">
+                            {plan.isLocked ? 'Building Eligibility...' : plan.description}
+                        </p>
                     </div>
                 ))}
             </div>
@@ -119,10 +135,6 @@ export default function LoanList() {
                 </div>
             ) : (
                 <div className="mb-8">
-                    {/* Placeholder or empty state if we want to encourage activity, or just hidden. 
-                         For now, hiding it is cleanest since we have "More Options" below. 
-                         Or we can show a banner "Apply for your first loan".
-                         User said "keep real data only", so hiding if empty is best.*/}
                 </div>
             )}
 
