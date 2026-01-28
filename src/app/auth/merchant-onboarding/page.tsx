@@ -117,8 +117,8 @@ export default function MerchantOnboarding() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-900 font-sans">
-            <div className="w-full max-w-md bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-blue-900/5 relative overflow-hidden border border-slate-100">
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 font-sans">
+            <div className="w-full max-w-md bg-white rounded-[2.5rem] p-6 sm:p-8 md:p-12 shadow-2xl shadow-blue-900/5 relative overflow-hidden border border-slate-100">
 
                 {/* Progress Bar */}
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100">
@@ -293,7 +293,7 @@ export default function MerchantOnboarding() {
                 )}
 
             </div>
-            <p className="mt-8 text-slate-400 text-xs font-bold uppercase tracking-widest opacity-50">Merchant Protocol Verified</p>
+            <p className="mt-6 text-slate-400 text-xs font-bold uppercase tracking-widest text-center">Merchant Protocol Verified</p>
         </div>
     );
 }

@@ -183,7 +183,7 @@ export default function CustomerPay() {
                                     <Search className="w-10 h-10 text-white" />
                                 </div>
                                 <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Pay Anyone</h3>
-                                <p className="text-slate-500 font-medium">Enter mobile number or UPI ID</p>
+                                <p className="text-slate-500 font-medium">Enter mobile number or Open Score ID</p>
                             </div>
 
                             <div className="space-y-4 mb-6">
@@ -191,7 +191,7 @@ export default function CustomerPay() {
                                     <Smartphone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
                                     <input
                                         type="text"
-                                        placeholder="Enter mobile number or UPI ID"
+                                        placeholder="Enter mobile number or Open Score ID"
                                         className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && e.currentTarget.value.trim()) {
