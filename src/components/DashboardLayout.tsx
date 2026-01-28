@@ -100,9 +100,11 @@ export default function DashboardLayout({
                     <header className="px-6 py-4 md:py-6 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
                         <h2 className="text-xl md:text-3xl font-black tracking-tight text-slate-900">{title}</h2>
                         <div className="flex items-center gap-3 md:hidden">
-                            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-sm border border-blue-200">
-                                {user?.name?.[0] || 'U'}
-                            </div>
+                            <Link href="/customer/profile">
+                                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-sm border border-blue-200 cursor-pointer active:scale-90 transition-transform">
+                                    {user?.name?.[0] || 'U'}
+                                </div>
+                            </Link>
                         </div>
                     </header>
 
