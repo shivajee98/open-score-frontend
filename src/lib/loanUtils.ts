@@ -190,7 +190,7 @@ export function calculateRepayment(amount: number, tenureMonths: number, option:
             parts.push(`${option.interestRate}% Interest`);
         }
 
-        const breakdownText = `${parts.join(" • ")} • ₹${emi.toLocaleString()} / repay`;
+        const breakdownText = `${parts.join(" • ")} • ₹${emi.toLocaleString()} / EMI`;
 
         return {
             total,

@@ -13,7 +13,7 @@ interface PayoutSelectorProps {
 export default function PayoutSelector({ options, selected, onChange, planAmount, tenure }: PayoutSelectorProps) {
     return (
         <div className="mb-8">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Select Repayment Schedule</h3>
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Select EMI Plan</h3>
             <div className="space-y-3">
                 {options.map(option => {
                     const { total, count, emi } = calculateRepayment(planAmount, tenure, option);
@@ -95,7 +95,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                             </div>
                                             <div>
                                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Schedule</p>
-                                                <p className="text-sm font-black text-slate-900">{count} Installments</p>
+                                                <p className="text-sm font-black text-slate-900">{count} EMIs</p>
                                             </div>
                                             <div>
                                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Net EMI</p>
@@ -111,7 +111,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
 
                                         <div className="bg-slate-900 rounded-2xl p-5 text-white flex justify-between items-center shadow-lg shadow-slate-900/10">
                                             <div>
-                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Repayment</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total EMI Pay</p>
                                                 <p className="text-xl font-black">₹{total.toLocaleString()}</p>
                                             </div>
                                             {((option.cashback || 0) * count) > 0 && (

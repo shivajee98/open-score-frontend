@@ -117,8 +117,8 @@ export default function LoanDetail() {
                     plan={plan}
                     tenure={tenure}
                     payout={payout}
-                    isRepayment={true}
-                    totalRepayment={total}
+                    isEmi={true}
+                    totalEmi={total}
                     breakdown={breakdown}
                     count={count}
                 />

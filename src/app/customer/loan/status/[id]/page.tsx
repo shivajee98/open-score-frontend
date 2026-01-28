@@ -309,7 +309,7 @@ export default function LoanStatus() {
                         <Lightbulb size={20} className="fill-amber-500 text-amber-500" />
                     </div>
                     <div>
-                        <p className="text-amber-800 font-bold text-sm">Repay your loans on time to avoid penalties and increase your creditworthiness.</p>
+                        <p className="text-amber-800 font-bold text-sm">Pay your EMIs on time to avoid penalties and increase your creditworthiness.</p>
                     </div>
                 </div>
             </div>

@@ -6,15 +6,15 @@ interface EarningsCardProps {
     plan: LoanPlan;
     tenure: TenureMonths;
     payout: PayoutOption | null;
-    isRepayment?: boolean;
-    totalRepayment?: number;
+    isEmi?: boolean;
+    totalEmi?: number;
     breakdown?: string;
     count?: number;
 }
 
-export default function EarningsCard({ plan, tenure, payout, isRepayment, totalRepayment, breakdown: propBreakdown, count: propCount }: EarningsCardProps) {
-    const result = isRepayment && totalRepayment !== undefined
-        ? { total: totalRepayment, breakdown: propBreakdown || '-', count: propCount || 0 }
+export default function EarningsCard({ plan, tenure, payout, isEmi, totalEmi, breakdown: propBreakdown, count: propCount }: EarningsCardProps) {
+    const result = isEmi && totalEmi !== undefined
+        ? { total: totalEmi, breakdown: propBreakdown || '-', count: propCount || 0 }
         : (payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-', count: 0 });
 
     const { total, breakdown, count } = result;
