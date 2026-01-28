@@ -159,7 +159,7 @@ export default function LoanDetail() {
                                     <div className="text-right">
                                         <div className="font-black text-xl text-slate-900">
                                             ₹ {emi.toLocaleString()}
-                                            <span className="text-xs font-bold text-slate-400 ml-1 uppercase">/ installment</span>
+                                            <span className="text-xs font-bold text-slate-400 ml-1 uppercase">/ repayment</span>
                                         </div>
                                         {payout && (
                                             <div className="text-xs font-bold text-emerald-600 mt-1 flex flex-col items-end">
