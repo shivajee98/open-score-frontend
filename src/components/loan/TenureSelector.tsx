@@ -12,7 +12,7 @@ interface TenureSelectorProps {
 export default function TenureSelector({ options, selected, onChange, payoutCount }: TenureSelectorProps) {
     return (
         <div className="mb-8">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Selected Tenure</h3>
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Tenure</h3>
             <div className="flex gap-4">
                 {options.map(t => (
                     <button
