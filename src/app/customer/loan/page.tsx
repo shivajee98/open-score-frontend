@@ -64,33 +64,33 @@ export default function LoanList() {
                     <div
                         key={plan.amount}
                         onClick={() => router.push(`/customer/loan/${plan.amount}`)}
-                        className="bg-slate-900 rounded-[2.5rem] p-8 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all"
+                        className="bg-slate-900 rounded-[2.5rem] p-6 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all"
                     >
                         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/30 rounded-full blur-[80px] -mr-20 -mt-20 group-hover:bg-indigo-600/40 transition-colors"></div>
                         <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl"></div>
 
-                        <div className="relative z-10 flex justify-between items-start">
+                        <div className="relative z-10 flex justify-between items-center">
                             <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <div className="bg-indigo-500 p-2 rounded-xl">
-                                        <Zap size={18} className="text-white fill-white" />
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="bg-indigo-500 p-1.5 rounded-lg">
+                                        <Zap size={14} className="text-white fill-white" />
                                     </div>
-                                    <span className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em]">Priority Fast-Track</span>
+                                    <span className="text-[9px] font-semibold text-indigo-300 uppercase tracking-[0.2em]">Priority Fast-Track</span>
                                 </div>
-                                <h2 className="text-3xl font-black text-white mb-2 tracking-tight">{plan.title}</h2>
-                                <p className="text-indigo-200/60 font-medium text-sm max-w-[200px] leading-relaxed mb-6">
+                                <h2 className="text-2xl font-medium text-white mb-0.5 tracking-tight">{plan.title}</h2>
+                                <p className="text-indigo-200/60 font-normal text-[11px] max-w-[200px] leading-relaxed mb-3">
                                     {plan.description} • Get funds in seconds.
                                 </p>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-4xl font-black text-white">₹{plan.amount.toLocaleString()}</span>
-                                    <div className="h-8 w-[2px] bg-white/10 mx-1"></div>
-                                    <div className="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Active Instantly</span>
+                                    <span className="text-3xl font-semibold text-white">₹{plan.amount.toLocaleString()}</span>
+                                    <div className="h-6 w-[1.5px] bg-white/10 mx-1"></div>
+                                    <div className="bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
+                                        <span className="text-[9px] font-medium text-white uppercase tracking-widest">Active Instantly</span>
                                     </div>
                                 </div>
                             </div>
-                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all">
-                                <ChevronRight size={24} />
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all">
+                                <ChevronRight size={20} />
                             </div>
                         </div>
                     </div>
