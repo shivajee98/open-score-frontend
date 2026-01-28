@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Wallet, User, Zap } from 'lucide-react';
+import { LayoutDashboard, Wallet, User, Zap, CreditCard } from 'lucide-react';
 
 export default function MobileNav() {
     const pathname = usePathname();
@@ -27,6 +27,11 @@ export default function MobileNav() {
                     <Link href={`/${role}/transactions`} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname.includes('transactions') ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
                         <Wallet size={24} strokeWidth={pathname.includes('transactions') ? 3 : 2} />
                         <span className="text-[10px] font-bold uppercase tracking-wide">Wallet</span>
+                    </Link>
+
+                    <Link href={`/${role}/repayments`} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname.includes('repayments') ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
+                        <CreditCard size={24} strokeWidth={pathname.includes('repayments') ? 3 : 2} />
+                        <span className="text-[10px] font-bold uppercase tracking-wide">Repay</span>
                     </Link>
                 </>
             )}
