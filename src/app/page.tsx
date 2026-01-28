@@ -57,6 +57,12 @@ export default function Home() {
     checkSession();
   }, [router]);
 
+  useEffect(() => {
+    if (step === 4 && role === 'MERCHANT') {
+      handleRegister();
+    }
+  }, [step, role]);
+
   const redirectUser = (user: any) => {
     // Sync with Native App
     if ((window as any).ReactNativeWebView) {
@@ -150,8 +156,15 @@ export default function Home() {
       });
 
       localStorage.setItem('token', authData.access_token);
+      localStorage.setItem('user', JSON.stringify(authData.user));
 
-      // 2. Update Details
+      // 2. If Merchant, skip this basic onboarding and go to specialized merchant flow
+      if (role === 'MERCHANT') {
+        redirectUser(authData.user);
+        return;
+      }
+
+      // 3. Update Details (For Customer)
       await apiFetch('/auth/onboarding', {
         method: 'POST',
         body: JSON.stringify({ name, email }),
@@ -267,8 +280,15 @@ export default function Home() {
                 <button
                   key={item.id}
                   onClick={() => {
-                    setRole(item.id as any);
-                    setStep(2); // Go to details after role
+                    const selectedRole = item.id as any;
+                    setRole(selectedRole);
+                    if (selectedRole === 'MERCHANT') {
+                      // Trigger registration immediately for merchants
+                      // We'll handle the rest in the specialized onboarding page
+                      setStep(4); // Internal state for "Processing..."
+                    } else {
+                      setStep(2); // Go to details after role for customers
+                    }
                   }}
                   className={`w-full p-5 rounded-2xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
                 >
@@ -326,6 +346,13 @@ export default function Home() {
             >
               {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Create Account'}
             </button>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="py-12 text-center space-y-4 animate-in fade-in duration-500">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="text-slate-500 font-bold text-sm">Pre-configuring your Store...</p>
           </div>
         )}
 
