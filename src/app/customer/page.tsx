@@ -152,21 +152,64 @@ export default function CustomerHome() {
             {/* Action Grid */}
             <div className={cn("px-6 mb-10", !isMerchant && !kycLoan && "-mt-8 relative z-20")}>
                 <div className="bg-white p-6 rounded-[2rem] shadow-xl shadow-slate-900/5 border border-slate-50 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-                    {[
-                        { label: 'Pay ID', icon: <Send size={24} />, href: '/customer/pay', color: 'text-blue-600' },
-                        { label: 'History', icon: <History size={24} />, href: '/customer/transactions', color: 'text-indigo-600' },
-                        { label: 'Rewards', icon: <PartyPopper size={24} />, href: '#', color: 'text-rose-500' },
-                        { label: 'Analytics', icon: <TrendingUp size={24} />, href: '#', color: 'text-emerald-500' },
-                    ].map((item, i) => (
-                        <Link key={i} href={item.href} className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
-                            <div className={cn("w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm", item.color)}>
-                                {item.icon}
-                            </div>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">{item.label}</span>
-                        </Link>
-                    ))}
+                    {isMerchant ? (
+                        <>
+                            <Link href="/customer/qr" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-emerald-600">
+                                    <QrCode size={24} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Show QR</span>
+                            </Link>
+                            <button onClick={() => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' }))} className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600">
+                                    <ScanBarcode size={24} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Scan & Pay</span>
+                            </button>
+                            <Link href="/customer/transactions" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-indigo-600">
+                                    <History size={24} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">History</span>
+                            </Link>
+                            <Link href="/customer/rewards" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-rose-500">
+                                    <PartyPopper size={24} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Rewards</span>
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link href="/customer/pay" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-blue-600">
+                                    <Send size={24} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Pay ID</span>
+                            </Link>
+                            <Link href="/customer/qr" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-purple-600">
+                                    <QrCode size={24} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Show QR</span>
+                            </Link>
+                            <Link href="/customer/repayments" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-emerald-600">
+                                    <CreditCard size={24} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Repay</span>
+                            </Link>
+                            <Link href="/customer/rewards" className="flex flex-col items-center gap-3 p-3 min-w-[72px] hover:bg-slate-50 rounded-2xl transition-colors">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 shadow-sm text-rose-500">
+                                    <PartyPopper size={24} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Rewards</span>
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
+
 
             {/* Contextual Section */}
             <div className="px-6 mb-10">
@@ -251,10 +294,13 @@ export default function CustomerHome() {
             {/* Utility Grid */}
             <div className="px-6 mb-24">
                 <div className="flex justify-between items-end mb-6 px-2">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isMerchant ? 'Business Utilities' : 'Quick Utilities'}</h3>
+                    <div>
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{isMerchant ? 'Business Utilities' : 'Quick Utilities'}</h3>
+                        <span className="text-[8px] font-bold text-slate-300 uppercase tracking-wider">(Coming Soon)</span>
+                    </div>
                     <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">View All</span>
                 </div>
-                <div className="grid grid-cols-4 gap-6">
+                <div className={cn("grid gap-6", isMerchant ? "grid-cols-4" : "grid-cols-4")}>
                     {(isMerchant ? [
                         { label: 'Settlement', icon: <Landmark size={20} /> },
                         { label: 'Staff Pay', icon: <Users size={20} /> },
@@ -265,6 +311,10 @@ export default function CustomerHome() {
                         { label: 'Mobile', icon: <Smartphone size={20} className="text-blue-500" /> },
                         { label: 'DTH', icon: <TvIcon /> },
                         { label: 'Water', icon: <DropletIcon /> },
+                        { label: 'Gas', icon: <FlameIcon /> },
+                        { label: 'Broadband', icon: <WifiIcon /> },
+                        { label: 'Insurance', icon: <ShieldIcon /> },
+                        { label: 'More', icon: <GridIcon /> },
                     ]).map((item, i) => (
                         <div key={i} className="flex flex-col items-center gap-3">
                             <div className="w-14 h-14 rounded-3xl bg-white border border-slate-100 flex items-center justify-center shadow-sm relative group cursor-not-allowed overflow-hidden">
@@ -287,6 +337,19 @@ const TvIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2" /><polyline points="17 2 12 7 7 2" /></svg>
 );
 const DropletIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
 );
+const FlameIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500 fill-orange-500"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
+);
+const WifiIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500"><path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12.01" y2="20" /></svg>
+);
+const ShieldIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+);
+const GridIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+);
+
 

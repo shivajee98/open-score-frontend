@@ -175,7 +175,63 @@ export default function CustomerPay() {
 
                 {step === 1 ? (
                     <div className="space-y-6">
-                        {scanning ? (
+                        <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
+                            <div className="absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+
+                            <div className="mb-8 text-center">
+                                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded-[2rem] flex items-center justify-center shadow-lg shadow-blue-600/30">
+                                    <Search className="w-10 h-10 text-white" />
+                                </div>
+                                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Pay Anyone</h3>
+                                <p className="text-slate-500 font-medium">Enter mobile number or UPI ID</p>
+                            </div>
+
+                            <div className="space-y-4 mb-6">
+                                <div className="relative">
+                                    <Smartphone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                                    <input
+                                        type="text"
+                                        placeholder="Enter mobile number or UPI ID"
+                                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                                                fetchPayeeDetails(e.currentTarget.value.trim());
+                                            }
+                                        }}
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={(e) => {
+                                        const input = ((e.target as HTMLElement).previousElementSibling as HTMLInputElement);
+                                        if (input?.value.trim()) {
+                                            fetchPayeeDetails(input.value.trim());
+                                        }
+                                    }}
+                                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                    Continue <ArrowRight className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-slate-200"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-4 bg-white text-slate-400 font-bold uppercase tracking-widest text-[10px]">Or</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={startScanner}
+                                className="w-full mt-6 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95"
+                            >
+                                <Scan className="w-5 h-5" /> Scan QR Code
+                            </button>
+                        </div>
+
+                        {scanning && (
                             <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
                                 <div id="reader" className="w-full max-w-sm overflow-hidden rounded-3xl border-4 border-white/20"></div>
                                 <button
@@ -185,29 +241,6 @@ export default function CustomerPay() {
                                     <X className="w-5 h-5" /> Cancel Scan
                                 </button>
                                 <p className="text-white/50 text-xs mt-4 uppercase tracking-widest font-bold">Align QR code within frame</p>
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-slate-200 border border-slate-100 text-center relative overflow-hidden group">
-                                <div className="absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-
-                                <div className="w-24 h-24 mx-auto mb-8 relative">
-                                    <div className="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-20"></div>
-                                    <button
-                                        onClick={startScanner}
-                                        className="relative w-full h-full bg-blue-600 text-white rounded-[2.5rem] flex items-center justify-center shadow-lg shadow-blue-600/30 hover:scale-110 active:scale-95 transition-all group-hover:rotate-12"
-                                    >
-                                        <Scan className="w-10 h-10" />
-                                    </button>
-                                </div>
-                                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Scan QR Code</h3>
-                                <p className="text-slate-500 font-medium mb-8">Point camera at any OpenScore QR to pay instantly.</p>
-
-                                <button
-                                    onClick={startScanner}
-                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95"
-                                >
-                                    <Smartphone className="w-5 h-5" /> Open Scanner
-                                </button>
                             </div>
                         )}
                     </div>

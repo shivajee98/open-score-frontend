@@ -44,6 +44,27 @@ export default function Onboarding() {
         }
     }, [router]);
 
+    const handleMerchantSelection = async () => {
+        setLoading(true);
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const res = await apiFetch('/auth/verify', {
+                method: 'POST',
+                body: JSON.stringify({ mobile_number: user.mobile_number, otp: 'BYPASS', role: 'MERCHANT' })
+            });
+
+            // Update local state
+            const updatedUser = { ...res.user, role: 'MERCHANT' };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/; max-age=2592000; SameSite=Lax`;
+
+            router.push('/auth/merchant-onboarding');
+        } catch (err: any) {
+            setErrors({ api: err.message });
+            setLoading(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!role) {
@@ -68,8 +89,7 @@ export default function Onboarding() {
                 method: 'POST',
                 body: JSON.stringify({
                     name,
-                    email,
-                    business_name: role === 'MERCHANT' ? businessName : undefined
+                    email
                 })
             });
 
@@ -125,8 +145,12 @@ export default function Onboarding() {
                                     <button
                                         key={item.id}
                                         onClick={() => {
-                                            setRole(item.id as any);
-                                            setStep(2);
+                                            if (item.id === 'MERCHANT') {
+                                                handleMerchantSelection();
+                                            } else {
+                                                setRole('CUSTOMER');
+                                                setStep(2);
+                                            }
                                         }}
                                         className={`w-full p-6 rounded-3xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
                                     >
@@ -196,22 +220,6 @@ export default function Onboarding() {
                                         </div>
                                     </div>
 
-                                    {role === 'MERCHANT' && (
-                                        <div className="animate-in fade-in slide-in-from-top-4">
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Business Name</label>
-                                            <div className="relative">
-                                                <Briefcase className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                                <input
-                                                    type="text"
-                                                    value={businessName}
-                                                    onChange={(e) => setBusinessName(e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
-                                                    placeholder="e.g. Sharma Kirana Store"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
 
                                 <button
@@ -240,7 +248,4 @@ export default function Onboarding() {
     );
 }
 
-// Additional icons
-const Briefcase = ({ className }: { className?: string }) => (
-    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>
-);
+
