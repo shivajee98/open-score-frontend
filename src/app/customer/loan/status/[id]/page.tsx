@@ -30,9 +30,9 @@ export default function LoanStatus() {
                         setLoan({
                             id: 'L-10293',
                             amount: 30000,
-                            status: 'APPROVED',
+                            status: 'PENDING',
                             tenure: 3,
-                            created_at: '2019-08-15'
+                            created_at: new Date().toISOString()
                         });
                     }
                 }
@@ -66,7 +66,7 @@ export default function LoanStatus() {
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
             {/* Header */}
-            <div className="bg-slate-900 p-6 pt-8 pb-16 rounded-b-[2.5rem] shadow-xl relative z-10">
+            <div className="bg-slate-900 p-6 pt-8 pb-16 rounded-b-xl shadow-xl relative z-10">
                 <button onClick={() => router.push('/customer/loan')} className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors mb-6">
                     <ArrowLeft className="w-4 h-4" /> Back to Loans
                 </button>
@@ -77,7 +77,7 @@ export default function LoanStatus() {
             <div className="px-6 -mt-10 relative z-20 space-y-6">
 
                 {/* Details Card */}
-                <div className="bg-white rounded-[2rem] shadow-xl shadow-blue-900/5 overflow-hidden">
+                <div className="bg-white rounded-lg shadow-xl shadow-blue-900/5 overflow-hidden">
                     <div className="p-6 border-b border-slate-100">
                         <div className="flex justify-between items-start mb-4">
                             <div>
@@ -91,15 +91,15 @@ export default function LoanStatus() {
                         </div>
 
                         <div className={`space-y-3 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
-                            <div className="flex justify-between text-xs font-bold text-slate-500">
+                            <div className="flex justify-between text-xs text-slate-500">
                                 <span>Processing Fee</span>
                                 <span className="text-slate-900">₹ {processingFee.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-xs font-bold text-slate-500">
+                            <div className="flex justify-between text-xs text-slate-500">
                                 <span>KYC Price</span>
                                 <span className="text-slate-900">₹ {kycPrice.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between text-xs font-bold text-slate-500">
+                            <div className="flex justify-between text-xs text-slate-500">
                                 <span>Credit re-assessment Fees</span>
                                 <span className="text-slate-900">₹ {creditAssessmentFee.toLocaleString()}</span>
                             </div>
@@ -141,38 +141,41 @@ export default function LoanStatus() {
                 </div>
 
                 {/* Timeline Stepper */}
-                <div className="bg-white rounded-[2rem] p-8 shadow-xl shadow-blue-900/5">
-                    <div className="flex items-center justify-between relative">
-                        {/* Connecting Line */}
-                        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-100 z-0 px-8">
-                            <div className="w-2/3 h-full bg-emerald-500 rounded-full"></div>
+                <div className="bg-white rounded-lg p-6 py-10 shadow-xl shadow-blue-900/5">
+                    <div className="flex items-center justify-between relative px-2">
+                        {/* Connecting Line - Thinner and Elegant */}
+                        <div className="absolute left-6 right-6 top-[20px] h-[2px] bg-slate-50 z-0">
+                            <div className={`h-full bg-emerald-500 transition-all duration-1000 ${loan.status === 'DISBURSED' ? 'w-full' :
+                                    loan.status === 'APPROVED' ? 'w-2/3' :
+                                        loan.status === 'PENDING' ? 'w-1/3' : 'w-0'
+                                }`} />
                         </div>
 
                         {/* Steps */}
                         {[
                             { label: 'Submitted', date: new Date(loan.created_at).toLocaleDateString(), status: 'done' },
                             {
-                                label: 'Approved',
-                                date: loan.approved_at ? new Date(loan.approved_at).toLocaleDateString() : '',
-                                status: loan.status === 'APPROVED' ? 'done' : loan.status === 'REJECTED' ? 'error' : 'current'
+                                label: 'Approval',
+                                date: loan.approved_at ? new Date(loan.approved_at).toLocaleDateString() : 'Awaiting',
+                                status: loan.status === 'APPROVED' ? 'done' : loan.status === 'REJECTED' ? 'error' : loan.status === 'PENDING' ? 'current' : 'pending'
                             },
-                            { label: 'Disbursed', date: '', status: loan.status === 'APPROVED' ? 'current' : 'pending' },
+                            { label: 'Disbursal', date: '', status: loan.status === 'DISBURSED' ? 'done' : loan.status === 'APPROVED' ? 'current' : 'pending' },
                             { label: 'Repayment', date: '', status: 'pending' },
                         ].map((step, i) => (
-                            <div key={i} className="relative z-10 flex flex-col items-center gap-2">
-                                <div className={`w-8 h-8 rounded-full border-4 flex items-center justify-center transition-all ${step.status === 'done' ? 'bg-emerald-500 border-white text-white' :
-                                    step.status === 'error' ? 'bg-rose-500 border-white text-white' :
-                                        step.status === 'current' ? 'bg-emerald-500 border-emerald-100 text-white shadow-lg shadow-emerald-500/30' :
-                                            'bg-slate-100 border-white text-slate-300'
+                            <div key={i} className="relative z-10 flex flex-col items-center gap-4">
+                                <div className={`w-9 h-9 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 ${step.status === 'done' ? 'bg-emerald-500 border-white text-white shadow-lg shadow-emerald-500/10' :
+                                        step.status === 'error' ? 'bg-rose-500 border-white text-white' :
+                                            step.status === 'current' ? 'bg-white border-amber-400 text-amber-500 shadow-xl shadow-amber-400/5' :
+                                                'bg-slate-50 border-white text-slate-100'
                                     }`}>
-                                    {step.status === 'done' ? <Check size={14} strokeWidth={4} /> :
-                                        step.status === 'error' ? <Ban size={14} strokeWidth={4} /> :
-                                            step.status === 'current' ? <div className="w-2 h-2 rounded-full bg-white animate-pulse" /> :
-                                                <div className="w-2 h-2 rounded-full bg-slate-300" />}
+                                    {step.status === 'done' ? <Check size={16} strokeWidth={4} /> :
+                                        step.status === 'error' ? <Ban size={16} strokeWidth={4} /> :
+                                            step.status === 'current' ? <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" /> :
+                                                <div className="w-2 h-2 rounded-full bg-slate-200" />}
                                 </div>
                                 <div className="text-center">
-                                    <p className={`text-[10px] font-bold uppercase tracking-wide ${step.status === 'current' ? 'text-blue-600' : 'text-slate-400'}`}>{step.label}</p>
-                                    {step.date && <p className="text-[9px] font-bold text-slate-300">{step.date}</p>}
+                                    <p className={`text-[10px] uppercase tracking-widest font-medium ${step.status === 'current' ? 'text-amber-500' : 'text-slate-400'}`}>{step.label}</p>
+                                    {step.date && <p className="text-[9px] text-slate-300 mt-1">{step.date}</p>}
                                 </div>
                             </div>
                         ))}
