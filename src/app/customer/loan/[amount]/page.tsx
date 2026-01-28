@@ -206,25 +206,19 @@ export default function LoanDetail() {
                         ))}
                     </ul>
                 </div>
-            </div>
-
-            {/* Fixed CTA - Floating above content but below nav (if z-50). Actually nav is z-50.
-                User wants bottom buttons visible.
-                If I put it at bottom-0, it covers nav.
-                I will make it float ABOVE the nav.
-                MobileNav is ~60-70px high.
-            */}
-            <div className="fixed bottom-[90px] left-6 right-6 z-40">
-                <button
-                    onClick={handleConfirm}
-                    disabled={!payout || loading}
-                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                    {loading ? 'Processing...' : `Confirm ₹${plan.amount.toLocaleString()} Loan`}
-                </button>
+                {/* CTA - Now non-sticky, at the end of content */}
+                <div className="mt-8 pb-32">
+                    <button
+                        onClick={handleConfirm}
+                        disabled={!payout || loading}
+                        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {loading ? 'Processing...' : `Confirm ₹${plan.amount.toLocaleString()} Loan`}
+                    </button>
+                </div>
             </div>
 
             <LoadingOverlay isVisible={showOverlay} />
-        </div >
+        </div>
     );
 }
