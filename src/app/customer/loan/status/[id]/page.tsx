@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 
@@ -297,6 +297,25 @@ export default function LoanStatus() {
                             <h3 className="text-lg font-black uppercase tracking-tight">Loan Approved!</h3>
                             <p className="font-medium text-xs mt-1">Please contact your supervisor for amount transfer and final disbursement.</p>
                         </div>
+                    </div>
+                )}
+
+                {/* Special Action: Manage Repayments */}
+                {loan.status === 'DISBURSED' && (
+                    <div className="bg-slate-900 rounded-lg p-6 text-white shadow-xl shadow-slate-900/20 flex flex-col items-center text-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center border border-white/10">
+                            <TrendingUp className="w-6 h-6 text-emerald-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black uppercase tracking-tight">Repayment Active</h3>
+                            <p className="text-slate-400 text-xs font-medium mt-1">You can now track your EMIs and make payments from your analytical dashboard.</p>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/customer/loan/${loan.id}/repayment`)}
+                            className="w-full py-4 bg-white text-slate-900 rounded-xl font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-widest shadow-lg"
+                        >
+                            Open Repayment Dashboard
+                        </button>
                     </div>
                 )}
 
