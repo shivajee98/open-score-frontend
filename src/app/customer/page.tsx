@@ -13,6 +13,38 @@ export default function CustomerHome() {
     const [user, setUser] = useState<any>(null);
     const [kycLoan, setKycLoan] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [bannerIndex, setBannerIndex] = useState(0);
+
+    const banners = [
+        {
+            title: "Apply Now & Get 0% Interest Credit",
+            sub: "First Users Only!",
+            color: "bg-slate-900",
+            accent: "bg-blue-600",
+            amount: "₹5,00,000"
+        },
+        {
+            title: "First User Advantage",
+            sub: "Apply for Credit at 0% Interest",
+            color: "bg-indigo-950",
+            accent: "bg-purple-600",
+            amount: "₹2,50,000"
+        },
+        {
+            title: "Unlock 0% Interest Credit",
+            sub: "First User Offer",
+            color: "bg-zinc-950",
+            accent: "bg-emerald-600",
+            amount: "₹1,00,000"
+        }
+    ];
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setBannerIndex((prev) => (prev + 1) % banners.length);
+        }, 3000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user') || '{}');
@@ -131,54 +163,47 @@ export default function CustomerHome() {
                 </div>
             )}
 
-            {/* Banners - Horizontal Scroll */}
-            <div className="px-6 mb-10 overflow-x-auto flex gap-6 no-scrollbar snap-x">
-                {[
-                    {
-                        title: "Apply Now & Get 0% Interest Credit",
-                        sub: "First Users Only!",
-                        color: "bg-slate-900",
-                        accent: "bg-blue-600",
-                        amount: "₹5,00,000"
-                    },
-                    {
-                        title: "First User Advantage",
-                        sub: "Apply for Credit at 0% Interest",
-                        color: "bg-indigo-950",
-                        accent: "bg-purple-600",
-                        amount: "₹2,50,000"
-                    },
-                    {
-                        title: "Unlock 0% Interest Credit",
-                        sub: "First User Offer",
-                        color: "bg-zinc-950",
-                        accent: "bg-emerald-600",
-                        amount: "₹1,00,000"
-                    }
-                ].map((banner, i) => (
-                    <div
-                        key={i}
-                        onClick={() => router.push('/customer/loan/apply')}
-                        className={`snap-center shrink-0 w-[90%] ${banner.color} rounded-[2.5rem] p-8 relative overflow-hidden h-48 flex flex-col justify-center shadow-2xl shadow-slate-900/20 group cursor-pointer border border-white/5`}
-                    >
-                        <div className={`absolute top-0 right-0 w-64 h-64 ${banner.accent}/10 rounded-full blur-3xl -mr-16 -mt-16 transition-colors`}></div>
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className="text-white font-black text-xl tracking-tight leading-tight max-w-[200px]">{banner.title}</h3>
-                                    <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mt-2 group-hover:text-white/60 transition-colors">{banner.sub}</p>
+            {/* Banners - Animated Slide */}
+            <div className="px-6 mb-10 relative overflow-hidden">
+                <div
+                    className="flex gap-6 transition-transform duration-700 ease-in-out"
+                    style={{ transform: `translateX(calc(-${bannerIndex * 90}% - ${bannerIndex * 24}px))` }}
+                >
+                    {banners.map((banner, i) => (
+                        <div
+                            key={i}
+                            onClick={() => router.push('/customer/loan/apply')}
+                            className={`shrink-0 w-[90%] ${banner.color} rounded-[2.5rem] p-8 relative overflow-hidden h-48 flex flex-col justify-center shadow-2xl shadow-slate-900/20 group cursor-pointer border border-white/5`}
+                        >
+                            <div className={`absolute top-0 right-0 w-64 h-64 ${banner.accent}/10 rounded-full blur-3xl -mr-16 -mt-16 transition-colors`}></div>
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="text-white font-black text-xl tracking-tight leading-tight max-w-[200px]">{banner.title}</h3>
+                                        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mt-2 group-hover:text-white/60 transition-colors">{banner.sub}</p>
+                                    </div>
+                                    <div className="bg-white/5 backdrop-blur-md p-3 rounded-2xl border border-white/10">
+                                        <Zap className="text-yellow-400 fill-yellow-400 w-6 h-6" />
+                                    </div>
                                 </div>
-                                <div className="bg-white/5 backdrop-blur-md p-3 rounded-2xl border border-white/10">
-                                    <Zap className="text-yellow-400 fill-yellow-400 w-6 h-6" />
+                                <div className="flex items-baseline gap-2 mt-2">
+                                    <span className="text-white/30 text-[9px] font-black uppercase tracking-widest">Limit Up to</span>
+                                    <span className="text-3xl font-black text-white tracking-tighter">{banner.amount}</span>
                                 </div>
-                            </div>
-                            <div className="flex items-baseline gap-2 mt-2">
-                                <span className="text-white/30 text-[9px] font-black uppercase tracking-widest">Limit Up to</span>
-                                <span className="text-3xl font-black text-white tracking-tighter">{banner.amount}</span>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
+
+                {/* Pagination Dots */}
+                <div className="flex justify-center gap-2 mt-4">
+                    {banners.map((_, i) => (
+                        <div
+                            key={i}
+                            className={`h-1 rounded-full transition-all duration-300 ${i === bannerIndex ? 'w-6 bg-blue-600' : 'w-1.5 bg-slate-200'}`}
+                        />
+                    ))}
+                </div>
             </div>
 
             {/* Recharge & Bills Section */}
