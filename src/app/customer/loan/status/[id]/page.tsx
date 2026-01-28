@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import KycForm from '@/components/loan/KycForm';
 
 export default function LoanStatus() {
     const router = useRouter();
@@ -14,7 +13,6 @@ export default function LoanStatus() {
     const [isDetailsOpen, setIsDetailsOpen] = useState(true);
     const [loan, setLoan] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showKycForm, setShowKycForm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const fetchLoan = async () => {
@@ -68,7 +66,6 @@ export default function LoanStatus() {
                 body: JSON.stringify(formData)
             });
             alert('Form Submitted Successfully!');
-            setShowKycForm(false);
             fetchLoan();
         } catch (e) {
             alert('Submission failed');
@@ -282,7 +279,7 @@ export default function LoanStatus() {
                             <p className="text-blue-100 text-xs font-medium mt-1">We need a few more details to finalize your application.</p>
                         </div>
                         <button
-                            onClick={() => setShowKycForm(true)}
+                            onClick={() => window.open(`https://open-score-kyc.vercel.app/form/${loan.kyc_token}`, '_blank')}
                             className="w-full py-3 bg-white text-blue-600 rounded-xl font-black text-sm hover:bg-blue-50 transition-all uppercase tracking-widest shadow-lg"
                         >
                             Open Application Form
@@ -314,21 +311,6 @@ export default function LoanStatus() {
                 </div>
             </div>
 
-            {/* KYC Form Modal */}
-            {showKycForm && (
-                <div className="fixed inset-0 z-[100] bg-white overflow-y-auto pt-safe">
-                    <div className="p-6">
-                        <button onClick={() => setShowKycForm(false)} className="mb-8 p-3 bg-slate-100 rounded-xl text-slate-500 hover:text-slate-900 transition-colors">
-                            <ArrowLeft className="w-6 h-6" />
-                        </button>
-                        <KycForm
-                            loanAmount={loan.amount}
-                            onSubmit={handleKycSubmit}
-                            loading={submitting}
-                        />
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
