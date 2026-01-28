@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function CustomerHome() {
     const router = useRouter();
-    const [balance, setBalance] = useState('...');
+    const [balance, setBalance] = useState('0');
+    const [lockedBalance, setLockedBalance] = useState('0');
     const [user, setUser] = useState<any>(null);
     const [kycLoan, setKycLoan] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -24,6 +25,7 @@ export default function CustomerHome() {
             try {
                 const w = await apiFetch('/wallet/balance');
                 setBalance(w.balance);
+                setLockedBalance(w.locked_balance || '0');
 
                 if (user.role === 'CUSTOMER') {
                     const loans = await apiFetch('/loans');
@@ -72,7 +74,18 @@ export default function CustomerHome() {
                         </div>
                         <div>
                             <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">Account Balance</p>
-                            <p className="text-3xl font-black text-white tracking-tighter">₹ {balance}</p>
+                            <div className="flex items-center gap-3">
+                                <p className="text-3xl font-black text-white tracking-tighter">₹ {balance}</p>
+                                {Number(lockedBalance) > 0 && (
+                                    <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/10 shadow-inner group cursor-help">
+                                        <div className="relative">
+                                            <div className="absolute inset-0 bg-yellow-400 blur-sm opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                                            <Lock size={12} className="text-yellow-400 relative z-10" />
+                                        </div>
+                                        <span className="text-[11px] font-black text-white tracking-tight">₹{lockedBalance}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

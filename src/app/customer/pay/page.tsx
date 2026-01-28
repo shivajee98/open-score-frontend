@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import PinModal from '@/components/PinModal';
-import { Scan, X, ArrowRight, Smartphone, Search, Home, QrCode, Receipt } from 'lucide-react';
+import { Scan, X, ArrowRight, Smartphone, Search, Home, QrCode, Receipt, Lock } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ export default function CustomerPay() {
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [balance, setBalance] = useState(0);
+    const [lockedBalance, setLockedBalance] = useState(0);
     const [payees, setPayees] = useState([]);
     const [payee, setPayee] = useState<any>(null);
     const [error, setError] = useState('');
@@ -31,8 +32,10 @@ export default function CustomerPay() {
     ];
 
     useEffect(() => {
-        apiFetch('/wallet/balance').then(data => setBalance(data.balance));
-        // We might want to list recent payees here in future
+        apiFetch('/wallet/balance').then(data => {
+            setBalance(data.balance);
+            setLockedBalance(data.locked_balance || 0);
+        });
     }, []);
 
     const startScanner = async () => {
@@ -114,8 +117,15 @@ export default function CustomerPay() {
 
     const handleInitiatePay = () => {
         if (!amount || parseFloat(amount) <= 0) return;
-        if (parseFloat(amount) > balance) {
-            setError('Insufficient wallet balance');
+
+        const payAmount = parseFloat(amount);
+
+        if (payAmount > balance) {
+            if (payAmount <= (balance + lockedBalance)) {
+                setError('Insufficient available balance. This amount is currently in LOCKED state – Please Contact Agent for release.');
+            } else {
+                setError('Insufficient wallet balance');
+            }
             return;
         }
         setPinModalOpen(true);
@@ -267,9 +277,19 @@ export default function CustomerPay() {
                                 />
                             </div>
 
-                            <div className="flex justify-between items-center px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
-                                <span className="text-xs font-bold uppercase text-slate-400">Paying From</span>
-                                <span className="text-sm font-black text-slate-900">Wallet (₹{balance.toLocaleString('en-IN')})</span>
+                            <div className="flex flex-col gap-2 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold uppercase text-slate-400">Available Balance</span>
+                                    <span className="text-sm font-black text-slate-900">₹{balance.toLocaleString('en-IN')}</span>
+                                </div>
+                                {lockedBalance > 0 && (
+                                    <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                                        <span className="text-xs font-bold uppercase text-amber-500 flex items-center gap-1">
+                                            <Lock size={12} /> Locked Balance
+                                        </span>
+                                        <span className="text-sm font-black text-slate-400">₹{lockedBalance.toLocaleString('en-IN')}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <button
