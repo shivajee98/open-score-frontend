@@ -168,7 +168,7 @@ export default function LoanDetail() {
 
                                 {payout?.cashback ? (
                                     <div className="flex justify-between items-center">
-                                        <span className="text-emerald-600 font-black uppercase tracking-wider">Cashback/EMI</span>
+                                        <span className="text-emerald-600 font-black uppercase tracking-wider">Cashback Per EMI</span>
                                         <span className="font-black text-emerald-600">₹ {payout.cashback}</span>
                                     </div>
                                 ) : null}
