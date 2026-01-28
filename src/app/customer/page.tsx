@@ -133,20 +133,20 @@ export default function CustomerHome() {
             </div>
 
             {/* Quick Actions - Floating Card */}
-            <div className="px-6 -mt-12 relative z-20 mb-8">
-                <div className="bg-white py-4 px-6 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50">
-                    <div className="grid grid-cols-3 gap-4">
+            <div className="px-10 -mt-12 relative z-20 mb-8">
+                <div className="bg-white py-2 px-3 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-50">
+                    <div className="grid grid-cols-3 gap-1">
                         {[
-                            { label: 'Scan QR', icon: <ScanBarcode size={24} strokeWidth={2} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })), href: '#', color: 'text-indigo-600 bg-indigo-50' },
-                            { label: 'Pay ID', icon: <Send size={24} strokeWidth={2} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50' },
-                            { label: 'Show QR', icon: <QrCode size={24} strokeWidth={2} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50' },
+                            { label: 'Scan QR', icon: <ScanBarcode size={22} strokeWidth={2} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })), href: '#', color: 'text-indigo-600 bg-indigo-50' },
+                            { label: 'Pay ID', icon: <Send size={22} strokeWidth={2} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50' },
+                            { label: 'Show QR', icon: <QrCode size={22} strokeWidth={2} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50' },
                         ].map((item, i) => (
-                            <div key={i} onClick={item.action} className="flex flex-col items-center gap-2 active:scale-95 transition-all cursor-pointer">
+                            <div key={i} onClick={item.action} className="flex flex-col items-center gap-1 active:scale-95 transition-all cursor-pointer">
                                 <Link href={item.href || '#'} className="contents">
-                                    <div className={`w-14 h-14 rounded-[1.2rem] ${item.color} flex items-center justify-center`}>
+                                    <div className={`w-12 h-12 rounded-xl ${item.color} flex items-center justify-center`}>
                                         {item.icon}
                                     </div>
-                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center">{item.label}</span>
+                                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest text-center">{item.label}</span>
                                 </Link>
                             </div>
                         ))}
