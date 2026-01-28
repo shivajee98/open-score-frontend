@@ -311,7 +311,7 @@ export default function LoanStatus() {
                             <p className="text-slate-400 text-xs font-medium mt-1">You can now track your EMIs and make payments from your analytical dashboard.</p>
                         </div>
                         <button
-                            onClick={() => router.push(`/customer/loan/${loan.id}/repayment`)}
+                            onClick={() => router.push(`/customer/loan/status/${loan.id}/repayment`)}
                             className="w-full py-4 bg-white text-slate-900 rounded-xl font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-widest shadow-lg"
                         >
                             Open Repayment Dashboard
