@@ -120,6 +120,7 @@ export default function LoanDetail() {
                     isRepayment={true}
                     totalRepayment={total}
                     breakdown={breakdown}
+                    count={count}
                 />
 
                 <TenureSelector
@@ -162,7 +163,7 @@ export default function LoanDetail() {
 
                                 <div className="flex justify-between items-center text-xs">
                                     <span className="text-slate-500 font-bold uppercase tracking-wider">{payout?.label || 'Fixed'} Repayment Schedule</span>
-                                    <span className="text-slate-400 font-bold">{count} Installments</span>
+                                    <span className="text-slate-400 font-bold">{count} EMI</span>
                                 </div>
 
                                 {payout?.cashback ? (

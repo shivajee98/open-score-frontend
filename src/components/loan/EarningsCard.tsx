@@ -9,19 +9,22 @@ interface EarningsCardProps {
     isRepayment?: boolean;
     totalRepayment?: number;
     breakdown?: string;
+    count?: number;
 }
 
-export default function EarningsCard({ plan, tenure, payout, isRepayment, totalRepayment, breakdown: propBreakdown }: EarningsCardProps) {
-    const { total, breakdown } = isRepayment && totalRepayment !== undefined
-        ? { total: totalRepayment, breakdown: propBreakdown || (payout ? `₹${payout.fixedAmount} x ${Math.round(totalRepayment / (payout.fixedAmount || 1))} Payments` : '-') }
-        : (payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-' });
+export default function EarningsCard({ plan, tenure, payout, isRepayment, totalRepayment, breakdown: propBreakdown, count: propCount }: EarningsCardProps) {
+    const result = isRepayment && totalRepayment !== undefined
+        ? { total: totalRepayment, breakdown: propBreakdown || '-', count: propCount || 0 }
+        : (payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-', count: 0 });
+
+    const { total, breakdown, count } = result;
 
     return (
         <div className="bg-slate-900 text-white rounded-[2rem] p-6 shadow-xl relative mb-8 border border-slate-800 overflow-hidden">
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Loan Amount</p>
-                    <h2 className="text-3xl font-black">₹ {plan.amount.toLocaleString('en-IN')}</h2>
+                    <h2 className="text-2xl font-bold">₹ {plan.amount.toLocaleString('en-IN')}</h2>
                 </div>
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${plan.color} shadow-lg`}>
                     <TrendingUp className="w-6 h-6 text-white" />
@@ -49,10 +52,15 @@ export default function EarningsCard({ plan, tenure, payout, isRepayment, totalR
                 <div className="flex justify-between items-end">
                     <div>
                         <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Repayment</p>
-                        <p className="text-2xl font-black text-emerald-400">₹ {total.toLocaleString('en-IN')}</p>
+                        <p className="text-xl font-bold text-emerald-400">₹ {total.toLocaleString('en-IN')}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex flex-col items-end gap-1">
                         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-400/10 px-2 py-1 rounded">{breakdown}</span>
+                        {payout?.cashback && count > 0 && (
+                            <span className="text-[9px] font-black text-emerald-300 uppercase tracking-tighter bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                                Cashback upto ₹{(payout.cashback * count).toLocaleString()}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
