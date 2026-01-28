@@ -42,13 +42,14 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
             { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 5, val: 'Big Cashback', isBestValue: true },
             { id: '7days', label: 'Every 7 Days', frequency: '7 Days', interestRate: 0, cashback: 10, val: 'Recommended' },
             { id: '10days', label: 'Every 10 Days', frequency: '10 Days', interestRate: 0, cashback: 15, val: 'Recommended' },
+            { id: 'monthly', label: 'Monthly', frequency: 'Monthly', interestRate: 0, cashback: 20 },
         ]
     },
     20000: {
         amount: 20000,
         title: "Starter Boost",
         description: "Earn cashback on repayments",
-        tenures: [3],
+        tenures: [1, 3],
         color: "from-orange-500 to-red-600",
         payoutOptions: (tenure) => [
             { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 25, val: 'Big Cashback', isBestValue: true },
@@ -61,7 +62,7 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
         amount: 30000,
         title: "Micro Start",
         description: "Interest Free with High Cashback",
-        tenures: [3],
+        tenures: [1, 3],
         color: "from-emerald-500 to-teal-600",
         payoutOptions: (tenure) => [
             // 30K Loan. 3 Month. Interest Free 0%. Repayment 30k.
@@ -75,9 +76,15 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
         amount: 50000,
         title: "Growth Pro",
         description: "Flexible Interest & Cashback Options",
-        tenures: [3, 6],
+        tenures: [1, 3, 6],
         color: "from-blue-600 to-indigo-700",
         payoutOptions: (tenure) => {
+            if (tenure === 1) {
+                return [
+                    { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 10, val: 'Big Cashback', isBestValue: true },
+                    { id: 'monthly', label: 'Monthly', frequency: 'Monthly', interestRate: 0, cashback: 20 },
+                ];
+            }
             if (tenure === 3) {
                 // 50K Loan - 3 Month
                 return [
