@@ -92,25 +92,33 @@ export default function LoanStatus() {
                         </div>
 
                         <div className={`space-y-4 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
-                            <div className="flex justify-between text-xs text-slate-500">
-                                <span>Processing Fee</span>
-                                <span className="text-slate-900">₹ {processingFee.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-xs text-slate-500">
-                                <span>Login Fee</span>
-                                <span className="text-slate-900">₹ {loginFee.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-xs text-slate-500">
-                                <span>Field KYC Fee</span>
-                                <span className="text-slate-900">₹ {fieldKycFee.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-xs text-slate-500">
-                                <span>GST (18%)</span>
-                                <span className="text-slate-900">₹ {gst.toLocaleString()}</span>
+                            {/* Additional Charges Group */}
+                            <div className="space-y-3 pt-2 border-t border-slate-50">
+                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1">Additional Amount Pay</p>
+                                <div className="flex justify-between text-xs text-slate-500">
+                                    <span>Processing Fee</span>
+                                    <span className="text-slate-900">₹ {processingFee.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-slate-500">
+                                    <span>Login Fee</span>
+                                    <span className="text-slate-900">₹ {loginFee.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-slate-500">
+                                    <span>Field KYC Fee</span>
+                                    <span className="text-slate-900">₹ {fieldKycFee.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-slate-500">
+                                    <span>GST (18%)</span>
+                                    <span className="text-slate-900">₹ {gst.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs font-bold text-slate-900 pt-1 border-t border-slate-50/50">
+                                    <span>Total Additional Amount</span>
+                                    <span>₹ {totalDeductions.toLocaleString()}</span>
+                                </div>
                             </div>
 
                             {interestRate > 0 && (
-                                <>
+                                <div className="space-y-3 pt-2">
                                     <div className="flex justify-between text-xs text-slate-500">
                                         <span>Total Interest @ {interestRate}%</span>
                                         <span className="text-slate-900">₹ {totalInterest.toLocaleString()}</span>
@@ -119,17 +127,17 @@ export default function LoanStatus() {
                                         <span>Annualized Rate</span>
                                         <span className="text-slate-900">{(interestRate * 4).toFixed(2)}% p.a</span>
                                     </div>
-                                </>
+                                </div>
                             )}
 
-                            <div className="pt-2 border-t border-slate-50 space-y-3">
-                                <div className="flex justify-between text-sm text-slate-900">
-                                    <span>Disbursal Amount</span>
-                                    <span>₹ {disbursalAmount.toLocaleString()}</span>
-                                </div>
+                            <div className="pt-4 border-t border-slate-100 space-y-3">
                                 <div className="flex justify-between text-sm text-slate-900">
                                     <span>Net Payable Amount</span>
                                     <span>₹ {netPayableAmount.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm font-bold text-slate-900">
+                                    <span>Disbursal Amount</span>
+                                    <span>₹ {disbursalAmount.toLocaleString()}</span>
                                 </div>
                             </div>
 
