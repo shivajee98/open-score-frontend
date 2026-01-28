@@ -117,7 +117,7 @@ export default function CustomerHome() {
                             <Wallet size={20} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-0.5">Account Balance</p>
+                            <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-0.5">Elite Credit Value</p>
                             <div className="flex items-center gap-3">
                                 <p className="text-2xl font-black text-white tracking-tighter">₹ {balance}</p>
                                 {Number(lockedBalance) > 0 && (
