@@ -36,10 +36,12 @@ export default function TransactionDetailModal({ isOpen, transaction, onClose }:
 
                 <div className="bg-slate-50 rounded-[2rem] p-6 space-y-4 border border-slate-100/50">
                     <div className="flex justify-between items-start">
-                        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">To / From</span>
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
+                            {transaction.counterparty_vpa === 'System' ? (isCredit ? 'Source' : 'Paid To') : 'To / From'}
+                        </span>
                         <div className="text-right">
                             <p className="font-bold text-slate-900 text-lg">{transaction.counterparty_name}</p>
-                            <p className="text-slate-500 text-xs font-bold">{transaction.counterparty_vpa}</p>
+                            <p className="text-slate-500 text-xs font-bold">{transaction.counterparty_vpa === 'System' ? 'OpenScore Platform' : transaction.counterparty_vpa}</p>
                             <p className="text-slate-400 text-[10px] mt-1 break-all">Ref: {String(transaction.description).split('Ref: ')[1] || '-'}</p>
                         </div>
                     </div>

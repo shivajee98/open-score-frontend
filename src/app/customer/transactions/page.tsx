@@ -83,7 +83,10 @@ export default function CustomerTransactions() {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-slate-900 text-sm">
-                                                    {t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`}
+                                                    {t.counterparty_vpa === 'System'
+                                                        ? (t.type === 'CREDIT' ? t.counterparty_name : 'Paid')
+                                                        : (t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`)
+                                                    }
                                                 </p>
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">
                                                     {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {t.counterparty_vpa || 'Wallet Transfer'}
