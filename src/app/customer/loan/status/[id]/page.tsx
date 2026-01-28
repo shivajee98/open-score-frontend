@@ -46,6 +46,20 @@ export default function LoanStatus() {
         fetchLoan();
     }, [loanId]);
 
+    const handleFinalConfirm = async () => {
+        setSubmitting(true);
+        try {
+            await apiFetch(`/loans/${loan.id}/confirm`, {
+                method: 'POST'
+            });
+            fetchLoan();
+        } catch (e) {
+            alert('Confirmation failed');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const handleKycSubmit = async (formData: any) => {
         setSubmitting(true);
         try {
@@ -234,6 +248,28 @@ export default function LoanStatus() {
                         ))}
                     </div>
                 </div>
+
+                {/* Action: Final Confirmation (PREVIEW STATE) */}
+                {loan.status === 'PREVIEW' && (
+                    <div className="bg-slate-900 rounded-lg p-6 text-white shadow-xl shadow-slate-900/20 flex flex-col items-center text-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center border border-white/10">
+                            <IndianRupee className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black uppercase tracking-tight">Confirm Your Loan</h3>
+                            <p className="text-slate-400 text-xs font-medium mt-1">Please review the fee breakdown above before final confirmation.</p>
+                        </div>
+                        <button
+                            onClick={handleFinalConfirm}
+                            disabled={submitting}
+                            className="w-full py-3 bg-white text-slate-900 rounded-xl font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
+                        >
+                            {submitting ? (
+                                <div className="w-4 h-4 border-2 border-slate-900 rounded-full animate-spin border-t-transparent"></div>
+                            ) : `Confirm Application`}
+                        </button>
+                    </div>
+                )}
 
                 {/* Special Action: Complete KYC */}
                 {loan.status === 'KYC_SENT' && (
