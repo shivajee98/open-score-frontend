@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +14,7 @@ export default function CustomerHome() {
     const [kycLoan, setKycLoan] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [dynamicText, setDynamicText] = useState("Apply Now & Get 0% Interest Credit");
+    const [activeBanner, setActiveBanner] = useState(0);
 
     const banners = [
         {
@@ -173,34 +174,61 @@ export default function CustomerHome() {
                 </div>
             )}
 
-            {/* Banners - Static Scroll with Dynamic Text */}
-            <div className="px-6 mb-10 overflow-x-auto flex gap-5 no-scrollbar snap-x">
-                {banners.map((banner, i) => (
-                    <div
-                        key={i}
-                        onClick={() => router.push('/customer/loan/apply')}
-                        className={`snap-center shrink-0 w-[85%] ${banner.color} rounded-[2rem] p-6 relative overflow-hidden h-44 flex flex-col justify-center shadow-xl shadow-slate-900/10 group cursor-pointer border border-white/5`}
-                    >
-                        <div className={`absolute top-0 right-0 w-48 h-48 ${banner.accent}/20 rounded-full blur-3xl -mr-10 -mt-10 transition-colors`}></div>
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-3">
-                                <div>
-                                    <h3 className="text-white font-black text-lg tracking-tight leading-tight max-w-[200px] transition-all duration-300">
-                                        {banner.title}
-                                    </h3>
-                                    <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mt-2">{banner.sub}</p>
+            {/* Banners - Controlled Carousel with Arrows */}
+            <div className="px-6 mb-10 relative group">
+                <div className="relative h-44 w-full overflow-hidden rounded-[2rem]">
+                    {banners.map((banner, i) => (
+                        <div
+                            key={i}
+                            onClick={() => router.push('/customer/loan/apply')}
+                            className={`absolute inset-0 w-full h-full ${banner.color} p-6 flex flex-col justify-center shadow-xl shadow-slate-900/10 cursor-pointer border border-white/5 transition-all duration-500 ease-in-out transform ${i === activeBanner ? 'opacity-100 translate-x-0' : 'opacity-0 ' + (i < activeBanner ? '-translate-x-full' : 'translate-x-full')
+                                }`}
+                        >
+                            <div className={`absolute top-0 right-0 w-48 h-48 ${banner.accent}/20 rounded-full blur-3xl -mr-10 -mt-10 transition-colors`}></div>
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 className="text-white font-black text-lg tracking-tight leading-tight max-w-[200px]">
+                                            {banner.title}
+                                        </h3>
+                                        <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mt-2">{banner.sub}</p>
+                                    </div>
+                                    <div className="bg-white/5 backdrop-blur-md p-2.5 rounded-xl border border-white/10">
+                                        <Zap className="text-yellow-400 fill-yellow-400 w-5 h-5 animate-pulse" />
+                                    </div>
                                 </div>
-                                <div className="bg-white/5 backdrop-blur-md p-2.5 rounded-xl border border-white/10">
-                                    <Zap className="text-yellow-400 fill-yellow-400 w-5 h-5 animate-pulse" />
+                                <div className="flex items-end gap-2 mt-2">
+                                    <span className="text-white/30 text-[9px] font-black uppercase tracking-widest mb-1">{banner.label}</span>
+                                    <span className="text-2xl font-black text-white tracking-tighter">{banner.amount}</span>
                                 </div>
-                            </div>
-                            <div className="flex items-end gap-2 mt-2">
-                                <span className="text-white/30 text-[9px] font-black uppercase tracking-widest mb-1">{(banner as any).label || 'Limit Up to'}</span>
-                                <span className="text-2xl font-black text-white tracking-tighter">{banner.amount}</span>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
+
+                {/* Carousel Arrows */}
+                <button
+                    onClick={() => setActiveBanner((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 transition-all z-30"
+                >
+                    <ChevronLeft size={16} strokeWidth={3} />
+                </button>
+                <button
+                    onClick={() => setActiveBanner((prev) => (prev === banners.length - 1 ? 0 : prev + 1))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 backdrop-blur-md border border-white/10 flex items-center justify-center text-white active:scale-90 transition-all z-30"
+                >
+                    <ChevronRight size={16} strokeWidth={3} />
+                </button>
+
+                {/* Progress Indicators */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-30">
+                    {banners.map((_, i) => (
+                        <div
+                            key={i}
+                            className={`h-1 rounded-full transition-all duration-300 ${i === activeBanner ? 'w-4 bg-white' : 'w-1 bg-white/30'}`}
+                        />
+                    ))}
+                </div>
             </div>
 
             {/* Recharge & Bills Section */}
