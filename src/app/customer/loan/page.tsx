@@ -164,7 +164,7 @@ export default function LoanList() {
                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Select Term Loan</h3>
                         <span className="text-[10px] font-bold text-slate-400">Fixed Tenure</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="flex flex-col gap-4 mb-8">
                         {Object.values(LOAN_PLANS).filter((p: any) => p.amount > 10000).map((plan: any) => (
                             <div
                                 key={plan.amount}
@@ -176,30 +176,39 @@ export default function LoanList() {
                                     router.push(`/customer/loan/${plan.amount}`);
                                 }}
                                 className={cn(
-                                    "bg-white rounded-[2rem] p-5 pt-12 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.95]",
+                                    "bg-white rounded-[2rem] p-6 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between",
                                     plan.isLocked ? "opacity-75 grayscale-[0.5]" : "hover:border-blue-200"
                                 )}
                             >
-                                <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${plan.color}`}></div>
-                                <div className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${plan.isLocked
-                                    ? "bg-slate-100 text-slate-400"
-                                    : "bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white"
-                                    }`}>
-                                    {plan.isLocked ? <Lock size={14} /> : <ChevronRight size={16} />}
+                                <div className={`absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b ${plan.color}`}></div>
+
+                                <div className="flex items-center gap-5 flex-1">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0 ${plan.isLocked
+                                        ? "bg-slate-100 text-slate-400"
+                                        : "bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white"
+                                        }`}>
+                                        {plan.isLocked ? <Lock size={20} /> : <Zap size={20} className="fill-current" />}
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className={`text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-gradient-to-r ${plan.color} uppercase tracking-wide flex items-center gap-1 w-fit`}>
+                                                {plan.title}
+                                            </span>
+                                            {plan.isLocked && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Locked</span>}
+                                        </div>
+                                        <h3 className="text-xl font-black text-slate-900">
+                                            ₹ {plan.amount >= 100000 ? `${plan.amount / 100000}L` : plan.amount >= 1000 ? `${plan.amount / 1000}k` : plan.amount}
+                                        </h3>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            {plan.isLocked ? 'Building Eligibility...' : plan.description}
+                                        </p>
+                                    </div>
                                 </div>
 
-                                <div className="mb-3">
-                                    <span className={`text-[10px] font-bold text-white px-2 py-1 rounded-full bg-gradient-to-r ${plan.color} uppercase tracking-wide flex items-center gap-1 w-fit`}>
-                                        {plan.isLocked && <Lock size={8} fill="white" />}
-                                        {plan.title}
-                                    </span>
+                                <div className="ml-4 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
+                                    <ChevronRight size={20} />
                                 </div>
-                                <h3 className="text-2xl font-black text-slate-900 mb-1">
-                                    ₹ {plan.amount >= 100000 ? `${plan.amount / 100000}L` : plan.amount >= 1000 ? `${plan.amount / 1000}k` : plan.amount}
-                                </h3>
-                                <p className="text-xs font-bold text-slate-400 line-clamp-1">
-                                    {plan.isLocked ? 'Building Eligibility...' : plan.description}
-                                </p>
                             </div>
                         ))}
                     </div>
@@ -246,16 +255,20 @@ export default function LoanList() {
                     {/* Other Loans */}
                     <div>
                         <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">More Options</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-4">
                             {[
                                 { title: 'Business Loan', icon: '💼', desc: 'For heavy inventory' },
                                 { title: 'Personal Loan', icon: '🏠', desc: 'For personal use' }
                             ].map((item, i) => (
-                                <div key={i} className="bg-white rounded-[2rem] p-5 border border-slate-100 opacity-60">
-                                    <div className="text-2xl mb-3 grayscale">{item.icon}</div>
-                                    <h4 className="font-black text-slate-900 text-sm mb-1">{item.title}</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-3">{item.desc}</p>
-                                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">Coming Soon</span>
+                                <div key={i} className="bg-white rounded-[2rem] p-6 border border-slate-100 opacity-60 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-3xl grayscale">{item.icon}</div>
+                                        <div>
+                                            <h4 className="font-black text-slate-900 text-sm">{item.title}</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{item.desc}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Upcoming</span>
                                 </div>
                             ))}
                         </div>
