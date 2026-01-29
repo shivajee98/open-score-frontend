@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import QRCode from 'react-qr-code';
-import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X } from 'lucide-react';
+import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X, Scan } from 'lucide-react';
 
 export default function CustomerQR() {
     const [qrData, setQrData] = useState('');
@@ -15,6 +15,8 @@ export default function CustomerQR() {
     const [isMapping, setIsMapping] = useState(false);
     const [mapCode, setMapCode] = useState('');
     const [mapStatus, setMapStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [scanning, setScanning] = useState(false);
+    const [scannerInstance, setScannerInstance] = useState<any>(null);
 
     useEffect(() => {
         apiFetch('/payment/qr').then(data => setQrData(data.qr_data));
@@ -44,6 +46,38 @@ export default function CustomerQR() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }
+
+    const startScanner = async () => {
+        setScanning(true);
+        const { Html5Qrcode } = await import('html5-qrcode');
+        setTimeout(async () => {
+            try {
+                if (!document.getElementById("reader")) return;
+                const instance = new Html5Qrcode("reader");
+                setScannerInstance(instance);
+                await instance.start(
+                    { facingMode: "environment" },
+                    { fps: 15, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        setMapCode(decodedText);
+                        stopScanner();
+                    },
+                    () => { }
+                );
+            } catch (err) {
+                console.error(err);
+                setScanning(false);
+            }
+        }, 100);
+    };
+
+    const stopScanner = async () => {
+        setScanning(false);
+        if (scannerInstance && scannerInstance.isScanning) {
+            await scannerInstance.stop();
+            setScannerInstance(null);
+        }
+    };
 
     const handleMapQr = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -125,38 +159,56 @@ export default function CustomerQR() {
                         <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in duration-300">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-lg font-black text-slate-900">Map Physical QR</h3>
-                                <button onClick={() => setIsMapping(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200">
+                                <button onClick={() => { setIsMapping(false); stopScanner(); }} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200">
                                     <X size={20} />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleMapQr} className="space-y-3">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">QR Code ID</label>
-                                    <input
-                                        autoFocus
-                                        value={mapCode}
-                                        onChange={(e) => setMapCode(e.target.value)}
-                                        placeholder="Enter Code ID (e.g. A1B2)"
-                                        className="w-full p-3 bg-slate-50 rounded-lg font-mono text-center text-lg font-black tracking-widest border-2 border-transparent focus:border-blue-500 outline-none transition-all uppercase"
-                                    />
-                                    <p className="text-[10px] text-slate-400 mt-2 font-medium leading-tight">
-                                        Enter the 6-digit alphanumeric code printed below the QR code sticker.
-                                    </p>
+                            {scanning ? (
+                                <div className="space-y-4">
+                                    <div id="reader" className="w-full h-64 overflow-hidden rounded-xl border-2 border-slate-200"></div>
+                                    <button onClick={stopScanner} className="w-full py-2 bg-slate-100 font-bold rounded-lg text-slate-600">Cancel Scan</button>
                                 </div>
+                            ) : (
+                                <form onSubmit={handleMapQr} className="space-y-4">
+                                    <button
+                                        type="button"
+                                        onClick={startScanner}
+                                        className="w-full py-3 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl font-bold text-slate-500 flex items-center justify-center gap-2 hover:bg-slate-100 hover:border-slate-400 transition-all"
+                                    >
+                                        <Scan size={20} /> Scan QR Code
+                                    </button>
 
-                                <button
-                                    disabled={mapStatus === 'loading' || !mapCode}
-                                    className={`w-full py-2.5 rounded-lg font-bold text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${mapStatus === 'success' ? 'bg-emerald-500' :
+                                    <div className="relative flex py-2 items-center">
+                                        <div className="flex-grow border-t border-slate-200"></div>
+                                        <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase">Or Type ID</span>
+                                        <div className="flex-grow border-t border-slate-200"></div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">QR Code ID</label>
+                                        <input
+                                            autoFocus
+                                            value={mapCode}
+                                            onChange={(e) => setMapCode(e.target.value)}
+                                            placeholder="Enter Code ID"
+                                            className="w-full p-3 bg-slate-50 rounded-lg font-mono text-center text-lg font-black tracking-widest border-2 border-transparent focus:border-blue-500 outline-none transition-all uppercase"
+                                        />
+                                    </div>
+
+                                    <button
+                                        disabled={mapStatus === 'loading' || !mapCode}
+                                        className={`w-full py-2.5 rounded-lg font-bold text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${mapStatus === 'success' ? 'bg-emerald-500' :
                                             mapStatus === 'error' ? 'bg-rose-500' :
                                                 'bg-blue-600 hover:bg-blue-700'
-                                        }`}
-                                >
-                                    {mapStatus === 'loading' ? 'Linking...' :
-                                        mapStatus === 'success' ? <><Check size={20} /> Linked!</> :
-                                            mapStatus === 'error' ? 'Invalid Code' : 'Link QR Code'}
-                                </button>
-                            </form>
+                                            }`}
+                                    >
+                                        {mapStatus === 'loading' ? 'Linking...' :
+                                            mapStatus === 'success' ? <><Check size={20} /> Linked!</> :
+                                                mapStatus === 'error' ? 'Invalid Code' : 'Link QR Code'}
+                                    </button>
+                                </form>
+                            )}
                         </div>
                     </div>
                 )}

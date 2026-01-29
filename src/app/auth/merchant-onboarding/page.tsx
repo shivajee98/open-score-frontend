@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import {
     Store,
@@ -20,7 +20,13 @@ import { cn } from '@/lib/loanUtils';
 
 export default function MerchantOnboarding() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
+
+    useEffect(() => {
+        const s = searchParams.get('step');
+        if (s) setStep(parseInt(s));
+    }, [searchParams]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -63,6 +69,29 @@ export default function MerchantOnboarding() {
         { label: "₹1,00,000 - ₹2,00,000", sub: "Cashback: ₹2,000 - ₹4,000", value: "1l-2l" },
         { label: "₹2,00,000 - ₹5,00,000", sub: "Cashback: ₹3,000 - ₹5,000", value: "2l-5l" },
     ];
+
+    const handleStep1Submit = async () => {
+        setLoading(true);
+        try {
+            await apiFetch('/auth/update-profile', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email
+                })
+            });
+
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            u.name = formData.name;
+            u.email = formData.email;
+            localStorage.setItem('user', JSON.stringify(u));
+
+            router.push('/customer');
+        } catch (e: any) {
+            setError(e.message || 'Failed to update profile');
+            setLoading(false);
+        }
+    };
 
     const handleSubmit = async () => {
         setLoading(true);
@@ -168,11 +197,11 @@ export default function MerchantOnboarding() {
                             </div>
                         </div>
                         <button
-                            disabled={!formData.name || !formData.email.includes('@')}
-                            onClick={() => setStep(2)}
+                            disabled={!formData.name || !formData.email.includes('@') || loading}
+                            onClick={handleStep1Submit}
                             className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 group disabled:opacity-50"
                         >
-                            Continue <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                            {loading ? 'Saving...' : <>Continue <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>}
                         </button>
                     </div>
                 )}

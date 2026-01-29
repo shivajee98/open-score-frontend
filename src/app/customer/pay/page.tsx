@@ -8,10 +8,11 @@ import PinModal from '@/components/PinModal';
 import { Scan, X, ArrowRight, Smartphone, Search, Home, QrCode, Receipt, Lock } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function CustomerPay() {
-    const router = useRouter(); // Instantiated router
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -34,6 +35,10 @@ export default function CustomerPay() {
     ];
 
     useEffect(() => {
+        if (searchParams.get('scan') === 'true') {
+            startScanner();
+        }
+
         apiFetch('/wallet/balance').then(data => {
             setBalance(data.balance);
             setLockedBalance(data.locked_balance || 0);
@@ -52,7 +57,17 @@ export default function CustomerPay() {
             const unique = Array.from(new Map(transferPayees.map((p: any) => [p.vpa, p])).values());
             setRecentPayees(unique.slice(0, 4));
         });
-    }, []);
+    }, [searchParams]);
+
+    // Debounce Search
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (searchQuery.length >= 3) { // Min 3 chars to search
+                fetchPayeeDetails(searchQuery);
+            }
+        }, 500); // 500ms debounce
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
 
     const startScanner = async () => {
         setScanning(true);
@@ -221,11 +236,6 @@ export default function CustomerPay() {
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Enter mobile number or Open Score ID"
                                         className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && searchQuery.trim()) {
-                                                fetchPayeeDetails(searchQuery.trim());
-                                            }
-                                        }}
                                     />
                                 </div>
 

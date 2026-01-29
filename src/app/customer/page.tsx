@@ -98,9 +98,9 @@ export default function CustomerHome() {
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
             {/* Header Redesign - Tech/Circuit Theme */}
-            <div className="bg-[#1a73e8] px-4 pt-14 pb-28 relative overflow-hidden shadow-2xl">
+            <div className="bg-emerald-600 px-4 pt-14 pb-28 relative overflow-hidden shadow-2xl">
                 {/* Main Gradient Background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#2979FF] via-[#2962FF] to-[#6200EA] z-0"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 z-0"></div>
 
                 {/* Circuit Board Pattern Overlay - Reduced Density */}
                 <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
@@ -139,7 +139,7 @@ export default function CustomerHome() {
                     <div className="absolute -inset-[2px] rounded-[1.4rem] bg-cyan-400/50 blur-md animate-pulse"></div>
 
                     {/* Card Container */}
-                    <div className="relative bg-gradient-to-r from-[#2979FF]/40 to-[#7C4DFF]/40 backdrop-blur-xl rounded-[1.3rem] py-2.5 px-4 flex items-center justify-between border-[1.5px] border-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.3),inset_0_0_20px_rgba(34,211,238,0.1)] overflow-hidden">
+                    <div className="relative bg-gradient-to-r from-emerald-500/40 to-teal-500/40 backdrop-blur-xl rounded-[1.3rem] py-2.5 px-4 flex items-center justify-between border-[1.5px] border-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.3),inset_0_0_20px_rgba(16,185,129,0.1)] overflow-hidden">
 
                         {/* Internal Shine Effect */}
                         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
@@ -171,11 +171,11 @@ export default function CustomerHome() {
                 <div className="bg-white py-2 px-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-50">
                     <div className="grid grid-cols-3 gap-1">
                         {[
-                            { label: 'Scan QR', icon: <ScanBarcode size={22} strokeWidth={2} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })), href: '#', color: 'text-indigo-600 bg-indigo-50' },
+                            { label: 'Scan QR', icon: <ScanBarcode size={22} strokeWidth={2} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50' },
                             { label: 'Pay ID', icon: <Send size={22} strokeWidth={2} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50' },
                             { label: 'Show QR', icon: <QrCode size={22} strokeWidth={2} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50' },
                         ].map((item, i) => (
-                            <div key={i} onClick={item.action} className="flex flex-col items-center gap-1 active:scale-95 transition-all cursor-pointer">
+                            <div key={i} className="flex flex-col items-center gap-1 active:scale-95 transition-all cursor-pointer">
                                 <Link href={item.href || '#'} className="contents">
                                     <div className={`w-10 h-10 rounded-lg ${item.color} flex items-center justify-center`}>
                                         {item.icon}
@@ -200,6 +200,24 @@ export default function CustomerHome() {
                                 <div>
                                     <h3 className="text-slate-900 font-black text-lg leading-tight uppercase tracking-tight">Complete KYC Now</h3>
                                     <p className="text-slate-800 text-[10px] font-black leading-tight mt-1 opacity-60 uppercase tracking-widest">Required for Loan #{kycLoan.id}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+            )}
+
+            {isMerchant && !user.is_onboarded && (
+                <div className="px-4 mb-8">
+                    <Link href={`/auth/merchant-onboarding?step=2`}>
+                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 rounded-3xl shadow-2xl shadow-purple-900/30 border-4 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="w-12 h-12 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                    <Zap size={30} className="fill-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-black text-lg leading-tight uppercase tracking-tight">Claim ₹250 Cashback</h3>
+                                    <p className="text-white/80 text-[10px] font-black leading-tight mt-1 opacity-80 uppercase tracking-widest">Complete Setup Now</p>
                                 </div>
                             </div>
                         </div>

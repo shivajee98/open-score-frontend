@@ -25,8 +25,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 // Enforce onboarding
                 const isOnboardingPath = pathname === '/auth/onboarding' || pathname === '/auth/merchant-onboarding';
                 if (!user.is_onboarded && !isOnboardingPath) {
-                    router.push(user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding');
-                    return;
+                    // Allow Merchants to access dashboard to claim cashback
+                    if (user.role === 'MERCHANT' && pathname.startsWith('/customer')) {
+                        // proceed
+                    } else {
+                        router.push(user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding');
+                        return;
+                    }
                 }
 
                 // Prevent access to wrong roles

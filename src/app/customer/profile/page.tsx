@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -163,6 +163,35 @@ export default function Profile() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Support Section */}
+                        <div className="mt-8 mb-4">
+                            <h3 className="px-1 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Support & Settings</h3>
+
+                            <div className="space-y-3">
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-rose-500 shadow-sm group-hover:scale-110 transition-transform"><Headphones className="w-5 h-5" /></div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900">Help & Support</p>
+                                            <p className="text-[10px] font-bold text-slate-400">help@openscore.in • +91 98765 43210</p>
+                                        </div>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-slate-300" />
+                                </div>
+
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-amber-500 shadow-sm group-hover:scale-110 transition-transform"><Bell className="w-5 h-5" /></div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900">Notifications</p>
+                                            <p className="text-[10px] font-bold text-slate-400">Manage your alerts</p>
+                                        </div>
+                                    </div>
+                                    <div className="w-10 h-5 bg-blue-600 rounded-full relative shadow-inner"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full shadow-sm"></div></div>
+                                </div>
+                            </div>
+                        </div>
 
                         <div className="flex gap-3 mt-8">
                             {isEditing ? (
