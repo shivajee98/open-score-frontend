@@ -198,44 +198,44 @@ export default function RepaymentsPage() {
                 <div className="relative z-10">
                     <div className="flex justify-between items-center mb-10">
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-black text-white tracking-tighter leading-none">My Repayments</h1>
-                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] opacity-80 mt-1">Portfolio</p>
+                            <h1 className="text-xl font-black text-white tracking-tighter leading-none">My Repayments</h1>
+                            <p className="text-[8px] font-black text-blue-400 uppercase tracking-[0.2em] opacity-80 mt-1">Portfolio</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
-                                <Bell size={18} />
-                                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
+                            <button className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
+                                <Bell size={16} />
+                                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
                             </button>
-                            <button className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
-                                <HelpCircle size={18} />
+                            <button className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                                <HelpCircle size={16} />
                             </button>
                             <Link href="/customer">
-                                <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
-                                    <ArrowLeft size={18} />
+                                <div className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                                    <ArrowLeft size={16} />
                                 </div>
                             </Link>
                         </div>
                     </div>
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                        <ShieldCheck size={28} />
-                    </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 mb-6">
+                    <ShieldCheck size={24} />
+                </div>
 
-                    {/* Financial Summary Cards */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4 group">
-                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 mb-3 group-hover:scale-110 transition-transform">
-                                <IndianRupee size={16} />
-                            </div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Outstanding</p>
-                            <h3 className="text-lg font-black text-white tracking-tight">₹{totalActiveDebt.toLocaleString()}</h3>
+                {/* Financial Summary Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3.5 group">
+                        <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 mb-2 group-hover:scale-110 transition-transform">
+                            <IndianRupee size={14} />
                         </div>
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-4 group">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
-                                <Coins size={16} />
-                            </div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Repayment Bonus</p>
-                            <h3 className="text-lg font-black text-emerald-400 tracking-tight">₹{totalCashback.toLocaleString()}</h3>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Outstanding</p>
+                        <h3 className="text-base font-black text-white tracking-tight">₹{totalActiveDebt.toLocaleString()}</h3>
+                    </div>
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3.5 group">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2 group-hover:scale-110 transition-transform">
+                            <Coins size={14} />
                         </div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Repayment Bonus</p>
+                        <h3 className="text-base font-black text-emerald-400 tracking-tight">₹{totalCashback.toLocaleString()}</h3>
                     </div>
                 </div>
             </div>
@@ -250,17 +250,17 @@ export default function RepaymentsPage() {
                             placeholder="Find loan ID or amount..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-slate-50 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all border border-transparent"
+                            className="w-full pl-9 pr-4 py-2 bg-slate-50 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all border border-transparent"
                         />
                     </div>
                     <button
                         onClick={() => setShowFilters(!showFilters)}
                         className={cn(
-                            "w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-95 border",
+                            "w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 border",
                             showFilters ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-100 hover:bg-slate-50"
                         )}
                     >
-                        <Filter size={18} />
+                        <Filter size={16} />
                     </button>
                 </div>
 
@@ -315,7 +315,7 @@ export default function RepaymentsPage() {
                                 <div
                                     key={loan.id}
                                     onClick={() => handleOpenLoan(loan)}
-                                    className="p-5 rounded-2xl bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col gap-5 group active:scale-[0.98] transition-all cursor-pointer hover:shadow-2xl hover:shadow-blue-900/10 hover:border-blue-200 relative overflow-hidden"
+                                    className="p-4 rounded-xl bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] flex flex-col gap-4 group active:scale-[0.98] transition-all cursor-pointer hover:shadow-2xl hover:shadow-blue-900/10 hover:border-blue-200 relative overflow-hidden"
                                 >
                                     {/* Subtle Progress Bar Background */}
                                     <div className="absolute bottom-0 left-0 h-1 bg-slate-100 w-full overflow-hidden">
@@ -326,16 +326,16 @@ export default function RepaymentsPage() {
                                     </div>
 
                                     <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-blue-600 border border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                                                <TrendingUp size={28} />
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-blue-600 border border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                                                <TrendingUp size={20} />
                                             </div>
                                             <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Application #{loan.display_id || loan.id}</span>
-                                                    <Sparkles size={10} className="text-amber-500 animate-pulse" />
+                                                <div className="flex items-center gap-2 mb-0.5">
+                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Application #{loan.display_id || loan.id}</span>
+                                                    <Sparkles size={8} className="text-amber-500 animate-pulse" />
                                                 </div>
-                                                <h3 className="text-2xl font-black tracking-tighter text-slate-900">₹{parseFloat(loan.amount).toLocaleString()}</h3>
+                                                <h3 className="text-xl font-black tracking-tighter text-slate-900">₹{parseFloat(loan.amount).toLocaleString()}</h3>
                                             </div>
                                         </div>
                                         <div className="text-right">
@@ -355,8 +355,8 @@ export default function RepaymentsPage() {
                                                 <p className="text-xs font-black text-slate-900 truncate">₹{(loan.amount - (loan.paid_amount || 0)).toLocaleString()}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest group-hover:bg-blue-600 transition-colors shadow-lg shadow-slate-900/10">
-                                            Dashboard <ChevronRight size={14} />
+                                        <div className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest group-hover:bg-blue-600 transition-colors shadow-lg shadow-slate-900/10">
+                                            Dashboard <ChevronRight size={12} />
                                         </div>
                                     </div>
                                 </div>
@@ -430,45 +430,47 @@ export default function RepaymentsPage() {
             </main>
 
             {/* Modal for Closed Loans Detail (Simple legacy modal) */}
-            {showModal && selectedLoan && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col relative overflow-hidden animate-in zoom-in duration-300">
-                        <div className="p-8 border-b border-slate-50 flex justify-between items-start">
-                            <div>
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Loan #{selectedLoan.id} Review</h2>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Full Repayment Ledger</p>
+            {
+                showModal && selectedLoan && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl flex flex-col relative overflow-hidden animate-in zoom-in duration-300">
+                            <div className="p-8 border-b border-slate-50 flex justify-between items-start">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Loan #{selectedLoan.id} Review</h2>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Full Repayment Ledger</p>
+                                </div>
+                                <button onClick={() => setShowModal(false)} className="p-3 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors"><X size={20} /></button>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="p-3 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 transition-colors"><X size={20} /></button>
-                        </div>
-                        <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                            <div className="space-y-3">
-                                {repayments.map((rep, idx) => (
-                                    <div key={rep.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-black">{idx + 1}</div>
-                                            <div>
-                                                <p className="font-black text-sm text-slate-900">₹{parseFloat(rep.amount).toLocaleString()}</p>
-                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Paid: {new Date(rep.paid_at || '').toLocaleDateString()}</p>
+                            <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                                <div className="space-y-3">
+                                    {repayments.map((rep, idx) => (
+                                        <div key={rep.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-black">{idx + 1}</div>
+                                                <div>
+                                                    <p className="font-black text-sm text-slate-900">₹{parseFloat(rep.amount).toLocaleString()}</p>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Paid: {new Date(rep.paid_at || '').toLocaleDateString()}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
+                                                <CheckCircle2 size={12} />
+                                                <span className="text-[9px] font-black uppercase tracking-widest">Success</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
-                                            <CheckCircle2 size={12} />
-                                            <span className="text-[9px] font-black uppercase tracking-widest">Success</span>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex items-center justify-between">
-                            <div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Repaid</p>
-                                <p className="text-xl font-black text-slate-900">₹{parseFloat(selectedLoan.amount).toLocaleString()}</p>
+                            <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex items-center justify-between">
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Repaid</p>
+                                    <p className="text-xl font-black text-slate-900">₹{parseFloat(selectedLoan.amount).toLocaleString()}</p>
+                                </div>
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-sm"><IndianRupee size={24} /></div>
                             </div>
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-sm"><IndianRupee size={24} /></div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

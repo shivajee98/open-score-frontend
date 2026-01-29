@@ -148,8 +148,8 @@ export default function CustomerHome() {
 
                 <div className="flex justify-between items-start text-white mb-6 relative z-10">
                     <div>
-                        <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'}/90 text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 opacity-80`}>Welcome Back</p>
-                        <h1 className="text-3xl font-black tracking-tighter drop-shadow-sm uppercase">
+                        <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'}/90 text-[8px] font-black uppercase tracking-[0.2em] mb-1 opacity-80`}>Welcome Back</p>
+                        <h1 className="text-2xl font-black tracking-tighter drop-shadow-sm uppercase">
                             {isMerchant ? (user?.business_name || 'MY STORE') : (user?.name || 'CUSTOMER')}
                         </h1>
                     </div>
@@ -157,19 +157,19 @@ export default function CustomerHome() {
                     <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-1.5">
                             <Link href="/customer/notifications">
-                                <button className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 relative">
-                                    <Bell size={16} strokeWidth={2.5} />
-                                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
+                                <button className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 relative">
+                                    <Bell size={14} strokeWidth={2.5} />
+                                    <span className="absolute top-1.5 right-1.5 w-1 h-1 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
                                 </button>
                             </Link>
                             <Link href="/customer/profile">
-                                <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-sm shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 overflow-hidden">
+                                <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-xs shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 overflow-hidden">
                                     {user?.name?.[0] || 'U'}
                                 </div>
                             </Link>
                         </div>
-                        <button className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20" title="Help & Support">
-                            <Headphones size={16} strokeWidth={2.5} />
+                        <button className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20" title="Help & Support">
+                            <Headphones size={14} strokeWidth={2.5} />
                         </button>
                     </div>
                 </div>
@@ -190,8 +190,8 @@ export default function CustomerHome() {
                         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
                         <div className="flex items-center gap-3 relative z-10 w-full">
-                            <div className="w-9 h-9 rounded-[10px] bg-white/10 border border-white/20 text-white flex items-center justify-center shadow-lg">
-                                <Wallet size={18} strokeWidth={2.5} />
+                            <div className="w-8 h-8 rounded-[8px] bg-white/10 border border-white/20 text-white flex items-center justify-center shadow-lg">
+                                <Wallet size={16} strokeWidth={2.5} />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center justify-between">
@@ -204,7 +204,7 @@ export default function CustomerHome() {
                                     </button>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <p className="text-[24px] font-black text-white tracking-tighter drop-shadow-sm">
+                                    <p className="text-[20px] font-black text-white tracking-tighter drop-shadow-sm">
                                         ₹ {showBalance ? balance : '••••••'}
                                     </p>
                                     {Number(lockedBalance) > 0 && showBalance && (
@@ -225,16 +225,16 @@ export default function CustomerHome() {
                 <div className="bg-white py-2 px-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-50">
                     <div className="grid grid-cols-3 gap-1">
                         {[
-                            { label: 'Scan QR', icon: <ScanBarcode size={22} strokeWidth={2} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50' },
-                            { label: 'Pay ID', icon: <Send size={22} strokeWidth={2} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50' },
-                            { label: 'Show QR', icon: <QrCode size={22} strokeWidth={2} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50' },
+                            { label: 'Scan QR', icon: <ScanBarcode size={18} strokeWidth={2} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50' },
+                            { label: 'Pay ID', icon: <Send size={18} strokeWidth={2} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50' },
+                            { label: 'Show QR', icon: <QrCode size={18} strokeWidth={2} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50' },
                         ].map((item, i) => (
                             <div key={i} className="flex flex-col items-center gap-1 active:scale-95 transition-all cursor-pointer">
                                 <Link href={item.href || '#'} className="contents">
-                                    <div className={`w-10 h-10 rounded-lg ${item.color} flex items-center justify-center`}>
+                                    <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center`}>
                                         {item.icon}
                                     </div>
-                                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest text-center">{item.label}</span>
+                                    <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest text-center">{item.label}</span>
                                 </Link>
                             </div>
                         ))}
@@ -286,16 +286,16 @@ export default function CustomerHome() {
             )}
 
             {isMerchant && !user.pincode && (
-                <div className="px-4 mb-8">
+                <div className="px-4 mb-6">
                     <div onClick={() => setShowClaimModal(true)} className="cursor-pointer">
-                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 rounded-3xl shadow-2xl shadow-purple-900/30 border-4 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
+                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 rounded-2xl shadow-xl shadow-purple-900/30 border-4 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
                             <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-12 h-12 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
-                                    <Zap size={30} className="fill-white" />
+                                <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                    <Zap size={24} className="fill-white" />
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-black text-lg leading-tight uppercase tracking-tight">Claim ₹250 Cashback</h3>
-                                    <p className="text-white/80 text-[10px] font-black leading-tight mt-1 opacity-80 uppercase tracking-widest">Complete Setup Now</p>
+                                    <h3 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim ₹250 Cashback</h3>
+                                    <p className="text-white/80 text-[9px] font-black leading-tight mt-0.5 opacity-80 uppercase tracking-widest">Complete Setup Now</p>
                                 </div>
                             </div>
                         </div>
@@ -384,21 +384,21 @@ export default function CustomerHome() {
                 </div>
                 <div className="grid grid-cols-4 gap-y-8 gap-x-4">
                     {[
-                        { label: 'Electricity', icon: <Zap size={20} className="text-amber-500 fill-amber-500 animate-pulse" /> },
-                        { label: 'Mobile', icon: <Smartphone size={20} className="text-blue-500 animate-[bounce_2s_infinite]" /> },
-                        { label: 'DTH', icon: <Tv size={20} className="text-slate-900" /> },
-                        { label: 'Water', icon: <Droplets size={20} className="text-blue-500 animate-bounce delay-100" /> },
-                        { label: 'Gas', icon: <Flame size={20} className="text-orange-500 fill-orange-500 animate-pulse" /> },
-                        { label: 'Broadband', icon: <Wifi size={20} className="text-purple-500 animate-pulse" /> },
-                        { label: 'Insurance', icon: <ShieldCheck size={20} className="text-emerald-500" /> },
-                        { label: 'More', icon: <LayoutGrid size={20} className="text-slate-500" /> },
+                        { label: 'Electricity', icon: <Zap size={18} className="text-amber-500 fill-amber-500 animate-pulse" /> },
+                        { label: 'Mobile', icon: <Smartphone size={18} className="text-blue-500 animate-[bounce_2s_infinite]" /> },
+                        { label: 'DTH', icon: <Tv size={18} className="text-slate-900" /> },
+                        { label: 'Water', icon: <Droplets size={18} className="text-blue-500 animate-bounce delay-100" /> },
+                        { label: 'Gas', icon: <Flame size={18} className="text-orange-500 fill-orange-500 animate-pulse" /> },
+                        { label: 'Broadband', icon: <Wifi size={18} className="text-purple-500 animate-pulse" /> },
+                        { label: 'Insurance', icon: <ShieldCheck size={18} className="text-emerald-500" /> },
+                        { label: 'More', icon: <LayoutGrid size={18} className="text-slate-500" /> },
                     ].map((item, i) => (
-                        <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer active:scale-95 transition-all">
-                            <div className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden transition-all group-hover:shadow-md group-hover:-translate-y-1">
+                        <div key={i} className="flex flex-col items-center gap-1.5 group cursor-pointer active:scale-95 transition-all">
+                            <div className="w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden transition-all group-hover:shadow-md group-hover:-translate-y-1">
                                 {item.icon}
                                 <div className="absolute inset-0 bg-slate-50/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center leading-tight">{item.label}</span>
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center leading-tight">{item.label}</span>
                         </div>
                     ))}
                 </div>

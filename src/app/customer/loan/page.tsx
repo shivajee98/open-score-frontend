@@ -87,9 +87,9 @@ export default function LoanList() {
                 </button>
             </div>
 
-            <div className="mb-8">
-                <h1 className="text-2xl font-black text-slate-900 mb-2">Open Your Loan Score</h1>
-                <p className="text-slate-500 font-medium text-sm">Choose Credit As Your Need</p>
+            <div className="mb-6">
+                <h1 className="text-xl font-black text-slate-900 mb-1">Open Your Loan Score</h1>
+                <p className="text-slate-500 font-medium text-xs">Choose Credit As Your Need</p>
             </div>
 
             {/* Recent Activity / History Highlight - MOVED TO TOP */}
@@ -102,7 +102,7 @@ export default function LoanList() {
 
                     <div
                         onClick={() => router.push('/customer/loan/history')}
-                        className="bg-slate-900 rounded-2xl p-4 text-white shadow-xl shadow-slate-900/20 relative overflow-hidden group cursor-pointer"
+                        className="bg-slate-900 rounded-xl p-3 text-white shadow-xl shadow-slate-900/20 relative overflow-hidden group cursor-pointer"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/10 transition-colors"></div>
 
@@ -136,8 +136,8 @@ export default function LoanList() {
 
             {/* Active Loan Alert - RESTRICTION */}
             {activeLoan && (
-                <div className="mb-10 animate-in fade-in slide-in-from-top-4">
-                    <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-2xl shadow-slate-900/40 relative overflow-hidden">
+                <div className="mb-8 animate-in fade-in slide-in-from-top-4">
+                    <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-2xl shadow-slate-900/40 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] -mr-20 -mt-20"></div>
 
                         <div className="relative z-10">
@@ -162,7 +162,7 @@ export default function LoanList() {
                                 </button>
                                 <button
                                     onClick={() => handleCancel(activeLoan.id)}
-                                    className="px-4 py-3 bg-white/10 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95 border border-white/10"
+                                    className="px-3 py-2.5 bg-white/10 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95 border border-white/10"
                                 >
                                     Cancel
                                 </button>
@@ -207,7 +207,7 @@ export default function LoanList() {
                             router.push(`/customer/loan/${plan.amount}`);
                         }}
                         className={cn(
-                            "bg-slate-900 rounded-3xl p-4 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all",
+                            "bg-slate-900 rounded-2xl p-3.5 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all",
                             (activeLoan || cooldown.active) && "opacity-75 grayscale-[0.5]"
                         )}
                     >
@@ -270,7 +270,7 @@ export default function LoanList() {
                                     router.push(`/customer/loan/${plan.amount}`);
                                 }}
                                 className={cn(
-                                    "bg-white rounded-2xl p-4 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between",
+                                    "bg-white rounded-xl p-3 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between",
                                     (isLocked || activeLoan || cooldown.active) ? "opacity-75 grayscale-[0.5]" : "hover:border-blue-200"
                                 )}
                             >

@@ -71,8 +71,8 @@ export default function CustomerTransactions() {
                 {/* Filters */}
                 <div className="flex flex-col md:flex-row gap-3 mb-8">
                     <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input type="text" placeholder="Search payments..." className={`w-full pl-10 pr-4 py-3 bg-white rounded-lg border border-slate-100 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-${themeColor}-100 outline-none`} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                        <input type="text" placeholder="Search payments..." className={`w-full pl-9 pr-4 py-2.5 bg-white rounded-lg border border-slate-100 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-${themeColor}-100 outline-none`} />
                     </div>
                 </div>
 
@@ -88,11 +88,11 @@ export default function CustomerTransactions() {
                                 {grouped[date].map((t: any) => (
                                     <div key={t.id} onClick={() => setSelectedTx(t)} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-all group cursor-pointer active:scale-[0.98]">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                                                {t.type === 'CREDIT' ? <ArrowDownLeft className="w-6 h-6 stroke-[3]" /> : <ArrowUpRight className="w-6 h-6 stroke-[3]" />}
+                                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                {t.type === 'CREDIT' ? <ArrowDownLeft className="w-5 h-5 stroke-[3]" /> : <ArrowUpRight className="w-5 h-5 stroke-[3]" />}
                                             </div>
                                             <div>
-                                                <p className="font-bold text-slate-900 text-sm">
+                                                <p className="font-bold text-slate-900 text-xs">
                                                     {t.counterparty_vpa === 'System'
                                                         ? (t.type === 'CREDIT' ? t.counterparty_name : 'Paid')
                                                         : (t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`)
@@ -104,7 +104,7 @@ export default function CustomerTransactions() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className={`font-black text-base ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                            <p className={`font-black text-sm ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
                                                 {t.type === 'CREDIT' ? '+' : '-'}₹{parseFloat(t.amount).toLocaleString('en-IN')}
                                             </p>
                                             <p className="text-[10px] text-slate-300 font-medium">TxID: ...{String(t.description).split('Ref: ')[1]?.substring(0, 6) || String(t.id)}</p>
