@@ -124,48 +124,67 @@ export default function LoanApplication() {
         }, 1500);
     };
 
-    const offers = [
-        {
-            amount: '10,000',
-            type: 'Credit',
-            details: '10 Minutes • ₹500 Platform Fee',
-            fees: '₹500 Processing Fee',
-            tenure: '1 Month',
-            interest: '0%',
-            bestFor: 'Urgent',
-            color: 'bg-emerald-500'
-        },
-        {
-            amount: '30,000',
-            type: 'Credit',
-            details: '0% Interest (3 Months)',
-            fees: 'No Processing Fee',
-            tenure: '3 Months',
-            interest: '0%',
-            bestFor: 'Short Term',
-            color: 'bg-blue-500'
-        },
-        {
-            amount: '50,000',
-            type: 'Credit',
-            details: '6% Monthly (3 Months) • One Time 16%',
-            fees: '16% One Time if paid early',
-            tenure: '3 Months',
-            interest: '6% Monthly',
-            bestFor: 'Medium Term',
-            color: 'bg-purple-500'
-        },
-        {
-            amount: '50,000',
-            type: 'Credit',
-            details: '12% Monthly (6 Months) • Half Yearly 18%',
-            fees: '18% Half Yearly',
-            tenure: '6 Months',
-            interest: '12% Monthly',
-            bestFor: 'Long Term',
-            color: 'bg-indigo-500'
+    // States for Plans
+    const [plans, setPlans] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const data = await apiFetch('/loan-plans');
+                // Transform API data to UI format if needed, or just use directly
+                // Mapping DB fields to UI expectation
+                // UI used: amount, type (Credit), details, fees, tenure, interest, bestFor, color
+                const mappedPlans = data.map((p: any) => ({
+                    id: p.id,
+                    amount: parseFloat(p.amount).toLocaleString('en-IN'),
+                    rawAmount: parseFloat(p.amount), // for logic
+                    type: 'Credit',
+                    details: `${p.tenure_days} Days • ${p.interest_rate}% Interest`,
+                    fees: `₹${parseFloat(p.processing_fee) + parseFloat(p.application_fee) + parseFloat(p.other_fee)} Total Fees`,
+                    tenure: `${Math.round(p.tenure_days / 30)} Months`,
+                    tenureMonths: Math.round(p.tenure_days / 30),
+                    interest: p.interest_rate == 0 ? '0% Interest' : `${p.interest_rate}% Monthly`,
+                    bestFor: p.tag_text || 'Standard',
+                    color: p.plan_color || 'bg-blue-500'
+                }));
+
+                // Sort by amount
+                mappedPlans.sort((a: any, b: any) => a.rawAmount - b.rawAmount);
+                setPlans(mappedPlans);
+            } catch (e) {
+                console.error("Failed to load plans", e);
+                toast.error("Could not load loan offers.");
+            }
+        };
+
+        if (step === 2) {
+            fetchPlans();
         }
-    ];
+    }, [step]);
+
+    const handleApply = async () => {
+        if (!selectedOffer) return;
+
+        setLoading(true);
+        try {
+            await apiFetch('/loans/apply', {
+                method: 'POST',
+                body: JSON.stringify({
+                    amount: selectedOffer.rawAmount,
+                    tenure: selectedOffer.tenureMonths, // Still sending months for legacy compat, but plan_id rules
+                    payout_frequency: 'MONTHLY', // Defaulting for now as per plan logic usually
+                    payout_option_id: 'standard', // Mock/Default
+                    loan_plan_id: selectedOffer.id
+                })
+            });
+            toast.success("Application Submitted!");
+            router.push('/customer/loan');
+        } catch (e: any) {
+            toast.error(e.message || "Application Failed");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (loading || checkingEligibility) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -377,8 +396,8 @@ export default function LoanApplication() {
                         {step === 2 && (
                             <div className="space-y-3 animate-in slide-in-from-right-4 duration-300">
                                 {/* Offers List */}
-                                {offers.map((offer, index) => (
-                                    <div onClick={() => setSelectedOffer(offer)} key={index} className="cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]">
+                                {plans.map((offer, index) => (
+                                    <div onClick={() => setSelectedOffer(offer)} key={index} className={`cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]`}>
                                         <div className={`absolute top-0 left-0 w-1 h-full ${offer.color}`}></div>
                                         <div className="flex justify-between items-start mb-2">
                                             <div>
@@ -480,7 +499,7 @@ export default function LoanApplication() {
                             </div>
                         </div>
 
-                        <button className={`w-full py-2.5 text-white rounded-xl font-black text-base shadow-xl hover:opacity-90 transition-opacity ${selectedOffer.color}`}>
+                        <button onClick={handleApply} className={`w-full py-2.5 text-white rounded-xl font-black text-base shadow-xl hover:opacity-90 transition-opacity ${selectedOffer.color}`}>
                             Confirm & Apply
                         </button>
                     </div>
