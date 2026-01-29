@@ -229,19 +229,19 @@ export default function CustomerHome() {
 
             {/* Quick Actions - Floating Card */}
             <div className="px-6 -mt-12 relative z-20 mb-8">
-                <div className="bg-white py-2 px-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-50">
+                <div className="bg-white py-4 px-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-50">
                     <div className="grid grid-cols-3 gap-1">
                         {[
-                            { label: 'Scan QR', icon: <ScanBarcode size={18} strokeWidth={2} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50' },
-                            { label: 'Pay ID', icon: <Send size={18} strokeWidth={2} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50' },
-                            { label: 'Show QR', icon: <QrCode size={18} strokeWidth={2} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50' },
+                            { label: 'Scan QR', icon: <ScanBarcode size={28} strokeWidth={2.5} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50/50' },
+                            { label: 'Pay ID', icon: <Send size={28} strokeWidth={2.5} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50/50' },
+                            { label: 'Show QR', icon: <QrCode size={28} strokeWidth={2.5} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50/50' },
                         ].map((item, i) => (
                             <div key={i} className="flex flex-col items-center gap-1 active:scale-95 transition-all cursor-pointer">
                                 <Link href={item.href || '#'} className="contents">
-                                    <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center`}>
+                                    <div className={`w-14 h-14 rounded-2xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1`}>
                                         {item.icon}
                                     </div>
-                                    <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest text-center">{item.label}</span>
+                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-[0.1em] text-center">{item.label}</span>
                                 </Link>
                             </div>
                         ))}
