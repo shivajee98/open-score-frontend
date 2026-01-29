@@ -288,8 +288,8 @@ export default function LoanStatus() {
                     </div>
                 )}
 
-                {/* Loan History Option - Logic: Only show if CLOSED */}
-                {loan.status === 'CLOSED' && (
+                {/* Loan History Option - Logic: Show if CLOSED OR Fully Paid */}
+                {(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) && (
                     <div className="bg-emerald-50 rounded-lg p-4 text-emerald-900 shadow-xl shadow-emerald-900/10 flex flex-col items-center text-center gap-3 border border-emerald-100">
                         <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
                             <History className="w-6 h-6 text-emerald-600" />
