@@ -48,6 +48,20 @@ export default function DashboardLayout({
 
     const router = useRouter();
     const lastTxRef = React.useRef<string | null>(null);
+    const audioContextRef = React.useRef<AudioContext | null>(null);
+
+    // Initialize AudioContext on first interaction
+    const initAudio = () => {
+        if (!audioContextRef.current) {
+            const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+            if (AudioContextClass) {
+                audioContextRef.current = new AudioContextClass();
+            }
+        }
+        if (audioContextRef.current?.state === 'suspended') {
+            audioContextRef.current.resume();
+        }
+    };
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -80,6 +94,19 @@ export default function DashboardLayout({
         const interval = setInterval(checkNewTransactions, pollRate);
         return () => clearInterval(interval);
     }, [router, user?.role]);
+
+    useEffect(() => {
+        const handleFirstInteraction = () => {
+            initAudio();
+            // We can keep the listener or remove it, but initAudio handles multiple calls safely
+        };
+        window.addEventListener('click', handleFirstInteraction);
+        window.addEventListener('touchstart', handleFirstInteraction);
+        return () => {
+            window.removeEventListener('click', handleFirstInteraction);
+            window.removeEventListener('touchstart', handleFirstInteraction);
+        };
+    }, []);
 
     const checkNewTransactions = async () => {
         try {
@@ -120,52 +147,60 @@ export default function DashboardLayout({
     const playNotificationSound = (text: string) => {
         if (typeof window === 'undefined') return;
 
-        // 1. Play a tech "Ding" using Web Audio API (highly reliable)
-        try {
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-            if (AudioContext) {
-                const context = new AudioContext();
-                const o = context.createOscillator();
-                const g = context.createGain();
-                o.type = 'sine';
-                o.frequency.setValueAtTime(880, context.currentTime); // A5 note
-                o.connect(g);
-                g.connect(context.destination);
-                g.gain.setValueAtTime(0, context.currentTime);
-                g.gain.linearRampToValueAtTime(0.5, context.currentTime + 0.1);
-                g.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.5);
-                o.start();
-                o.stop(context.currentTime + 0.5);
-            }
-        } catch (e) { console.error("WebAudio failed", e); }
+        // Ensure AudioContext is ready
+        initAudio();
 
-        // 2. Clear out existing speech
+        // 1. Play high-frequency Tech Beep
+        if (audioContextRef.current) {
+            try {
+                const ctx = audioContextRef.current;
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = 'sine';
+                o.frequency.setValueAtTime(1200, ctx.currentTime);
+                o.connect(g);
+                g.connect(ctx.destination);
+                g.gain.setValueAtTime(0, ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+                g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                o.start();
+                o.stop(ctx.currentTime + 0.4);
+            } catch (e) {
+                console.error("Tech beep failed", e);
+            }
+        }
+
+        // 2. Clear out existing speech and try to speak
         if (window.speechSynthesis) {
             window.speechSynthesis.cancel();
 
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9; // Slightly slower for clarity
-            utterance.pitch = 1.1; // Slightly higher/friendly
+            const speak = () => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
 
-            // Try to find a better voice if available
-            const voices = window.speechSynthesis.getVoices();
-            const betterVoice = voices.find(v => v.lang.includes('en-IN')) ||
-                voices.find(v => v.lang.includes('en-GB')) ||
-                voices.find(v => v.lang.includes('en-US'));
-            if (betterVoice) utterance.voice = betterVoice;
+                const voices = window.speechSynthesis.getVoices();
+                const betterVoice = voices.find(v => v.lang.includes('en-IN')) ||
+                    voices.find(v => v.lang.includes('en-GB')) ||
+                    voices.find(v => v.lang.includes('en-US'));
 
-            window.speechSynthesis.speak(utterance);
+                if (betterVoice) utterance.voice = betterVoice;
+                window.speechSynthesis.speak(utterance);
+            };
+
+            // Voices often load asynchronously
+            if (window.speechSynthesis.getVoices().length === 0) {
+                window.speechSynthesis.onvoiceschanged = speak;
+            } else {
+                speak();
+            }
         }
     };
 
     const toggleAudio = () => {
+        initAudio();
         if (!isAudioEnabled) {
-            // "Prime" audio context for better browser support
-            if (window.speechSynthesis) {
-                const p = new SpeechSynthesisUtterance("Audio notifications enabled");
-                p.volume = 0; // Silent priming
-                window.speechSynthesis.speak(p);
-            }
+            playNotificationSound("Voice alerts enabled");
             setIsAudioEnabled(true);
             toast.success("Sound notifications turned ON");
         } else {
