@@ -24,17 +24,28 @@ export default function DashboardLayout({
 }) {
     const [user, setUser] = useState<any>(null);
     const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
 
-    // Load audio preference
+    // Load audio preference with Merchant default logic
     useEffect(() => {
         const saved = localStorage.getItem('audio_enabled');
-        if (saved === 'true') setIsAudioEnabled(true);
-    }, []);
+        if (saved === 'true') {
+            setIsAudioEnabled(true);
+        } else if (saved === null && user?.role === 'MERCHANT') {
+            // Default ON for Merchants on first load
+            setIsAudioEnabled(true);
+            localStorage.setItem('audio_enabled', 'true');
+        }
+    }, [user?.role]);
 
     // Save audio preference
     useEffect(() => {
-        localStorage.setItem('audio_enabled', isAudioEnabled.toString());
+        if (isAudioEnabled !== null) {
+            localStorage.setItem('audio_enabled', isAudioEnabled.toString());
+        }
     }, [isAudioEnabled]);
+
     const router = useRouter();
     const lastTxRef = React.useRef<string | null>(null);
 
@@ -107,6 +118,8 @@ export default function DashboardLayout({
     };
 
     const playNotificationSound = (text: string) => {
+        if (typeof window === 'undefined') return;
+
         // 1. Play a tech "Ding" using Web Audio API (highly reliable)
         try {
             const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -170,12 +183,12 @@ export default function DashboardLayout({
 
     return (
         <AuthGuard>
-            <div className="flex flex-col md:flex-row h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans selection:bg-blue-100 selection:text-blue-900">
+            <div className={`flex flex-col md:flex-row h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans selection:bg-${themeColor}-100 selection:text-${themeColor}-900`}>
                 {/* Desktop Sidebar */}
                 <aside className="w-72 border-r border-slate-200 bg-white hidden md:flex flex-col shadow-xl z-20">
                     <div className="p-6">
                         <div className="flex items-center gap-2 mb-1">
-                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-lg">O</div>
+                            <div className={`w-8 h-8 rounded-lg bg-${themeColor}-600 flex items-center justify-center text-white font-black text-lg`}>O</div>
                             <h1 className="text-xl font-black tracking-tight text-slate-900">OpenScore</h1>
                         </div>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-11">Powered by MSME Shakti</p>
@@ -186,7 +199,10 @@ export default function DashboardLayout({
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-slate-500 hover:text-blue-600 group font-bold"
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-slate-500 font-bold",
+                                    `hover:text-${themeColor}-600 group`
+                                )}
                             >
                                 <span className="group-hover:scale-110 transition-transform text-lg">
                                     {item.icon}
@@ -199,7 +215,7 @@ export default function DashboardLayout({
 
                     <div className="p-4 border-t border-slate-100">
                         <Link href="/customer/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer group">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-sm group-hover:scale-110 transition-transform">
+                            <div className={`w-10 h-10 rounded-full bg-${themeColor}-100 text-${themeColor}-600 flex items-center justify-center font-black text-sm group-hover:scale-110 transition-transform`}>
                                 {user?.name?.[0] || 'U'}
                             </div>
                             <div className="flex-1 overflow-hidden">
@@ -230,7 +246,7 @@ export default function DashboardLayout({
                         </div>
                         <div className="flex items-center gap-2 md:hidden">
                             <Link href="/customer/profile">
-                                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-sm border border-blue-200 cursor-pointer active:scale-90 transition-transform">
+                                <div className={`w-9 h-9 rounded-full bg-${themeColor}-100 flex items-center justify-center text-${themeColor}-600 font-black text-sm border border-${themeColor}-200 cursor-pointer active:scale-90 transition-transform`}>
                                     {user?.name?.[0] || 'U'}
                                 </div>
                             </Link>

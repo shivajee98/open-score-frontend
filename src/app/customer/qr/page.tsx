@@ -101,11 +101,14 @@ export default function CustomerQR() {
         }
     };
 
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
+
     return (
         <DashboardLayout title="Receive Money" navItems={navItems}>
             <div className="max-w-md mx-auto space-y-6 relative">
                 <div className="bg-white rounded-3xl p-6 md:p-8 text-center shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+                    <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-${themeColor}-500 to-${isMerchant ? 'teal' : 'indigo'}-500`}></div>
 
                     <div className="w-20 h-20 bg-slate-50 rounded-xl mx-auto mb-6 flex items-center justify-center text-2xl shadow-inner text-slate-900 border border-slate-100">
                         {user?.name?.[0]}

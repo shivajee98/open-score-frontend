@@ -26,7 +26,13 @@ function CustomerPayPage() {
     const [successData, setSuccessData] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [recentPayees, setRecentPayees] = useState<any[]>([]);
+    const [user, setUser] = useState<any>(null);
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+
+    useEffect(() => {
+        const stored = localStorage.getItem('user');
+        if (stored) setUser(JSON.parse(stored));
+    }, []);
 
     const scannerInitializing = useRef(false);
     const hasScanned = useRef(false);
@@ -251,6 +257,9 @@ function CustomerPayPage() {
         }
     };
 
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
+
     return (
         <DashboardLayout title="Scan & Pay" navItems={navItems}>
             <div className="max-w-xl mx-auto">
@@ -274,10 +283,10 @@ function CustomerPayPage() {
                 {step === 1 ? (
                     <div className="space-y-4">
                         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
-                            <div className="absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                            <div className={`absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-${themeColor}-500 to-${isMerchant ? 'teal' : 'purple'}-500`}></div>
 
                             <div className="mb-8 text-center">
-                                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30">
+                                <div className={`w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-${themeColor}-600 to-${isMerchant ? 'teal' : 'purple'}-600 rounded-2xl flex items-center justify-center shadow-lg shadow-${themeColor}-600/30`}>
                                     <Search className="w-10 h-10 text-white" />
                                 </div>
                                 <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Pay Anyone</h3>

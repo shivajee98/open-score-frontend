@@ -97,6 +97,9 @@ export default function Profile() {
         }
     };
 
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
+
     if (!isAuthenticated || !user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-400 font-bold uppercase text-xs animate-pulse">Loading Profile...</div>;
 
     return (
@@ -107,7 +110,7 @@ export default function Profile() {
                 </button>
 
                 <div className="bg-white rounded-[3rem] p-6 md:p-8 shadow-2xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                    <div className={`absolute top-0 right-0 w-64 h-64 bg-${themeColor}-500/10 rounded-full blur-3xl -mr-16 -mt-16`}></div>
 
                     <div className="relative text-center mb-12">
                         <div className="w-32 h-32 mx-auto bg-slate-900 text-white rounded-2xl flex items-center justify-center text-4xl font-black shadow-xl mb-6">
@@ -118,12 +121,12 @@ export default function Profile() {
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="text-2xl font-black text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-blue-500 focus:outline-none w-full"
+                                className={`text-2xl font-black text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                             />
                         ) : (
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">{user.name}</h2>
                         )}
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full font-bold text-xs uppercase tracking-wide">
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 bg-${themeColor}-50 text-${themeColor}-600 rounded-full font-bold text-xs uppercase tracking-wide`}>
                             <Shield className="w-3 h-3" /> {user.role} Account
                         </div>
                     </div>
@@ -146,7 +149,7 @@ export default function Profile() {
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-blue-500 focus:outline-none w-full"
+                                        className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                     />
                                 ) : (
                                     <p className="text-base font-black text-slate-900 truncate" title={user.email}>{user.email || 'Not verified'}</p>
@@ -188,7 +191,7 @@ export default function Profile() {
                                             <p className="text-[10px] font-bold text-slate-400">Manage your alerts</p>
                                         </div>
                                     </div>
-                                    <div className="w-10 h-5 bg-blue-600 rounded-full relative shadow-inner"><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full shadow-sm"></div></div>
+                                    <div className={`w-10 h-5 bg-${themeColor}-600 rounded-full relative shadow-inner`}><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full shadow-sm"></div></div>
                                 </div>
                             </div>
                         </div>
@@ -208,7 +211,7 @@ export default function Profile() {
                                     <Edit2 className="w-4 h-4" /> Edit Profile
                                 </button>
                             )}
-                            <button onClick={handleChangePinClick} className="flex-1 bg-blue-500 text-white py-2.5 rounded-lg font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <button onClick={handleChangePinClick} className={`flex-1 bg-${themeColor}-500 text-white py-2.5 rounded-lg font-bold hover:bg-${themeColor}-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-${themeColor}-500/20`}>
                                 <Lock className="w-4 h-4" /> Change PIN
                             </button>
                         </div>

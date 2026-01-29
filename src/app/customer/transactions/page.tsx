@@ -49,6 +49,16 @@ export default function CustomerTransactions() {
 
     const grouped = groupTransactionsByDate(transactions);
 
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const stored = localStorage.getItem('user');
+        if (stored) setUser(JSON.parse(stored));
+    }, []);
+
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
+
     return (
         <DashboardLayout title="Activity" navItems={navItems}>
             <TransactionDetailModal
@@ -62,7 +72,7 @@ export default function CustomerTransactions() {
                 <div className="flex flex-col md:flex-row gap-3 mb-8">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input type="text" placeholder="Search payments..." className="w-full pl-10 pr-4 py-3 bg-white rounded-lg border border-slate-100 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-100 outline-none" />
+                        <input type="text" placeholder="Search payments..." className={`w-full pl-10 pr-4 py-3 bg-white rounded-lg border border-slate-100 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-${themeColor}-100 outline-none`} />
                     </div>
                 </div>
 

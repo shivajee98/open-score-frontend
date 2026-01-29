@@ -54,9 +54,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }, [pathname, router]);
 
     if (!authorized) {
+        let themeColor = 'blue';
+        try {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                if (user.role === 'MERCHANT') themeColor = 'emerald';
+            }
+        } catch (e) { }
+
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className={`w-10 h-10 border-4 border-${themeColor}-600 border-t-transparent rounded-full animate-spin`}></div>
             </div>
         );
     }

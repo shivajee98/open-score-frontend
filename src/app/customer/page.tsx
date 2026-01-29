@@ -94,13 +94,14 @@ export default function CustomerHome() {
     );
 
     const isMerchant = user.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
             {/* Header Redesign - Tech/Circuit Theme */}
-            <div className="bg-emerald-600 px-4 pt-14 pb-28 relative overflow-hidden shadow-2xl">
+            <div className={`bg-${themeColor}-600 px-4 pt-14 pb-28 relative overflow-hidden shadow-2xl`}>
                 {/* Main Gradient Background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 z-0"></div>
+                <div className={`absolute inset-0 bg-gradient-to-br from-${themeColor}-500 via-${themeColor}-600 to-${themeColor}-700 z-0`}></div>
 
                 {/* Circuit Board Pattern Overlay - Reduced Density */}
                 <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
@@ -123,7 +124,7 @@ export default function CustomerHome() {
 
                 <div className="flex justify-between items-start text-white mb-10 relative z-10">
                     <div>
-                        <p className="text-blue-100/90 text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 opacity-80">Welcome Back</p>
+                        <p className={`${isMerchant ? 'text-emerald-50' : 'text-blue-100'}/90 text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 opacity-80`}>Welcome Back</p>
                         <h1 className="text-3xl font-black tracking-tighter drop-shadow-sm">{isMerchant ? (user?.business_name || 'My Store') : (user?.name || 'Customer')}</h1>
                     </div>
                     <Link href="/customer/profile">
@@ -136,21 +137,25 @@ export default function CustomerHome() {
                 {/* Balance Card - Neon Tech Style */}
                 <div className="relative group z-10 mx-2">
                     {/* Outer Neon Glow */}
-                    <div className="absolute -inset-[2px] rounded-[1.4rem] bg-cyan-400/50 blur-md animate-pulse"></div>
+                    <div className={`absolute -inset-[2px] rounded-[1.4rem] bg-${themeColor}-400/50 blur-md animate-pulse`}></div>
 
                     {/* Card Container */}
-                    <div className="relative bg-gradient-to-r from-emerald-500/40 to-teal-500/40 backdrop-blur-xl rounded-[1.3rem] py-2.5 px-4 flex items-center justify-between border-[1.5px] border-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.3),inset_0_0_20px_rgba(16,185,129,0.1)] overflow-hidden">
-
+                    <div className={`relative bg-gradient-to-r from-${themeColor}-500/40 to-${themeColor}-500/40 backdrop-blur-xl rounded-[1.3rem] py-2.5 px-4 flex items-center justify-between border-[1.5px] border-${themeColor}-300 shadow-[0_0_20px_rgba(var(--theme-glow),0.3),inset_0_0_20px_rgba(var(--theme-glow),0.1)] overflow-hidden`}>
+                        <style jsx>{`
+                            div {
+                                --theme-glow: ${isMerchant ? '16, 185, 129' : '37, 99, 235'};
+                            }
+                        `}</style>
                         {/* Internal Shine Effect */}
                         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-                        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent"></div>
+                        <div className={`absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-${themeColor}-300/40 to-transparent`}></div>
 
                         <div className="flex items-center gap-3 relative z-10">
                             <div className="w-11 h-11 rounded-[12px] bg-white/10 border border-white/20 text-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.15)]">
                                 <Wallet size={22} strokeWidth={2.5} />
                             </div>
                             <div>
-                                <p className="text-cyan-50 text-[10px] font-bold uppercase tracking-[0.15em] mb-0.5 opacity-90 drop-shadow-sm">Elite Credit Value</p>
+                                <p className={`${isMerchant ? 'text-emerald-50' : 'text-blue-50'} text-[10px] font-bold uppercase tracking-[0.15em] mb-0.5 opacity-90 drop-shadow-sm`}>Elite Credit Value</p>
                                 <div className="flex items-center gap-2">
                                     <p className="text-[28px] font-black text-white tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]">₹ {balance}</p>
                                     {Number(lockedBalance) > 0 && (

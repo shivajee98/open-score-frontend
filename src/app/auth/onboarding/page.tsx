@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { User as UserIcon, Store, Mail, ArrowRight, User } from 'lucide-react';
+import { User as UserIcon, Store, Mail, ArrowRight, User, Lock } from 'lucide-react';
 
 export default function Onboarding() {
     // Steps: 1 = Role selection, 2 = Detail entry
@@ -12,6 +12,9 @@ export default function Onboarding() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [businessName, setBusinessName] = useState('');
+    const [pin, setPin] = useState('');
+    const [confirmPin, setConfirmPin] = useState('');
+    const [showPin, setShowPin] = useState(false);
     const [errors, setErrors] = useState<any>({});
     const [loading, setLoading] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
@@ -65,10 +68,15 @@ export default function Onboarding() {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleFinalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!role) {
-            setErrors({ api: 'Please select an account type.' });
+
+        if (pin.length !== 6) {
+            setErrors({ pin: 'PIN must be exactly 6 digits.' });
+            return;
+        }
+        if (pin !== confirmPin) {
+            setErrors({ pin: 'PINs do not match.' });
             return;
         }
 
@@ -76,15 +84,26 @@ export default function Onboarding() {
         setErrors({});
 
         try {
-            // 1. Update role if needed (call verify again)
-            // Note: The backend AuthController.verifyOtp now updates the role if provided for existing users.
-            const mobile = JSON.parse(localStorage.getItem('user') || '{}').mobile_number;
+            const userLocalStorage = JSON.parse(localStorage.getItem('user') || '{}');
+            const mobile = userLocalStorage.mobile_number;
+            const token = localStorage.getItem('token');
+
+            // 1. Update role if needed
             await apiFetch('/auth/verify', {
                 method: 'POST',
                 body: JSON.stringify({ mobile_number: mobile, otp: 'BYPASS', role })
             });
 
-            // 2. Complete onboarding (details)
+            // 2. Set PIN
+            await apiFetch('/wallet/set-pin', {
+                method: 'POST',
+                body: JSON.stringify({
+                    pin: pin,
+                    pin_confirmation: confirmPin
+                })
+            });
+
+            // 3. Complete onboarding
             const res = await apiFetch('/auth/onboarding', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -98,8 +117,6 @@ export default function Onboarding() {
             localStorage.setItem('user', JSON.stringify(updatedUser));
             document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/; max-age=2592000; SameSite=Lax`;
 
-            // Update cookies for middleware
-            const token = localStorage.getItem('token');
             if (token) {
                 document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
                 document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/; max-age=86400; SameSite=Lax`;
@@ -179,10 +196,10 @@ export default function Onboarding() {
                                     ← Back to Account Type
                                 </button>
                                 <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-2">Profile Details</h2>
-                                <p className="text-slate-500 font-medium">Final step to unlock your wallet.</p>
+                                <p className="text-slate-500 font-medium">Almost there. Let's get to know you.</p>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-4">
+                            <form onSubmit={(e) => { e.preventDefault(); setStep(3); }} className="space-y-4">
                                 {errors.api && (
                                     <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-100">
                                         {errors.api}
@@ -226,6 +243,90 @@ export default function Onboarding() {
                                     type="submit"
                                     disabled={loading}
                                     className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-base shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                                >
+                                    Continue to PIN Setup <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                            </form>
+                        </div>
+                    )}
+
+                    {step === 3 && (
+                        <div className="animate-in slide-in-from-right-8 duration-300">
+                            <div className="mb-10 text-center">
+                                <button
+                                    onClick={() => setStep(2)}
+                                    className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 hover:underline"
+                                >
+                                    ← Back to Profile
+                                </button>
+                                <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-2">Set Wallet PIN</h2>
+                                <p className="text-slate-500 font-medium">Create a secure 6-digit PIN for transactions.</p>
+                            </div>
+
+                            <form onSubmit={handleFinalSubmit} className="space-y-6">
+                                {errors.api && (
+                                    <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-100">
+                                        {errors.api}
+                                    </div>
+                                )}
+
+                                <div className="space-y-4">
+                                    <div className="flex justify-center gap-2">
+                                        {[...Array(6)].map((_, i) => (
+                                            <div key={i} className="w-10 h-12 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center font-black text-xl text-blue-600 shadow-inner">
+                                                {pin[i] ? '•' : ''}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Wallet PIN (6 Digits)</label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                                            <input
+                                                type="password"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                maxLength={6}
+                                                value={pin}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    if (val.length <= 6) setPin(val);
+                                                }}
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 tracking-[0.5em] text-center"
+                                                placeholder="..."
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Confirm PIN</label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                                            <input
+                                                type="password"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                maxLength={6}
+                                                value={confirmPin}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    if (val.length <= 6) setConfirmPin(val);
+                                                }}
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 tracking-[0.5em] text-center"
+                                                placeholder="..."
+                                                required
+                                            />
+                                        </div>
+                                        {errors.pin && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 uppercase">{errors.pin}</p>}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || pin.length !== 6 || confirmPin.length !== 6}
+                                    className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-base shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
                                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>

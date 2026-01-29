@@ -15,7 +15,8 @@ import {
     PartyPopper,
     Mail,
     User,
-    ChevronDown
+    ChevronDown,
+    Lock
 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 
@@ -58,7 +59,9 @@ function MerchantOnboardingForm() {
         business_nature: '',
         customer_segment: '',
         daily_turnover: '',
-        business_address: ''
+        business_address: '',
+        pin: '',
+        confirm_pin: ''
     });
 
     const turnoverOptions = [
@@ -102,6 +105,16 @@ function MerchantOnboardingForm() {
         setLoading(true);
         setError('');
         try {
+            // 1. Set PIN
+            await apiFetch('/wallet/set-pin', {
+                method: 'POST',
+                body: JSON.stringify({
+                    pin: formData.pin,
+                    pin_confirmation: formData.confirm_pin
+                })
+            });
+
+            // 2. Complete Onboarding
             await apiFetch('/auth/onboarding', {
                 method: 'POST',
                 body: JSON.stringify(formData)
@@ -158,7 +171,7 @@ function MerchantOnboardingForm() {
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100">
                     <div
                         className="h-full bg-blue-600 transition-all duration-500"
-                        style={{ width: `${(step / 3) * 100}%` }}
+                        style={{ width: `${(step / 4) * 100}%` }}
                     />
                 </div>
 
@@ -167,7 +180,7 @@ function MerchantOnboardingForm() {
                         <Store size={28} />
                     </div>
                     <h2 className="text-xl font-black tracking-tight text-slate-900">Merchant Setup</h2>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">Step {step} of 3</p>
+                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">Step {step} of 4</p>
                 </div>
 
                 {error && <div className="p-3 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-rose-100 mb-8 text-center">{error}</div>}
@@ -316,13 +329,74 @@ function MerchantOnboardingForm() {
                         <div className="flex gap-3">
                             <button onClick={() => setStep(2)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-xl font-bold text-sm hover:bg-slate-100">Back</button>
                             <button
-                                onClick={handleSubmit}
+                                onClick={() => setStep(4)}
                                 disabled={loading || !formData.daily_turnover}
+                                className="flex-[2] py-2.5 bg-blue-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
+                            >
+                                Continue To PIN Setup <ArrowRight size={18} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 4: PIN Setup */}
+                {step === 4 && (
+                    <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+                        <div className="text-center mb-8">
+                            <h3 className="text-base font-black">Secure Your Wallet</h3>
+                            <p className="text-slate-400 text-xs font-medium">Set a 6-digit transaction PIN</p>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex justify-center gap-2">
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="w-8 h-10 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center font-black text-lg text-blue-600">
+                                        {formData.pin[i] ? '•' : ''}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="space-y-3">
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="password"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={6}
+                                        placeholder="Set 6-Digit PIN"
+                                        className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
+                                        value={formData.pin}
+                                        onChange={e => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
+                                    />
+                                </div>
+                                <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="password"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={6}
+                                        placeholder="Confirm 6-Digit PIN"
+                                        className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
+                                        value={formData.confirm_pin}
+                                        onChange={e => setFormData({ ...formData, confirm_pin: e.target.value.replace(/\D/g, '') })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setStep(3)} className="flex-1 py-2.5 bg-slate-50 text-slate-500 rounded-xl font-bold text-sm hover:bg-slate-100">Back</button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={loading || formData.pin.length !== 6 || formData.pin !== formData.confirm_pin}
                                 className="flex-[2] py-2.5 bg-blue-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
                             >
                                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <>Submit & Claim ₹250 <CheckCircle2 size={18} /></>}
                             </button>
                         </div>
+                        {formData.pin && formData.confirm_pin && formData.pin !== formData.confirm_pin && (
+                            <p className="text-[10px] text-rose-500 font-bold text-center uppercase tracking-widest mt-2">PINs do not match</p>
+                        )}
                     </div>
                 )}
 
