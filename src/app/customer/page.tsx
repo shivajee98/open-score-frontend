@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api';
 import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import MerchantClaimModal from '@/components/MerchantClaimModal';
 
 export default function CustomerHome() {
     const router = useRouter();
@@ -16,6 +17,7 @@ export default function CustomerHome() {
     const [loading, setLoading] = useState(true);
     const [dynamicText, setDynamicText] = useState("Apply Now & Get 0% Interest Credit");
     const [activeBanner, setActiveBanner] = useState(0);
+    const [showClaimModal, setShowClaimModal] = useState(false);
 
     const banners = [
         {
@@ -93,6 +95,17 @@ export default function CustomerHome() {
         loadData();
     }, [user]);
 
+    const handleClaimSuccess = (updatedUser: any) => {
+        setShowClaimModal(false);
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        // Refresh wallet balance
+        apiFetch('/wallet/balance').then(w => {
+            setBalance(w.balance);
+            setLockedBalance(w.locked_balance || '0');
+        });
+    };
+
     if (!user || loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="flex flex-col items-center gap-3">
@@ -107,6 +120,8 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
+            <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} />
+
             {/* Header Redesign - Tech/Circuit Theme */}
             <div className={`px-4 pt-14 pb-16 relative overflow-hidden shadow-2xl ${isMerchant ? 'bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950' : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950'}`}>
                 {/* Main Gradient Background Overlay */}
@@ -270,9 +285,9 @@ export default function CustomerHome() {
                 </div>
             )}
 
-            {isMerchant && !user.is_onboarded && (
+            {isMerchant && !user.pincode && (
                 <div className="px-4 mb-8">
-                    <Link href={`/auth/merchant-onboarding?step=2`}>
+                    <div onClick={() => setShowClaimModal(true)} className="cursor-pointer">
                         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 rounded-3xl shadow-2xl shadow-purple-900/30 border-4 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
                             <div className="flex items-center gap-3 relative z-10">
                                 <div className="w-12 h-12 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
@@ -284,7 +299,7 @@ export default function CustomerHome() {
                                 </div>
                             </div>
                         </div>
-                    </Link>
+                    </div>
                 </div>
             )}
 
