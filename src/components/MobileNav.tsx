@@ -4,15 +4,42 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { LayoutDashboard, Wallet, User, Zap, CreditCard, QrCode, History } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export default function MobileNav() {
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
+    const [activeLoanId, setActiveLoanId] = useState<string | null>(null);
+    const [hasActiveLoan, setHasActiveLoan] = useState(false);
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user') || '{}');
         setUser(u);
     }, [pathname]);
+
+    useEffect(() => {
+        if (user?.role === 'CUSTOMER') {
+            apiFetch('/loans').then((loans: any[]) => {
+                const activeLoans = loans?.filter(l => {
+                    if (l.status !== 'DISBURSED') return false;
+                    const principal = Number(l.amount);
+                    const processingFee = principal === 10000 ? 0 : 1200;
+                    const loginFee = principal === 10000 ? 300 : 200;
+                    const fieldKycFee = principal === 10000 ? 500 : 600;
+                    const gst = Math.round(principal * 0.18);
+                    const totalPayable = principal + processingFee + loginFee + fieldKycFee + gst;
+                    return Number(l.paid_amount || 0) < totalPayable;
+                });
+
+                setHasActiveLoan(activeLoans?.length > 0);
+                if (activeLoans?.length === 1) {
+                    setActiveLoanId(activeLoans[0].id);
+                } else {
+                    setActiveLoanId(null);
+                }
+            }).catch(() => { });
+        }
+    }, [user, pathname]);
 
     // Only show on main app routes
     const baseRole = pathname.split('/')[1];
@@ -59,10 +86,15 @@ export default function MobileNav() {
                         <span className="text-[9px] font-black uppercase tracking-widest">Activity</span>
                     </Link>
 
-                    <Link href="/customer/repayments" className={`flex flex-col items-center gap-1 p-2 min-w-[64px] rounded-xl transition-all duration-300 ${pathname === '/customer/repayments' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
-                        <CreditCard size={22} className={pathname === '/customer/repayments' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/repayments' ? 3 : 2} />
-                        <span className="text-[9px] font-black uppercase tracking-widest">Repay</span>
-                    </Link>
+                    {hasActiveLoan && (
+                        <Link
+                            href={activeLoanId ? `/customer/loan/status/${activeLoanId}/repayment` : "/customer/repayments"}
+                            className={`flex flex-col items-center gap-1 p-2 min-w-[64px] rounded-xl transition-all duration-300 ${pathname.includes('/repayment') ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}
+                        >
+                            <CreditCard size={22} className={pathname.includes('/repayment') ? 'scale-110' : ''} strokeWidth={pathname.includes('/repayment') ? 3 : 2} />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Repay</span>
+                        </Link>
+                    )}
                 </>
             )}
         </div>

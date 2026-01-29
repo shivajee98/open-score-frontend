@@ -94,70 +94,56 @@ export default function LoanStatus() {
                     <div className="p-4 border-b border-slate-100">
                         <div className="flex justify-between items-start mb-8">
                             <div>
-                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-2">Loan Amount</p>
-                                <span className={`text-[10px] font-normal px-2 py-0.5 border rounded-full uppercase tracking-wide ${loan.status === 'DISBURSED' || loan.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-2">Loan ID</p>
+                                <span className={`text-[10px] font-normal px-2 py-0.5 border rounded-full uppercase tracking-wide tracking-widest ${loan.status === 'DISBURSED' || loan.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
                                     loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
                                         loan.status === 'KYC_SENT' ? 'bg-amber-50 border-amber-100 text-amber-600' :
                                             loan.status === 'FORM_SUBMITTED' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
                                                 'bg-slate-50 border-slate-100 text-slate-600'
                                     }`}>{loan.status.replace('_', ' ')}</span>
                             </div>
-                            <h2 className="text-xl font-normal text-slate-900">₹ {Number(loan.amount).toLocaleString()}</h2>
+                            <h2 className="text-xl font-normal text-slate-900 tracking-tight">#{loanId}</h2>
                         </div>
 
                         <div className={`space-y-3 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                             {/* Additional Charges Group */}
                             <div className="space-y-3 pt-2 border-t border-slate-50">
-                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1">Additional Amount Pay</p>
+                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1">Sanction summary</p>
                                 <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Processing Fee</span>
-                                    <span className="text-slate-900">₹ {processingFee.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Login Fee</span>
-                                    <span className="text-slate-900">₹ {loginFee.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Field KYC Fee</span>
-                                    <span className="text-slate-900">₹ {fieldKycFee.toLocaleString()}</span>
+                                    <span>Loan Amount</span>
+                                    <span className="text-slate-900 font-bold">₹ {principal.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500">
                                     <span>GST (18%)</span>
-                                    <span className="text-slate-900">₹ {gst.toLocaleString()}</span>
+                                    <span className="text-slate-900 font-medium">₹ {gst.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between text-xs font-bold text-slate-900 pt-1 border-t border-slate-50/50">
-                                    <span>Total Additional Amount</span>
+                                <div className="flex justify-between text-xs text-slate-500">
+                                    <span>Processing Fee</span>
+                                    <span className="text-slate-900 font-medium">₹ {processingFee.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-slate-500">
+                                    <span>Login Fee</span>
+                                    <span className="text-slate-900 font-medium">₹ {loginFee.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-slate-500">
+                                    <span>Field KYC Fee</span>
+                                    <span className="text-slate-900 font-medium">₹ {fieldKycFee.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs font-bold text-slate-900 pt-1 border-t border-slate-100">
+                                    <span>Total fee and charges</span>
                                     <span>₹ {totalDeductions.toLocaleString()}</span>
                                 </div>
                             </div>
 
-                            {interestRate > 0 && (
-                                <div className="space-y-3 pt-2">
-                                    <div className="flex justify-between text-xs text-slate-500">
-                                        <span>Total Interest @ {interestRate}%</span>
-                                        <span className="text-slate-900">₹ {totalInterest.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between text-xs text-slate-500">
-                                        <span>Annualized Rate</span>
-                                        <span className="text-slate-900">{(interestRate * 4).toFixed(2)}% p.a</span>
-                                    </div>
-                                </div>
-                            )}
-
                             <div className="pt-4 border-t border-slate-100 space-y-3">
-                                <div className="flex justify-between text-sm text-slate-900">
-                                    <span>Net Payable Amount</span>
-                                    <span>₹ {netPayableAmount.toLocaleString()}</span>
-                                </div>
                                 <div className="flex justify-between text-sm font-bold text-slate-900">
                                     <span>Disbursal Amount</span>
                                     <span>₹ {disbursalAmount.toLocaleString()}</span>
                                 </div>
-                            </div>
-
-                            <div className="flex justify-between text-[10px] text-slate-400 pt-1">
-                                <span>Loan ID</span>
-                                <span>{loanId}</span>
+                                <div className="flex justify-between text-sm text-slate-900">
+                                    <span>Net Payable Amount</span>
+                                    <span>₹ {netPayableAmount.toLocaleString()}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -175,7 +161,7 @@ export default function LoanStatus() {
                     <div className="flex items-center justify-between relative px-2">
                         {/* Connecting Line - Thinner and Elegant */}
                         <div className="absolute left-6 right-6 top-[20px] h-[2px] bg-slate-50 z-0 text-center">
-                            <div className={`h-full bg-emerald-500 transition-all duration-1000 ${loan.status === 'DISBURSED' ? 'w-full' :
+                            <div className={`h-full bg-emerald-500 transition-all duration-1000 ${loan.status === 'CLOSED' || loan.status === 'DISBURSED' ? 'w-full' :
                                 loan.status === 'APPROVED' ? 'w-[75%]' :
                                     loan.status === 'FORM_SUBMITTED' ? 'w-[50%]' :
                                         loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED' ? 'w-[25%]' :
@@ -192,20 +178,20 @@ export default function LoanStatus() {
                             },
                             {
                                 label: 'Verification',
-                                date: (loan.status === 'FORM_SUBMITTED' || loan.status === 'APPROVED' || loan.status === 'DISBURSED') ? 'Verified' : 'In Progress',
-                                status: (loan.status === 'FORM_SUBMITTED' || loan.status === 'APPROVED' || loan.status === 'DISBURSED') ? 'done' :
+                                date: (loan.status === 'FORM_SUBMITTED' || loan.status === 'APPROVED' || loan.status === 'DISBURSED' || loan.status === 'CLOSED') ? 'Verified' : 'In Progress',
+                                status: (loan.status === 'FORM_SUBMITTED' || loan.status === 'APPROVED' || loan.status === 'DISBURSED' || loan.status === 'CLOSED') ? 'done' :
                                     (loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED') ? 'current' : 'pending'
                             },
                             {
                                 label: 'Approval',
                                 date: loan.approved_at ? new Date(loan.approved_at).toLocaleDateString() : 'Awaiting',
-                                status: (loan.status === 'APPROVED' || loan.status === 'DISBURSED') ? 'done' :
+                                status: (loan.status === 'APPROVED' || loan.status === 'DISBURSED' || loan.status === 'CLOSED') ? 'done' :
                                     (loan.status === 'FORM_SUBMITTED') ? 'current' : 'pending'
                             },
                             {
-                                label: 'Disbursal',
+                                label: loan.status === 'CLOSED' ? 'Closed' : 'Disbursal',
                                 date: loan.disbursed_at ? new Date(loan.disbursed_at).toLocaleDateString() : '',
-                                status: loan.status === 'DISBURSED' ? 'done' :
+                                status: (loan.status === 'DISBURSED' || loan.status === 'CLOSED') ? 'done' :
                                     loan.status === 'APPROVED' ? 'current' : 'pending'
                             },
                         ].map((step, i) => (
@@ -280,6 +266,25 @@ export default function LoanStatus() {
                             <h3 className="text-base font-black uppercase tracking-tight">Loan Approved!</h3>
                             <p className="font-medium text-xs mt-1">Please contact your supervisor for amount transfer and final disbursement.</p>
                         </div>
+                    </div>
+                )}
+
+                {/* Repayment Option - Logic: Only show if disbursed AND NOT fully paid */}
+                {loan.status === 'DISBURSED' && (Number(loan.paid_amount || 0) < netPayableAmount) && (
+                    <div className="bg-slate-900 rounded-lg p-4 text-white shadow-xl shadow-slate-900/20 flex flex-col items-center text-center gap-3">
+                        <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-white/10">
+                            <IndianRupee className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="text-base font-black uppercase tracking-tight">Repayment Option</h3>
+                            <p className="text-slate-400 text-xs font-medium mt-1">Manage your loan repayments and EMIs.</p>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/customer/loan/status/${loanId}/repayment`)}
+                            className="w-full py-3 bg-white text-slate-900 rounded-lg font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
+                        >
+                            Repay Now
+                        </button>
                     </div>
                 )}
 

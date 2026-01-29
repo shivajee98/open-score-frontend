@@ -157,67 +157,66 @@ export default function RepaymentDashboard() {
                 onClose={() => setSuccessData(null)}
             />
 
-            {/* Premium Multi-Layer Header */}
-            <div className="bg-slate-900 pt-12 pb-24 px-4 rounded-b-3xl shadow-2xl relative overflow-hidden">
+            {/* Premium Multi-Layer Header - Optimized Height & Layout */}
+            <div className="bg-slate-900 pt-8 pb-16 px-4 rounded-b-3xl shadow-2xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900/50 via-slate-900 to-indigo-900/30"></div>
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] -mr-32 -mt-32"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[100px] -ml-20 -mb-20"></div>
 
                 <div className="relative z-10">
-                    <button
-                        onClick={() => router.push(`/customer/loan/status/${loanId}`)}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-xl text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-8 hover:bg-white/10 hover:text-white transition-all border border-white/5"
-                    >
-                        <ArrowLeft className="w-4 h-4" /> Application Root
-                    </button>
+                    <div className="flex justify-between items-start mb-6">
+                        <button
+                            onClick={() => router.push(`/customer/loan/status/${loanId}`)}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-xl text-slate-400 font-black text-[9px] uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all border border-white/5"
+                        >
+                            <ArrowLeft className="w-4 h-4" /> Application Root
+                        </button>
 
-                    <div className="flex justify-between items-start mb-10">
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                                <h1 className="text-3xl font-black text-white tracking-tighter">Repayment</h1>
-                            </div>
-                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] opacity-80 pl-1">Quantum Ledger • #{loan.display_id || loan.id}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-3">
-                            <div className="flex items-center gap-2">
-                                <button className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
-                                    <Bell size={18} />
-                                    <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
-                                </button>
-                                <button className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
-                                    <HelpCircle size={18} />
-                                </button>
-                            </div>
-                            <div className="text-right">
-                                <span className="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1.5 opacity-70">Payable Value</span>
-                                <span className="text-2xl font-black text-white leading-none tracking-tight">₹{totalPayable.toLocaleString()}</span>
-                            </div>
+                        <div className="flex items-center gap-2">
+                            <button className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
+                                <Bell size={16} />
+                                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
+                            </button>
+                            <button className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                                <HelpCircle size={16} />
+                            </button>
                         </div>
                     </div>
 
-                    {/* Quick Insight Strip */}
-                    <div className="grid grid-cols-4 gap-2">
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
-                            <Coins size={14} className="text-emerald-400 mb-2" />
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Cashback</p>
-                            <p className="text-sm font-black text-emerald-400 truncate">₹{totalCashbackEarned.toLocaleString()}</p>
+                    <div className="flex justify-between items-end mb-8">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                <h1 className="text-xl font-black text-white tracking-tighter uppercase">Repayment</h1>
+                            </div>
+                            <p className="text-slate-400 text-[8px] font-black uppercase tracking-[0.25em] opacity-70 pl-0.5">#{loan.display_id || loan.id}</p>
                         </div>
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
-                            <Zap size={14} className="text-amber-400 mb-2" />
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Interval</p>
-                            <p className="text-sm font-black text-white truncate">{loan.payout_frequency}</p>
+                        <div className="text-right">
+                            <span className="block text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1 opacity-70">To Pay</span>
+                            <span className="text-xl font-black text-white leading-none tracking-tight">₹{totalPayable.toLocaleString()}</span>
                         </div>
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
-                            <Calendar size={14} className="text-blue-400 mb-2" />
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Total EMIs</p>
-                            <p className="text-sm font-black text-white truncate">{repayments.length} Units</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 px-0.5">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
+                            <Coins size={16} className="text-emerald-400 mb-2" />
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cashback</p>
+                            <p className="text-lg font-black text-emerald-400 leading-none">₹{totalCashbackEarned.toLocaleString()}</p>
                         </div>
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
-                            <ShieldCheck size={14} className="text-indigo-400 mb-2" />
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Tier</p>
-                            <p className="text-sm font-black text-white uppercase tracking-tighter truncate">Gold</p>
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
+                            <Zap size={16} className="text-amber-400 mb-2" />
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Interval</p>
+                            <p className="text-lg font-black text-white leading-none capitalize">{loan.payout_frequency}</p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
+                            <Calendar size={16} className="text-blue-400 mb-2" />
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total EMIs</p>
+                            <p className="text-lg font-black text-white leading-none">{repayments.length} Units</p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
+                            <ShieldCheck size={16} className="text-indigo-400 mb-2" />
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Tier</p>
+                            <p className="text-lg font-black text-white uppercase leading-none">Gold</p>
                         </div>
                     </div>
                 </div>
@@ -467,6 +466,6 @@ export default function RepaymentDashboard() {
                     Auto-Debit Active via Wallet
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
