@@ -102,28 +102,23 @@ export default function CustomerHome() {
                 {/* Main Gradient Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#2979FF] via-[#2962FF] to-[#6200EA] z-0"></div>
 
-                {/* Circuit Board Pattern Overlay */}
-                <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
+                {/* Circuit Board Pattern Overlay - Reduced Density */}
+                <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                        <pattern id="circuit" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-                            <path d="M10 10 h 20 v 20 h 20" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                            <circle cx="50" cy="30" r="2.5" fill="white" />
-                            <path d="M70 10 v 40 h -20" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                            <circle cx="50" cy="50" r="2.5" fill="white" />
-                            <path d="M10 80 h 30 v -10" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                            <circle cx="40" cy="70" r="2.5" fill="white" />
-                            <path d="M90 90 h -20 v -20" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                            <circle cx="70" cy="70" r="2.5" fill="white" />
+                        <pattern id="circuit" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
+                            <path d="M40 40 h 60 v 60 h 60" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                            <circle cx="160" cy="100" r="3" fill="white" />
+                            <path d="M300 40 v 100 h -60" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                            <circle cx="240" cy="140" r="3" fill="white" />
                         </pattern>
                     </defs>
                     <rect width="100%" height="100%" fill="url(#circuit)" />
                 </svg>
 
-                {/* Random Glowing Circuit Lines */}
-                <div className="absolute inset-0 z-0 opacity-30">
-                    <div className="absolute top-[20%] left-[10%] w-[1px] h-24 bg-gradient-to-b from-transparent via-cyan-400 to-transparent transform rotate-45 animate-pulse"></div>
-                    <div className="absolute top-[30%] right-[10%] w-32 h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-[pulse_3s_infinite]"></div>
-                    <div className="absolute bottom-[20%] left-[30%] w-[1px] h-16 bg-gradient-to-b from-transparent via-cyan-400 to-transparent transform -rotate-45 animate-[pulse_2s_infinite]"></div>
+                {/* Random Glowing Circuit Lines - Sparse */}
+                <div className="absolute inset-0 z-0 opacity-20">
+                    <div className="absolute top-[15%] left-[5%] w-[1px] h-40 bg-gradient-to-b from-transparent via-cyan-400 to-transparent transform rotate-45 animate-pulse"></div>
+                    <div className="absolute bottom-[20%] right-[10%] w-[1px] h-32 bg-gradient-to-b from-transparent via-cyan-400 to-transparent transform -rotate-12 animate-[pulse_4s_infinite]"></div>
                 </div>
 
                 <div className="flex justify-between items-start text-white mb-10 relative z-10">
