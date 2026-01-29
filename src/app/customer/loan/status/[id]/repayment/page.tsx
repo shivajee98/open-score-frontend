@@ -1,13 +1,31 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, AlertCircle, Calendar, IndianRupee, PieChart, TrendingUp, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/loanUtils';
 import PinModal from '@/components/PinModal';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import { toast } from '@/components/ui/Toast';
+import {
+    ArrowLeft,
+    CheckCircle2,
+    AlertCircle,
+    Calendar,
+    IndianRupee,
+    PieChart,
+    TrendingUp,
+    ChevronDown,
+    Zap,
+    ShieldCheck,
+    Coins,
+    Sparkles,
+    Search,
+    Filter,
+    ArrowRightCircle,
+    ReceiptIcon,
+    HistoryIcon
+} from 'lucide-react';
 
 export default function RepaymentDashboard() {
     const router = useRouter();
@@ -18,9 +36,12 @@ export default function RepaymentDashboard() {
     const [repayments, setRepayments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
-    const [historyOpen, setHistoryOpen] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState(true); // Default open for better visibility
     const [pinModalOpen, setPinModalOpen] = useState(false);
     const [successData, setSuccessData] = useState<any>(null);
+
+    // Filter states for EMIs
+    const [emiFilter, setEmiFilter] = useState('ALL'); // ALL, PAID, PENDING, OVERDUE
 
     const fetchData = async () => {
         try {
@@ -71,14 +92,22 @@ export default function RepaymentDashboard() {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div></div>;
+    if (loading) return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-blue-600 rounded-full animate-spin border-t-transparent shadow-xl"></div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Analyzing Repayment DNA...</p>
+            </div>
+        </div>
+    );
+
     if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Application not found</div>;
 
     const paidEmis = repayments.filter(r => r.status === 'PAID');
     const pendingEmi = repayments.find(r => r.status === 'PENDING');
     const totalPaid = Number(loan.paid_amount || 0);
 
-    // Calculate total payable (Principal + GST + Fees) roughly for progress bar
+    // Constants for calculations
     const processingFee = loan.amount == 10000 ? 0 : 1200;
     const loginFee = loan.amount == 10000 ? 300 : 200;
     const fieldKycFee = loan.amount == 10000 ? 500 : 600;
@@ -87,17 +116,30 @@ export default function RepaymentDashboard() {
 
     const progress = Math.min(100, Math.round((totalPaid / totalPayable) * 100));
 
-    // Group history by week to avoid long lists
+    // Senior Fintech Analytics
+    const cashbackRate = 0.01; // 1% cashback on each repayment
+    const totalCashbackEarned = paidEmis.reduce((sum, r) => sum + (Number(r.amount) * cashbackRate), 0);
+    const expectedTotalCashback = (totalPayable * cashbackRate);
+
+    // Grouping & Filtering for UI
+    const filteredRepayments = repayments.filter(r => {
+        if (emiFilter === 'ALL') return true;
+        if (emiFilter === 'PAID') return r.status === 'PAID';
+        if (emiFilter === 'PENDING') return r.status === 'PENDING';
+        if (emiFilter === 'OVERDUE') return r.status === 'PENDING' && new Date(r.due_date) < new Date();
+        return true;
+    });
+
     const groupedPaid = paidEmis.reduce((acc: any, curr: any) => {
         const date = new Date(curr.paid_at);
-        const week = `Week ${Math.ceil(date.getDate() / 7)} of ${date.toLocaleString('default', { month: 'short', year: 'numeric' })}`;
+        const week = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
         if (!acc[week]) acc[week] = [];
         acc[week].push(curr);
         return acc;
     }, {});
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans pb-24">
+        <div className="min-h-screen bg-slate-50 font-sans pb-32">
             <PinModal
                 isOpen={pinModalOpen}
                 title={`Confirm EMI Payment`}
@@ -113,153 +155,299 @@ export default function RepaymentDashboard() {
                 onClose={() => setSuccessData(null)}
             />
 
-            {/* Header Area */}
-            <div className="bg-slate-900 pt-10 pb-20 px-4 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+            {/* Premium Multi-Layer Header */}
+            <div className="bg-slate-900 pt-12 pb-24 px-4 rounded-b-3xl shadow-2xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/50 via-slate-900 to-indigo-900/30"></div>
+                {/* Decorative Elements */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] -mr-32 -mt-32"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[100px] -ml-20 -mb-20"></div>
 
-                <button onClick={() => router.push(`/customer/loan/status/${loanId}`)} className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mb-8 relative z-10 hover:text-white transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> Application Status
-                </button>
+                <div className="relative z-10">
+                    <button
+                        onClick={() => router.push(`/customer/loan/status/${loanId}`)}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-xl text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-8 hover:bg-white/10 hover:text-white transition-all border border-white/5"
+                    >
+                        <ArrowLeft className="w-4 h-4" /> Application Root
+                    </button>
 
-                <div className="relative z-10 flex justify-between items-end">
-                    <div>
-                        <h1 className="text-2xl font-black text-white mb-2 leading-none">Repayment</h1>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest opacity-80">Analytical Dashboard</p>
+                    <div className="flex justify-between items-start mb-10">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                <h1 className="text-3xl font-black text-white tracking-tighter">Repayment</h1>
+                            </div>
+                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] opacity-80 pl-1">Quantum Ledger • #{loan.display_id || loan.id}</p>
+                        </div>
+                        <div className="text-right">
+                            <span className="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1.5 opacity-70">Payable Value</span>
+                            <span className="text-2xl font-black text-white leading-none tracking-tight">₹{totalPayable.toLocaleString()}</span>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <span className="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Total Loan</span>
-                        <span className="text-xl font-black text-white leading-none">₹{totalPayable.toLocaleString()}</span>
+
+                    {/* Quick Insight Strip */}
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
+                            <Coins size={14} className="text-emerald-400 mb-2" />
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Cashback</p>
+                            <p className="text-sm font-black text-emerald-400 truncate">₹{totalCashbackEarned.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
+                            <Zap size={14} className="text-amber-400 mb-2" />
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Frequency</p>
+                            <p className="text-sm font-black text-white truncate">{loan.payout_frequency}</p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
+                            <ShieldCheck size={14} className="text-blue-400 mb-2" />
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Tier</p>
+                            <p className="text-sm font-black text-white uppercase tracking-tighter truncate">Gold</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="px-4 -mt-10 relative z-20 space-y-4">
+            <div className="px-4 -mt-12 relative z-20 space-y-6">
 
-                {/* Visual Progress Card */}
-                <div className="bg-white rounded-3xl p-6 shadow-2xl shadow-blue-900/5">
-                    <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
-                                <PieChart size={24} />
+                {/* Main Progress & Health Card */}
+                <div className="bg-white rounded-2xl p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-50 overflow-hidden relative group">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
+                                <PieChart size={28} />
                             </div>
-                            <div>
-                                <h3 className="text-base font-black text-slate-900 leading-none">Repayment Health</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{progress}% of total paid</p>
+                            <div className="min-w-0">
+                                <h3 className="text-lg font-black text-slate-900 tracking-tight truncate">Repayment Health</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest">Excellent</span>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-l pl-2 border-slate-200 hidden xs:block">100% Consistency</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Remaining</span>
-                            <span className="text-base font-black text-slate-900 leading-none">₹{(totalPayable - totalPaid).toLocaleString()}</span>
+                        <div className="text-left sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0">
+                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">Total Outstanding</span>
+                            <span className="text-2xl font-black text-slate-900 tracking-tighter">₹{(totalPayable - totalPaid).toLocaleString()}</span>
                         </div>
                     </div>
 
-                    {/* Minimal Progress Bar */}
-                    <div className="h-4 bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-1 mb-2">
-                        <div
-                            className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(37,99,235,0.4)]"
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-
-                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        <span>Paid: ₹{totalPaid.toLocaleString()}</span>
-                        <span>{repayments.length - paidEmis.length} EMIs Left</span>
+                    {/* Progress Bar Visualization */}
+                    <div className="relative pt-2">
+                        <div className="h-6 bg-slate-100 rounded-full overflow-hidden p-1 border border-slate-100">
+                            <div
+                                className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 rounded-full transition-all duration-1000 shadow-[0_0_20px_rgba(37,99,235,0.3)] relative"
+                                style={{ width: `${progress}%` }}
+                            >
+                                {progress > 15 && (
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-white uppercase tracking-widest">
+                                        {progress}%
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            <span className="flex items-center gap-1"><ArrowRightCircle size={10} className="text-blue-500" /> Paid: ₹{totalPaid.toLocaleString()}</span>
+                            <span>{repayments.length - paidEmis.length} EMIs to Goal</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Primary Action: Next Due */}
+                {/* Next Payment CTA / Action Card */}
                 {pendingEmi ? (
-                    <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-2xl shadow-indigo-900/40 animate-in fade-in slide-in-from-bottom-4">
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="flex items-center gap-2">
-                                <div className="p-2 bg-white/10 rounded-lg">
-                                    <Calendar size={20} />
-                                </div>
+                    <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-2xl shadow-blue-900/40 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+
+                        <div className="flex justify-between items-start mb-8">
+                            <div className="space-y-4">
+                                <span className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest border border-white/5">
+                                    <Calendar size={12} className="text-blue-400" /> Due in {Math.ceil((new Date(pendingEmi.due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} Days
+                                </span>
                                 <div>
-                                    <h4 className="text-sm font-black uppercase tracking-widest opacity-80">Next Due Date</h4>
-                                    <p className="text-lg font-bold">{new Date(pendingEmi.due_date).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">Installment Amount</h4>
+                                    <p className="text-4xl font-black tracking-tighter">₹{pendingEmi.amount.toLocaleString()}</p>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <h4 className="text-sm font-black uppercase tracking-widest opacity-80">EMI Amount</h4>
-                                <p className="text-lg font-bold">₹{pendingEmi.amount.toLocaleString()}</p>
+                            <div className="flex flex-col items-end gap-2">
+                                <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                                    <ReceiptIcon size={24} className="text-white opacity-80" />
+                                </div>
+                                <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">ID: {pendingEmi.display_id || pendingEmi.id}</p>
+                            </div>
+                        </div>
+
+                        {/* Breakdown for Next EMI */}
+                        <div className="grid grid-cols-2 gap-3 mb-8">
+                            <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Principal + Fees</p>
+                                <p className="text-sm font-black">₹{(Number(pendingEmi.amount) * 0.9).toFixed(0)}</p>
+                            </div>
+                            <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                                <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Cashback Reward</p>
+                                <p className="text-sm font-black text-emerald-400">+ ₹{(Number(pendingEmi.amount) * cashbackRate).toFixed(0)}</p>
                             </div>
                         </div>
 
                         <button
                             onClick={handleRepay}
                             disabled={paying}
-                            className="w-full py-2.5 bg-white text-indigo-600 rounded-xl font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
                         >
-                            {paying ? <div className="w-5 h-5 border-2 border-indigo-600 rounded-full animate-spin border-t-transparent" /> : "Pay Installment Now"}
+                            {paying ? (
+                                <div className="w-5 h-5 border-2 border-white rounded-full animate-spin border-t-transparent" />
+                            ) : (
+                                <>Verify & Pay EMI <ArrowRightCircle size={18} /></>
+                            )}
                         </button>
-                        <p className="text-[9px] text-center text-indigo-200 mt-4 font-bold uppercase tracking-widest">Amount will be debited from your main wallet balance</p>
                     </div>
                 ) : (
-                    <div className="bg-emerald-500 rounded-3xl p-6 text-white shadow-2xl shadow-emerald-900/40 text-center space-y-3">
-                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <CheckCircle2 size={32} />
+                    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-8 text-white shadow-2xl shadow-emerald-900/30 text-center space-y-6 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')] opacity-10"></div>
+                        <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center mx-auto mb-4 border border-white/20 shadow-xl">
+                            <Sparkles size={40} className="text-white animate-bounce" />
                         </div>
-                        <h2 className="text-xl font-black">Loan Fully Repaid!</h2>
-                        <p className="text-emerald-50 text-xs font-medium">Your credit score has been upgraded because of your consistent repayment.</p>
+                        <div>
+                            <h2 className="text-3xl font-black tracking-tight mb-2">Loan Cleared!</h2>
+                            <p className="text-emerald-50 text-xs font-bold uppercase tracking-widest opacity-80">Profile Level: Financial Master</p>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 max-w-[240px] mx-auto">
+                            <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">Your credit score grew by <span className="text-emerald-300">+24 points</span> through this loan cycle.</p>
+                        </div>
                     </div>
                 )}
 
-                {/* Analytical History - Grouped */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-blue-900/5 overflow-hidden">
-                    <button
-                        onClick={() => setHistoryOpen(!historyOpen)}
-                        className="w-full p-6 flex justify-between items-center group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center border border-amber-100">
-                                <TrendingUp size={24} />
-                            </div>
-                            <div className="text-left">
-                                <h3 className="text-base font-black text-slate-900 leading-none">Payment History</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Analytical Grouping</p>
-                            </div>
+                {/* Analytical Ledger Section */}
+                <div className="bg-white rounded-2xl shadow-xl shadow-slate-900/5 overflow-hidden border border-slate-50">
+                    <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-black text-slate-900 tracking-tight">Analytical Ledger</h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Deep-dive categorization</p>
                         </div>
-                        <ChevronDown className={cn("text-slate-300 group-hover:text-slate-900 transition-all", historyOpen ? "rotate-180" : "")} size={24} />
-                    </button>
+                        <HistoryIcon size={24} className="text-slate-300" />
+                    </div>
 
-                    {historyOpen && (
-                        <div className="px-6 pb-8 space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
-                            {Object.entries(groupedPaid).length > 0 ? (
-                                Object.entries(groupedPaid).reverse().map(([week, items]: [string, any]) => (
-                                    <div key={week} className="border-l-2 border-slate-100 pl-6 relative">
-                                        <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-slate-200 border-2 border-white" />
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{week}</h4>
-                                        <div className="space-y-3">
-                                            {items.map((item: any) => (
-                                                <div key={item.id} className="flex justify-between items-center text-xs">
-                                                    <div>
-                                                        <span className="font-bold text-slate-900">₹{item.amount.toLocaleString()} EMI Paid</span>
-                                                        <span className="block text-[9px] text-slate-400 leading-none mt-1">{new Date(item.paid_at).toLocaleDateString()}</span>
-                                                    </div>
-                                                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black border border-emerald-100 uppercase tracking-widest">Verified</span>
-                                                </div>
-                                            ))}
+                    {/* Advanced List Filters */}
+                    <div className="px-8 py-4 bg-slate-50 flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-100">
+                        {['ALL', 'PAID', 'PENDING', 'OVERDUE'].map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setEmiFilter(f)}
+                                className={cn(
+                                    "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                                    emiFilter === f ? "bg-slate-900 text-white shadow-lg" : "bg-white text-slate-400 border border-slate-100 hover:bg-slate-50"
+                                )}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                        {filteredRepayments.length > 0 ? (
+                            filteredRepayments.map((rep, idx) => (
+                                <div
+                                    key={rep.id}
+                                    className={cn(
+                                        "p-5 rounded-[2rem] border transition-all flex items-center justify-between group",
+                                        rep.status === 'PAID' ? "bg-white border-slate-100" : "bg-slate-50 border-transparent"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs border transition-all",
+                                            rep.status === 'PAID'
+                                                ? "bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white"
+                                                : "bg-white text-slate-300 border-slate-100 group-hover:border-blue-200 group-hover:text-blue-500"
+                                        )}>
+                                            {idx + 1}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <p className="font-black text-lg text-slate-900 tracking-tight leading-none">₹{parseFloat(rep.amount).toLocaleString()}</p>
+                                                {rep.status === 'PAID' ? (
+                                                    <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[7px] font-black uppercase">
+                                                        +₹{(Number(rep.amount) * cashbackRate).toFixed(0)} Cashback
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-400 rounded-full border border-slate-200 text-[7px] font-black uppercase">
+                                                        Standard EMI
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Tabular Layout for Alignment */}
+                                            <div className="grid grid-cols-[60px_1fr] gap-y-1.5 items-center">
+                                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.1em] border-r border-slate-100 pr-2">Settled</span>
+                                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest pl-2">
+                                                    {rep.status === 'PAID' ? new Date(rep.paid_at || '').toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : new Date(rep.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                </span>
+
+                                                <span className="text-[8px] font-black text-blue-400/60 uppercase tracking-[0.1em] border-r border-slate-100 pr-2">Principal</span>
+                                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest pl-2">
+                                                    ₹{(Number(rep.amount) * 0.92).toFixed(0)}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                ))
-                            ) : (
-                                <p className="text-center text-xs text-slate-400 font-bold py-2.5">No payments recorded yet.</p>
-                            )}
+
+                                    <div className="text-right">
+                                        {rep.status === 'PAID' ? (
+                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-[0.1em]">
+                                                <CheckCircle2 size={10} /> Verified
+                                            </div>
+                                        ) : (
+                                            new Date(rep.due_date) < new Date() ? (
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[9px] font-black uppercase tracking-[0.1em]">
+                                                    <AlertCircle size={10} /> Overdue
+                                                </div>
+                                            ) : (
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100 text-[9px] font-black uppercase tracking-[0.1em]">
+                                                    Upcoming
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-20 text-center space-y-3">
+                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-200 border border-slate-100">
+                                    <Search size={32} />
+                                </div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No matching EMIs found</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Senior Insight Hook: Credit Health Tip */}
+                <div className="p-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl text-white overflow-hidden relative group">
+                    <div className="absolute bottom-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mb-10 group-hover:scale-125 transition-transform duration-1000"></div>
+                    <div className="relative z-10 space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                                <TrendingUp size={20} className="text-white" />
+                            </div>
+                            <h3 className="text-lg font-black tracking-tight">Loan Impact Analysis</h3>
                         </div>
-                    )}
+                        <div className="space-y-3">
+                            <p className="text-sm font-medium text-blue-100 leading-relaxed">
+                                By clearing this loan on time, you are unlocking a <span className="text-white font-black text-base italic underline decoration-blue-400 underline-offset-4 tracking-tight">₹25,000 credit upgrade</span> in your next cycle.
+                            </p>
+                            <div className="flex items-center gap-4 pt-2">
+                                <div className="flex -space-x-2">
+                                    {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-indigo-700 bg-blue-400 flex items-center justify-center text-[8px] font-black uppercase">Lv{i}</div>)}
+                                </div>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-blue-200">You are in Top 5% Payers</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
 
-            {/* Bottom Insight */}
-            <div className="p-6 text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-full border border-amber-100 text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4">
-                    <AlertCircle size={12} /> Priority Credit Tip
+            {/* Sticky Bottom Insight */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 flex items-center justify-center z-40">
+                <div className="flex items-center gap-3 px-6 py-2 bg-slate-900 rounded-full text-[10px] font-black text-white uppercase tracking-widest shadow-2xl">
+                    <AlertCircle size={14} className="text-blue-400" />
+                    Auto-Debit Active via Wallet
                 </div>
-                <p className="text-slate-400 text-[11px] font-medium leading-relaxed max-w-[280px] mx-auto">
-                    Repaying before the due date increases your credit limit and unlocks higher loan amounts in the future.
-                </p>
             </div>
         </div>
     );
