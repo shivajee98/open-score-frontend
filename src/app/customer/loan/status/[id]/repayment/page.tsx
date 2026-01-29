@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/loanUtils';
 import PinModal from '@/components/PinModal';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
+import SupportModal from '@/components/SupportModal';
 import { toast } from '@/components/ui/Toast';
 import {
     ArrowLeft,
@@ -26,7 +27,7 @@ import {
     ReceiptIcon,
     HistoryIcon,
     Bell,
-    HelpCircle
+    Headphones
 } from 'lucide-react';
 
 export default function RepaymentDashboard() {
@@ -41,6 +42,7 @@ export default function RepaymentDashboard() {
     const [historyOpen, setHistoryOpen] = useState(true); // Default open for better visibility
     const [pinModalOpen, setPinModalOpen] = useState(false);
     const [successData, setSuccessData] = useState<any>(null);
+    const [supportOpen, setSupportOpen] = useState(false);
 
     // Filter states for EMIs
     const [emiFilter, setEmiFilter] = useState('ALL'); // ALL, PAID, PENDING, OVERDUE
@@ -178,8 +180,11 @@ export default function RepaymentDashboard() {
                                 <Bell size={16} />
                                 <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
                             </button>
-                            <button className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
-                                <HelpCircle size={16} />
+                            <button
+                                onClick={() => setSupportOpen(true)}
+                                className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95"
+                            >
+                                <Headphones size={16} />
                             </button>
                         </div>
                     </div>
@@ -205,7 +210,7 @@ export default function RepaymentDashboard() {
                         </div>
                         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
                             <Zap size={16} className="text-amber-400 mb-2" />
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Interval</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tenure</p>
                             <p className="text-lg font-black text-white leading-none capitalize">{loan.payout_frequency}</p>
                         </div>
                         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
@@ -219,6 +224,21 @@ export default function RepaymentDashboard() {
                             <p className="text-lg font-black text-white uppercase leading-none">Gold</p>
                         </div>
                     </div>
+
+                    {!pendingEmi && (
+                        <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-700">
+                            <div>
+                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5"><CheckCircle2 size={12} /> Status: Cleared</p>
+                                <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Ready for Upgrade</p>
+                            </div>
+                            <button
+                                onClick={() => router.push('/customer/loan')}
+                                className="bg-white text-blue-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-black/10"
+                            >
+                                Apply New Loan <ArrowRightCircle size={14} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -314,18 +334,24 @@ export default function RepaymentDashboard() {
                         </button>
                     </div>
                 ) : (
-                    <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-8 text-white shadow-2xl shadow-emerald-900/30 text-center space-y-6 relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-2xl shadow-blue-900/30 text-center space-y-6 relative overflow-hidden">
                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')] opacity-10"></div>
                         <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center mx-auto mb-4 border border-white/20 shadow-xl">
                             <Sparkles size={40} className="text-white animate-bounce" />
                         </div>
                         <div>
                             <h2 className="text-3xl font-black tracking-tight mb-2">Loan Cleared!</h2>
-                            <p className="text-emerald-50 text-xs font-bold uppercase tracking-widest opacity-80">Profile Level: Financial Master</p>
+                            <p className="text-blue-50 text-xs font-bold uppercase tracking-widest opacity-80">Profile Level: Financial Master</p>
                         </div>
                         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 max-w-[240px] mx-auto">
                             <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">Your credit score grew by <span className="text-emerald-300">+24 points</span> through this loan cycle.</p>
                         </div>
+                        <button
+                            onClick={() => router.push('/customer/loan')}
+                            className="bg-white text-blue-600 px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg active:scale-95 flex items-center gap-2 mx-auto"
+                        >
+                            Apply New Loan <ArrowRightCircle size={16} />
+                        </button>
                     </div>
                 )}
 
@@ -466,6 +492,7 @@ export default function RepaymentDashboard() {
                     Auto-Debit Active via Wallet
                 </div>
             </div>
+            <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
         </div >
     );
 }

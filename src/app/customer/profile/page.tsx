@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api';
 import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
+import SupportModal from '@/components/SupportModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
 export default function Profile() {
@@ -15,8 +16,64 @@ export default function Profile() {
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [hasPin, setHasPin] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [supportOpen, setSupportOpen] = useState(false);
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
+
+    useEffect(() => {
+        const saved = localStorage.getItem('audio_enabled');
+        if (saved === 'true') setNotificationsEnabled(true);
+    }, []);
+
+    const toggleNotifications = async () => {
+        if (typeof window === 'undefined') return;
+
+        // Check for WebView
+        const isWebView = !!(window as any).ReactNativeWebView;
+
+        if (isWebView) {
+            // Forward request to native side
+            (window as any).ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'REQUEST_NOTIFICATION_PERMISSION'
+            }));
+
+            // Optimistic toggle for local experience
+            const newState = !notificationsEnabled;
+            setNotificationsEnabled(newState);
+            localStorage.setItem('audio_enabled', newState.toString());
+            toast.success(newState ? "Notifications Enabled" : "Notifications Disabled");
+            return;
+        }
+
+        // Standard Browser logic
+        if (!("Notification" in window)) {
+            toast.error("Browser does not support notifications");
+            return;
+        }
+
+        if (Notification.permission === "granted") {
+            const newState = !notificationsEnabled;
+            setNotificationsEnabled(newState);
+            localStorage.setItem('audio_enabled', newState.toString());
+            toast.success(newState ? "Notifications Enabled" : "Notifications Disabled");
+        } else if (Notification.permission !== "denied") {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === "granted") {
+                    setNotificationsEnabled(true);
+                    localStorage.setItem('audio_enabled', 'true');
+                    toast.success("Notifications Enabled");
+                } else {
+                    toast.error("Notification permission denied");
+                }
+            } catch (e) {
+                toast.error("Failed to request permission");
+            }
+        } else {
+            toast.error("Notifications are blocked. Please enable in browser settings.");
+        }
+    };
 
     useEffect(() => {
         apiFetch('/auth/me').then(data => {
@@ -172,7 +229,10 @@ export default function Profile() {
                             <h3 className="px-1 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Support & Settings</h3>
 
                             <div className="space-y-3">
-                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group">
+                                <div
+                                    onClick={() => setSupportOpen(true)}
+                                    className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group"
+                                >
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-rose-500 shadow-sm group-hover:scale-110 transition-transform"><Headphones className="w-5 h-5" /></div>
                                         <div>
@@ -183,7 +243,10 @@ export default function Profile() {
                                     <ArrowRight className="w-4 h-4 text-slate-300" />
                                 </div>
 
-                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group">
+                                <div
+                                    onClick={toggleNotifications}
+                                    className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group"
+                                >
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-amber-500 shadow-sm group-hover:scale-110 transition-transform"><Bell className="w-5 h-5" /></div>
                                         <div>
@@ -191,7 +254,9 @@ export default function Profile() {
                                             <p className="text-[10px] font-bold text-slate-400">Manage your alerts</p>
                                         </div>
                                     </div>
-                                    <div className={`w-10 h-5 bg-${themeColor}-600 rounded-full relative shadow-inner`}><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full shadow-sm"></div></div>
+                                    <div className={`w-10 h-5 ${notificationsEnabled ? `bg-${themeColor}-600` : 'bg-slate-200'} rounded-full relative shadow-inner transition-colors duration-200`}>
+                                        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-200 ${notificationsEnabled ? 'right-1' : 'left-1'}`}></div>
+                                    </div>
                                 </div>
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-rose-50 hover:border-rose-100 transition-colors group"
                                     onClick={() => {
@@ -251,6 +316,7 @@ export default function Profile() {
                 mode={pinModalMode}
                 title={pinModalMode === 'VERIFY' ? 'Enter Current PIN' : 'Set New PIN'}
             />
+            <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
         </div>
     );
 }

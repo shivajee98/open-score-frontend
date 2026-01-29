@@ -25,11 +25,12 @@ import {
     Sparkles,
     LayoutDashboard,
     Bell,
-    HelpCircle
+    Headphones
 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 import PinModal from '@/components/PinModal';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
+import SupportModal from '@/components/SupportModal';
 import { toast } from '@/components/ui/Toast';
 
 export default function RepaymentsPage() {
@@ -43,6 +44,7 @@ export default function RepaymentsPage() {
     const [showModal, setShowModal] = useState(false);
     const [pinModalOpen, setPinModalOpen] = useState(false);
     const [successData, setSuccessData] = useState<any>(null);
+    const [supportOpen, setSupportOpen] = useState(false);
 
     // Filters state
     const [searchQuery, setSearchQuery] = useState('');
@@ -158,8 +160,11 @@ export default function RepaymentsPage() {
         </div>
     );
 
-    const activeLoans = filteredLoans.filter(l => l.status === 'DISBURSED');
-    const closedLoans = filteredLoans.filter(l => l.status !== 'DISBURSED' && l.status !== 'PENDING' && l.status !== 'APPROVED');
+    const activeLoans = filteredLoans.filter(l => l.status === 'DISBURSED' && Number(l.paid_amount || 0) < Number(l.amount));
+    const closedLoans = filteredLoans.filter(l =>
+        (l.status !== 'DISBURSED' && l.status !== 'PENDING' && l.status !== 'APPROVED') ||
+        (l.status === 'DISBURSED' && Number(l.paid_amount || 0) >= Number(l.amount))
+    );
 
     // Aggregate Insights
     const totalActiveDebt = activeLoans.reduce((sum, l) => sum + (Number(l.amount) - Number(l.paid_amount || 0)), 0);
@@ -206,8 +211,11 @@ export default function RepaymentsPage() {
                                 <Bell size={16} />
                                 <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
                             </button>
-                            <button className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
-                                <HelpCircle size={16} />
+                            <button
+                                onClick={() => setSupportOpen(true)}
+                                className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95"
+                            >
+                                <Headphones size={16} />
                             </button>
                             <Link href="/customer">
                                 <div className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
@@ -471,6 +479,7 @@ export default function RepaymentsPage() {
                     </div>
                 )
             }
+            <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
         </div >
     );
 }

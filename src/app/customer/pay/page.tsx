@@ -22,7 +22,7 @@ function CustomerPayPage() {
     const [payee, setPayee] = useState<any>(null);
     const [error, setError] = useState('');
     const [scanning, setScanning] = useState(false);
-    const [scannerInstance, setScannerInstance] = useState<any>(null);
+    const scannerRef = useRef<any>(null);
     const [successData, setSuccessData] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [recentPayees, setRecentPayees] = useState<any[]>([]);
@@ -54,7 +54,8 @@ function CustomerPayPage() {
             setLockedBalance(data.locked_balance || 0);
         });
 
-        apiFetch('/wallet/transactions').then(data => {
+        apiFetch('/wallet/transactions').then(res => {
+            const data = res.data || [];
             const transferPayees = data
                 .filter((tx: any) => tx.source_type === 'TRANSFER' && tx.type === 'DEBIT')
                 .map((tx: any) => ({
@@ -108,12 +109,17 @@ function CustomerPayPage() {
                 }
 
                 // Clean up previous instance
-                if (scannerInstance) {
-                    try { await scannerInstance.stop(); } catch (e) { }
+                if (scannerRef.current) {
+                    try {
+                        if (scannerRef.current.getState() === 2) {
+                            await scannerRef.current.stop();
+                        }
+                    } catch (e) { }
+                    scannerRef.current = null;
                 }
 
                 const instance = new Html5Qrcode("reader");
-                setScannerInstance(instance);
+                scannerRef.current = instance;
 
                 await instance.start(
                     { facingMode: "environment" },
@@ -131,7 +137,7 @@ function CustomerPayPage() {
                 toast.error(errorMessage);
                 setError(errorMessage);
                 setScanning(false);
-                setScannerInstance(null);
+                scannerRef.current = null;
                 scannerInitializing.current = false;
             }
         }, 400); // Slightly longer timeout
@@ -140,28 +146,29 @@ function CustomerPayPage() {
     const stopScanner = async () => {
         console.log("Stopping scanner...");
         scannerInitializing.current = false;
-        setScanning(false);
-        if (scannerInstance) {
+        if (scannerRef.current) {
             try {
-                if (scannerInstance.isScanning) {
-                    await scannerInstance.stop();
+                if (scannerRef.current.getState() === 2) {
+                    await scannerRef.current.stop();
                 }
-                const element = document.getElementById("reader");
-                if (element) element.innerHTML = "";
             } catch (e) {
                 console.error("Error stopping scanner:", e);
             }
-            setScannerInstance(null);
+            scannerRef.current = null;
         }
+        setScanning(false);
     };
 
     useEffect(() => {
         return () => {
-            if (scannerInstance) {
-                scannerInstance.stop().catch(() => { });
+            if (scannerRef.current) {
+                if (scannerRef.current.getState() === 2) {
+                    scannerRef.current.stop().catch(() => { });
+                }
+                scannerRef.current = null;
             }
         };
-    }, [scannerInstance]);
+    }, []);
 
     function onScanSuccess(decodedText: string) {
         if (hasScanned.current) return;
@@ -397,58 +404,70 @@ function CustomerPayPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 animate-in slide-in-from-bottom-8 duration-500 relative">
-                        {/* Persistent Back Button */}
+                    <div className="bg-white rounded-2xl p-5 shadow-xl shadow-slate-200 border border-slate-100 animate-in slide-in-from-bottom-8 duration-500 relative max-w-sm mx-auto">
+                        {/* Persistent Back Button - Smaller & subtler */}
                         <button
                             onClick={() => setStep(1)}
-                            className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-20"
+                            className="absolute left-4 top-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95 z-20"
                         >
                             <ArrowLeft size={16} />
                         </button>
-                        <div className="text-center mb-8">
-                            <div className="w-12 h-12 mx-auto rounded-xl bg-slate-100 text-slate-900 flex items-center justify-center text-xl font-black mb-4 uppercase shadow-inner">
+
+                        <div className="text-center mt-4 mb-6">
+                            <div className="w-12 h-12 mx-auto rounded-lg bg-slate-900 text-white flex items-center justify-center text-lg font-bold mb-3 shadow-lg shadow-slate-200">
                                 {payee?.name?.[0]}
                             </div>
-                            <h4 className="text-xl font-black text-slate-900 tracking-tight">{payee?.name}</h4>
-                            <p className="text-blue-600 font-bold text-sm bg-blue-50 inline-block px-3 py-1 rounded-full mt-2">{payee?.vpa || 'Verified Merchant'}</p>
+                            <h4 className="text-lg font-bold text-slate-900 tracking-tight">{payee?.name}</h4>
+                            <div className="mt-1">
+                                <span className="text-blue-600 font-medium text-[10px] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 tracking-wide">
+                                    {payee?.vpa || 'Verified Merchant'}
+                                </span>
+                            </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="relative">
-                                <span className="absolute left-8 top-1/2 -translate-y-1/2 text-3xl font-black text-slate-300">₹</span>
-                                <input
-                                    type="number"
-                                    autoFocus
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    className="w-full bg-slate-50 rounded-2xl p-6 pl-16 text-4xl font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 border border-slate-200 transition-all text-center"
-                                    placeholder="0"
-                                />
+                        <div className="space-y-4 px-2">
+                            <div className="relative group">
+                                <div className="border border-blue-600 rounded-xl px-4 py-3 flex items-center justify-center bg-blue-50/20 active-focus-within:ring-2 ring-blue-100 transition-all">
+                                    <span className="text-2xl font-bold text-slate-800 mr-1">₹</span>
+                                    <input
+                                        type="number"
+                                        autoFocus
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        className="bg-transparent text-3xl font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none w-32 text-center"
+                                        placeholder="0"
+                                    />
+                                    {/* Cursor blinker simulation if needed, or rely on browser default */}
+                                </div>
                             </div>
 
-                            <div className="flex flex-col gap-2 px-4 py-3 bg-slate-50 rounded-lg border border-slate-100">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold uppercase text-slate-400">Available Balance</span>
-                                    <span className="text-sm font-black text-slate-900">₹{balance.toLocaleString('en-IN')}</span>
-                                </div>
-                                {lockedBalance > 0 && (
-                                    <div className="flex justify-between items-center pt-2 border-t border-slate-200">
-                                        <span className="text-xs font-bold uppercase text-amber-500 flex items-center gap-1">
-                                            <Lock size={12} /> Locked Balance
-                                        </span>
-                                        <span className="text-sm font-black text-slate-400">₹{lockedBalance.toLocaleString('en-IN')}</span>
-                                    </div>
-                                )}
+                            <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-100">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Available Balance</span>
+                                <span className="text-sm font-black text-slate-900">₹{balance.toLocaleString('en-IN')}</span>
                             </div>
+                            {lockedBalance > 0 && (
+                                <div className="flex justify-between items-center px-4 pt-1 pb-2">
+                                    <span className="text-[9px] font-bold uppercase text-amber-500 flex items-center gap-1">
+                                        <Lock size={10} /> Locked
+                                    </span>
+                                    <span className="text-xs font-bold text-slate-400">₹{lockedBalance.toLocaleString('en-IN')}</span>
+                                </div>
+                            )}
 
                             <button
                                 onClick={handleInitiatePay}
                                 disabled={loading || !amount}
-                                className="w-full h-[4.5rem] bg-blue-600 text-white rounded-xl font-black text-lg shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
                             >
                                 {loading ? 'Processing...' : 'Proceed to Pay'}
                             </button>
-                            <button onClick={() => setStep(1)} className="w-full py-2.5 text-slate-400 font-bold hover:text-slate-600 transition-all">Cancel Transaction</button>
+
+                            <button
+                                onClick={() => setStep(1)}
+                                className="w-full py-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-slate-600 transition-all"
+                            >
+                                Cancel Transaction
+                            </button>
                         </div>
                     </div>
                 )}

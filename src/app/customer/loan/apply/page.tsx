@@ -41,21 +41,27 @@ export default function LoanApplication() {
                 setLoans(data);
 
                 // Identify Active Loan (Not closed/rejected/cancelled)
-                // Note: If DISBURSED, it's Active.
-                const active = data.find((l: any) => l.status === 'DISBURSED' || l.status === 'PENDING' || l.status === 'PROCEEDED' || l.status === 'KYC_SENT' || l.status === 'FORM_SUBMITTED' || l.status === 'APPROVED' || l.status === 'PREVIEW');
+                // Note: If DISBURSED, it's Active ONLY if not fully paid.
+                const active = data.find((l: any) => {
+                    const statusMatch = ['PENDING', 'PROCEEDED', 'KYC_SENT', 'FORM_SUBMITTED', 'APPROVED', 'PREVIEW'].includes(l.status);
+                    const isUnpaidDisbursed = l.status === 'DISBURSED' && Number(l.paid_amount || 0) < Number(l.amount);
+                    return statusMatch || isUnpaidDisbursed;
+                });
                 setActiveLoan(active);
 
                 // Check Cooldown
-                // Ignore CLOSED loans for cooldown
+                // Ignore CLOSED loans AND fully paid DISBURSED loans for cooldown
                 const sorted = data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                const lastDisbursed = sorted.find((l: any) => l.disbursed_at && l.status !== 'CLOSED'); // Only active/ongoing loans trigger wait? Actually if it's active, it's caught by activeLoan.
+                const lastDisbursed = sorted.find((l: any) => {
+                    if (!l.disbursed_at) return false;
+                    if (l.status === 'CLOSED') return false;
+                    // If fully paid, it doesn't trigger a wait
+                    if (l.status === 'DISBURSED' && Number(l.paid_amount || 0) >= Number(l.amount)) return false;
+                    return true;
+                });
 
-                // If the user meant "Wait 15 days after disbursal regardless of closure", we would remove the status check. 
-                // BUT User said: "if loans are cleared then make sure that users can apply". 
-                // So we ONLY check cooldown if the loan is NOT closed (which essentially means it's active, so activeLoan catches it).
-                // However, let's keep the logic safe: If there is a loan that is somehow "Recent but Not Active?" (Impossible).
-                // Let's stick to the rule: "Wait until 15 days" typically applies to "Frequency of loans". 
-                // But since "Cleared = Go", we effectively disable cooldown for cleared loans.
+                // If loans are cleared then make sure that users can apply instantly.
+                // We ONLY check cooldown if the loan is NOT closed or cleared.
 
                 if (lastDisbursed) {
                     const disbursedDate = new Date(lastDisbursed.disbursed_at);

@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import AuthGuard from './AuthGuard';
 import { toast } from '@/components/ui/Toast';
-import { Volume2, VolumeX, Bell, BellOff, HelpCircle, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight } from 'lucide-react';
+import { Volume2, VolumeX, Bell, BellOff, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight, Headphones } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
+import SupportModal from './SupportModal';
 
 interface NavItem {
     label: string;
@@ -24,6 +25,7 @@ export default function DashboardLayout({
 }) {
     const [user, setUser] = useState<any>(null);
     const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+    const [supportOpen, setSupportOpen] = useState(false);
     const isMerchant = user?.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'blue';
 
@@ -290,10 +292,11 @@ export default function DashboardLayout({
                                 </button>
                             </Link>
                             <button
+                                onClick={() => setSupportOpen(true)}
                                 className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
                                 title="Help & Support"
                             >
-                                <HelpCircle size={18} />
+                                <Headphones size={18} />
                             </button>
                         </div>
                         <div className="flex items-center gap-2 md:hidden">
@@ -314,6 +317,7 @@ export default function DashboardLayout({
                         )}
                     </div>
                 </main >
+                <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
             </div >
         </AuthGuard>
     );

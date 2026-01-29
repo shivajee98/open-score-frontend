@@ -47,12 +47,13 @@ export default function LoanHistory() {
                         >
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${loan.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
-                                        loan.status === 'PENDING' ? 'bg-amber-100 text-amber-600' :
-                                            loan.status === 'REJECTED' ? 'bg-rose-100 text-rose-600' :
-                                                'bg-slate-100 text-slate-500'
+                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${(loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= Number(loan.amount)) ? 'bg-slate-100 text-slate-700' :
+                                            loan.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' :
+                                                loan.status === 'PENDING' ? 'bg-amber-100 text-amber-600' :
+                                                    loan.status === 'REJECTED' ? 'bg-rose-100 text-rose-600' :
+                                                        'bg-slate-100 text-slate-500'
                                         }`}>
-                                        {loan.status}
+                                        {(loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= Number(loan.amount)) ? 'COMPLETED' : loan.status}
                                     </span>
                                     <span className="text-[10px] font-bold text-slate-400">
                                         {new Date(loan.created_at).toLocaleDateString()}

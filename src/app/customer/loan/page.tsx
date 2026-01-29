@@ -26,7 +26,11 @@ export default function LoanList() {
                 const pendingKyc = loans.find((l: any) => l.status === 'KYC_SENT');
                 if (pendingKyc) setKycLoan(pendingKyc);
 
-                const active = loans.find((l: any) => !['REJECTED', 'CANCELLED', 'DISBURSED', 'CLOSED'].includes(l.status));
+                const active = loans.find((l: any) => {
+                    const statusMatch = ['PENDING', 'PROCEEDED', 'KYC_SENT', 'FORM_SUBMITTED', 'APPROVED', 'PREVIEW'].includes(l.status);
+                    const isUnpaidDisbursed = l.status === 'DISBURSED' && Number(l.paid_amount || 0) < Number(l.amount);
+                    return statusMatch || isUnpaidDisbursed;
+                });
                 setActiveLoan(active);
 
                 // Check for highest CLOSED loan to unlock next stage
@@ -43,8 +47,14 @@ export default function LoanList() {
                 }
 
                 // Check for 15-day cooldown from last disbursement
-                // We IGNORE cooldown if the loan is CLOSED (Paid)
-                const lastDisbursed = sorted.find((l: any) => l.disbursed_at && l.status !== 'CLOSED');
+                // We IGNORE cooldown if the loan is CLOSED (Paid) or fully repaid
+                const lastDisbursed = sorted.find((l: any) => {
+                    if (!l.disbursed_at) return false;
+                    if (l.status === 'CLOSED') return false;
+                    // If fully paid, it doesn't trigger a wait
+                    if (l.status === 'DISBURSED' && Number(l.paid_amount || 0) >= Number(l.amount)) return false;
+                    return true;
+                });
 
                 if (lastDisbursed) {
                     const disbursedDate = new Date(lastDisbursed.disbursed_at);
@@ -109,20 +119,24 @@ export default function LoanList() {
                         <div className="relative z-10 flex justify-between items-center">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                    {recentLoan.status === 'DISBURSED' ? (
-                                        <Check className="text-emerald-400 w-4 h-4" />
+                                    {['DISBURSED', 'CLOSED'].includes(recentLoan.status) ? (
+                                        <Check className={recentLoan.status === 'CLOSED' ? "text-slate-400 w-4 h-4" : "text-emerald-400 w-4 h-4"} />
                                     ) : (
                                         <Clock className="text-blue-400 w-4 h-4" />
                                     )}
                                     <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">
-                                        {recentLoan.status === 'DISBURSED' ? 'Your loan score is open on this disbursal' : 'Last Application'}
+                                        {recentLoan.status === 'CLOSED' ? 'Loan Successfully Repaid' :
+                                            recentLoan.status === 'DISBURSED' ? 'Your loan score is open on this disbursal' : 'Last Application'}
                                     </span>
                                 </div>
                                 <h3 className="text-lg font-black mb-1">₹ {recentLoan.amount.toLocaleString()} Loan</h3>
                                 <p className="text-xs font-medium text-slate-400">
                                     Applied on {new Date(recentLoan.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} •
-                                    <span className={`ml-1 ${recentLoan.status === 'DISBURSED' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                        {recentLoan.status === 'DISBURSED' ? 'done' : 'ongoing loan'}
+                                    <span className={`ml-1 ${(recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount)))
+                                            ? 'text-slate-700 font-black'
+                                            : recentLoan.status === 'DISBURSED' ? 'text-emerald-400' : 'text-amber-400'
+                                        }`}>
+                                        {(recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount))) ? 'Completed' : recentLoan.status === 'DISBURSED' ? 'Active' : 'In Progress'}
                                     </span>
                                 </p>
                             </div>

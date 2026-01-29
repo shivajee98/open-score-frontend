@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
@@ -18,7 +18,18 @@ export default function CustomerQR() {
     const [mapCode, setMapCode] = useState('');
     const [mapStatus, setMapStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [scanning, setScanning] = useState(false);
-    const [scannerInstance, setScannerInstance] = useState<any>(null);
+    const scannerRef = useRef<any>(null);
+
+    useEffect(() => {
+        return () => {
+            if (scannerRef.current) {
+                if (scannerRef.current.getState() === 2) {
+                    scannerRef.current.stop().catch(() => { });
+                }
+                scannerRef.current = null;
+            }
+        };
+    }, []);
 
     useEffect(() => {
         apiFetch('/payment/qr').then(data => setQrData(data.qr_data));
@@ -55,8 +66,18 @@ export default function CustomerQR() {
         setTimeout(async () => {
             try {
                 if (!document.getElementById("reader")) return;
+
+                if (scannerRef.current) {
+                    try {
+                        if (scannerRef.current.getState() === 2) {
+                            await scannerRef.current.stop();
+                        }
+                    } catch (e) { }
+                    scannerRef.current = null;
+                }
+
                 const instance = new Html5Qrcode("reader");
-                setScannerInstance(instance);
+                scannerRef.current = instance;
                 await instance.start(
                     { facingMode: "environment" },
                     { fps: 15, qrbox: { width: 250, height: 250 } },
@@ -74,11 +95,17 @@ export default function CustomerQR() {
     };
 
     const stopScanner = async () => {
-        setScanning(false);
-        if (scannerInstance && scannerInstance.isScanning) {
-            await scannerInstance.stop();
-            setScannerInstance(null);
+        if (scannerRef.current) {
+            try {
+                if (scannerRef.current.getState() === 2) {
+                    await scannerRef.current.stop();
+                }
+            } catch (e) {
+                console.error("Error stopping scanner:", e);
+            }
+            scannerRef.current = null;
         }
+        setScanning(false);
     };
 
     const handleMapQr = async (e: React.FormEvent) => {

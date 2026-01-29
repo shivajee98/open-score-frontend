@@ -95,12 +95,13 @@ export default function LoanStatus() {
                         <div className="flex justify-between items-start mb-8">
                             <div>
                                 <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-2">Loan ID</p>
-                                <span className={`text-[10px] font-normal px-2 py-0.5 border rounded-full uppercase tracking-wide tracking-widest ${loan.status === 'DISBURSED' || loan.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-                                    loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-                                        loan.status === 'KYC_SENT' ? 'bg-amber-50 border-amber-100 text-amber-600' :
-                                            loan.status === 'FORM_SUBMITTED' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
-                                                'bg-slate-50 border-slate-100 text-slate-600'
-                                    }`}>{loan.status.replace('_', ' ')}</span>
+                                <span className={`text-[10px] font-black px-2 py-0.5 border rounded-full uppercase tracking-widest ${(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'bg-slate-50 border-slate-200 text-slate-700' :
+                                        (loan.status === 'DISBURSED' || loan.status === 'APPROVED') ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                                            loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                                loan.status === 'KYC_SENT' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                                                    loan.status === 'FORM_SUBMITTED' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
+                                                        'bg-slate-50 border-slate-100 text-slate-600'
+                                    }`}>{(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'COMPLETED' : loan.status.replace('_', ' ')}</span>
                             </div>
                             <h2 className="text-xl font-normal text-slate-900 tracking-tight">#{loanId}</h2>
                         </div>
