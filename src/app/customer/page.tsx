@@ -293,13 +293,13 @@ export default function CustomerHome() {
                 <div className="overflow-hidden mx-4">
                     <div
                         className="flex transition-transform duration-500 ease-out"
-                        style={{ transform: `translateX(-${activeBanner * 100}%)` }}
+                        style={{ transform: `translateX(calc(-${activeBanner} * (88% + 0.75rem)))` }}
                     >
                         {banners.map((banner, i) => (
                             <div
                                 key={i}
                                 onClick={() => router.push('/customer/loan/apply')}
-                                className={`w-full h-28 ${banner.color} rounded-2xl p-4 flex-shrink-0 flex flex-col justify-center shadow-2xl shadow-slate-900/40 cursor-pointer border border-white/10 relative overflow-hidden transition-all duration-300 ${i === activeBanner ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`}
+                                className={`w-[88%] h-28 mr-3 ${banner.color} rounded-2xl p-4 flex-shrink-0 flex flex-col justify-center shadow-2xl shadow-slate-900/40 cursor-pointer border border-white/10 relative overflow-hidden transition-all duration-300 ${i === activeBanner ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`}
                             >
                                 <div className={`absolute top-0 right-0 w-32 h-32 ${banner.accent}/10 rounded-full blur-2xl -mr-10 -mt-10`}></div>
                                 <div className="relative z-10 flex justify-between items-center">
