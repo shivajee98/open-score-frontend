@@ -289,7 +289,15 @@ export default function CustomerHome() {
             )}
 
             {/* Banners - Full Width Carousel */}
-            <div className="relative mt-4 z-30 mb-10 group">
+            <div className="relative mt-4 z-30 mb-10 group px-1">
+                {/* Left Arrow - Outside */}
+                <button
+                    onClick={() => setActiveBanner((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
+                    className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 z-50 transition-all hover:bg-slate-50 hover:scale-110 active:scale-95"
+                >
+                    <ChevronLeft size={14} />
+                </button>
+
                 <div className="overflow-hidden mx-4">
                     <div
                         className="flex transition-transform duration-500 ease-out"
@@ -299,7 +307,7 @@ export default function CustomerHome() {
                             <div
                                 key={i}
                                 onClick={() => router.push('/customer/loan/apply')}
-                                className={`w-[88%] h-28 mr-3 ${banner.color} rounded-2xl p-4 flex-shrink-0 flex flex-col justify-center shadow-2xl shadow-slate-900/40 cursor-pointer border border-white/10 relative overflow-hidden transition-all duration-300 ${i === activeBanner ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`}
+                                className={`w-[88%] h-28 mr-3 ${banner.color} rounded-2xl py-4 px-8 flex-shrink-0 flex flex-col justify-center shadow-2xl shadow-slate-900/40 cursor-pointer border border-white/10 relative overflow-hidden transition-all duration-300 ${i === activeBanner ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`}
                             >
                                 <div className={`absolute top-0 right-0 w-32 h-32 ${banner.accent}/10 rounded-full blur-2xl -mr-10 -mt-10`}></div>
                                 <div className="relative z-10 flex justify-between items-center">
@@ -330,20 +338,6 @@ export default function CustomerHome() {
                         ))}
                     </div>
 
-                    {/* Smaller Arrows - Inside Full Width Carousel */}
-                    <button
-                        onClick={() => setActiveBanner((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white z-40 transition-all hover:bg-white/40 shadow-lg"
-                    >
-                        <ChevronLeft size={16} />
-                    </button>
-                    <button
-                        onClick={() => setActiveBanner((prev) => (prev === banners.length - 1 ? 0 : prev + 1))}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white z-40 transition-all hover:bg-white/40 shadow-lg"
-                    >
-                        <ChevronRight size={16} />
-                    </button>
-
                     {/* Progress Indicators */}
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-30">
                         {banners.map((_, i) => (
@@ -354,6 +348,14 @@ export default function CustomerHome() {
                         ))}
                     </div>
                 </div>
+
+                {/* Right Arrow - Outside */}
+                <button
+                    onClick={() => setActiveBanner((prev) => (prev === banners.length - 1 ? 0 : prev + 1))}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 z-50 transition-all hover:bg-slate-50 hover:scale-110 active:scale-95"
+                >
+                    <ChevronRight size={14} />
+                </button>
             </div>
 
             {/* Recharge & Bills Section */}
