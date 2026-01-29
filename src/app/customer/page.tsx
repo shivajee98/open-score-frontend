@@ -97,36 +97,74 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
-            {/* Header Redesign */}
-            <div className="bg-[#1a73e8] px-6 pt-12 pb-24 relative overflow-hidden">
-                <div className="flex justify-between items-start text-white mb-8 relative z-10">
+            {/* Header Redesign - Tech/Circuit Theme */}
+            <div className="bg-[#1a73e8] px-6 pt-14 pb-28 relative overflow-hidden shadow-2xl">
+                {/* Main Gradient Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#2979FF] via-[#2962FF] to-[#6200EA] z-0"></div>
+
+                {/* Circuit Board Pattern Overlay */}
+                <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="circuit" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                            <path d="M10 10 h 20 v 20 h 20" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                            <circle cx="50" cy="30" r="2.5" fill="white" />
+                            <path d="M70 10 v 40 h -20" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                            <circle cx="50" cy="50" r="2.5" fill="white" />
+                            <path d="M10 80 h 30 v -10" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                            <circle cx="40" cy="70" r="2.5" fill="white" />
+                            <path d="M90 90 h -20 v -20" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                            <circle cx="70" cy="70" r="2.5" fill="white" />
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#circuit)" />
+                </svg>
+
+                {/* Random Glowing Circuit Lines */}
+                <div className="absolute inset-0 z-0 opacity-30">
+                    <div className="absolute top-[20%] left-[10%] w-[1px] h-24 bg-gradient-to-b from-transparent via-cyan-400 to-transparent transform rotate-45 animate-pulse"></div>
+                    <div className="absolute top-[30%] right-[10%] w-32 h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-[pulse_3s_infinite]"></div>
+                    <div className="absolute bottom-[20%] left-[30%] w-[1px] h-16 bg-gradient-to-b from-transparent via-cyan-400 to-transparent transform -rotate-45 animate-[pulse_2s_infinite]"></div>
+                </div>
+
+                <div className="flex justify-between items-start text-white mb-10 relative z-10">
                     <div>
-                        <p className="text-blue-100 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Welcome Back</p>
-                        <h1 className="text-3xl font-black tracking-tighter">{isMerchant ? (user?.business_name || 'My Store') : (user?.name || 'Customer')}</h1>
+                        <p className="text-blue-100/90 text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 opacity-80">Welcome Back</p>
+                        <h1 className="text-4xl font-black tracking-tighter drop-shadow-sm">{isMerchant ? (user?.business_name || 'My Store') : (user?.name || 'Customer')}</h1>
                     </div>
                     <Link href="/customer/profile">
-                        <div className="w-10 h-10 rounded-xl bg-[#4285f4] border border-[#8ab4f8] flex items-center justify-center font-black text-sm shadow-lg active:scale-90 transition-transform cursor-pointer">
+                        <div className="w-11 h-11 rounded-1xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-sm shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20">
                             {user?.name?.[0] || 'U'}
                         </div>
                     </Link>
                 </div>
 
-                {/* Balance Card */}
-                <div className="bg-[#4285f4] rounded-[1.5rem] p-4 flex items-center justify-between border border-[#8ab4f8]/30 shadow-2xl relative z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white text-[#1a73e8] flex items-center justify-center shadow-lg transform -rotate-6">
-                            <Wallet size={20} strokeWidth={2.5} />
-                        </div>
-                        <div>
-                            <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-0.5">Elite Credit Value</p>
-                            <div className="flex items-center gap-3">
-                                <p className="text-2xl font-black text-white tracking-tighter">₹ {balance}</p>
-                                {Number(lockedBalance) > 0 && (
-                                    <div className="flex items-center gap-1 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-lg border border-white/10 shadow-inner group cursor-help">
-                                        <Lock size={10} className="text-yellow-400" />
-                                        <span className="text-[10px] font-black text-white tracking-tight">₹{lockedBalance}</span>
-                                    </div>
-                                )}
+                {/* Balance Card - Neon Tech Style */}
+                <div className="relative group z-10 mx-2">
+                    {/* Outer Neon Glow */}
+                    <div className="absolute -inset-[2px] rounded-[1.4rem] bg-cyan-400/50 blur-md animate-pulse"></div>
+
+                    {/* Card Container */}
+                    <div className="relative bg-gradient-to-r from-[#2979FF]/40 to-[#7C4DFF]/40 backdrop-blur-xl rounded-[1.3rem] py-4 px-5 flex items-center justify-between border-[1.5px] border-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.3),inset_0_0_20px_rgba(34,211,238,0.1)] overflow-hidden">
+
+                        {/* Internal Shine Effect */}
+                        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent"></div>
+
+                        <div className="flex items-center gap-5 relative z-10">
+                            <div className="w-11 h-11 rounded-[12px] bg-white/10 border border-white/20 text-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.15)]">
+                                <Wallet size={22} strokeWidth={2.5} />
+                            </div>
+                            <div>
+                                <p className="text-cyan-50 text-[10px] font-bold uppercase tracking-[0.15em] mb-0.5 opacity-90 drop-shadow-sm">Elite Credit Value</p>
+                                <div className="flex items-center gap-3">
+                                    <p className="text-[28px] font-black text-white tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]">₹ {balance}</p>
+                                    {Number(lockedBalance) > 0 && (
+                                        <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
+                                            <Lock size={10} className="text-yellow-400" />
+                                            <span className="text-[10px] font-black text-white tracking-tight">₹{lockedBalance}</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
