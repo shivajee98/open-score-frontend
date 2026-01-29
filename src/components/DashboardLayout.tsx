@@ -89,8 +89,8 @@ export default function DashboardLayout({
             router.push('/');
         }
 
-        // Poll for notifications - Faster for Merchants
-        const pollRate = user?.role === 'MERCHANT' ? 5000 : 15000;
+        // Poll for notifications - Faster for Merchants (Almost instant)
+        const pollRate = user?.role === 'MERCHANT' ? 2000 : 15000;
         const interval = setInterval(checkNewTransactions, pollRate);
         return () => clearInterval(interval);
     }, [router, user?.role]);
@@ -115,22 +115,24 @@ export default function DashboardLayout({
                 const transactions = res.data;
                 const latestTx = transactions[0];
 
-                if (lastTxRef.current && lastTxRef.current !== latestTx.id) {
+                if (lastTxRef.current && latestTx.id > lastTxRef.current) {
+                    const lastId = lastTxRef.current;
                     // Filter for all new credits since the last seen ID
                     const newCredits = transactions.filter((tx: any) =>
                         tx.type === 'CREDIT' &&
-                        tx.id !== lastTxRef.current &&
+                        tx.id > lastId &&
                         tx.amount > 0
                     );
 
                     if (newCredits.length > 0) {
                         const totalAmount = newCredits.reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
                         const sender = newCredits[0].counterparty_name || 'Customer';
+                        const formattedAmount = Math.floor(totalAmount); // Remove decimals for cleaner speech
 
                         console.log(`New payment detected: ₹${totalAmount}`);
 
                         if (isAudioEnabled) {
-                            playNotificationSound(`Received Rupees ${totalAmount}`);
+                            playNotificationSound(`Received ${formattedAmount} limits`);
                         }
 
                         toast.success(`Received ₹${totalAmount} from ${sender}`);
