@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import {
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 
-export default function MerchantOnboarding() {
+function MerchantOnboardingForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
@@ -61,13 +61,11 @@ export default function MerchantOnboarding() {
     });
 
     const turnoverOptions = [
-        { label: "₹1,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "1k-5k" },
-        { label: "₹5,000 - ₹10,000", sub: "Cashback: ₹50 - ₹200", value: "5k-10k" },
-        { label: "₹10,000 - ₹20,000", sub: "Cashback: ₹200 - ₹400", value: "10k-20k" },
-        { label: "₹20,000 - ₹50,000", sub: "Cashback: ₹500 - ₹1,000", value: "20k-50k" },
-        { label: "₹50,000 - ₹1,00,000", sub: "Cashback: ₹1,000 - ₹2,000", value: "50k-1l" },
-        { label: "₹1,00,000 - ₹2,00,000", sub: "Cashback: ₹2,000 - ₹4,000", value: "1l-2l" },
-        { label: "₹2,00,000 - ₹5,00,000", sub: "Cashback: ₹3,000 - ₹5,000", value: "2l-5l" },
+        { label: "₹1,00,000 - ₹5,00,000", sub: "Cashback: ₹500 - ₹2,000", value: "1l-5l" },
+        { label: "₹5,00,000 - ₹10,00,000", sub: "Cashback: ₹2,000 - ₹5,000", value: "5l-10l" },
+        { label: "₹10,00,000 - ₹20,00,000", sub: "Cashback: ₹5,000 - ₹10,000", value: "10l-20l" },
+        { label: "₹20,00,000 - ₹50,00,000", sub: "Cashback: ₹10,000 - ₹25,000", value: "20l-50l" },
+        { label: "₹50,00,000+", sub: "Cashback: ₹25,000+", value: "50l+" },
     ];
 
     const handleStep1Submit = async () => {
@@ -324,5 +322,17 @@ export default function MerchantOnboarding() {
             </div>
             <p className="mt-6 text-slate-400 text-xs font-bold uppercase tracking-widest text-center">Merchant Protocol Verified</p>
         </div>
+    );
+}
+
+export default function MerchantOnboarding() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        }>
+            <MerchantOnboardingForm />
+        </Suspense>
     );
 }

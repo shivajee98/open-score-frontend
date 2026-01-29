@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
@@ -10,7 +10,7 @@ import { toast } from '@/components/ui/Toast';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function CustomerPay() {
+function CustomerPayPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
@@ -168,7 +168,6 @@ export default function CustomerPay() {
         setError('');
 
         try {
-            // Artificial delay to prevent button flickering and provide feedback
             const [res] = await Promise.all([
                 apiFetch('/payment/pay', {
                     method: 'POST',
@@ -178,7 +177,7 @@ export default function CustomerPay() {
                         pin: pin
                     })
                 }),
-                new Promise(resolve => setTimeout(resolve, 1500)) // Minimum 1.5s loading
+                new Promise(resolve => setTimeout(resolve, 1500))
             ]);
 
             setSuccessData({
@@ -355,5 +354,17 @@ export default function CustomerPay() {
                 )}
             </div>
         </DashboardLayout>
+    );
+}
+
+export default function CustomerPay() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        }>
+            <CustomerPayPage />
+        </Suspense>
     );
 }
