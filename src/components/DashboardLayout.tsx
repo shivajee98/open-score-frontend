@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import AuthGuard from './AuthGuard';
 import { toast } from '@/components/ui/Toast';
-import { Volume2, VolumeX, Bell, BellOff, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight } from 'lucide-react';
+import { Volume2, VolumeX, Bell, BellOff, HelpCircle, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 
 interface NavItem {
@@ -242,6 +242,19 @@ export default function DashboardLayout({
                                 title={isAudioEnabled ? "Click to Mute" : "Click to Enable Audio Alerts"}
                             >
                                 {isAudioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                            </button>
+                            <button
+                                className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95 relative"
+                                title="Notifications"
+                            >
+                                <Bell size={18} />
+                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+                            </button>
+                            <button
+                                className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
+                                title="Help & Support"
+                            >
+                                <HelpCircle size={18} />
                             </button>
                         </div>
                         <div className="flex items-center gap-2 md:hidden">

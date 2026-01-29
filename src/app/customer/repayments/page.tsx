@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import {
@@ -22,7 +23,9 @@ import {
     ShieldCheck,
     Coins,
     Sparkles,
-    LayoutDashboard
+    LayoutDashboard,
+    Bell,
+    HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 import PinModal from '@/components/PinModal';
@@ -195,17 +198,26 @@ export default function RepaymentsPage() {
                 <div className="relative z-10">
                     <div className="flex justify-between items-center mb-10">
                         <div className="flex items-center gap-3">
-                            <button onClick={() => router.push('/customer')} className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90">
-                                <ArrowLeft size={20} />
+                            <h1 className="text-2xl font-black text-white tracking-tighter leading-none">My Repayments</h1>
+                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] opacity-80 mt-1">Portfolio</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
+                                <Bell size={18} />
+                                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
                             </button>
-                            <div>
-                                <h1 className="text-2xl font-black text-white tracking-tighter">My Repayments</h1>
-                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] opacity-80">Financial Ledger</p>
-                            </div>
+                            <button className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                                <HelpCircle size={18} />
+                            </button>
+                            <Link href="/customer">
+                                <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                                    <ArrowLeft size={18} />
+                                </div>
+                            </Link>
                         </div>
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                            <ShieldCheck size={28} />
-                        </div>
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                        <ShieldCheck size={28} />
                     </div>
 
                     {/* Financial Summary Cards */}

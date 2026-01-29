@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -127,11 +127,20 @@ export default function CustomerHome() {
                         <p className={`${isMerchant ? 'text-emerald-50' : 'text-blue-100'}/90 text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 opacity-80`}>Welcome Back</p>
                         <h1 className="text-3xl font-black tracking-tighter drop-shadow-sm">{isMerchant ? (user?.business_name || 'My Store') : (user?.name || 'Customer')}</h1>
                     </div>
-                    <Link href="/customer/profile">
-                        <div className="w-11 h-11 rounded-1xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-sm shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20">
-                            {user?.name?.[0] || 'U'}
-                        </div>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <button className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 relative">
+                            <Bell size={20} strokeWidth={2.5} />
+                            <span className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-slate-900 animate-pulse"></span>
+                        </button>
+                        <button className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20">
+                            <HelpCircle size={20} strokeWidth={2.5} />
+                        </button>
+                        <Link href="/customer/profile">
+                            <div className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-sm shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 overflow-hidden">
+                                {user?.name?.[0] || 'U'}
+                            </div>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Balance Card - Neon Tech Style */}

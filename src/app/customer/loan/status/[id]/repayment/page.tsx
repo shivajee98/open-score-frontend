@@ -24,7 +24,9 @@ import {
     Filter,
     ArrowRightCircle,
     ReceiptIcon,
-    HistoryIcon
+    HistoryIcon,
+    Bell,
+    HelpCircle
 } from 'lucide-react';
 
 export default function RepaymentDashboard() {
@@ -178,9 +180,20 @@ export default function RepaymentDashboard() {
                             </div>
                             <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] opacity-80 pl-1">Quantum Ledger • #{loan.display_id || loan.id}</p>
                         </div>
-                        <div className="text-right">
-                            <span className="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1.5 opacity-70">Payable Value</span>
-                            <span className="text-2xl font-black text-white leading-none tracking-tight">₹{totalPayable.toLocaleString()}</span>
+                        <div className="flex flex-col items-end gap-3">
+                            <div className="flex items-center gap-2">
+                                <button className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
+                                    <Bell size={18} />
+                                    <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
+                                </button>
+                                <button className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95">
+                                    <HelpCircle size={18} />
+                                </button>
+                            </div>
+                            <div className="text-right">
+                                <span className="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1.5 opacity-70">Payable Value</span>
+                                <span className="text-2xl font-black text-white leading-none tracking-tight">₹{totalPayable.toLocaleString()}</span>
+                            </div>
                         </div>
                     </div>
 
