@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Bell, ArrowLeft, CheckCircle2, AlertCircle, Clock, Wallet, Zap, ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
+import { Bell, ArrowLeft, CheckCircle2, AlertCircle, Clock, Wallet, Zap, ShieldCheck, X, Receipt } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function NotificationsPage() {
@@ -11,6 +10,7 @@ export default function NotificationsPage() {
     const [notifications, setNotifications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const [selectedNotif, setSelectedNotif] = useState<any>(null);
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user') || '{}');
@@ -21,7 +21,6 @@ export default function NotificationsPage() {
         const fetchNotifications = async () => {
             if (!user) return;
             try {
-                // Fetching transactions as notifications for now since there's no dedicated table
                 const res = await apiFetch('/wallet/transactions?limit=20');
                 setNotifications(res.data || []);
             } catch (e) {
@@ -41,9 +40,9 @@ export default function NotificationsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="min-h-screen bg-slate-50 pb-20 font-sans">
             {/* Header */}
-            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 px-4 pt-14 pb-8 relative overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 px-4 pt-14 pb-12 relative overflow-hidden shadow-2xl">
                 <div className="absolute inset-0 opacity-20 z-0">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500 rounded-full blur-[100px] -mr-32 -mt-32"></div>
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] -ml-32 -mb-32"></div>
@@ -53,7 +52,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => router.back()}
-                            className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center active:scale-95 transition-all"
+                            className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center active:scale-95 transition-all outline-none"
                         >
                             <ArrowLeft size={20} />
                         </button>
@@ -62,18 +61,12 @@ export default function NotificationsPage() {
                             <p className="text-white/60 text-[10px] uppercase font-black tracking-widest leading-none mt-1">Activity & Updates</p>
                         </div>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center relative">
-                        <Bell size={20} className="text-white/40" />
-                        {notifications.length > 0 && (
-                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-slate-900"></span>
-                        )}
-                    </div>
                 </div>
             </div>
 
             {/* List */}
-            <div className="px-4 -mt-6 relative z-20">
-                <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[60vh]">
+            <div className="px-4 -mt-8 relative z-20">
+                <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[60vh]">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
                             <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
@@ -90,22 +83,31 @@ export default function NotificationsPage() {
                     ) : (
                         <div className="divide-y divide-slate-50">
                             {notifications.map((notif, i) => (
-                                <div key={i} className="p-4 hover:bg-slate-50/50 transition-colors flex gap-4 active:bg-slate-50">
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm">
+                                <div
+                                    key={i}
+                                    onClick={() => setSelectedNotif(notif)}
+                                    className="p-4 hover:bg-slate-50/80 transition-colors flex gap-4 active:bg-slate-100 cursor-pointer"
+                                >
+                                    <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm text-slate-500">
                                         {getIcon(notif.type, notif.status)}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start mb-0.5">
-                                            <h4 className="font-bold text-slate-900 text-[13px] truncate uppercase tracking-tight">
+                                            <h4 className="font-bold text-slate-900 text-[13px] truncate uppercase tracking-tight flex-1 pr-2">
                                                 {notif.description || (notif.type === 'CREDIT' ? 'Funds Received' : 'Payment Sent')}
                                             </h4>
-                                            <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">
+                                            <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2 font-bold bg-slate-50 px-2 py-1 rounded-full">
                                                 {new Date(notif.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                             </span>
                                         </div>
-                                        <p className="text-slate-500 text-[11px] leading-tight line-clamp-2">
-                                            {notif.type === 'CREDIT' ? 'Received' : 'Sent'} ₹{notif.amount} {notif.status === 'COMPLETED' ? 'successfully' : 'pending'}. ID: #{notif.id}
-                                        </p>
+                                        <div className="flex justify-between items-end">
+                                            <p className="text-slate-500 text-[11px] leading-tight line-clamp-1">
+                                                ID: #{notif.id} • {notif.status}
+                                            </p>
+                                            <span className={`text-xs font-black ${notif.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                                {notif.type === 'CREDIT' ? '+' : '-'} ₹{notif.amount}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -114,24 +116,60 @@ export default function NotificationsPage() {
                 </div>
             </div>
 
-            {/* Quick Tips */}
-            <div className="px-6 py-8">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Security Tips</h3>
-                <div className="grid grid-cols-1 gap-3">
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex gap-3">
-                        <ShieldCheck className="text-emerald-600 shrink-0" size={20} />
-                        <p className="text-emerald-800 text-[11px] font-medium leading-normal">
-                            Always verify the merchant name before completing any payment.
-                        </p>
-                    </div>
-                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-3">
-                        <Zap className="text-blue-600 shrink-0" size={20} />
-                        <p className="text-blue-800 text-[11px] font-medium leading-normal">
-                            Enable 2FA and Biometric login for enhanced account security.
-                        </p>
+            {/* Detail Modal */}
+            {selectedNotif && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative animate-in slide-in-from-bottom-10 duration-300">
+                        <button
+                            onClick={() => setSelectedNotif(null)}
+                            className="absolute top-5 right-5 w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                        >
+                            <X size={18} />
+                        </button>
+
+                        <div className="flex flex-col items-center mb-8">
+                            <div className="w-20 h-20 rounded-3xl bg-slate-50 border-4 border-white shadow-xl flex items-center justify-center mb-4">
+                                {getIcon(selectedNotif.type, selectedNotif.status)}
+                            </div>
+                            <h3 className="text-3xl font-black text-slate-900 tracking-tight">
+                                {selectedNotif.type === 'CREDIT' ? '+' : '-'} ₹{selectedNotif.amount}
+                            </h3>
+                            <p className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mt-2 ${selectedNotif.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
+                                    selectedNotif.status === 'FAILED' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                                }`}>
+                                {selectedNotif.status}
+                            </p>
+                        </div>
+
+                        <div className="space-y-4 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                            <div className="flex justify-between items-start border-b border-slate-200/50 pb-3">
+                                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Details</span>
+                                <span className="text-slate-700 font-bold text-xs text-right max-w-[60%] leading-relaxed">
+                                    {selectedNotif.description || 'Transaction'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center border-b border-slate-200/50 pb-3">
+                                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Date</span>
+                                <span className="text-slate-700 font-bold text-xs">
+                                    {new Date(selectedNotif.created_at).toLocaleString()}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Tx ID</span>
+                                <span className="text-slate-700 font-mono font-bold text-xs">
+                                    #{selectedNotif.id}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex gap-3">
+                            <button className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+                                <Receipt size={16} /> Share Receipt
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

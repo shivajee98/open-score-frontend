@@ -278,13 +278,15 @@ export default function DashboardLayout({
                             >
                                 {isAudioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                             </button>
-                            <button
-                                className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95 relative"
-                                title="Notifications"
-                            >
-                                <Bell size={18} />
-                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
-                            </button>
+                            <Link href="/customer/notifications">
+                                <button
+                                    className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95 relative"
+                                    title="Notifications"
+                                >
+                                    <Bell size={18} />
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+                                </button>
+                            </Link>
                             <button
                                 className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
                                 title="Help & Support"
