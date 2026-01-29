@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import QRCode from 'react-qr-code';
-import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X, Scan } from 'lucide-react';
+import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X, Scan, ArrowLeft } from 'lucide-react';
 
 export default function CustomerQR() {
+    const router = useRouter();
     const [qrData, setQrData] = useState('');
     const [user, setUser] = useState<any>(null);
     const [copied, setCopied] = useState(false);
@@ -110,7 +112,15 @@ export default function CustomerQR() {
                 <div className="bg-white rounded-3xl p-6 md:p-8 text-center shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
                     <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-${themeColor}-500 to-${isMerchant ? 'teal' : 'indigo'}-500`}></div>
 
-                    <div className="w-20 h-20 bg-slate-50 rounded-xl mx-auto mb-6 flex items-center justify-center text-2xl shadow-inner text-slate-900 border border-slate-100">
+                    {/* Persistent Back Button */}
+                    <button
+                        onClick={() => router.push('/customer')}
+                        className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-20"
+                    >
+                        <ArrowLeft size={16} />
+                    </button>
+
+                    <div className="w-20 h-20 bg-slate-50 rounded-xl mx-auto mb-6 flex items-center justify-center text-2xl shadow-inner text-slate-900 border border-slate-100 mt-2">
                         {user?.name?.[0]}
                     </div>
 

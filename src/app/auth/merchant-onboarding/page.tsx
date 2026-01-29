@@ -11,6 +11,7 @@ import {
     TrendingUp,
     MapPin,
     ArrowRight,
+    ArrowLeft,
     CheckCircle2,
     PartyPopper,
     Mail,
@@ -157,7 +158,22 @@ function MerchantOnboardingForm() {
                     />
                 </div>
 
-                <div className="text-center mb-10">
+                {/* Header Section */}
+                <div className="text-center mb-10 relative">
+                    {/* Back Button - Persistent */}
+                    <button
+                        onClick={() => {
+                            if (step === 1) {
+                                router.push('/');
+                            } else {
+                                setStep(step - 1);
+                            }
+                        }}
+                        className="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95"
+                    >
+                        <ArrowLeft size={16} />
+                    </button>
+
                     <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-600 text-white font-black text-xl mb-4 shadow-xl shadow-blue-600/20">
                         <Store size={28} />
                     </div>

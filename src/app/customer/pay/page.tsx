@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import PinModal from '@/components/PinModal';
-import { Scan, X, ArrowRight, Smartphone, Search, Home, QrCode, Receipt, Lock } from 'lucide-react';
+import { Scan, X, ArrowRight, ArrowLeft, Smartphone, Search, Home, QrCode, Receipt, Lock } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -285,7 +285,15 @@ function CustomerPayPage() {
                         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
                             <div className={`absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-${themeColor}-500 to-${isMerchant ? 'teal' : 'purple'}-500`}></div>
 
-                            <div className="mb-8 text-center">
+                            {/* Persistent Back Button */}
+                            <button
+                                onClick={() => router.push('/customer')}
+                                className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-20"
+                            >
+                                <ArrowLeft size={16} />
+                            </button>
+
+                            <div className="mb-8 text-center mt-2">
                                 <div className={`w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-${themeColor}-600 to-${isMerchant ? 'teal' : 'purple'}-600 rounded-2xl flex items-center justify-center shadow-lg shadow-${themeColor}-600/30`}>
                                     <Search className="w-10 h-10 text-white" />
                                 </div>
@@ -389,7 +397,14 @@ function CustomerPayPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 animate-in slide-in-from-bottom-8 duration-500">
+                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 animate-in slide-in-from-bottom-8 duration-500 relative">
+                        {/* Persistent Back Button */}
+                        <button
+                            onClick={() => setStep(1)}
+                            className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-20"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
                         <div className="text-center mb-8">
                             <div className="w-12 h-12 mx-auto rounded-xl bg-slate-100 text-slate-900 flex items-center justify-center text-xl font-black mb-4 uppercase shadow-inner">
                                 {payee?.name?.[0]}

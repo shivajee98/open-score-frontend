@@ -170,16 +170,17 @@ export default function LoanApplication() {
     return (
         <div className="min-h-screen bg-slate-50 p-4 pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
             <div className="max-w-md mx-auto">
-                <button onClick={() => {
-                    if (entryMode) router.back();
-                    else setEntryMode(true);
-                }} className="mb-6 flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> {entryMode ? 'Back to Dashboard' : 'Back to Selection'}
-                </button>
-
                 {entryMode ? (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                        <div className="mb-4">
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 relative">
+                        {/* Persistent Back Button - Mode 1 */}
+                        <button
+                            onClick={() => router.back()}
+                            className="absolute left-0 top-1 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-20"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
+
+                        <div className="mb-4 text-center">
                             <h1 className="text-2xl font-black text-slate-900 leading-tight">What would you like to do?</h1>
                             <p className="text-slate-500 text-sm font-medium mt-1">Select an option to proceed.</p>
                         </div>
@@ -235,7 +236,18 @@ export default function LoanApplication() {
                     <div className="bg-white rounded-3xl p-6 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden animate-in slide-in-from-right-8 duration-300">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
-                        <div className="mb-8">
+                        {/* Persistent Back Button - Mode 2 */}
+                        <button
+                            onClick={() => {
+                                if (step === 1) setEntryMode(true);
+                                else setStep(step - 1);
+                            }}
+                            className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-20"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
+
+                        <div className="mb-8 text-center mt-2">
                             <h1 className="text-xl font-black text-slate-900 tracking-tight">Apply for Loan</h1>
                             <p className="text-slate-500 text-sm font-medium">Get instant approval in minutes.</p>
                         </div>
