@@ -178,7 +178,18 @@ export function calculateRepayment(amount: number, tenureMonths: number, option:
         const principal = amount;
         const totalInterest = (principal * option.interestRate) / 100;
         const total = principal + totalInterest;
-        const emi = Math.ceil(total / count);
+        // Integer Distribution Strategy
+        // Base EMI = Floor(Total / Count)
+        // Remainder = Total % Count
+        // The first 'Remainder' number of EMIs get +1.
+        // For display purposes, we show the First EMI (which is the highest possible value).
+
+        const baseEmi = Math.floor(total / count);
+        const remainder = total % count;
+
+        // If remainder > 0, the first EMI will be Base + 1
+        const emi = baseEmi + (remainder > 0 ? 1 : 0);
+
 
         // Build Breakdown String
         let parts = [];
