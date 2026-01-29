@@ -4,6 +4,7 @@
     "": {
       "name": "frontend",
       "dependencies": {
+        "frontend": ".",
         "clsx": "^2.1.1",
         "html2canvas": "^1.4.1",
         "html5-qrcode": "^2.3.8",
@@ -482,6 +483,8 @@
     "flatted": ["flatted@3.3.3", "", {}, "sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg=="],
 
     "for-each": ["for-each@0.3.5", "", { "dependencies": { "is-callable": "^1.2.7" } }, "sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg=="],
+
+    "frontend": ["frontend@file:", { "dependencies": { "clsx": "^2.1.1", "html2canvas": "^1.4.1", "html5-qrcode": "^2.3.8", "lucide-react": "^0.563.0", "next": "16.1.4", "react": "19.2.3", "react-dom": "19.2.3", "react-qr-code": "^2.0.18", "tailwind-merge": "^3.4.0" }, "devDependencies": { "@tailwindcss/postcss": "^4.1.18", "@types/html2canvas": "^1.0.0", "@types/node": "^20.19.30", "@types/react": "^19.2.9", "@types/react-dom": "^19.2.3", "babel-plugin-react-compiler": "1.0.0", "eslint": "^9.39.2", "eslint-config-next": "16.1.4", "tailwindcss": "^4.1.18", "typescript": "^5.9.3" } }],
 
     "function-bind": ["function-bind@1.1.2", "", {}, "sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA=="],
 
