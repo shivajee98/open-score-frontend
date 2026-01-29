@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { toast } from '@/components/ui/Toast';
 import {
     Store,
     Briefcase,
@@ -70,6 +71,8 @@ function MerchantOnboardingForm() {
 
     const handleStep1Submit = async () => {
         setLoading(true);
+        setError('');
+        console.log("Updating basic profile for merchant Step 1...");
         try {
             await apiFetch('/auth/update-profile', {
                 method: 'POST',
@@ -79,14 +82,18 @@ function MerchantOnboardingForm() {
                 })
             });
 
+            console.log("Basic profile updated. Syncing local storage...");
             const u = JSON.parse(localStorage.getItem('user') || '{}');
             u.name = formData.name;
             u.email = formData.email;
             localStorage.setItem('user', JSON.stringify(u));
 
+            toast.success('Information saved! Redirecting...');
             router.push('/customer');
         } catch (e: any) {
+            console.error("Step 1 Submission Error:", e);
             setError(e.message || 'Failed to update profile');
+            toast.error(e.message || 'Failed to update profile');
             setLoading(false);
         }
     };

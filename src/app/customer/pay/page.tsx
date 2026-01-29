@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
@@ -26,6 +26,10 @@ function CustomerPayPage() {
     const [successData, setSuccessData] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [recentPayees, setRecentPayees] = useState<any[]>([]);
+    const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+
+    const scannerInitializing = useRef(false);
+    const hasScanned = useRef(false);
 
     const navItems = [
         { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
@@ -40,7 +44,7 @@ function CustomerPayPage() {
         }
 
         apiFetch('/wallet/balance').then(data => {
-            setBalance(data.balance);
+            setBalance(data.balance || 0);
             setLockedBalance(data.locked_balance || 0);
         });
 
@@ -61,26 +65,47 @@ function CustomerPayPage() {
 
     // Debounce Search
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
+        const timeoutId = setTimeout(async () => {
             if (searchQuery.length >= 3) { // Min 3 chars to search
-                fetchPayeeDetails(searchQuery);
+                try {
+                    const results = await apiFetch(`/payment/search?query=${searchQuery}`);
+                    setSearchSuggestions(results);
+                } catch (err) {
+                    console.error("Search error:", err);
+                    setSearchSuggestions([]);
+                }
+            } else {
+                setSearchSuggestions([]);
             }
         }, 500); // 500ms debounce
         return () => clearTimeout(timeoutId);
     }, [searchQuery]);
 
     const startScanner = async () => {
+        if (scannerInitializing.current || scanning) return;
+
+        scannerInitializing.current = true;
         setScanning(true);
         setError('');
+        hasScanned.current = false;
 
         // Dynamic import to avoid SSR issues
         const { Html5Qrcode } = await import('html5-qrcode');
 
         setTimeout(async () => {
             try {
-                if (!document.getElementById("reader")) {
-                    throw new Error("Scanner element not found");
+                const element = document.getElementById("reader");
+                if (!element) {
+                    scannerInitializing.current = false;
+                    setScanning(false);
+                    return;
                 }
+
+                // Clean up previous instance
+                if (scannerInstance) {
+                    try { await scannerInstance.stop(); } catch (e) { }
+                }
+
                 const instance = new Html5Qrcode("reader");
                 setScannerInstance(instance);
 
@@ -90,6 +115,7 @@ function CustomerPayPage() {
                     onScanSuccess,
                     onScanFailure
                 );
+                scannerInitializing.current = false;
             } catch (err: any) {
                 console.error("Scanner Error:", err);
                 const errorMessage = err?.name === 'NotAllowedError'
@@ -100,29 +126,42 @@ function CustomerPayPage() {
                 setError(errorMessage);
                 setScanning(false);
                 setScannerInstance(null);
+                scannerInitializing.current = false;
             }
-        }, 300);
+        }, 400); // Slightly longer timeout
     };
 
     const stopScanner = async () => {
+        console.log("Stopping scanner...");
+        scannerInitializing.current = false;
         setScanning(false);
-        if (scannerInstance && scannerInstance.isScanning) {
-            await scannerInstance.stop();
+        if (scannerInstance) {
+            try {
+                if (scannerInstance.isScanning) {
+                    await scannerInstance.stop();
+                }
+                const element = document.getElementById("reader");
+                if (element) element.innerHTML = "";
+            } catch (e) {
+                console.error("Error stopping scanner:", e);
+            }
             setScannerInstance(null);
         }
     };
 
     useEffect(() => {
         return () => {
-            if (scannerInstance?.isScanning) {
+            if (scannerInstance) {
                 scannerInstance.stop().catch(() => { });
             }
-        }
+        };
     }, [scannerInstance]);
 
     function onScanSuccess(decodedText: string) {
+        if (hasScanned.current) return;
+        hasScanned.current = true;
+
         stopScanner();
-        // Identify if it is a VPA or UUID
         console.log("Scanned QR:", decodedText);
         fetchPayeeDetails(decodedText);
     }
@@ -130,19 +169,38 @@ function CustomerPayPage() {
     function onScanFailure(error: any) { }
 
     const fetchPayeeDetails = async (id: string) => {
+        if (!id) return;
         setLoading(true);
+        setError('');
+        console.log("Fetching payee details for:", id);
         try {
             const data = await apiFetch(`/payment/payee/${id}`);
             setPayee(data);
             setStep(2);
-        } catch (err) {
+            setSearchSuggestions([]);
+            setSearchQuery('');
+        } catch (err: any) {
             console.error("Payee fetch error:", err);
-            setError('Invalid QR or User Not Found');
-            toast.error('Invalid QR or User Not Found');
+            setError(err.message || 'Invalid QR or User Not Found');
+            toast.error(err.message || 'Invalid QR or User Not Found');
+            hasScanned.current = false; // Allow retry
         } finally {
             setLoading(false);
         }
     }
+
+    const selectPayee = (p: any) => {
+        console.log("Selecting payee from suggestion:", p);
+        setPayee({
+            name: p.name,
+            role: p.role,
+            payee_wallet_uuid: p.wallet_uuid,
+            vpa: p.vpa
+        });
+        setStep(2);
+        setSearchSuggestions([]);
+        setSearchQuery('');
+    };
 
     const [pinModalOpen, setPinModalOpen] = useState(false);
 
@@ -236,12 +294,42 @@ function CustomerPayPage() {
                                         placeholder="Enter mobile number or Open Score ID"
                                         className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                                     />
+
+                                    {/* Search Suggestions */}
+                                    {searchSuggestions.length > 0 ? (
+                                        <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                            {searchSuggestions.map((p, i) => (
+                                                <div
+                                                    key={i}
+                                                    onClick={() => selectPayee(p)}
+                                                    className="p-4 flex items-center justify-between hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black">
+                                                            {p.name?.[0]}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-black text-slate-900">{p.name}</p>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.vpa}</p>
+                                                        </div>
+                                                    </div>
+                                                    <ArrowRight size={16} className="text-slate-300" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (searchQuery.length >= 3 && !loading) && (
+                                        <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 p-4 text-center">
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No users found</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <button
                                     onClick={() => {
-                                        if (searchQuery.trim()) {
+                                        if (searchQuery.length >= 10 || searchQuery.includes('@')) {
                                             fetchPayeeDetails(searchQuery.trim());
+                                        } else {
+                                            toast.error('Enter a full mobile number or ID');
                                         }
                                     }}
                                     className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-base shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
@@ -250,7 +338,7 @@ function CustomerPayPage() {
                                 </button>
                             </div>
 
-                            {recentPayees.length > 0 && (
+                            {recentPayees.length > 0 && searchQuery.length < 1 && (
                                 <div className="mb-8">
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Recent Payees</h4>
                                     <div className="grid grid-cols-4 gap-3">
@@ -284,24 +372,12 @@ function CustomerPayPage() {
 
                             <button
                                 onClick={startScanner}
-                                className="w-full mt-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95"
+                                disabled={scanning}
+                                className="w-full mt-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50"
                             >
                                 <Scan className="w-5 h-5" /> Scan QR Code
                             </button>
                         </div>
-
-                        {scanning && (
-                            <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
-                                <div id="reader" className="w-full max-w-sm overflow-hidden rounded-2xl border-4 border-white/20"></div>
-                                <button
-                                    onClick={stopScanner}
-                                    className="mt-8 px-6 py-3 bg-white text-black rounded-full font-bold flex items-center gap-2"
-                                >
-                                    <X className="w-5 h-5" /> Cancel Scan
-                                </button>
-                                <p className="text-white/50 text-xs mt-4 uppercase tracking-widest font-bold">Align QR code within frame</p>
-                            </div>
-                        )}
                     </div>
                 ) : (
                     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 animate-in slide-in-from-bottom-8 duration-500">
@@ -353,6 +429,19 @@ function CustomerPayPage() {
                     </div>
                 )}
             </div>
+
+            {scanning && (
+                <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
+                    <div id="reader" className="w-full max-w-sm overflow-hidden rounded-2xl border-4 border-white/20"></div>
+                    <button
+                        onClick={stopScanner}
+                        className="mt-8 px-6 py-3 bg-white text-black rounded-full font-bold flex items-center gap-2"
+                    >
+                        <X className="w-5 h-5" /> Cancel Scan
+                    </button>
+                    <p className="text-white/50 text-xs mt-4 uppercase tracking-widest font-bold">Align QR code within frame</p>
+                </div>
+            )}
         </DashboardLayout>
     );
 }
@@ -360,7 +449,7 @@ function CustomerPayPage() {
 export default function CustomerPay() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center" aria-label="Loading payment page">
                 <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
         }>
