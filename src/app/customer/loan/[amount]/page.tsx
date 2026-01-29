@@ -91,7 +91,7 @@ export default function LoanDetail() {
         }
     };
 
-    if (!plan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6"><div className="animate-pulse w-full max-w-md h-96 bg-slate-200 rounded-3xl"></div></div>;
+    if (!plan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4"><div className="animate-pulse w-full max-w-md h-96 bg-slate-200 rounded-2xl"></div></div>;
 
     const currentOptions = plan.payoutOptions(tenure);
     const { total, breakdown, count, emi } = payout ? calculateRepayment(plan.amount, tenure, payout) : { total: 0, breakdown: '-', count: 0, emi: 0 };
@@ -104,13 +104,13 @@ export default function LoanDetail() {
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-32">
             {/* Header */}
-            <div className="bg-slate-900 p-6 pb-24 rounded-b-[2rem]">
+            <div className="bg-slate-900 p-4 pb-24 rounded-b-[2rem]">
                 <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Back to Plans
                 </button>
             </div>
 
-            <div className="px-6 -mt-20">
+            <div className="px-4 -mt-20">
                 {/* We need to update EarningsCard to handle Repayment props or just pass Plan */}
                 {/* Ideally we should rename EarningsCard to LoanSummaryCard. For now let's pass new props if component supports, or we update component next. */}
                 <RepaymentCard
@@ -141,14 +141,14 @@ export default function LoanDetail() {
 
 
                 {/* Terms */}
-                <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 mb-8">
+                <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100 mb-8">
                     <div className="flex items-center gap-2 mb-4 text-blue-600">
                         <Shield className="w-5 h-5" />
                         <h4 className="font-black text-xs uppercase tracking-widest">Important Terms</h4>
                     </div>
                     <ul className="space-y-3">
                         {['Earnings credited to wallet only.', 'Early closure cancels future payouts.', 'Repayment schedule locks after disbursal.'].map((term, i) => (
-                            <li key={i} className="flex gap-3 text-sm font-medium text-slate-600">
+                            <li key={i} className="flex gap-2 text-sm font-medium text-slate-600">
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-300 mt-2 shrink-0" />
                                 {term}
                             </li>
@@ -160,7 +160,7 @@ export default function LoanDetail() {
                     <button
                         onClick={handleConfirm}
                         disabled={!payout || loading}
-                        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-base shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {loading ? 'Processing...' : `Proceed`}
                     </button>

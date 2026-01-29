@@ -95,10 +95,10 @@ export default function DashboardLayout({
             <div className="flex flex-col md:flex-row h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans selection:bg-blue-100 selection:text-blue-900">
                 {/* Desktop Sidebar */}
                 <aside className="w-72 border-r border-slate-200 bg-white hidden md:flex flex-col shadow-xl z-20">
-                    <div className="p-8">
-                        <div className="flex items-center gap-3 mb-1">
-                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-xl">O</div>
-                            <h1 className="text-2xl font-black tracking-tight text-slate-900">OpenScore</h1>
+                    <div className="p-6">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-lg">O</div>
+                            <h1 className="text-xl font-black tracking-tight text-slate-900">OpenScore</h1>
                         </div>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-11">Powered by MSME Shakti</p>
                     </div>
@@ -108,9 +108,9 @@ export default function DashboardLayout({
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className="flex items-center gap-4 px-6 py-4 rounded-2xl hover:bg-slate-50 transition-all text-slate-500 hover:text-blue-600 group font-bold"
+                                className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-slate-500 hover:text-blue-600 group font-bold"
                             >
-                                <span className="group-hover:scale-110 transition-transform text-xl">
+                                <span className="group-hover:scale-110 transition-transform text-lg">
                                     {item.icon}
                                 </span>
                                 <span className="text-sm">{item.label}</span>
@@ -119,8 +119,8 @@ export default function DashboardLayout({
                     </nav>
 
 
-                    <div className="p-6 border-t border-slate-100">
-                        <Link href="/customer/profile" className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer group">
+                    <div className="p-4 border-t border-slate-100">
+                        <Link href="/customer/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer group">
                             <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-sm group-hover:scale-110 transition-transform">
                                 {user?.name?.[0] || 'U'}
                             </div>
@@ -134,9 +134,9 @@ export default function DashboardLayout({
 
                 {/* Main Content */}
                 < main className="flex-1 flex flex-col overflow-hidden relative pb-[5.5rem] md:pb-0 bg-slate-50" >
-                    <header className="px-6 py-4 md:py-6 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
-                        <h2 className="text-xl md:text-3xl font-black tracking-tight text-slate-900">{title}</h2>
-                        <div className="flex items-center gap-3 md:hidden">
+                    <header className="px-4 py-2.5 md:py-4 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
+                        <h2 className="text-lg md:text-2xl font-black tracking-tight text-slate-900">{title}</h2>
+                        <div className="flex items-center gap-2 md:hidden">
                             <Link href="/customer/profile">
                                 <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-sm border border-blue-200 cursor-pointer active:scale-90 transition-transform">
                                     {user?.name?.[0] || 'U'}
@@ -145,9 +145,9 @@ export default function DashboardLayout({
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar scroll-smooth">
+                    <div className="flex-1 overflow-y-auto p-3 md:p-8 custom-scrollbar scroll-smooth">
                         {user ? children : (
-                            <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                            <div className="flex flex-col items-center justify-center h-64 space-y-3">
                                 <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Verifying Session...</p>
                             </div>

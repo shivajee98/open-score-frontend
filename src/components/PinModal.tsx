@@ -87,8 +87,8 @@ export default function PinModal({ isOpen, title = 'Enter Wallet PIN', mode = 'V
     const activeTitle = mode === 'SET' ? (step === 'CONFIRM' ? 'Confirm New PIN' : 'Set New 6-Digit PIN') : title;
 
     return (
-        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
                 {onClose && (
                     <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors">
                         <X className="w-5 h-5 text-slate-400" />
@@ -96,10 +96,10 @@ export default function PinModal({ isOpen, title = 'Enter Wallet PIN', mode = 'V
                 )}
 
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-blue-50 rounded-2xl mx-auto flex items-center justify-center text-blue-600 mb-4 shadow-inner">
+                    <div className="w-12 h-12 bg-blue-50 rounded-xl mx-auto flex items-center justify-center text-blue-600 mb-4 shadow-inner">
                         <ShieldCheck className="w-8 h-8" />
                     </div>
-                    <h3 className="text-xl font-black text-slate-900">{activeTitle}</h3>
+                    <h3 className="text-lg font-black text-slate-900">{activeTitle}</h3>
                     <p className="text-slate-500 text-sm mt-2">
                         {mode === 'SET' && step === 'ENTER' ? 'Choose a secure PIN for your wallet.' :
                             mode === 'SET' && step === 'CONFIRM' ? 'Re-enter to confirm.' :
@@ -118,7 +118,7 @@ export default function PinModal({ isOpen, title = 'Enter Wallet PIN', mode = 'V
                                 value={digit}
                                 onChange={(e) => handleInput(i, e.target.value, step === 'CONFIRM')}
                                 onKeyDown={(e) => handleKeyDown(i, e, step === 'CONFIRM')}
-                                className={`w-10 h-14 rounded-xl border-2 text-center text-2xl font-black transition-all outline-none 
+                                className={`w-10 h-14 rounded-lg border-2 text-center text-xl font-black transition-all outline-none 
                                     ${digit ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-200 bg-white text-slate-900 focus:border-blue-400 focus:ring-4 focus:ring-blue-50'}`}
                             />
                         </div>
@@ -126,7 +126,7 @@ export default function PinModal({ isOpen, title = 'Enter Wallet PIN', mode = 'V
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-xl text-center text-xs font-bold border border-red-100 flex items-center justify-center gap-2">
+                    <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-lg text-center text-xs font-bold border border-red-100 flex items-center justify-center gap-2">
                         <Lock className="w-3 h-3" /> {error}
                     </div>
                 )}

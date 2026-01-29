@@ -57,28 +57,28 @@ export default function CustomerTransactions() {
                 onClose={() => setSelectedTx(null)}
             />
 
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-4xl mx-auto space-y-4">
                 {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 mb-8">
+                <div className="flex flex-col md:flex-row gap-3 mb-8">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input type="text" placeholder="Search payments..." className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-slate-100 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-100 outline-none" />
+                        <input type="text" placeholder="Search payments..." className="w-full pl-10 pr-4 py-3 bg-white rounded-lg border border-slate-100 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-blue-100 outline-none" />
                     </div>
                 </div>
 
                 {loading ? (
-                    <div className="space-y-4">
-                        {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-200 rounded-2xl animate-pulse"></div>)}
+                    <div className="space-y-3">
+                        {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-200 rounded-xl animate-pulse"></div>)}
                     </div>
                 ) : Object.keys(grouped).length > 0 ? (
                     Object.keys(grouped).map(date => (
                         <div key={date} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h5 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-2">{date}</h5>
-                            <div className="bg-white rounded-[2rem] p-2 shadow-sm border border-slate-100 space-y-1">
+                            <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100 space-y-1">
                                 {grouped[date].map((t: any) => (
-                                    <div key={t.id} onClick={() => setSelectedTx(t)} className="flex justify-between items-center p-4 hover:bg-slate-50 rounded-2xl transition-all group cursor-pointer active:scale-[0.98]">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                    <div key={t.id} onClick={() => setSelectedTx(t)} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-all group cursor-pointer active:scale-[0.98]">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${t.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
                                                 {t.type === 'CREDIT' ? <ArrowDownLeft className="w-6 h-6 stroke-[3]" /> : <ArrowUpRight className="w-6 h-6 stroke-[3]" />}
                                             </div>
                                             <div>

@@ -26,24 +26,24 @@ export default function LoanHistory() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6 pb-24">
+        <div className="min-h-screen bg-slate-50 p-4 pb-24">
             <button onClick={() => router.push('/customer/loan')} className="mb-6 flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
                 <ArrowLeft className="w-4 h-4" /> Back to Loans
             </button>
 
-            <h1 className="text-3xl font-black text-slate-900 mb-8">Loan History</h1>
+            <h1 className="text-2xl font-black text-slate-900 mb-8">Loan History</h1>
 
             {loading ? (
-                <div className="space-y-4">
-                    {[1, 2].map(i => <div key={i} className="h-32 bg-slate-200 rounded-3xl animate-pulse" />)}
+                <div className="space-y-3">
+                    {[1, 2].map(i => <div key={i} className="h-32 bg-slate-200 rounded-2xl animate-pulse" />)}
                 </div>
             ) : loans.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {loans.map((loan) => (
                         <div
                             key={loan.id}
                             onClick={() => router.push(`/customer/loan/status/${loan.id}`)}
-                            className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-all cursor-pointer active:scale-[0.98]"
+                            className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-all cursor-pointer active:scale-[0.98]"
                         >
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -58,7 +58,7 @@ export default function LoanHistory() {
                                         {new Date(loan.created_at).toLocaleDateString()}
                                     </span>
                                 </div>
-                                <h3 className="text-xl font-black text-slate-900">₹ {loan.amount.toLocaleString()}</h3>
+                                <h3 className="text-lg font-black text-slate-900">₹ {loan.amount.toLocaleString()}</h3>
                                 <p className="text-xs font-bold text-slate-500 mt-1">
                                     {loan.tenure} Months • {loan.payout_frequency} Payout
                                 </p>
@@ -89,11 +89,11 @@ export default function LoanHistory() {
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
+                <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
                     <p className="text-slate-400 font-bold">No loan history found.</p>
                     <button
                         onClick={() => router.push('/customer/loan')}
-                        className="mt-4 px-6 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all"
+                        className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all"
                     >
                         Apply Now
                     </button>

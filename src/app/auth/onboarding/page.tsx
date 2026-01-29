@@ -122,22 +122,22 @@ export default function Onboarding() {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
             <div className="w-full max-w-lg">
-                <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-blue-900/5 relative overflow-hidden">
+                <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl shadow-blue-900/5 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-purple-600"></div>
 
                     {step === 1 && (
                         <div className="animate-in slide-in-from-right-8 duration-300">
                             <div className="mb-10 text-center">
-                                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl mx-auto flex items-center justify-center mb-6 text-2xl font-black">
+                                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl mx-auto flex items-center justify-center mb-6 text-xl font-black">
                                     O
                                 </div>
-                                <h2 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">Account Type</h2>
+                                <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-2">Account Type</h2>
                                 <p className="text-slate-500 font-medium">How will you use OpenScore?</p>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 mb-8">
+                            <div className="grid grid-cols-1 gap-3 mb-8">
                                 {[
                                     { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon className="w-6 h-6" /> },
                                     { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store className="w-6 h-6" /> },
@@ -152,14 +152,14 @@ export default function Onboarding() {
                                                 setStep(2);
                                             }
                                         }}
-                                        className={`w-full p-6 rounded-3xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
+                                        className={`w-full p-4 rounded-2xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
                                     >
-                                        <div className="flex items-center gap-5">
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${role === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-100 text-slate-400 group-hover:text-blue-600'}`}>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${role === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-100 text-slate-400 group-hover:text-blue-600'}`}>
                                                 {item.icon}
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-slate-900 text-lg">{item.label}</h4>
+                                                <h4 className="font-black text-slate-900 text-base">{item.label}</h4>
                                                 <p className="text-sm text-slate-500 font-medium">{item.sub}</p>
                                             </div>
                                         </div>
@@ -178,18 +178,18 @@ export default function Onboarding() {
                                 >
                                     ← Back to Account Type
                                 </button>
-                                <h2 className="text-3xl font-black tracking-tighter text-slate-900 mb-2">Profile Details</h2>
+                                <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-2">Profile Details</h2>
                                 <p className="text-slate-500 font-medium">Final step to unlock your wallet.</p>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-4">
                                 {errors.api && (
-                                    <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold text-center border border-red-100">
+                                    <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-100">
                                         {errors.api}
                                     </div>
                                 )}
 
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     <div>
                                         <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Full Name (As per Aadhaar)</label>
                                         <div className="relative">
@@ -198,7 +198,7 @@ export default function Onboarding() {
                                                 type="text"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
                                                 placeholder="e.g. Rahul Sharma"
                                                 required
                                             />
@@ -213,7 +213,7 @@ export default function Onboarding() {
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
                                                 placeholder="rahul@example.com"
                                                 required
                                             />
@@ -225,7 +225,7 @@ export default function Onboarding() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                                    className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-base shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2 group"
                                 >
                                     {loading ? (
                                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>

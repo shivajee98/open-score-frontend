@@ -114,7 +114,7 @@ export default function RepaymentDashboard() {
             />
 
             {/* Header Area */}
-            <div className="bg-slate-900 pt-10 pb-20 px-6 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
+            <div className="bg-slate-900 pt-10 pb-20 px-4 rounded-b-[3rem] shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
 
                 <button onClick={() => router.push(`/customer/loan/status/${loanId}`)} className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mb-8 relative z-10 hover:text-white transition-colors">
@@ -123,33 +123,33 @@ export default function RepaymentDashboard() {
 
                 <div className="relative z-10 flex justify-between items-end">
                     <div>
-                        <h1 className="text-3xl font-black text-white mb-2 leading-none">Repayment</h1>
+                        <h1 className="text-2xl font-black text-white mb-2 leading-none">Repayment</h1>
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest opacity-80">Analytical Dashboard</p>
                     </div>
                     <div className="text-right">
                         <span className="block text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Total Loan</span>
-                        <span className="text-2xl font-black text-white leading-none">₹{totalPayable.toLocaleString()}</span>
+                        <span className="text-xl font-black text-white leading-none">₹{totalPayable.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
 
-            <div className="px-6 -mt-10 relative z-20 space-y-6">
+            <div className="px-4 -mt-10 relative z-20 space-y-4">
 
                 {/* Visual Progress Card */}
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/5">
+                <div className="bg-white rounded-3xl p-6 shadow-2xl shadow-blue-900/5">
                     <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
                                 <PieChart size={24} />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-slate-900 leading-none">Repayment Health</h3>
+                                <h3 className="text-base font-black text-slate-900 leading-none">Repayment Health</h3>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{progress}% of total paid</p>
                             </div>
                         </div>
                         <div className="text-right">
                             <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Remaining</span>
-                            <span className="text-lg font-black text-slate-900 leading-none">₹{(totalPayable - totalPaid).toLocaleString()}</span>
+                            <span className="text-base font-black text-slate-900 leading-none">₹{(totalPayable - totalPaid).toLocaleString()}</span>
                         </div>
                     </div>
 
@@ -169,54 +169,54 @@ export default function RepaymentDashboard() {
 
                 {/* Primary Action: Next Due */}
                 {pendingEmi ? (
-                    <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-900/40 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-2xl shadow-indigo-900/40 animate-in fade-in slide-in-from-bottom-4">
                         <div className="flex justify-between items-start mb-6">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white/10 rounded-xl">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-white/10 rounded-lg">
                                     <Calendar size={20} />
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-black uppercase tracking-widest opacity-80">Next Due Date</h4>
-                                    <p className="text-xl font-bold">{new Date(pendingEmi.due_date).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                    <p className="text-lg font-bold">{new Date(pendingEmi.due_date).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                                 </div>
                             </div>
                             <div className="text-right">
                                 <h4 className="text-sm font-black uppercase tracking-widest opacity-80">EMI Amount</h4>
-                                <p className="text-xl font-bold">₹{pendingEmi.amount.toLocaleString()}</p>
+                                <p className="text-lg font-bold">₹{pendingEmi.amount.toLocaleString()}</p>
                             </div>
                         </div>
 
                         <button
                             onClick={handleRepay}
                             disabled={paying}
-                            className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3"
+                            className="w-full py-2.5 bg-white text-indigo-600 rounded-xl font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                             {paying ? <div className="w-5 h-5 border-2 border-indigo-600 rounded-full animate-spin border-t-transparent" /> : "Pay Installment Now"}
                         </button>
                         <p className="text-[9px] text-center text-indigo-200 mt-4 font-bold uppercase tracking-widest">Amount will be debited from your main wallet balance</p>
                     </div>
                 ) : (
-                    <div className="bg-emerald-500 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-emerald-900/40 text-center space-y-3">
-                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div className="bg-emerald-500 rounded-3xl p-6 text-white shadow-2xl shadow-emerald-900/40 text-center space-y-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
                             <CheckCircle2 size={32} />
                         </div>
-                        <h2 className="text-2xl font-black">Loan Fully Repaid!</h2>
+                        <h2 className="text-xl font-black">Loan Fully Repaid!</h2>
                         <p className="text-emerald-50 text-xs font-medium">Your credit score has been upgraded because of your consistent repayment.</p>
                     </div>
                 )}
 
                 {/* Analytical History - Grouped */}
-                <div className="bg-white rounded-[2.5rem] shadow-xl shadow-blue-900/5 overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-xl shadow-blue-900/5 overflow-hidden">
                     <button
                         onClick={() => setHistoryOpen(!historyOpen)}
-                        className="w-full p-8 flex justify-between items-center group"
+                        className="w-full p-6 flex justify-between items-center group"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center border border-amber-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center border border-amber-100">
                                 <TrendingUp size={24} />
                             </div>
                             <div className="text-left">
-                                <h3 className="text-lg font-black text-slate-900 leading-none">Payment History</h3>
+                                <h3 className="text-base font-black text-slate-900 leading-none">Payment History</h3>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Analytical Grouping</p>
                             </div>
                         </div>
@@ -224,7 +224,7 @@ export default function RepaymentDashboard() {
                     </button>
 
                     {historyOpen && (
-                        <div className="px-8 pb-8 space-y-6 animate-in slide-in-from-top-2 fade-in duration-300">
+                        <div className="px-6 pb-8 space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
                             {Object.entries(groupedPaid).length > 0 ? (
                                 Object.entries(groupedPaid).reverse().map(([week, items]: [string, any]) => (
                                     <div key={week} className="border-l-2 border-slate-100 pl-6 relative">
@@ -244,7 +244,7 @@ export default function RepaymentDashboard() {
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-center text-xs text-slate-400 font-bold py-4">No payments recorded yet.</p>
+                                <p className="text-center text-xs text-slate-400 font-bold py-2.5">No payments recorded yet.</p>
                             )}
                         </div>
                     )}
@@ -253,7 +253,7 @@ export default function RepaymentDashboard() {
             </div>
 
             {/* Bottom Insight */}
-            <div className="p-8 text-center">
+            <div className="p-6 text-center">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-full border border-amber-100 text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4">
                     <AlertCircle size={12} /> Priority Credit Tip
                 </div>

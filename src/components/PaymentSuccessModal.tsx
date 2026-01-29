@@ -25,25 +25,25 @@ export default function PaymentSuccessModal({ isOpen, amount, payeeName, transac
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className={`w-full max-w-sm bg-white rounded-[2rem] shadow-2xl overflow-hidden transition-all duration-500 transform ${animate ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-8'}`}>
-                <div className="bg-blue-600 p-8 text-center relative overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className={`w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-500 transform ${animate ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-8'}`}>
+                <div className="bg-blue-600 p-6 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                     <div className={`w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg transition-all duration-700 delay-200 ${animate ? 'scale-100 rotate-0' : 'scale-0 rotate-180'}`}>
                         <Check className="w-10 h-10 text-blue-600 stroke-[4]" />
                     </div>
-                    <h3 className="text-white font-black text-2xl tracking-tight mb-1">Payment Success!</h3>
+                    <h3 className="text-white font-black text-xl tracking-tight mb-1">Payment Success!</h3>
                     <p className="text-blue-100 text-sm font-medium opacity-90">{transactionRef.substring(0, 18)}...</p>
                 </div>
 
-                <div className="p-8 space-y-6">
+                <div className="p-6 space-y-4">
                     <div className="text-center">
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Total Amount</p>
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tighter">₹{parseFloat(amount).toFixed(2)}</h2>
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter">₹{parseFloat(amount).toFixed(2)}</h2>
                     </div>
 
-                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <div className="flex items-center gap-3">
+                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                        <div className="flex items-center gap-2">
                             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                                 {payeeName[0]}
                             </div>
@@ -56,7 +56,7 @@ export default function PaymentSuccessModal({ isOpen, amount, payeeName, transac
 
                     <button
                         onClick={onClose}
-                        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all active:scale-95"
+                        className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-95"
                     >
                         Done
                     </button>

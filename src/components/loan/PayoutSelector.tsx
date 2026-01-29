@@ -24,7 +24,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                             key={option.id}
                             onClick={() => onChange(option)}
                             className={cn(
-                                "relative rounded-[2rem] border-2 cursor-pointer transition-all flex flex-col group mb-4",
+                                "relative rounded-2xl border-2 cursor-pointer transition-all flex flex-col group mb-4",
                                 isSelected
                                     ? "border-blue-600 bg-white shadow-2xl shadow-blue-900/10 ring-4 ring-blue-50"
                                     : "border-slate-100 bg-white hover:border-slate-200"
@@ -41,8 +41,8 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                 </div>
                             )}
 
-                            <div className={cn("p-6 pt-10 flex items-start justify-between gap-4", !option.isBestValue && !option.val && "pt-6")}>
-                                <div className="flex gap-4">
+                            <div className={cn("p-4 pt-10 flex items-start justify-between gap-3", !option.isBestValue && !option.val && "pt-6")}>
+                                <div className="flex gap-3">
                                     <div className={cn(
                                         "w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 transition-all",
                                         isSelected ? "border-blue-600 bg-blue-600 shadow-lg shadow-blue-200" : "border-slate-200"
@@ -50,7 +50,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                         {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-full" />}
                                     </div>
                                     <div>
-                                        <h4 className={cn("font-black text-xl tracking-tight leading-none mb-2", isSelected ? "text-slate-900" : "text-slate-700")}>
+                                        <h4 className={cn("font-black text-lg tracking-tight leading-none mb-2", isSelected ? "text-slate-900" : "text-slate-700")}>
                                             {option.label}
                                         </h4>
                                         <div className="flex flex-wrap gap-x-3 gap-y-1">
@@ -69,7 +69,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                 </div>
 
                                 <div className="text-right shrink-0">
-                                    <p className={cn("text-2xl font-black tracking-tighter leading-none mb-1", isSelected ? "text-emerald-600" : "text-slate-900")}>
+                                    <p className={cn("text-xl font-black tracking-tighter leading-none mb-1", isSelected ? "text-emerald-600" : "text-slate-900")}>
                                         ₹ {emi.toLocaleString()}
                                     </p>
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em]">Per EMI</p>
@@ -78,9 +78,9 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
 
                             {/* Detailed Breakdown - Seamless Integration */}
                             {isSelected && (
-                                <div className="px-6 pb-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="pt-6 border-t border-slate-50 space-y-4">
-                                        <div className="flex justify-between items-center bg-slate-50/50 p-3 rounded-xl border border-slate-100/50">
+                                <div className="px-4 pb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="pt-6 border-t border-slate-50 space-y-3">
+                                        <div className="flex justify-between items-center bg-slate-50/50 p-3 rounded-lg border border-slate-100/50">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing Structure</span>
@@ -109,15 +109,15 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                             )}
                                         </div>
 
-                                        <div className="bg-slate-900 rounded-2xl p-5 text-white flex justify-between items-center shadow-lg shadow-slate-900/10">
+                                        <div className="bg-slate-900 rounded-xl p-3 text-white flex justify-between items-center shadow-lg shadow-slate-900/10">
                                             <div>
                                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total EMI Pay</p>
-                                                <p className="text-xl font-black">₹{total.toLocaleString()}</p>
+                                                <p className="text-lg font-black">₹{total.toLocaleString()}</p>
                                             </div>
                                             {((option.cashback || 0) * count) > 0 && (
                                                 <div className="text-right">
                                                     <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">You Save</p>
-                                                    <p className="text-lg font-black text-emerald-400">₹{((option.cashback || 0) * count).toLocaleString()}</p>
+                                                    <p className="text-base font-black text-emerald-400">₹{((option.cashback || 0) * count).toLocaleString()}</p>
                                                 </div>
                                             )}
                                         </div>

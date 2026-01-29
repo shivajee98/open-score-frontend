@@ -197,22 +197,22 @@ export default function CustomerPay() {
                     onClose={() => setPinModalOpen(false)}
                 />
 
-                {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold text-center border border-red-100">{error}</div>}
+                {error && <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-100">{error}</div>}
 
                 {step === 1 ? (
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
+                    <div className="space-y-4">
+                        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
                             <div className="absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
 
                             <div className="mb-8 text-center">
-                                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded-[2rem] flex items-center justify-center shadow-lg shadow-blue-600/30">
+                                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30">
                                     <Search className="w-10 h-10 text-white" />
                                 </div>
-                                <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Pay Anyone</h3>
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Pay Anyone</h3>
                                 <p className="text-slate-500 font-medium">Enter mobile number or Open Score ID</p>
                             </div>
 
-                            <div className="space-y-4 mb-6">
+                            <div className="space-y-3 mb-6">
                                 <div className="relative">
                                     <Smartphone className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
                                     <input
@@ -220,7 +220,7 @@ export default function CustomerPay() {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Enter mobile number or Open Score ID"
-                                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && searchQuery.trim()) {
                                                 fetchPayeeDetails(searchQuery.trim());
@@ -235,7 +235,7 @@ export default function CustomerPay() {
                                             fetchPayeeDetails(searchQuery.trim());
                                         }
                                     }}
-                                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-base shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
                                 >
                                     Continue <ArrowRight className="w-5 h-5" />
                                 </button>
@@ -244,7 +244,7 @@ export default function CustomerPay() {
                             {recentPayees.length > 0 && (
                                 <div className="mb-8">
                                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Recent Payees</h4>
-                                    <div className="grid grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-4 gap-3">
                                         {recentPayees.map((p, i) => (
                                             <div
                                                 key={i}
@@ -254,7 +254,7 @@ export default function CustomerPay() {
                                                 }}
                                                 className="flex flex-col items-center gap-2 group cursor-pointer active:scale-95 transition-all"
                                             >
-                                                <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-900 font-bold group-hover:bg-blue-50 group-hover:border-blue-100 group-hover:text-blue-600 transition-all">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-900 font-bold group-hover:bg-blue-50 group-hover:border-blue-100 group-hover:text-blue-600 transition-all">
                                                     {p.name?.[0]}
                                                 </div>
                                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter text-center line-clamp-1">{p.name}</span>
@@ -275,7 +275,7 @@ export default function CustomerPay() {
 
                             <button
                                 onClick={startScanner}
-                                className="w-full mt-6 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95"
+                                className="w-full mt-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95"
                             >
                                 <Scan className="w-5 h-5" /> Scan QR Code
                             </button>
@@ -283,10 +283,10 @@ export default function CustomerPay() {
 
                         {scanning && (
                             <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
-                                <div id="reader" className="w-full max-w-sm overflow-hidden rounded-3xl border-4 border-white/20"></div>
+                                <div id="reader" className="w-full max-w-sm overflow-hidden rounded-2xl border-4 border-white/20"></div>
                                 <button
                                     onClick={stopScanner}
-                                    className="mt-8 px-8 py-3 bg-white text-black rounded-full font-bold flex items-center gap-2"
+                                    className="mt-8 px-6 py-3 bg-white text-black rounded-full font-bold flex items-center gap-2"
                                 >
                                     <X className="w-5 h-5" /> Cancel Scan
                                 </button>
@@ -295,29 +295,29 @@ export default function CustomerPay() {
                         )}
                     </div>
                 ) : (
-                    <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-200 border border-slate-100 animate-in slide-in-from-bottom-8 duration-500">
+                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 animate-in slide-in-from-bottom-8 duration-500">
                         <div className="text-center mb-8">
-                            <div className="w-16 h-16 mx-auto rounded-2xl bg-slate-100 text-slate-900 flex items-center justify-center text-2xl font-black mb-4 uppercase shadow-inner">
+                            <div className="w-12 h-12 mx-auto rounded-xl bg-slate-100 text-slate-900 flex items-center justify-center text-xl font-black mb-4 uppercase shadow-inner">
                                 {payee?.name?.[0]}
                             </div>
-                            <h4 className="text-2xl font-black text-slate-900 tracking-tight">{payee?.name}</h4>
+                            <h4 className="text-xl font-black text-slate-900 tracking-tight">{payee?.name}</h4>
                             <p className="text-blue-600 font-bold text-sm bg-blue-50 inline-block px-3 py-1 rounded-full mt-2">{payee?.vpa || 'Verified Merchant'}</p>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             <div className="relative">
-                                <span className="absolute left-8 top-1/2 -translate-y-1/2 text-4xl font-black text-slate-300">₹</span>
+                                <span className="absolute left-8 top-1/2 -translate-y-1/2 text-3xl font-black text-slate-300">₹</span>
                                 <input
                                     type="number"
                                     autoFocus
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    className="w-full bg-slate-50 rounded-3xl p-8 pl-16 text-5xl font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 border border-slate-200 transition-all text-center"
+                                    className="w-full bg-slate-50 rounded-2xl p-6 pl-16 text-4xl font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 border border-slate-200 transition-all text-center"
                                     placeholder="0"
                                 />
                             </div>
 
-                            <div className="flex flex-col gap-2 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <div className="flex flex-col gap-2 px-4 py-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs font-bold uppercase text-slate-400">Available Balance</span>
                                     <span className="text-sm font-black text-slate-900">₹{balance.toLocaleString('en-IN')}</span>
@@ -335,11 +335,11 @@ export default function CustomerPay() {
                             <button
                                 onClick={handleInitiatePay}
                                 disabled={loading || !amount}
-                                className="w-full h-[4.5rem] bg-blue-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full h-[4.5rem] bg-blue-600 text-white rounded-xl font-black text-lg shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? 'Processing...' : 'Proceed to Pay'}
                             </button>
-                            <button onClick={() => setStep(1)} className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-all">Cancel Transaction</button>
+                            <button onClick={() => setStep(1)} className="w-full py-2.5 text-slate-400 font-bold hover:text-slate-600 transition-all">Cancel Transaction</button>
                         </div>
                     </div>
                 )}

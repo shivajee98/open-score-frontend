@@ -43,13 +43,13 @@ export default function LoadingOverlay({ isVisible, message = "Processing Applic
                 {/* Pulse Glow */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
 
-                <div className="relative z-10 bg-slate-800 p-8 rounded-[2.5rem] shadow-2xl border border-slate-700 w-80">
+                <div className="relative z-10 bg-slate-800 p-6 rounded-3xl shadow-2xl border border-slate-700 w-80">
                     <div className="w-20 h-20 mx-auto bg-blue-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-blue-500/30 relative">
                         <Loader2 className="w-10 h-10 text-white animate-spin" />
                         <div className="absolute inset-0 border-4 border-blue-400/30 rounded-full animate-ping"></div>
                     </div>
 
-                    <h3 className="text-xl font-black text-white mb-2 tracking-tight">
+                    <h3 className="text-lg font-black text-white mb-2 tracking-tight">
                         {message}
                     </h3>
 

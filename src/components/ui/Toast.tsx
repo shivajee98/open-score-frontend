@@ -47,7 +47,7 @@ export default function ToastContainer() {
                 <div
                     key={t.id}
                     className={`
-            flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border backdrop-blur-md pointer-events-auto transform transition-all animate-in slide-in-from-top-2
+            flex items-center gap-2 px-4 py-3 rounded-lg shadow-2xl border backdrop-blur-md pointer-events-auto transform transition-all animate-in slide-in-from-top-2
             ${t.type === 'success' ? 'bg-emerald-500/90 border-emerald-400/50 text-white' : ''}
             ${t.type === 'error' ? 'bg-rose-500/90 border-rose-400/50 text-white' : ''}
             ${t.type === 'info' ? 'bg-slate-800/90 border-slate-700/50 text-white' : ''}

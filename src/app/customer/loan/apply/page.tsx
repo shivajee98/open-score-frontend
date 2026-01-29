@@ -100,22 +100,22 @@ export default function LoanApplication() {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6 pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
+        <div className="min-h-screen bg-slate-50 p-4 pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
             <div className="max-w-md mx-auto">
                 <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                 </button>
 
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden">
+                <div className="bg-white rounded-3xl p-6 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
                     <div className="mb-8">
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Apply for Loan</h1>
+                        <h1 className="text-xl font-black text-slate-900 tracking-tight">Apply for Loan</h1>
                         <p className="text-slate-500 text-sm font-medium">Get instant approval in minutes.</p>
                     </div>
 
                     {step === 1 && (
-                        <form onSubmit={handleFormSubmit} className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                        <form onSubmit={handleFormSubmit} className="space-y-3 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Full Name (As per Aadhaar)</label>
                                 <input
@@ -123,13 +123,13 @@ export default function LoanApplication() {
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
                                     placeholder="e.g. Rahul Kumar"
                                     required
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Date of Birth</label>
                                     <input
@@ -137,7 +137,7 @@ export default function LoanApplication() {
                                         name="dob"
                                         value={formData.dob}
                                         onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
                                         required
                                     />
                                 </div>
@@ -148,7 +148,7 @@ export default function LoanApplication() {
                                         name="pinCode"
                                         value={formData.pinCode}
                                         onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
                                         placeholder="000000"
                                         required
                                         maxLength={6}
@@ -162,7 +162,7 @@ export default function LoanApplication() {
                                     name="address"
                                     value={formData.address}
                                     onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm resize-none"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm resize-none"
                                     placeholder="Enter your current address"
                                     rows={2}
                                     required
@@ -176,13 +176,13 @@ export default function LoanApplication() {
                                     name="city"
                                     value={formData.city}
                                     onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
                                     placeholder="e.g. Mumbai"
                                     required
                                 />
                             </div>
 
-                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-xs font-bold text-slate-500">Is this your WhatsApp Number?</span>
                                     <button
@@ -200,7 +200,7 @@ export default function LoanApplication() {
                                             name="whatsappTicket"
                                             value={formData.whatsappTicket}
                                             onChange={handleInputChange}
-                                            className="w-full bg-white border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                            className="w-full bg-white border border-slate-200 rounded-lg p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
                                             placeholder="Enter WhatsApp Number"
                                         />
                                     </div>
@@ -214,7 +214,7 @@ export default function LoanApplication() {
                                     name="altMobile"
                                     value={formData.altMobile}
                                     onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
                                     placeholder="+91"
                                     required
                                 />
@@ -223,7 +223,7 @@ export default function LoanApplication() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-base shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
+                                className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-base shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
                             >
                                 {loading ? 'Checking Eligibility...' : 'Submit For Loan Approval'} <Zap className="w-4 h-4 text-yellow-400" />
                             </button>
@@ -231,15 +231,15 @@ export default function LoanApplication() {
                     )}
 
                     {step === 2 && (
-                        <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-3 animate-in slide-in-from-right-4 duration-300">
                             {/* Offers List */}
                             {offers.map((offer, index) => (
-                                <div onClick={() => setSelectedOffer(offer)} key={index} className="cursor-pointer bg-slate-50 border border-slate-200 rounded-2xl p-5 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]">
+                                <div onClick={() => setSelectedOffer(offer)} key={index} className="cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]">
                                     <div className={`absolute top-0 left-0 w-1 h-full ${offer.color}`}></div>
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{offer.type}</p>
-                                            <h3 className="text-2xl font-black text-slate-900">₹ {offer.amount}</h3>
+                                            <h3 className="text-xl font-black text-slate-900">₹ {offer.amount}</h3>
                                         </div>
                                         <div className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide text-white ${offer.color}`}>
                                             {offer.bestFor}
@@ -248,10 +248,10 @@ export default function LoanApplication() {
                                     <p className="text-slate-600 font-medium text-xs mb-4">{offer.details}</p>
 
                                     <div className="grid grid-cols-2 gap-2">
-                                        <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-xl font-bold text-xs hover:bg-slate-300 transition-colors">
+                                        <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold text-xs hover:bg-slate-300 transition-colors">
                                             Details
                                         </button>
-                                        <button className={`py-2.5 text-white rounded-xl font-bold text-xs shadow-lg transition-colors ${offer.color}`}>
+                                        <button className={`py-2.5 text-white rounded-lg font-bold text-xs shadow-lg transition-colors ${offer.color}`}>
                                             Apply Now
                                         </button>
                                     </div>
@@ -271,27 +271,27 @@ export default function LoanApplication() {
             {/* Excitement Modal */}
             {showExcitement && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-md animate-in fade-in duration-500">
-                    <div className="relative w-full max-w-sm mx-auto p-6 text-center">
+                    <div className="relative w-full max-w-sm mx-auto p-4 text-center">
                         {/* Animated Background Blobs */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 animate-pulse"></div>
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500 rounded-full blur-[80px] opacity-20 animate-pulse delay-75"></div>
 
                         <div className="relative z-10 animate-in zoom-in-50 duration-500 slide-in-from-bottom-10">
                             <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/40 animate-bounce">
-                                <Check className="w-12 h-12 text-white stroke-[4]" />
+                                <Check className="w-10 h-10 text-white stroke-[4]" />
                             </div>
 
-                            <h2 className="text-4xl font-black text-white mb-2 tracking-tight">Approved!</h2>
-                            <p className="text-emerald-200 font-medium text-lg mb-8">You are eligible for special offers.</p>
+                            <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Approved!</h2>
+                            <p className="text-emerald-200 font-medium text-base mb-8">You are eligible for special offers.</p>
 
-                            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 mb-8">
+                            <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10 mb-8">
                                 <p className="text-slate-300 text-xs font-bold uppercase tracking-widest mb-1">Credit Limit Unlocked</p>
-                                <p className="text-4xl font-black text-white">₹ 50,000</p>
+                                <p className="text-3xl font-black text-white">₹ 50,000</p>
                             </div>
 
                             <button
                                 onClick={() => setShowExcitement(false)}
-                                className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-lg shadow-xl shadow-white/10 hover:bg-slate-100 transition-all active:scale-95"
+                                className="w-full py-2.5 bg-white text-slate-900 rounded-xl font-black text-base shadow-xl shadow-white/10 hover:bg-slate-100 transition-all active:scale-95"
                             >
                                 View My Offers
                             </button>
@@ -302,8 +302,8 @@ export default function LoanApplication() {
 
             {/* Offer Details Modal */}
             {selectedOffer && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl relative animate-in slide-in-from-bottom-10 duration-300">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 animate-in fade-in duration-200">
+                    <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative animate-in slide-in-from-bottom-10 duration-300">
                         <button
                             onClick={() => setSelectedOffer(null)}
                             className="absolute top-6 right-6 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200"
@@ -311,14 +311,14 @@ export default function LoanApplication() {
                             ✕
                         </button>
 
-                        <div className={`w-16 h-16 rounded-2xl ${selectedOffer.color} flex items-center justify-center text-white mb-6 shadow-xl`}>
+                        <div className={`w-12 h-12 rounded-xl ${selectedOffer.color} flex items-center justify-center text-white mb-6 shadow-xl`}>
                             <CreditCard className="w-8 h-8" />
                         </div>
 
-                        <h3 className="text-3xl font-black text-slate-900 mb-1">₹ {selectedOffer.amount}</h3>
+                        <h3 className="text-2xl font-black text-slate-900 mb-1">₹ {selectedOffer.amount}</h3>
                         <p className="text-slate-500 font-bold text-sm mb-6">{selectedOffer.type} Offer</p>
 
-                        <div className="space-y-4 mb-8">
+                        <div className="space-y-3 mb-8">
                             <div className="flex justify-between border-b border-slate-50 pb-3">
                                 <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Interest Rate</span>
                                 <span className="text-slate-800 font-bold text-sm">{selectedOffer.interest}</span>
@@ -333,7 +333,7 @@ export default function LoanApplication() {
                             </div>
                         </div>
 
-                        <button className={`w-full py-4 text-white rounded-2xl font-black text-lg shadow-xl hover:opacity-90 transition-opacity ${selectedOffer.color}`}>
+                        <button className={`w-full py-2.5 text-white rounded-xl font-black text-base shadow-xl hover:opacity-90 transition-opacity ${selectedOffer.color}`}>
                             Confirm & Apply
                         </button>
                     </div>

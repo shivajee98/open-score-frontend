@@ -85,9 +85,9 @@ export default function CustomerHome() {
     }, [user]);
 
     if (!user || loading) return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-            <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading Dashboard...</p>
             </div>
         </div>
@@ -98,7 +98,7 @@ export default function CustomerHome() {
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
             {/* Header Redesign - Tech/Circuit Theme */}
-            <div className="bg-[#1a73e8] px-6 pt-14 pb-28 relative overflow-hidden shadow-2xl">
+            <div className="bg-[#1a73e8] px-4 pt-14 pb-28 relative overflow-hidden shadow-2xl">
                 {/* Main Gradient Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#2979FF] via-[#2962FF] to-[#6200EA] z-0"></div>
 
@@ -124,7 +124,7 @@ export default function CustomerHome() {
                 <div className="flex justify-between items-start text-white mb-10 relative z-10">
                     <div>
                         <p className="text-blue-100/90 text-[10px] font-black uppercase tracking-[0.2em] mb-1.5 opacity-80">Welcome Back</p>
-                        <h1 className="text-4xl font-black tracking-tighter drop-shadow-sm">{isMerchant ? (user?.business_name || 'My Store') : (user?.name || 'Customer')}</h1>
+                        <h1 className="text-3xl font-black tracking-tighter drop-shadow-sm">{isMerchant ? (user?.business_name || 'My Store') : (user?.name || 'Customer')}</h1>
                     </div>
                     <Link href="/customer/profile">
                         <div className="w-11 h-11 rounded-1xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-sm shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20">
@@ -139,19 +139,19 @@ export default function CustomerHome() {
                     <div className="absolute -inset-[2px] rounded-[1.4rem] bg-cyan-400/50 blur-md animate-pulse"></div>
 
                     {/* Card Container */}
-                    <div className="relative bg-gradient-to-r from-[#2979FF]/40 to-[#7C4DFF]/40 backdrop-blur-xl rounded-[1.3rem] py-4 px-5 flex items-center justify-between border-[1.5px] border-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.3),inset_0_0_20px_rgba(34,211,238,0.1)] overflow-hidden">
+                    <div className="relative bg-gradient-to-r from-[#2979FF]/40 to-[#7C4DFF]/40 backdrop-blur-xl rounded-[1.3rem] py-2.5 px-4 flex items-center justify-between border-[1.5px] border-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.3),inset_0_0_20px_rgba(34,211,238,0.1)] overflow-hidden">
 
                         {/* Internal Shine Effect */}
                         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
                         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent"></div>
 
-                        <div className="flex items-center gap-5 relative z-10">
+                        <div className="flex items-center gap-3 relative z-10">
                             <div className="w-11 h-11 rounded-[12px] bg-white/10 border border-white/20 text-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.15)]">
                                 <Wallet size={22} strokeWidth={2.5} />
                             </div>
                             <div>
                                 <p className="text-cyan-50 text-[10px] font-bold uppercase tracking-[0.15em] mb-0.5 opacity-90 drop-shadow-sm">Elite Credit Value</p>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <p className="text-[28px] font-black text-white tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]">₹ {balance}</p>
                                     {Number(lockedBalance) > 0 && (
                                         <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
@@ -167,8 +167,8 @@ export default function CustomerHome() {
             </div>
 
             {/* Quick Actions - Floating Card */}
-            <div className="px-10 -mt-12 relative z-20 mb-8">
-                <div className="bg-white py-2 px-3 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-50">
+            <div className="px-6 -mt-12 relative z-20 mb-8">
+                <div className="bg-white py-2 px-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-50">
                     <div className="grid grid-cols-3 gap-1">
                         {[
                             { label: 'Scan QR', icon: <ScanBarcode size={22} strokeWidth={2} />, action: () => (window as any).ReactNativeWebView?.postMessage(JSON.stringify({ type: 'SCAN_QR' })), href: '#', color: 'text-indigo-600 bg-indigo-50' },
@@ -177,7 +177,7 @@ export default function CustomerHome() {
                         ].map((item, i) => (
                             <div key={i} onClick={item.action} className="flex flex-col items-center gap-1 active:scale-95 transition-all cursor-pointer">
                                 <Link href={item.href || '#'} className="contents">
-                                    <div className={`w-12 h-12 rounded-xl ${item.color} flex items-center justify-center`}>
+                                    <div className={`w-10 h-10 rounded-lg ${item.color} flex items-center justify-center`}>
                                         {item.icon}
                                     </div>
                                     <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest text-center">{item.label}</span>
@@ -190,15 +190,15 @@ export default function CustomerHome() {
 
             {/* KYC Alert (If any) */}
             {!isMerchant && kycLoan && (
-                <div className="px-6 mb-8">
+                <div className="px-4 mb-8">
                     <Link href={`/customer/loan/status/${kycLoan.id}`}>
-                        <div className="bg-yellow-400 p-6 rounded-[2.5rem] shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
-                            <div className="flex items-center gap-5 relative z-10">
-                                <div className="w-16 h-16 rounded-[1.5rem] bg-slate-900 text-yellow-400 flex items-center justify-center shadow-lg">
+                        <div className="bg-yellow-400 p-4 rounded-3xl shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="w-12 h-12 rounded-xl bg-slate-900 text-yellow-400 flex items-center justify-center shadow-lg">
                                     <ShieldCheck size={36} />
                                 </div>
                                 <div>
-                                    <h3 className="text-slate-900 font-black text-xl leading-tight uppercase tracking-tight">Complete KYC Now</h3>
+                                    <h3 className="text-slate-900 font-black text-lg leading-tight uppercase tracking-tight">Complete KYC Now</h3>
                                     <p className="text-slate-800 text-[10px] font-black leading-tight mt-1 opacity-60 uppercase tracking-widest">Required for Loan #{kycLoan.id}</p>
                                 </div>
                             </div>
@@ -208,31 +208,31 @@ export default function CustomerHome() {
             )}
 
             {/* Banners - Controlled Carousel with Arrows */}
-            <div className="px-6 mb-10 relative group">
-                <div className="relative h-44 w-full overflow-hidden rounded-[2rem]">
+            <div className="px-4 mb-10 relative group">
+                <div className="relative h-44 w-full overflow-hidden rounded-2xl">
                     {banners.map((banner, i) => (
                         <div
                             key={i}
                             onClick={() => router.push('/customer/loan/apply')}
-                            className={`absolute inset-0 w-full h-full ${banner.color} p-6 flex flex-col justify-center shadow-xl shadow-slate-900/10 cursor-pointer border border-white/5 transition-all duration-500 ease-in-out transform ${i === activeBanner ? 'opacity-100 translate-x-0' : 'opacity-0 ' + (i < activeBanner ? '-translate-x-full' : 'translate-x-full')
+                            className={`absolute inset-0 w-full h-full ${banner.color} p-4 flex flex-col justify-center shadow-xl shadow-slate-900/10 cursor-pointer border border-white/5 transition-all duration-500 ease-in-out transform ${i === activeBanner ? 'opacity-100 translate-x-0' : 'opacity-0 ' + (i < activeBanner ? '-translate-x-full' : 'translate-x-full')
                                 }`}
                         >
                             <div className={`absolute top-0 right-0 w-48 h-48 ${banner.accent}/20 rounded-full blur-3xl -mr-10 -mt-10 transition-colors`}></div>
                             <div className="relative z-10">
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
-                                        <h3 className="text-white font-black text-lg tracking-tight leading-tight max-w-[200px]">
+                                        <h3 className="text-white font-black text-base tracking-tight leading-tight max-w-[200px]">
                                             {banner.title}
                                         </h3>
                                         <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mt-2">{banner.sub}</p>
                                     </div>
-                                    <div className="bg-white/5 backdrop-blur-md p-2.5 rounded-xl border border-white/10">
+                                    <div className="bg-white/5 backdrop-blur-md p-2.5 rounded-lg border border-white/10">
                                         <Zap className="text-yellow-400 fill-yellow-400 w-5 h-5 animate-pulse" />
                                     </div>
                                 </div>
                                 <div className="flex items-end gap-2 mt-2">
                                     <span className="text-white/30 text-[9px] font-black uppercase tracking-widest mb-1">{banner.label}</span>
-                                    <span className="text-2xl font-black text-white tracking-tighter">{banner.amount}</span>
+                                    <span className="text-xl font-black text-white tracking-tighter">{banner.amount}</span>
                                 </div>
                             </div>
                         </div>
@@ -265,7 +265,7 @@ export default function CustomerHome() {
             </div>
 
             {/* Recharge & Bills Section */}
-            <div className="px-6 mb-24">
+            <div className="px-4 mb-24">
                 <div className="flex justify-between items-center mb-6 px-2">
                     <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center">
                         Recharge & Bills
@@ -285,7 +285,7 @@ export default function CustomerHome() {
                         { label: 'More', icon: <LayoutGrid size={24} className="text-slate-500" /> },
                     ].map((item, i) => (
                         <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer active:scale-95 transition-all">
-                            <div className="w-16 h-16 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden transition-all group-hover:shadow-md group-hover:-translate-y-1">
+                            <div className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden transition-all group-hover:shadow-md group-hover:-translate-y-1">
                                 {item.icon}
                                 <div className="absolute inset-0 bg-slate-50/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>
@@ -296,19 +296,19 @@ export default function CustomerHome() {
             </div>
 
             {/* Financial Services Section */}
-            <div className="px-6 mb-24">
+            <div className="px-4 mb-24">
                 <div className="flex justify-between items-center mb-6 px-2">
                     <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Financial Services</h3>
                     <div className="w-8 h-1 bg-slate-100 rounded-full"></div>
                 </div>
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                     {[
                         { title: 'Digital Gold', sub: 'Secure & Instant Savings', icon: <Landmark size={24} className="text-amber-500" /> },
                         { title: 'Mutual Funds', sub: 'Wealth Management', icon: <TrendingUp size={24} className="text-emerald-500" /> },
                     ].map((item, i) => (
-                        <div key={i} className="bg-white rounded-[2rem] p-6 border border-slate-50 shadow-xl shadow-slate-900/5 flex items-center justify-between group cursor-pointer active:scale-[0.99] transition-all">
-                            <div className="flex items-center gap-5">
-                                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <div key={i} className="bg-white rounded-2xl p-4 border border-slate-50 shadow-xl shadow-slate-900/5 flex items-center justify-between group cursor-pointer active:scale-[0.99] transition-all">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-transform">
                                     {item.icon}
                                 </div>
                                 <div>

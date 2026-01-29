@@ -52,20 +52,20 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
         onSubmit(formData);
     };
 
-    const inputClasses = "w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all";
+    const inputClasses = "w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all";
     const labelClasses = "block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1";
 
     return (
         <form onSubmit={handleSubmit} className="space-y-12">
             {/* Header */}
             <div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2">Loan Application Form</h2>
+                <h2 className="text-xl font-black text-slate-900 mb-2">Loan Application Form</h2>
                 <p className="text-slate-500 text-sm">Please provide accurate information for quick verification.</p>
             </div>
 
             {/* Basic Info */}
-            <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className={labelClasses}>Desired Loan Amount</label>
                         <div className="relative">
@@ -108,10 +108,10 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
             </div>
 
             {/* Contact Info */}
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">CONTACT INFORMATION</h3>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className={labelClasses}>First Name</label>
                         <input required name="first_name" value={formData.first_name} onChange={handleChange} className={inputClasses} />
@@ -146,7 +146,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className={labelClasses}>Email</label>
                         <input type="email" required name="email" value={formData.email} onChange={handleChange} placeholder="example@example.com" className={inputClasses} />
@@ -179,7 +179,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
             </div>
 
             {/* Employment */}
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">EMPLOYMENT INFORMATION</h3>
 
                 <div>
@@ -187,7 +187,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                     <input required name="employer" value={formData.employer} onChange={handleChange} className={inputClasses} />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className={labelClasses}>Occupation</label>
                         <input required name="occupation" value={formData.occupation} onChange={handleChange} className={inputClasses} />
@@ -198,7 +198,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className={labelClasses}>Gross Monthly Income</label>
                         <input type="number" required name="gross_monthly_income" value={formData.gross_monthly_income} onChange={handleChange} placeholder="1500" className={inputClasses} />
@@ -211,7 +211,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
             </div>
 
             {/* Others */}
-            <div className="space-y-6">
+            <div className="space-y-4">
                 <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">REFERENCES & CONSENT</h3>
 
                 <div>
@@ -219,11 +219,11 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                     <textarea name="bank_references" value={formData.bank_references} onChange={handleChange} className={inputClasses} rows={3} />
                 </div>
 
-                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[10px] text-slate-500 leading-relaxed mb-4">
                         I authorize prospective Credit Grantors/Lending/Leasing Companies to obtain personal and credit information about me from my employer and credit bureau, or credit reporting agency... (full text omitted for brevity)
                     </p>
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="flex items-center gap-2 cursor-pointer">
                         <input
                             type="checkbox"
                             name="consent"
@@ -239,7 +239,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
             <button
                 type="submit"
                 disabled={!formData.consent || loading}
-                className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-base hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
             >
                 {loading ? 'Submitting...' : 'Send Application Now'}
                 {!loading && <ChevronRight className="w-5 h-5" />}
