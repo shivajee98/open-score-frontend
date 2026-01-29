@@ -185,7 +185,7 @@ export default function RepaymentDashboard() {
                     </div>
 
                     {/* Quick Insight Strip */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
                             <Coins size={14} className="text-emerald-400 mb-2" />
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Cashback</p>
@@ -193,11 +193,16 @@ export default function RepaymentDashboard() {
                         </div>
                         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
                             <Zap size={14} className="text-amber-400 mb-2" />
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Frequency</p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Interval</p>
                             <p className="text-sm font-black text-white truncate">{loan.payout_frequency}</p>
                         </div>
                         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
-                            <ShieldCheck size={14} className="text-blue-400 mb-2" />
+                            <Calendar size={14} className="text-blue-400 mb-2" />
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Total EMIs</p>
+                            <p className="text-sm font-black text-white truncate">{repayments.length} Units</p>
+                        </div>
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3">
+                            <ShieldCheck size={14} className="text-indigo-400 mb-2" />
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Tier</p>
                             <p className="text-sm font-black text-white uppercase tracking-tighter truncate">Gold</p>
                         </div>
