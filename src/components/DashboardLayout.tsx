@@ -21,6 +21,7 @@ export default function DashboardLayout({
 }) {
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
+    const lastTxRef = React.useRef<string | null>(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -41,10 +42,46 @@ export default function DashboardLayout({
                     console.error("Hydration failed", err);
                     if (!storedUser) router.push('/');
                 });
+
+            // Initial poll to set ref
+            checkNewTransactions();
         } else {
             router.push('/');
         }
+
+        // Poll for notifications
+        const interval = setInterval(checkNewTransactions, 30000);
+        return () => clearInterval(interval);
     }, [router]);
+
+    const checkNewTransactions = async () => {
+        try {
+            const res = await apiFetch('/wallet/transactions?limit=1');
+            if (res && res.data && res.data.length > 0) {
+                const latestTx = res.data[0];
+
+                // If we have a stored ref, and the new one is different, and it's a credit
+                if (lastTxRef.current && lastTxRef.current !== latestTx.id) {
+                    if (latestTx.type === 'CREDIT' && latestTx.amount > 0) {
+                        playNotificationSound(`Rupees ${latestTx.amount} credited.`);
+                    }
+                }
+
+                lastTxRef.current = latestTx.id;
+            }
+        } catch (e) {
+            // silent fail
+        }
+    };
+
+    const playNotificationSound = (text: string) => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            window.speechSynthesis.speak(utterance);
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('token');

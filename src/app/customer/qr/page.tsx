@@ -4,12 +4,17 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import QRCode from 'react-qr-code';
-import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt } from 'lucide-react';
+import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X } from 'lucide-react';
 
 export default function CustomerQR() {
     const [qrData, setQrData] = useState('');
     const [user, setUser] = useState<any>(null);
     const [copied, setCopied] = useState(false);
+
+    // Mapping State
+    const [isMapping, setIsMapping] = useState(false);
+    const [mapCode, setMapCode] = useState('');
+    const [mapStatus, setMapStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
     useEffect(() => {
         apiFetch('/payment/qr').then(data => setQrData(data.qr_data));
@@ -40,9 +45,31 @@ export default function CustomerQR() {
         setTimeout(() => setCopied(false), 2000);
     }
 
+    const handleMapQr = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setMapStatus('loading');
+        try {
+            await apiFetch('/merchant/link-qr', {
+                method: 'POST',
+                body: JSON.stringify({ code: mapCode })
+            });
+            setMapStatus('success');
+            // Refresh QR data
+            apiFetch('/payment/qr').then(data => setQrData(data.qr_data));
+            setTimeout(() => {
+                setIsMapping(false);
+                setMapStatus('idle');
+                setMapCode('');
+            }, 2000);
+        } catch (err) {
+            setMapStatus('error');
+            setTimeout(() => setMapStatus('idle'), 3000);
+        }
+    };
+
     return (
         <DashboardLayout title="Receive Money" navItems={navItems}>
-            <div className="max-w-md mx-auto space-y-8">
+            <div className="max-w-md mx-auto space-y-8 relative">
                 <div className="bg-white rounded-[2.5rem] p-8 md:p-12 text-center shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
 
@@ -78,9 +105,61 @@ export default function CustomerQR() {
                     </p>
                 </div>
 
-                <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-xl">
-                    <Share2 className="w-5 h-5" /> Share Payment Link
-                </button>
+                <div className="flex gap-4">
+                    <button className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-xl">
+                        <Share2 className="w-5 h-5" /> Share
+                    </button>
+                    {user?.role === 'MERCHANT' && (
+                        <button
+                            onClick={() => setIsMapping(true)}
+                            className="flex-1 py-4 bg-white text-blue-600 border-2 border-blue-100 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-all active:scale-95 shadow-lg"
+                        >
+                            <Link2 className="w-5 h-5" /> Map QR
+                        </button>
+                    )}
+                </div>
+
+                {/* Mapping Modal */}
+                {isMapping && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                        <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-black text-slate-900">Map Physical QR</h3>
+                                <button onClick={() => setIsMapping(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleMapQr} className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">QR Code ID</label>
+                                    <input
+                                        autoFocus
+                                        value={mapCode}
+                                        onChange={(e) => setMapCode(e.target.value)}
+                                        placeholder="Enter Code ID (e.g. A1B2)"
+                                        className="w-full p-4 bg-slate-50 rounded-xl font-mono text-center text-xl font-black tracking-widest border-2 border-transparent focus:border-blue-500 outline-none transition-all uppercase"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-2 font-medium leading-tight">
+                                        Enter the 6-digit alphanumeric code printed below the QR code sticker.
+                                    </p>
+                                </div>
+
+                                <button
+                                    disabled={mapStatus === 'loading' || !mapCode}
+                                    className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${mapStatus === 'success' ? 'bg-emerald-500' :
+                                            mapStatus === 'error' ? 'bg-rose-500' :
+                                                'bg-blue-600 hover:bg-blue-700'
+                                        }`}
+                                >
+                                    {mapStatus === 'loading' ? 'Linking...' :
+                                        mapStatus === 'success' ? <><Check size={20} /> Linked!</> :
+                                            mapStatus === 'error' ? 'Invalid Code' : 'Link QR Code'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </DashboardLayout>
     );
