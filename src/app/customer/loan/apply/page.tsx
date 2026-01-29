@@ -130,7 +130,7 @@ export default function LoanApplication() {
     useEffect(() => {
         const fetchPlans = async () => {
             try {
-                const data = await apiFetch('/loan-plans');
+                const data = await apiFetch('/loan-plans', { cache: 'no-store' });
                 // Transform API data to UI format if needed, or just use directly
                 // Mapping DB fields to UI expectation
                 // UI used: amount, type (Credit), details, fees, tenure, interest, bestFor, color
