@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 
@@ -284,6 +284,25 @@ export default function LoanStatus() {
                             className="w-full py-3 bg-white text-slate-900 rounded-lg font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
                         >
                             Repay Now
+                        </button>
+                    </div>
+                )}
+
+                {/* Loan History Option - Logic: Only show if CLOSED */}
+                {loan.status === 'CLOSED' && (
+                    <div className="bg-emerald-50 rounded-lg p-4 text-emerald-900 shadow-xl shadow-emerald-900/10 flex flex-col items-center text-center gap-3 border border-emerald-100">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                            <History className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-base font-black uppercase tracking-tight">Loan History</h3>
+                            <p className="text-emerald-600/80 text-xs font-medium mt-1">View the repayment timeline for this loan.</p>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/customer/loan/status/${loanId}/repayment`)}
+                            className="w-full py-3 bg-white text-emerald-600 border border-emerald-200 rounded-lg font-black text-sm hover:bg-emerald-50 transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
+                        >
+                            View History
                         </button>
                     </div>
                 )}

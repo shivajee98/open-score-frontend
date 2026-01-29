@@ -48,16 +48,16 @@ export default function CustomerHome() {
     useEffect(() => {
         const interval = setInterval(() => {
             setActiveBanner((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
-        }, 5000);
+        }, 8000); // Slower speed
         return () => clearInterval(interval);
     }, [banners.length]);
 
     // Dynamic Text Effect for First Banner
     useEffect(() => {
         const texts = [
-            "Apply Now • Special Offer",
-            "Zero Cost EMI Live",
-            "0% APR for New Users"
+            "Apply Now & Get 0% Interest Credit - First Users Only!",
+            "First User Advantage: Apply for Credit at 0% Interest",
+            "Unlock 0% Interest Credit - First User Offer"
         ];
         let i = 0;
         const timer = setInterval(() => {
@@ -226,18 +226,18 @@ export default function CustomerHome() {
                     </div>
                 </div>
 
-                {/* Smaller Arrows */}
+                {/* Smaller Arrows - Always Visible */}
                 <button
                     onClick={() => setActiveBanner((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
-                    className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white z-40 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-slate-500 hover:text-slate-900 z-40 transition-all hover:bg-white shadow-lg"
                 >
-                    <ChevronLeft size={10} />
+                    <ChevronLeft size={16} />
                 </button>
                 <button
                     onClick={() => setActiveBanner((prev) => (prev === banners.length - 1 ? 0 : prev + 1))}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white z-40 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-slate-500 hover:text-slate-900 z-40 transition-all hover:bg-white shadow-lg"
                 >
-                    <ChevronRight size={10} />
+                    <ChevronRight size={16} />
                 </button>
 
                 {/* Progress Indicators */}
@@ -330,18 +330,18 @@ export default function CustomerHome() {
                         ))}
                     </div>
 
-                    {/* Smaller Arrows */}
+                    {/* Smaller Arrows - Inside Full Width Carousel */}
                     <button
                         onClick={() => setActiveBanner((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white z-40 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white z-40 transition-all hover:bg-white/40 shadow-lg"
                     >
-                        <ChevronLeft size={10} />
+                        <ChevronLeft size={16} />
                     </button>
                     <button
                         onClick={() => setActiveBanner((prev) => (prev === banners.length - 1 ? 0 : prev + 1))}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white z-40 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white z-40 transition-all hover:bg-white/40 shadow-lg"
                     >
-                        <ChevronRight size={10} />
+                        <ChevronRight size={16} />
                     </button>
 
                     {/* Progress Indicators */}

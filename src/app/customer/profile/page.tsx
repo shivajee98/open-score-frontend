@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -193,6 +193,27 @@ export default function Profile() {
                                     </div>
                                     <div className={`w-10 h-5 bg-${themeColor}-600 rounded-full relative shadow-inner`}><div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full shadow-sm"></div></div>
                                 </div>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-rose-50 hover:border-rose-100 transition-colors group"
+                                    onClick={() => {
+                                        localStorage.removeItem('token');
+                                        localStorage.removeItem('user');
+                                        if ((window as any).ReactNativeWebView) {
+                                            (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOGOUT' }));
+                                        }
+                                        router.push('/');
+                                    }}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-rose-500 shadow-sm group-hover:scale-110 transition-transform"><LogOut className="w-5 h-5" /></div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900 group-hover:text-rose-600">Log Out</p>
+                                            <p className="text-[10px] font-bold text-slate-400 group-hover:text-rose-400">Sign out of your account</p>
+                                        </div>
+                                    </div>
+                                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center group-hover:bg-rose-200">
+                                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-rose-500" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -220,21 +241,6 @@ export default function Profile() {
 
                 <div className="text-center mt-8 space-y-3">
                     <p className="text-xs text-slate-300 font-bold uppercase tracking-widest">Member since {new Date(user.created_at).getFullYear()}</p>
-                    <button
-                        onClick={() => {
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('user');
-
-                            if ((window as any).ReactNativeWebView) {
-                                (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOGOUT' }));
-                            }
-
-                            router.push('/');
-                        }}
-                        className="text-xs font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors"
-                    >
-                        Sign Out
-                    </button>
                 </div>
             </div>
 
