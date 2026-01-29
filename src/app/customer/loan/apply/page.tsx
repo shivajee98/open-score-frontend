@@ -23,7 +23,12 @@ export default function LoanApplication() {
 
     // Form Data
     const [isWhatsappSame, setIsWhatsappSame] = useState(true);
+
+    // Selection States for V2
     const [selectedOffer, setSelectedOffer] = useState<any>(null);
+    const [selectedTenureConfig, setSelectedTenureConfig] = useState<any>(null);
+    const [selectedFrequency, setSelectedFrequency] = useState<string>('');
+
     const [formData, setFormData] = useState({
         fullName: '',
         dob: '',
@@ -31,7 +36,7 @@ export default function LoanApplication() {
         city: '',
         pinCode: '',
         altMobile: '',
-        whatsappTicket: '' // Placeholder field as requested
+        whatsappTicket: ''
     });
 
     useEffect(() => {
@@ -41,7 +46,6 @@ export default function LoanApplication() {
                 setLoans(data);
 
                 // Identify Active Loan (Not closed/rejected/cancelled)
-                // Note: If DISBURSED, it's Active ONLY if not fully paid.
                 const active = data.find((l: any) => {
                     const statusMatch = ['PENDING', 'PROCEEDED', 'KYC_SENT', 'FORM_SUBMITTED', 'APPROVED', 'PREVIEW'].includes(l.status);
                     const isUnpaidDisbursed = l.status === 'DISBURSED' && Number(l.paid_amount || 0) < Number(l.amount);
@@ -50,18 +54,13 @@ export default function LoanApplication() {
                 setActiveLoan(active);
 
                 // Check Cooldown
-                // Ignore CLOSED loans AND fully paid DISBURSED loans for cooldown
                 const sorted = data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 const lastDisbursed = sorted.find((l: any) => {
                     if (!l.disbursed_at) return false;
                     if (l.status === 'CLOSED') return false;
-                    // If fully paid, it doesn't trigger a wait
                     if (l.status === 'DISBURSED' && Number(l.paid_amount || 0) >= Number(l.amount)) return false;
                     return true;
                 });
-
-                // If loans are cleared then make sure that users can apply instantly.
-                // We ONLY check cooldown if the loan is NOT closed or cleared.
 
                 if (lastDisbursed) {
                     const disbursedDate = new Date(lastDisbursed.disbursed_at);
@@ -131,24 +130,25 @@ export default function LoanApplication() {
         const fetchPlans = async () => {
             try {
                 const data = await apiFetch('/loan-plans', { cache: 'no-store' });
-                // Transform API data to UI format if needed, or just use directly
-                // Mapping DB fields to UI expectation
-                // UI used: amount, type (Credit), details, fees, tenure, interest, bestFor, color
+                // Map V2 plans to UI
                 const mappedPlans = data.map((p: any) => ({
                     id: p.id,
-                    amount: parseFloat(p.amount).toLocaleString('en-IN'),
-                    rawAmount: parseFloat(p.amount), // for logic
+                    name: p.name,
+                    rawAmount: Number(p.amount),
+                    amount: `₹${parseFloat(p.amount).toLocaleString('en-IN')}`,
                     type: 'Credit',
-                    details: `${p.tenure_days} Days • ${p.interest_rate}% Interest`,
-                    fees: `₹${parseFloat(p.processing_fee) + parseFloat(p.application_fee) + parseFloat(p.other_fee)} Total Fees`,
-                    tenure: `${Math.round(p.tenure_days / 30)} Months`,
-                    tenureMonths: Math.round(p.tenure_days / 30),
-                    interest: p.interest_rate == 0 ? '0% Interest' : `${p.interest_rate}% Monthly`,
+                    // V2 Configuration Data
+                    configurations: p.configurations || [],
+                    // Visual summaries
+                    tenureSummary: p.configurations?.map((c: any) => c.tenure_days < 30 ? `${c.tenure_days}d` : `${Math.round(c.tenure_days / 30)}m`).join(' / ') || 'N/A',
                     bestFor: p.tag_text || 'Standard',
-                    color: p.plan_color || 'bg-blue-500'
+                    // Robustly extract color for solid background
+                    color: (() => {
+                        const colorMatch = p.plan_color?.match(/(?:from|bg)-([a-z]+-[0-9]+)/);
+                        return colorMatch ? `bg-${colorMatch[1]}` : 'bg-indigo-600';
+                    })()
                 }));
 
-                // Sort by amount
                 mappedPlans.sort((a: any, b: any) => a.rawAmount - b.rawAmount);
                 setPlans(mappedPlans);
             } catch (e) {
@@ -163,7 +163,7 @@ export default function LoanApplication() {
     }, [step]);
 
     const handleApply = async () => {
-        if (!selectedOffer) return;
+        if (!selectedOffer || !selectedTenureConfig) return;
 
         setLoading(true);
         try {
@@ -171,9 +171,15 @@ export default function LoanApplication() {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: selectedOffer.rawAmount,
-                    tenure: selectedOffer.tenureMonths, // Still sending months for legacy compat, but plan_id rules
-                    payout_frequency: 'MONTHLY', // Defaulting for now as per plan logic usually
-                    payout_option_id: 'standard', // Mock/Default
+                    // Backend expects approx months or logic handles days? 
+                    // My modified Controller logic takes `tenure` (months approx) and converts to days to find config.
+                    // Wait, Controller says: $targetDays = $request->tenure * 30;
+                    // So I should send months relative to 30 days. e.g. 1 for 30 days, 2 for 60.
+                    // Or I should update Controller to take tenure_days directly?
+                    // Let's rely on the current logic: Tenure in Months.
+                    tenure: Math.round(selectedTenureConfig.tenure_days / 30) || (selectedTenureConfig.tenure_days / 30),
+                    payout_frequency: selectedFrequency,
+                    payout_option_id: 'standard',
                     loan_plan_id: selectedOffer.id
                 })
             });
@@ -397,22 +403,34 @@ export default function LoanApplication() {
                             <div className="space-y-3 animate-in slide-in-from-right-4 duration-300">
                                 {/* Offers List */}
                                 {plans.map((offer, index) => (
-                                    <div onClick={() => setSelectedOffer(offer)} key={index} className={`cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]`}>
+                                    <div onClick={() => {
+                                        setSelectedOffer(offer);
+                                        // Auto-select first tenure config if available
+                                        if (offer.configurations && offer.configurations.length > 0) {
+                                            setSelectedTenureConfig(offer.configurations[0]);
+                                            setSelectedFrequency('');
+                                        } else {
+                                            setSelectedTenureConfig(null);
+                                        }
+                                    }} key={index} className={`cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]`}>
                                         <div className={`absolute top-0 left-0 w-1 h-full ${offer.color}`}></div>
                                         <div className="flex justify-between items-start mb-2">
                                             <div>
                                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{offer.type}</p>
-                                                <h3 className="text-xl font-black text-slate-900">₹ {offer.amount}</h3>
+                                                <h3 className="text-xl font-black text-slate-900">{offer.amount}</h3>
                                             </div>
-                                            <div className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide text-white ${offer.color}`}>
-                                                {offer.bestFor}
+                                            <div className="text-right">
+                                                <span className={`block text-xs font-bold px-2 py-1 rounded text-white mb-1 ${offer.color}`}>
+                                                    {offer.bestFor}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-slate-400 block">{offer.tenureSummary}</span>
                                             </div>
                                         </div>
-                                        <p className="text-slate-600 font-medium text-xs mb-4">{offer.details}</p>
+                                        <p className="text-slate-600 font-medium text-xs mb-4">{offer.configurations.length} Tenure Options</p>
 
                                         <div className="grid grid-cols-2 gap-2">
                                             <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold text-xs hover:bg-slate-300 transition-colors">
-                                                Details
+                                                View Options
                                             </button>
                                             <button className={`py-2.5 text-white rounded-lg font-bold text-xs shadow-lg transition-colors ${offer.color}`}>
                                                 Apply Now
@@ -438,7 +456,6 @@ export default function LoanApplication() {
             {showExcitement && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-md animate-in fade-in duration-500">
                     <div className="relative w-full max-w-sm mx-auto p-4 text-center">
-                        {/* Animated Background Blobs */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20 animate-pulse"></div>
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500 rounded-full blur-[80px] opacity-20 animate-pulse delay-75"></div>
 
@@ -481,25 +498,90 @@ export default function LoanApplication() {
                             <CreditCard className="w-8 h-8" />
                         </div>
 
-                        <h3 className="text-2xl font-black text-slate-900 mb-1">₹ {selectedOffer.amount}</h3>
-                        <p className="text-slate-500 font-bold text-sm mb-6">{selectedOffer.type} Offer</p>
+                        <h3 className="text-2xl font-black text-slate-900 mb-1">{selectedOffer.amount}</h3>
+                        <p className="text-slate-500 font-bold text-sm mb-6">{selectedOffer.name}</p>
 
                         <div className="space-y-3 mb-8">
-                            <div className="flex justify-between border-b border-slate-50 pb-3">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Interest Rate</span>
-                                <span className="text-slate-800 font-bold text-sm">{selectedOffer.interest}</span>
+                            {/* Tenure Selection - Dynamic from Configs */}
+                            <div className="border-b border-slate-50 pb-3">
+                                <span className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Select Tenure</span>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {selectedOffer.configurations.map((conf: any, idx: number) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                setSelectedTenureConfig(conf);
+                                                setSelectedFrequency(''); // Reset frequency
+                                            }}
+                                            className={`py-2 px-2 rounded-lg text-xs font-bold border transition-all ${selectedTenureConfig === conf
+                                                ? 'bg-slate-900 text-white border-slate-900'
+                                                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                                }`}
+                                        >
+                                            {conf.tenure_days >= 30 ? `${Math.round(conf.tenure_days / 30)} Months` : `${conf.tenure_days} Days`}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex justify-between border-b border-slate-50 pb-3">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Tenure</span>
-                                <span className="text-slate-800 font-bold text-sm">{selectedOffer.tenure}</span>
-                            </div>
-                            <div className="flex justify-between border-b border-slate-50 pb-3">
-                                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Fees</span>
-                                <span className="text-slate-800 font-bold text-sm">{selectedOffer.fees}</span>
-                            </div>
+
+                            {/* Frequency Selector - Dependent on Tenure */}
+                            {selectedTenureConfig && (
+                                <div className="border-b border-slate-50 pb-3 animate-in fade-in slide-in-from-top-2">
+                                    <span className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Repayment Frequency</span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {(selectedTenureConfig.allowed_frequencies || []).map((freq: string) => (
+                                            <button
+                                                key={freq}
+                                                onClick={() => setSelectedFrequency(freq)}
+                                                className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all relative overflow-hidden ${selectedFrequency === freq
+                                                    ? 'bg-slate-900 text-white border-slate-900'
+                                                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                                    }`}
+                                            >
+                                                <span>{freq.replace('_', ' ')}</span>
+                                                {selectedTenureConfig.cashback && selectedTenureConfig.cashback[freq] > 0 && (
+                                                    <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] px-1 rounded-bl">
+                                                        ₹{selectedTenureConfig.cashback[freq]} CB
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Dynamic Fees Display */}
+                            {selectedTenureConfig && (
+                                <div className="border-b border-slate-50 pb-3 space-y-2">
+                                    <span className="block text-slate-400 text-xs font-bold uppercase tracking-widest">Fees Breakdown</span>
+                                    {selectedTenureConfig.fees && selectedTenureConfig.fees.map((fee: any, idx: number) => (
+                                        <div key={idx} className="flex justify-between text-xs">
+                                            <span className="text-slate-500 font-medium">{fee.name}</span>
+                                            <span className="text-slate-800 font-bold">₹{fee.amount}</span>
+                                        </div>
+                                    ))}
+                                    <div className="flex justify-between text-xs pt-1 border-t border-dashed border-slate-100">
+                                        <span className="text-slate-500 font-medium">Interest</span>
+                                        <span className="text-slate-800 font-bold">{selectedTenureConfig.interest_rate}% / mo</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <button onClick={handleApply} className={`w-full py-2.5 text-white rounded-xl font-black text-base shadow-xl hover:opacity-90 transition-opacity ${selectedOffer.color}`}>
+                        <button
+                            onClick={() => {
+                                if (!selectedTenureConfig) {
+                                    toast.error("Please select a tenure option");
+                                    return;
+                                }
+                                if (!selectedFrequency) {
+                                    toast.error("Please select a repayment frequency");
+                                    return;
+                                }
+                                handleApply();
+                            }}
+                            className={`w-full py-2.5 text-white rounded-xl font-black text-base shadow-xl hover:opacity-90 transition-opacity ${selectedOffer.color}`}
+                        >
                             Confirm & Apply
                         </button>
                     </div>

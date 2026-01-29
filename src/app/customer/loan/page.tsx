@@ -77,6 +77,32 @@ export default function LoanList() {
         fetchLoans();
     }, []);
 
+    // State for Dynamic Plans
+    const [loanPlans, setLoanPlans] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const data = await apiFetch('/loan-plans', { cache: 'no-store' });
+                // Map API data to UI format expected by this page
+                // The page expects: amount, title, description, color
+                const mapped = data.map((p: any) => ({
+                    id: p.id,
+                    amount: parseFloat(p.amount),
+                    title: p.tag_text || 'Standard Loan', // 'Starter Boost', 'Micro Start' etc.
+                    description: `${p.tenure_days} Days • ${p.interest_rate}% Interest`,
+                    color: p.plan_color ? p.plan_color.replace('bg-', 'from-').replace('500', '400') + ' to-' + p.plan_color.replace('bg-', '').replace('500', '600') : 'from-blue-400 to-blue-600', // Making a gradient
+                    rawColor: p.plan_color // Keep original for other uses
+                }));
+                const sorted = mapped.sort((a: any, b: any) => a.amount - b.amount);
+                setLoanPlans(sorted);
+            } catch (e) {
+                console.error("Failed to fetch plans", e);
+            }
+        };
+        fetchPlans();
+    }, []);
+
     const handleCancel = async (id: string) => {
         if (!confirm("Are you sure you want to cancel this loan application?")) return;
         try {
@@ -133,8 +159,8 @@ export default function LoanList() {
                                 <p className="text-xs font-medium text-slate-400">
                                     Applied on {new Date(recentLoan.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} •
                                     <span className={`ml-1 ${(recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount)))
-                                            ? 'text-slate-700 font-black'
-                                            : recentLoan.status === 'DISBURSED' ? 'text-emerald-400' : 'text-amber-400'
+                                        ? 'text-slate-700 font-black'
+                                        : recentLoan.status === 'DISBURSED' ? 'text-emerald-400' : 'text-amber-400'
                                         }`}>
                                         {(recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount))) ? 'Completed' : recentLoan.status === 'DISBURSED' ? 'Active' : 'In Progress'}
                                     </span>
@@ -206,9 +232,9 @@ export default function LoanList() {
 
             {/* Virtual Credit */}
             <div className="mb-10">
-                {Object.values(LOAN_PLANS).filter((p: any) => p.amount === 10000).map((plan: any) => (
+                {loanPlans.filter((p: any) => p.amount === 10000).map((plan: any) => (
                     <div
-                        key={plan.amount}
+                        key={plan.id}
                         onClick={() => {
                             if (activeLoan) {
                                 alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
@@ -263,11 +289,11 @@ export default function LoanList() {
                     <span className="text-[10px] font-bold text-slate-400">Fixed Tenure</span>
                 </div>
                 <div className="flex flex-col gap-3 mb-8">
-                    {Object.values(LOAN_PLANS).filter((p: any) => p.amount > 10000).map((plan: any) => {
+                    {loanPlans.filter((p: any) => p.amount > 10000).map((plan: any) => {
                         const isLocked = plan.amount > unlockedAmount;
                         return (
                             <div
-                                key={plan.amount}
+                                key={plan.id}
                                 onClick={() => {
                                     if (activeLoan) {
                                         alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
