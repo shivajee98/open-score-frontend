@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import AuthGuard from './AuthGuard';
+import { toast } from '@/components/ui/Toast';
+import { Volume2, VolumeX, Bell, BellOff, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/loanUtils';
 
 interface NavItem {
     label: string;
@@ -20,6 +23,18 @@ export default function DashboardLayout({
     navItems: NavItem[];
 }) {
     const [user, setUser] = useState<any>(null);
+    const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+
+    // Load audio preference
+    useEffect(() => {
+        const saved = localStorage.getItem('audio_enabled');
+        if (saved === 'true') setIsAudioEnabled(true);
+    }, []);
+
+    // Save audio preference
+    useEffect(() => {
+        localStorage.setItem('audio_enabled', isAudioEnabled.toString());
+    }, [isAudioEnabled]);
     const router = useRouter();
     const lastTxRef = React.useRef<string | null>(null);
 
@@ -49,21 +64,38 @@ export default function DashboardLayout({
             router.push('/');
         }
 
-        // Poll for notifications
-        const interval = setInterval(checkNewTransactions, 30000);
+        // Poll for notifications - Faster for Merchants
+        const pollRate = user?.role === 'MERCHANT' ? 5000 : 15000;
+        const interval = setInterval(checkNewTransactions, pollRate);
         return () => clearInterval(interval);
-    }, [router]);
+    }, [router, user?.role]);
 
     const checkNewTransactions = async () => {
         try {
-            const res = await apiFetch('/wallet/transactions?limit=1');
+            const res = await apiFetch('/wallet/transactions?limit=5');
             if (res && res.data && res.data.length > 0) {
-                const latestTx = res.data[0];
+                const transactions = res.data;
+                const latestTx = transactions[0];
 
-                // If we have a stored ref, and the new one is different, and it's a credit
                 if (lastTxRef.current && lastTxRef.current !== latestTx.id) {
-                    if (latestTx.type === 'CREDIT' && latestTx.amount > 0) {
-                        playNotificationSound(`Rupees ${latestTx.amount} credited.`);
+                    // Filter for all new credits since the last seen ID
+                    const newCredits = transactions.filter((tx: any) =>
+                        tx.type === 'CREDIT' &&
+                        tx.id !== lastTxRef.current &&
+                        tx.amount > 0
+                    );
+
+                    if (newCredits.length > 0) {
+                        const totalAmount = newCredits.reduce((sum: number, tx: any) => sum + Number(tx.amount), 0);
+                        const sender = newCredits[0].counterparty_name || 'Customer';
+
+                        console.log(`New payment detected: ₹${totalAmount}`);
+
+                        if (isAudioEnabled) {
+                            playNotificationSound(`Received Rupees ${totalAmount}`);
+                        }
+
+                        toast.success(`Received ₹${totalAmount} from ${sender}`);
                     }
                 }
 
@@ -75,11 +107,57 @@ export default function DashboardLayout({
     };
 
     const playNotificationSound = (text: string) => {
-        if ('speechSynthesis' in window) {
+        // 1. Play a tech "Ding" using Web Audio API (highly reliable)
+        try {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioContext) {
+                const context = new AudioContext();
+                const o = context.createOscillator();
+                const g = context.createGain();
+                o.type = 'sine';
+                o.frequency.setValueAtTime(880, context.currentTime); // A5 note
+                o.connect(g);
+                g.connect(context.destination);
+                g.gain.setValueAtTime(0, context.currentTime);
+                g.gain.linearRampToValueAtTime(0.5, context.currentTime + 0.1);
+                g.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.5);
+                o.start();
+                o.stop(context.currentTime + 0.5);
+            }
+        } catch (e) { console.error("WebAudio failed", e); }
+
+        // 2. Clear out existing speech
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 1;
-            utterance.pitch = 1;
+            utterance.rate = 0.9; // Slightly slower for clarity
+            utterance.pitch = 1.1; // Slightly higher/friendly
+
+            // Try to find a better voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const betterVoice = voices.find(v => v.lang.includes('en-IN')) ||
+                voices.find(v => v.lang.includes('en-GB')) ||
+                voices.find(v => v.lang.includes('en-US'));
+            if (betterVoice) utterance.voice = betterVoice;
+
             window.speechSynthesis.speak(utterance);
+        }
+    };
+
+    const toggleAudio = () => {
+        if (!isAudioEnabled) {
+            // "Prime" audio context for better browser support
+            if (window.speechSynthesis) {
+                const p = new SpeechSynthesisUtterance("Audio notifications enabled");
+                p.volume = 0; // Silent priming
+                window.speechSynthesis.speak(p);
+            }
+            setIsAudioEnabled(true);
+            toast.success("Sound notifications turned ON");
+        } else {
+            setIsAudioEnabled(false);
+            toast.error("Sound notifications turned OFF");
         }
     };
 
@@ -135,7 +213,21 @@ export default function DashboardLayout({
                 {/* Main Content */}
                 < main className="flex-1 flex flex-col overflow-hidden relative pb-[5.5rem] md:pb-0 bg-slate-50" >
                     <header className="px-4 py-2.5 md:py-4 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
-                        <h2 className="text-lg md:text-2xl font-black tracking-tight text-slate-900">{title}</h2>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg md:text-2xl font-black tracking-tight text-slate-900">{title}</h2>
+                            <button
+                                onClick={toggleAudio}
+                                className={cn(
+                                    "p-2 rounded-full transition-all active:scale-95 border",
+                                    isAudioEnabled
+                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                        : "bg-slate-50 text-slate-400 border-slate-100"
+                                )}
+                                title={isAudioEnabled ? "Click to Mute" : "Click to Enable Audio Alerts"}
+                            >
+                                {isAudioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                            </button>
+                        </div>
                         <div className="flex items-center gap-2 md:hidden">
                             <Link href="/customer/profile">
                                 <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-sm border border-blue-200 cursor-pointer active:scale-90 transition-transform">
