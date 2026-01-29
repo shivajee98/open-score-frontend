@@ -72,33 +72,15 @@ function MerchantOnboardingForm() {
         { label: "₹50,00,000+", sub: "Cashback: ₹25,000+", value: "50l+" },
     ];
 
-    const handleStep1Submit = async () => {
-        setLoading(true);
-        setError('');
-        console.log("Updating basic profile for merchant Step 1...");
-        try {
-            await apiFetch('/auth/update-profile', {
-                method: 'POST',
-                body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email
-                })
-            });
+    const handleStep1Submit = () => {
+        // Update local storage for persistence across reloads (optional)
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        u.name = formData.name;
+        u.email = formData.email;
+        localStorage.setItem('user', JSON.stringify(u));
 
-            console.log("Basic profile updated. Syncing local storage...");
-            const u = JSON.parse(localStorage.getItem('user') || '{}');
-            u.name = formData.name;
-            u.email = formData.email;
-            localStorage.setItem('user', JSON.stringify(u));
-
-            toast.success('Information saved! Redirecting...');
-            router.push('/customer');
-        } catch (e: any) {
-            console.error("Step 1 Submission Error:", e);
-            setError(e.message || 'Failed to update profile');
-            toast.error(e.message || 'Failed to update profile');
-            setLoading(false);
-        }
+        // Proceed to next step
+        setStep(2);
     };
 
     const handleSubmit = async () => {
