@@ -108,9 +108,9 @@ export default function CustomerHome() {
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
             {/* Header Redesign - Tech/Circuit Theme */}
-            <div className={`px-4 pt-14 pb-16 relative overflow-hidden shadow-2xl ${isMerchant ? 'bg-emerald-600' : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950'}`}>
+            <div className={`px-4 pt-14 pb-16 relative overflow-hidden shadow-2xl ${isMerchant ? 'bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950' : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950'}`}>
                 {/* Main Gradient Background Overlay */}
-                <div className={`absolute inset-0 z-0 ${isMerchant ? 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700' : 'opacity-50'}`}></div>
+                <div className={`absolute inset-0 z-0 ${isMerchant ? 'bg-gradient-to-br from-emerald-900/50 via-emerald-950/50 to-teal-900/50' : 'opacity-50'}`}></div>
 
                 {/* Circuit Board Pattern Overlay - Reduced Density */}
                 <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
