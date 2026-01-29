@@ -34,21 +34,25 @@ export default function LoanList() {
                     .filter((l: any) => l.status === 'CLOSED')
                     .reduce((max, l) => Math.max(max, Number(l.amount)), 0);
 
-                if (highestClosed >= 50000) {
-                    setUnlockedAmount(100000);
+                if (highestClosed >= 100000) {
+                    setUnlockedAmount(500000); // Unlock up to 5 Lakhs if 1 Lakh is paid
+                } else if (highestClosed >= 50000) {
+                    setUnlockedAmount(100000); // Unlock 1 Lakh if 50k is paid
                 } else if (highestClosed >= 30000) {
                     setUnlockedAmount(50000);
                 }
 
                 // Check for 15-day cooldown from last disbursement
-                const lastDisbursed = sorted.find((l: any) => l.disbursed_at);
+                // We IGNORE cooldown if the loan is CLOSED (Paid)
+                const lastDisbursed = sorted.find((l: any) => l.disbursed_at && l.status !== 'CLOSED');
+
                 if (lastDisbursed) {
                     const disbursedDate = new Date(lastDisbursed.disbursed_at);
                     const now = new Date();
                     const diffTime = Math.abs(now.getTime() - disbursedDate.getTime());
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Days elapsed since disbursement
 
-                    // If it's been less than 15 days (e.g. 1 day), we restrict.
+                    // If it's been less than 15 days, we restrict.
                     if (diffDays <= 15) {
                         setCooldown({ active: true, daysRemaining: 16 - diffDays });
                     }

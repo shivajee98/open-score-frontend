@@ -1,17 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, Zap, CreditCard, Calendar } from 'lucide-react';
+import { ArrowLeft, Check, Zap, CreditCard, Calendar, FileText, Clock, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
-import Link from 'next/link';
+import { apiFetch } from '@/lib/api';
 
 export default function LoanApplication() {
     const router = useRouter();
+
+    // UI States
+    const [entryMode, setEntryMode] = useState(true);
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
-
+    const [checkingEligibility, setCheckingEligibility] = useState(true);
     const [showExcitement, setShowExcitement] = useState(false);
+
+    // Data States
+    const [loans, setLoans] = useState<any[]>([]);
+    const [activeLoan, setActiveLoan] = useState<any>(null);
+    const [cooldown, setCooldown] = useState({ active: false, daysRemaining: 0 });
 
     // Form Data
     const [isWhatsappSame, setIsWhatsappSame] = useState(true);
@@ -25,6 +33,60 @@ export default function LoanApplication() {
         altMobile: '',
         whatsappTicket: '' // Placeholder field as requested
     });
+
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const data = await apiFetch('/loans');
+                setLoans(data);
+
+                // Identify Active Loan (Not closed/rejected/cancelled)
+                // Note: If DISBURSED, it's Active.
+                const active = data.find((l: any) => l.status === 'DISBURSED' || l.status === 'PENDING' || l.status === 'PROCEEDED' || l.status === 'KYC_SENT' || l.status === 'FORM_SUBMITTED' || l.status === 'APPROVED' || l.status === 'PREVIEW');
+                setActiveLoan(active);
+
+                // Check Cooldown
+                // Ignore CLOSED loans for cooldown
+                const sorted = data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                const lastDisbursed = sorted.find((l: any) => l.disbursed_at && l.status !== 'CLOSED'); // Only active/ongoing loans trigger wait? Actually if it's active, it's caught by activeLoan.
+
+                // If the user meant "Wait 15 days after disbursal regardless of closure", we would remove the status check. 
+                // BUT User said: "if loans are cleared then make sure that users can apply". 
+                // So we ONLY check cooldown if the loan is NOT closed (which essentially means it's active, so activeLoan catches it).
+                // However, let's keep the logic safe: If there is a loan that is somehow "Recent but Not Active?" (Impossible).
+                // Let's stick to the rule: "Wait until 15 days" typically applies to "Frequency of loans". 
+                // But since "Cleared = Go", we effectively disable cooldown for cleared loans.
+
+                if (lastDisbursed) {
+                    const disbursedDate = new Date(lastDisbursed.disbursed_at);
+                    const now = new Date();
+                    const diffTime = Math.abs(now.getTime() - disbursedDate.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 15) {
+                        setCooldown({ active: true, daysRemaining: 16 - diffDays });
+                    }
+                }
+
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setCheckingEligibility(false);
+            }
+        };
+        checkStatus();
+    }, []);
+
+    const handleNewLoanClick = () => {
+        if (activeLoan) {
+            toast.error("You already have an active loan application. Please verify your status.");
+            return;
+        }
+        if (cooldown.active) {
+            toast.error(`Please wait ${cooldown.daysRemaining} days before applying for a new loan.`);
+            return;
+        }
+        setEntryMode(false);
+    };
 
     const handleInputChange = (e: any) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -99,173 +161,240 @@ export default function LoanApplication() {
         }
     ];
 
+    if (loading || checkingEligibility) return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-slate-50 p-4 pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
             <div className="max-w-md mx-auto">
-                <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+                <button onClick={() => {
+                    if (entryMode) router.back();
+                    else setEntryMode(true);
+                }} className="mb-6 flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
+                    <ArrowLeft className="w-4 h-4" /> {entryMode ? 'Back to Dashboard' : 'Back to Selection'}
                 </button>
 
-                <div className="bg-white rounded-3xl p-6 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                {entryMode ? (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="mb-4">
+                            <h1 className="text-2xl font-black text-slate-900 leading-tight">What would you like to do?</h1>
+                            <p className="text-slate-500 text-sm font-medium mt-1">Select an option to proceed.</p>
+                        </div>
 
-                    <div className="mb-8">
-                        <h1 className="text-xl font-black text-slate-900 tracking-tight">Apply for Loan</h1>
-                        <p className="text-slate-500 text-sm font-medium">Get instant approval in minutes.</p>
-                    </div>
+                        {/* Apply New Loan Button */}
+                        <div
+                            onClick={handleNewLoanClick}
+                            className={`relative overflow-hidden bg-slate-900 rounded-3xl p-6 shadow-2xl shadow-slate-900/20 cursor-pointer group transition-all active:scale-[0.98] ${activeLoan || cooldown.active ? 'opacity-90' : ''}`}
+                        >
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-600/30 transition-colors"></div>
 
-                    {step === 1 && (
-                        <form onSubmit={handleFormSubmit} className="space-y-3 animate-in slide-in-from-right-4 duration-300">
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Full Name (As per Aadhaar)</label>
-                                <input
-                                    type="text"
-                                    name="fullName"
-                                    value={formData.fullName}
-                                    onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                    placeholder="e.g. Rahul Kumar"
-                                    required
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Date of Birth</label>
-                                    <input
-                                        type="date"
-                                        name="dob"
-                                        value={formData.dob}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                        required
-                                    />
+                            <div className="relative z-10">
+                                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white mb-4 border border-white/10">
+                                    <Zap size={24} className="fill-current" />
                                 </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Pin Code</label>
-                                    <input
-                                        type="text"
-                                        name="pinCode"
-                                        value={formData.pinCode}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                        placeholder="000000"
-                                        required
-                                        maxLength={6}
-                                    />
-                                </div>
-                            </div>
+                                <h3 className="text-xl font-black text-white mb-1">Apply for New Loan</h3>
+                                <p className="text-slate-400 text-sm font-medium mb-4">Get instant approval in minutes.</p>
 
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Address</label>
-                                <textarea
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm resize-none"
-                                    placeholder="Enter your current address"
-                                    rows={2}
-                                    required
-                                ></textarea>
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">City</label>
-                                <input
-                                    type="text"
-                                    name="city"
-                                    value={formData.city}
-                                    onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                    placeholder="e.g. Mumbai"
-                                    required
-                                />
-                            </div>
-
-                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs font-bold text-slate-500">Is this your WhatsApp Number?</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsWhatsappSame(!isWhatsappSame)}
-                                        className={`w-10 h-6 rounded-full p-1 transition-colors ${isWhatsappSame ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                                    >
-                                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${isWhatsappSame ? 'translate-x-4' : ''}`}></div>
-                                    </button>
-                                </div>
-                                {!isWhatsappSame && (
-                                    <div className="mt-2 animate-in fade-in slide-in-from-top-2">
-                                        <input
-                                            type="tel"
-                                            name="whatsappTicket"
-                                            value={formData.whatsappTicket}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-white border border-slate-200 rounded-lg p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                            placeholder="Enter WhatsApp Number"
-                                        />
+                                {(activeLoan || cooldown.active) && (
+                                    <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 flex items-start gap-2 backdrop-blur-md">
+                                        <AlertTriangle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                                        <p className="text-xs text-red-200 font-medium leading-relaxed">
+                                            {activeLoan ? "Active loan in progress." : `Wait ${cooldown.daysRemaining} days to apply.`}
+                                        </p>
                                     </div>
                                 )}
                             </div>
+                        </div>
 
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Alternate Mobile No</label>
-                                <input
-                                    type="tel"
-                                    name="altMobile"
-                                    value={formData.altMobile}
-                                    onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                    placeholder="+91"
-                                    required
-                                />
-                            </div>
+                        {/* Existing Loans Button */}
+                        <div
+                            onClick={() => router.push('/customer/loan/history')}
+                            className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 cursor-pointer group transition-all active:scale-[0.98] hover:border-slate-200"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-2xl -mr-10 -mt-10"></div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-base shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
-                            >
-                                {loading ? 'Checking Eligibility...' : 'Submit For Loan Approval'} <Zap className="w-4 h-4 text-yellow-400" />
-                            </button>
-                        </form>
-                    )}
-
-                    {step === 2 && (
-                        <div className="space-y-3 animate-in slide-in-from-right-4 duration-300">
-                            {/* Offers List */}
-                            {offers.map((offer, index) => (
-                                <div onClick={() => setSelectedOffer(offer)} key={index} className="cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]">
-                                    <div className={`absolute top-0 left-0 w-1 h-full ${offer.color}`}></div>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{offer.type}</p>
-                                            <h3 className="text-xl font-black text-slate-900">₹ {offer.amount}</h3>
-                                        </div>
-                                        <div className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide text-white ${offer.color}`}>
-                                            {offer.bestFor}
-                                        </div>
+                            <div className="relative z-10 flex items-center justify-between">
+                                <div>
+                                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-900 mb-4 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                                        <FileText size={24} />
                                     </div>
-                                    <p className="text-slate-600 font-medium text-xs mb-4">{offer.details}</p>
+                                    <h3 className="text-xl font-black text-slate-900 mb-1">Existing Loans</h3>
+                                    <p className="text-slate-500 text-sm font-medium">View ongoing and past loans.</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:translate-x-1 transition-transform">
+                                    <ArrowLeft size={20} className="rotate-180" />
+                                </div>
+                            </div>
+                        </div>
 
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold text-xs hover:bg-slate-300 transition-colors">
-                                            Details
-                                        </button>
-                                        <button className={`py-2.5 text-white rounded-lg font-bold text-xs shadow-lg transition-colors ${offer.color}`}>
-                                            Apply Now
-                                        </button>
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-3xl p-6 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden animate-in slide-in-from-right-8 duration-300">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+
+                        <div className="mb-8">
+                            <h1 className="text-xl font-black text-slate-900 tracking-tight">Apply for Loan</h1>
+                            <p className="text-slate-500 text-sm font-medium">Get instant approval in minutes.</p>
+                        </div>
+
+                        {step === 1 && (
+                            <form onSubmit={handleFormSubmit} className="space-y-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Full Name (As per Aadhaar)</label>
+                                    <input
+                                        type="text"
+                                        name="fullName"
+                                        value={formData.fullName}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                        placeholder="e.g. Rahul Kumar"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Date of Birth</label>
+                                        <input
+                                            type="date"
+                                            name="dob"
+                                            value={formData.dob}
+                                            onChange={handleInputChange}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Pin Code</label>
+                                        <input
+                                            type="text"
+                                            name="pinCode"
+                                            value={formData.pinCode}
+                                            onChange={handleInputChange}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                            placeholder="000000"
+                                            required
+                                            maxLength={6}
+                                        />
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
 
-                <div className="text-center mt-8">
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1">
-                        <CreditCard className="w-3 h-3" /> 100% Digital Process
-                    </p>
-                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Address</label>
+                                    <textarea
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm resize-none"
+                                        placeholder="Enter your current address"
+                                        rows={2}
+                                        required
+                                    ></textarea>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">City</label>
+                                    <input
+                                        type="text"
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                        placeholder="e.g. Mumbai"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-bold text-slate-500">Is this your WhatsApp Number?</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsWhatsappSame(!isWhatsappSame)}
+                                            className={`w-10 h-6 rounded-full p-1 transition-colors ${isWhatsappSame ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                        >
+                                            <div className={`w-4 h-4 bg-white rounded-full transition-transform ${isWhatsappSame ? 'translate-x-4' : ''}`}></div>
+                                        </button>
+                                    </div>
+                                    {!isWhatsappSame && (
+                                        <div className="mt-2 animate-in fade-in slide-in-from-top-2">
+                                            <input
+                                                type="tel"
+                                                name="whatsappTicket"
+                                                value={formData.whatsappTicket}
+                                                onChange={handleInputChange}
+                                                className="w-full bg-white border border-slate-200 rounded-lg p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                                placeholder="Enter WhatsApp Number"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Alternate Mobile No</label>
+                                    <input
+                                        type="tel"
+                                        name="altMobile"
+                                        value={formData.altMobile}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
+                                        placeholder="+91"
+                                        required
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-base shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
+                                >
+                                    {loading ? 'Checking Eligibility...' : 'Submit For Loan Approval'} <Zap className="w-4 h-4 text-yellow-400" />
+                                </button>
+                            </form>
+                        )}
+
+                        {step === 2 && (
+                            <div className="space-y-3 animate-in slide-in-from-right-4 duration-300">
+                                {/* Offers List */}
+                                {offers.map((offer, index) => (
+                                    <div onClick={() => setSelectedOffer(offer)} key={index} className="cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]">
+                                        <div className={`absolute top-0 left-0 w-1 h-full ${offer.color}`}></div>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{offer.type}</p>
+                                                <h3 className="text-xl font-black text-slate-900">₹ {offer.amount}</h3>
+                                            </div>
+                                            <div className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide text-white ${offer.color}`}>
+                                                {offer.bestFor}
+                                            </div>
+                                        </div>
+                                        <p className="text-slate-600 font-medium text-xs mb-4">{offer.details}</p>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold text-xs hover:bg-slate-300 transition-colors">
+                                                Details
+                                            </button>
+                                            <button className={`py-2.5 text-white rounded-lg font-bold text-xs shadow-lg transition-colors ${offer.color}`}>
+                                                Apply Now
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {!entryMode && (
+                    <div className="text-center mt-8">
+                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-1">
+                            <CreditCard className="w-3 h-3" /> 100% Digital Process
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Excitement Modal */}
