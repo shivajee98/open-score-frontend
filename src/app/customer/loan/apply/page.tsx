@@ -211,13 +211,8 @@ export default function LoanApplication() {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: selectedOffer.rawAmount,
-                    // Backend expects approx months or logic handles days? 
-                    // My modified Controller logic takes `tenure` (months approx) and converts to days to find config.
-                    // Wait, Controller says: $targetDays = $request->tenure * 30;
-                    // So I should send months relative to 30 days. e.g. 1 for 30 days, 2 for 60.
-                    // Or I should update Controller to take tenure_days directly?
-                    // Let's rely on the current logic: Tenure in Months.
-                    tenure: Math.round(selectedTenureConfig.tenure_days / 30) || (selectedTenureConfig.tenure_days / 30),
+                    // Pass EXACT days. Backend heuristic will detect > 6 as days.
+                    tenure: selectedTenureConfig.tenure_days,
                     payout_frequency: selectedFrequency,
                     payout_option_id: 'standard',
                     loan_plan_id: selectedOffer.id
