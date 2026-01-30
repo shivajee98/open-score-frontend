@@ -26,14 +26,12 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             if (step < 5) {
                 setStep(step + 1);
             } else {
-                localStorage.setItem('hasSeenOnboarding', 'true');
                 setStep('auth');
             }
         }
     };
 
     const skipOnboarding = () => {
-        localStorage.setItem('hasSeenOnboarding', 'true');
         setStep('auth');
     };
 

@@ -14,7 +14,7 @@ export default function Home() {
   const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | null>(null);
 
   // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'
-  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'>('mobile_entry');
+  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'>('onboarding');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,6 +32,13 @@ export default function Home() {
       } catch (e) {
         // Clear locally if session invalid
         clearAuthState();
+
+        // Check if user has already authenticated in this browser before
+        const seen = localStorage.getItem('hasSeenOnboarding') === 'true';
+        if (seen) {
+          setFlow('mobile_entry');
+        }
+
         setCheckingSession(false);
       }
     };
