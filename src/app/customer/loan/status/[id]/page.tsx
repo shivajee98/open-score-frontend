@@ -77,10 +77,15 @@ export default function LoanStatus() {
     const otherFees = fees.filter((f: any) =>
         !f.name.toLowerCase().includes('processing') &&
         !f.name.toLowerCase().includes('login') &&
-        !f.name.toLowerCase().includes('field')
+        !f.name.toLowerCase().includes('field') &&
+        !f.name.toLowerCase().includes('gst')
     ).reduce((sum: number, f: any) => sum + Number(f.amount), 0);
 
-    const totalFeesBeforeGst = fees.reduce((sum: number, f: any) => sum + Number(f.amount), 0);
+    // Filter out GST from the total fees sum because we calculate/add it separately below
+    const totalFeesBeforeGst = fees
+        .filter((f: any) => !f.name.toLowerCase().includes('gst'))
+        .reduce((sum: number, f: any) => sum + Number(f.amount), 0);
+
     const gstRate = 0.18;
     const gst = Math.round(principal * gstRate);
 
