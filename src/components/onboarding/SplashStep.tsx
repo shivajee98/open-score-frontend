@@ -26,7 +26,7 @@ export default function SplashStep({ onComplete }: { onComplete: () => void }) {
                 <Tagline className="opacity-0 animate-[fade-in_1s_ease-out_500ms_forwards]" />
 
                 <div className="absolute -bottom-2 left-0 right-0 h-[2px] overflow-hidden">
-                    <div className={`h-full bg-primary ${animateLine ? 'animate-draw-line' : 'w-0'}`} />
+                    <div className={`h-full bg-gradient-to-r from-blue-600 to-purple-600 ${animateLine ? 'animate-draw-line' : 'w-0'}`} />
                 </div>
             </div>
 

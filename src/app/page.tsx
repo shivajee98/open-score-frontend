@@ -203,7 +203,7 @@ export default function Home() {
               <button
                 onClick={handleSendOtp}
                 disabled={loading || mobile.length < 10}
-                className="w-full py-5 bg-primary text-white rounded-2xl font-black text-base shadow-xl shadow-primary/20 transition-brand active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group"
+                className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group"
               >
                 {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : <>Get OTP <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
               </button>
@@ -232,7 +232,7 @@ export default function Home() {
               <button
                 onClick={handleVerifyOtp}
                 disabled={loading || otp.length < 6}
-                className="w-full py-5 bg-primary text-white rounded-2xl font-black text-base shadow-xl shadow-primary/20 transition-brand active:scale-[0.98] disabled:opacity-50"
+                className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
               >
                 {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Verify Code'}
               </button>
@@ -263,7 +263,7 @@ export default function Home() {
                   className="w-full p-5 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:bg-white hover:border-primary/20 text-left transition-brand group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-brand">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center group-hover:brand-gradient group-hover:text-white transition-all shadow-sm">
                       {item.icon}
                     </div>
                     <div>
@@ -315,7 +315,7 @@ export default function Home() {
                   } else setError('Please fill all details correctly.');
                 }}
                 disabled={loading}
-                className="w-full py-5 bg-primary text-white rounded-2xl font-black text-base shadow-xl shadow-primary/20 transition-brand active:scale-[0.98]"
+                className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98]"
               >
                 {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Set Up Account'}
               </button>

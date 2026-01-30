@@ -19,7 +19,7 @@ export default function AuthEntry({ onMobileLogin, onEmailLogin }: AuthEntryProp
                 <div className="w-full max-w-sm space-y-4">
                     <button
                         onClick={onMobileLogin}
-                        className="w-full bg-primary text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition-brand shadow-xl shadow-primary/10"
+                        className="w-full brand-gradient text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl shadow-blue-500/20"
                     >
                         <Smartphone className="w-5 h-5" />
                         Continue with Mobile Number

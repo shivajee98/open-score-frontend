@@ -32,7 +32,7 @@ export default function StepContainer({
                     {Array.from({ length: totalSteps }).map((_, i) => (
                         <div
                             key={i}
-                            className={`h-1 rounded-full transition-brand ${i === stepIndex ? 'w-8 bg-primary' : 'w-2 bg-slate-100'}`}
+                            className={`h-1.5 rounded-full transition-all duration-500 ${i === stepIndex ? 'w-10 brand-gradient' : 'w-2 bg-slate-100'}`}
                         />
                     ))}
                 </div>
@@ -62,7 +62,7 @@ export default function StepContainer({
             <div className="mt-auto relative z-10">
                 <button
                     onClick={onNext}
-                    className="w-full bg-primary text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-2 group transition-brand active:scale-[0.98]"
+                    className="w-full brand-gradient text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-2 group transition-all active:scale-[0.98] shadow-xl shadow-blue-500/20"
                 >
                     {ctaText}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
