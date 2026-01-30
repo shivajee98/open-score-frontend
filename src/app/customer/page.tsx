@@ -170,16 +170,16 @@ export default function CustomerHome() {
                                 </div>
                             </Link>
                         </div>
-                        <button
-                            onClick={() => setSupportOpen(true)}
-                            className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"
-                            title="Help & Support"
-                        >
-                            <Headphones size={14} strokeWidth={2.5} />
-                        </button>
+                        <Link href="/customer/support">
+                            <button
+                                className="w-7 h-7 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"
+                                title="Help & Support"
+                            >
+                                <Headphones size={14} strokeWidth={2.5} />
+                            </button>
+                        </Link>
                     </div>
                 </div>
-                <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
 
                 {/* Balance Card - Navy/Violet Theme */}
                 <div className="relative group z-10 mx-auto max-w-sm">

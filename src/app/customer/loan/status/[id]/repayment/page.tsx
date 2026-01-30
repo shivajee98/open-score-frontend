@@ -1,12 +1,12 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/loanUtils';
 import PinModal from '@/components/PinModal';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
-import SupportModal from '@/components/SupportModal';
 import { toast } from '@/components/ui/Toast';
 import {
     ArrowLeft,
@@ -42,7 +42,6 @@ export default function RepaymentDashboard() {
     const [historyOpen, setHistoryOpen] = useState(true); // Default open for better visibility
     const [pinModalOpen, setPinModalOpen] = useState(false);
     const [successData, setSuccessData] = useState<any>(null);
-    const [supportOpen, setSupportOpen] = useState(false);
 
     // Filter states for EMIs
     const [emiFilter, setEmiFilter] = useState('ALL'); // ALL, PAID, PENDING, OVERDUE
@@ -186,12 +185,13 @@ export default function RepaymentDashboard() {
                                 <Bell size={16} />
                                 <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
                             </button>
-                            <button
-                                onClick={() => setSupportOpen(true)}
-                                className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95"
-                            >
-                                <Headphones size={16} />
-                            </button>
+                            <Link href="/customer/support">
+                                <button
+                                    className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95"
+                                >
+                                    <Headphones size={16} />
+                                </button>
+                            </Link>
                         </div>
                     </div>
 
@@ -498,7 +498,6 @@ export default function RepaymentDashboard() {
                     Auto-Debit Active via Wallet
                 </div>
             </div>
-            <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
-        </div >
+        </div>
     );
 }

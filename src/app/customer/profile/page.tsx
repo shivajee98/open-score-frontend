@@ -6,7 +6,6 @@ import { apiFetch } from '@/lib/api';
 import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
-import SupportModal from '@/components/SupportModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
 export default function Profile() {
@@ -24,7 +23,6 @@ export default function Profile() {
     const [hasPin, setHasPin] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-    const [supportOpen, setSupportOpen] = useState(false);
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
@@ -314,7 +312,7 @@ export default function Profile() {
 
                             <div className="space-y-3">
                                 <div
-                                    onClick={() => setSupportOpen(true)}
+                                    onClick={() => router.push('/customer/support')}
                                     className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group"
                                 >
                                     <div className="flex items-center gap-3">
@@ -400,7 +398,6 @@ export default function Profile() {
                 mode={pinModalMode}
                 title={pinModalMode === 'VERIFY' ? 'Enter Current PIN' : 'Set New PIN'}
             />
-            <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
         </div>
     );
 }

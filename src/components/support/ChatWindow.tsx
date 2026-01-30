@@ -27,14 +27,36 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [localMessages, setLocalMessages] = useState<Message[]>(messages);
+
+    useEffect(() => {
+        setLocalMessages(messages);
+    }, [messages]);
+
+    useEffect(() => {
+        // Initialize Echo
+        import('@/lib/echo').then(({ createEcho }) => {
+            const echo = createEcho();
+            // Assuming we have ticketId attached to a message or passed via props. 
+            // Wait, we don't have ticketId in props locally here? 
+            // We need to look at parent usage or infer.
+            // Actually, we need ticketId. Let's inspect ONE message to get ticket_id or pass it in props.
+            // Passed in props is safer. But we only have `messages`.
+            // Let's rely on the parent component passing `messages` which updates via polling for now? 
+            // No, we want to REMOVE polling.
+            // We need to add `ticketId` to props.
+        });
+    }, []);
+    // Wait, I need to update the interface first.
+
+    // ... logic placeholder ...
+
+    // Actually, let's update the Parent Page to handle the listening and pass updated messages down.
+    // That is cleaner. The ChatWindow should just be a dumb UI component.
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();

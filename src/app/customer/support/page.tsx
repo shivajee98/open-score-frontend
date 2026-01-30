@@ -31,12 +31,7 @@ export default function CustomerSupportPage() {
     }, []);
 
     useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (selectedTicket) {
-            fetchMessages(selectedTicket.id);
-            interval = setInterval(() => fetchMessages(selectedTicket.id), 3000);
-        }
-        return () => clearInterval(interval);
+        // Polling removed in favor of WebSockets
     }, [selectedTicket]);
 
     const fetchTickets = async () => {
@@ -67,6 +62,38 @@ export default function CustomerSupportPage() {
             console.error(error);
         }
     };
+
+    useEffect(() => {
+        if (!selectedTicket) return;
+
+        // Fetch initial
+        fetchMessages(selectedTicket.id);
+
+        // Setup Echo Listener
+        let echoInstance: any;
+        import('@/lib/echo').then(({ createEcho }) => {
+            const token = localStorage.getItem('token');
+            const echo = createEcho(token || undefined);
+            echoInstance = echo;
+
+            echo.private(`support.ticket.${selectedTicket.id}`)
+                .listen('.MessageSent', (e: any) => {
+                    console.log('New Message:', e.message);
+                    setMessages(prev => {
+                        // Avoid duplicates
+                        if (prev.find(m => m.id === e.message.id)) return prev;
+                        return [...prev, e.message];
+                    });
+                });
+        });
+
+        // Cleanup
+        return () => {
+            if (echoInstance) {
+                echoInstance.leave(`support.ticket.${selectedTicket.id}`);
+            }
+        };
+    }, [selectedTicket]);
 
     const handleCreateTicket = async (subject: string, message: string, priority: string) => {
         try {

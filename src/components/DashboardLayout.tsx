@@ -84,12 +84,27 @@ export default function DashboardLayout({
             });
 
         // Initial poll to set ref
-        checkNewTransactions();
+        // checkNewTransactions(); // Removed direct call, handled by loop below
 
-        // Poll for notifications - Faster for Merchants (Almost instant)
-        const pollRate = user?.role === 'MERCHANT' ? 2000 : 15000;
-        const interval = setInterval(checkNewTransactions, pollRate);
-        return () => clearInterval(interval);
+        // Poll for notifications - Safe Polling to avoid Stampede
+        let isMounted = true;
+        let timeoutId: NodeJS.Timeout;
+
+        const loop = async () => {
+            if (!isMounted) return;
+            await checkNewTransactions();
+            const pollRate = user?.role === 'MERCHANT' ? 3000 : 15000; // Increased slighty 2s->3s
+            if (isMounted) {
+                timeoutId = setTimeout(loop, pollRate);
+            }
+        };
+
+        loop();
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timeoutId);
+        };
     }, [router, user?.role]);
 
     useEffect(() => {
