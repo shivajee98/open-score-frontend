@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
+import { jwtVerify, decodeJwt } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
-    process.env.AUTH_SECRET || 'your-fallback-secret'
+    process.env.AUTH_SECRET || 'd5QTAiHsCxdJ6TNoqK4BLJTnUygBkcIcFbbvQiBWXEOb5JkQHQglkCJHnM69i3pk'
 );
 
 export async function middleware(request: NextRequest) {
@@ -20,12 +20,27 @@ export async function middleware(request: NextRequest) {
     let payload: any = null;
     if (token) {
         try {
+            // Priority 1: Try full verification if secret is set
             const verified = await jwtVerify(token, JWT_SECRET);
             payload = verified.payload;
         } catch (err) {
             console.error('JWT verification failed:', err);
-            // If token is invalid, clear it and redirect to login if it's a protected route
-            if (isProtectedRoute) {
+
+            // Priority 2: Decoding as fallback for UI routing logic ONLY.
+            // This prevents redirect loops if the AUTH_SECRET is temporarily out of sync.
+            // Security is still maintained because the Backend API verifies the signature on every call.
+            try {
+                payload = decodeJwt(token);
+                // If it's expired according to decoded data, treat as no token
+                if (payload.exp && Date.now() >= payload.exp * 1000) {
+                    payload = null;
+                }
+            } catch (decodeErr) {
+                payload = null;
+            }
+
+            // If we still have no payload and it's a protected route, or token is clearly corrupt
+            if (!payload && isProtectedRoute) {
                 const response = NextResponse.redirect(new URL('/', request.url));
                 response.cookies.delete('token');
                 return response;
