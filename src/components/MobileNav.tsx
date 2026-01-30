@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Wallet, User, Zap, CreditCard, QrCode, History } from 'lucide-react';
+import { LayoutDashboard, Wallet, User, Zap, CreditCard, QrCode, History, Landmark } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 
 export default function MobileNav() {
@@ -64,6 +64,10 @@ export default function MobileNav() {
                         <Wallet size={20} className={pathname === '/customer/transactions' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/transactions' ? 3 : 2} />
                         <span className="text-[8px] font-black uppercase tracking-widest">Sales</span>
                     </Link>
+                    <Link href="/customer/payout" className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname === '/customer/payout' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400'}`}>
+                        <Landmark size={20} className={pathname === '/customer/payout' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/payout' ? 3 : 2} />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Payout</span>
+                    </Link>
                     <Link href="/customer/profile" className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname === '/customer/profile' ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400'}`}>
                         <User size={20} className={pathname === '/customer/profile' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/profile' ? 3 : 2} />
                         <span className="text-[8px] font-black uppercase tracking-widest">Settings</span>
@@ -79,6 +83,10 @@ export default function MobileNav() {
                     <Link href="/customer/transactions" className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname === '/customer/transactions' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
                         <Wallet size={20} className={pathname === '/customer/transactions' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/transactions' ? 3 : 2} />
                         <span className="text-[8px] font-black uppercase tracking-widest">Wallet</span>
+                    </Link>
+                    <Link href="/customer/payout" className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname === '/customer/payout' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
+                        <Landmark size={20} className={pathname === '/customer/payout' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/payout' ? 3 : 2} />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Payout</span>
                     </Link>
 
                     <Link href="/customer/loan/history" className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname === '/customer/loan/history' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>

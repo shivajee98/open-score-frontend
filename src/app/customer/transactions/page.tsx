@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import TransactionDetailModal from '@/components/TransactionDetailModal';
-import { Home, Smartphone, QrCode, Receipt, ArrowDownLeft, ArrowUpRight, Search, Calendar, Filter } from 'lucide-react';
+import { Home, Smartphone, QrCode, Receipt, ArrowDownLeft, ArrowUpRight, Search, Calendar, Filter, Landmark } from 'lucide-react';
 
 export default function CustomerTransactions() {
     const [transactions, setTransactions] = useState([]);
@@ -22,6 +22,7 @@ export default function CustomerTransactions() {
         { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
         { label: 'Scan & Pay', href: '/customer/pay', icon: <Smartphone className="w-5 h-5" /> },
         { label: 'My QR', href: '/customer/qr', icon: <QrCode className="w-5 h-5" /> },
+        { label: 'Payout', href: '/customer/payout', icon: <Landmark className="w-5 h-5" /> },
         { label: 'Activity', href: '/customer/transactions', icon: <Receipt className="w-5 h-5" /> },
     ];
 

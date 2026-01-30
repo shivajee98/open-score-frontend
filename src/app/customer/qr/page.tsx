@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import QRCode from 'react-qr-code';
-import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X, Scan, ArrowLeft } from 'lucide-react';
+import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X, Scan, ArrowLeft, Landmark } from 'lucide-react';
 
 export default function CustomerQR() {
     const router = useRouter();
@@ -50,6 +50,7 @@ export default function CustomerQR() {
         { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
         { label: 'Scan & Pay', href: '/customer/pay', icon: <Smartphone className="w-5 h-5" /> },
         { label: 'My QR', href: '/customer/qr', icon: <QrCode className="w-5 h-5" /> },
+        { label: 'Payout', href: '/customer/payout', icon: <Landmark className="w-5 h-5" /> },
         { label: 'Activity', href: '/customer/transactions', icon: <Receipt className="w-5 h-5" /> },
     ];
 

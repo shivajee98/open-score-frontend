@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import PinModal from '@/components/PinModal';
-import { Scan, X, ArrowRight, ArrowLeft, Smartphone, Search, Home, QrCode, Receipt, Lock } from 'lucide-react';
+import { Scan, X, ArrowRight, ArrowLeft, Smartphone, Search, Home, QrCode, Receipt, Lock, Landmark } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -41,6 +41,7 @@ function CustomerPayPage() {
         { label: 'Overview', href: '/customer', icon: <Home className="w-5 h-5" /> },
         { label: 'Scan & Pay', href: '/customer/pay', icon: <Smartphone className="w-5 h-5" /> },
         { label: 'My QR', href: '/customer/qr', icon: <QrCode className="w-5 h-5" /> },
+        { label: 'Payout', href: '/customer/payout', icon: <Landmark className="w-5 h-5" /> },
         { label: 'Activity', href: '/customer/transactions', icon: <Receipt className="w-5 h-5" /> },
     ];
 

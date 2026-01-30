@@ -12,7 +12,14 @@ import { useAuthProtection } from '@/hooks/useAuthProtection';
 export default function Profile() {
     const [user, setUser] = useState<any>(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({ name: '', email: '' });
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        bank_name: '',
+        account_number: '',
+        ifsc_code: '',
+        account_holder_name: ''
+    });
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [hasPin, setHasPin] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
@@ -78,7 +85,14 @@ export default function Profile() {
     useEffect(() => {
         apiFetch('/auth/me').then(data => {
             setUser(data);
-            setFormData({ name: data.name, email: data.email || '' });
+            setFormData({
+                name: data.name,
+                email: data.email || '',
+                bank_name: data.bank_name || '',
+                account_number: data.account_number || '',
+                ifsc_code: data.ifsc_code || '',
+                account_holder_name: data.account_holder_name || ''
+            });
         }).catch(console.error);
 
         apiFetch('/wallet/check-pin').then(data => {
@@ -223,6 +237,76 @@ export default function Profile() {
                                 </div>
                             </div>
                         )}
+
+                        <div className="mt-8 mb-4">
+                            <h3 className="px-1 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Bank Details (For Payouts)</h3>
+                            <div className="space-y-4">
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Bank Name</p>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={formData.bank_name}
+                                                onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
+                                                className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                placeholder="e.g. HDFC Bank"
+                                            />
+                                        ) : (
+                                            <p className="text-base font-black text-slate-900">{user.bank_name || 'Not Set'}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Account Number</p>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={formData.account_number}
+                                                onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
+                                                className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                placeholder="Enter account number"
+                                            />
+                                        ) : (
+                                            <p className="text-base font-black text-slate-900">{user.account_number || 'Not Set'}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">IFSC Code</p>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={formData.ifsc_code}
+                                                onChange={(e) => setFormData({ ...formData, ifsc_code: e.target.value.toUpperCase() })}
+                                                className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                placeholder="HDFC0001234"
+                                            />
+                                        ) : (
+                                            <p className="text-base font-black text-slate-900 uppercase">{user.ifsc_code || 'Not Set'}</p>
+                                        )}
+                                    </div>
+                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">A/C Holder Name</p>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={formData.account_holder_name}
+                                                onChange={(e) => setFormData({ ...formData, account_holder_name: e.target.value })}
+                                                className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                placeholder="As per bank records"
+                                            />
+                                        ) : (
+                                            <p className="text-base font-black text-slate-900 truncate">{user.account_holder_name || 'Not Set'}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {/* Support Section */}
                         <div className="mt-8 mb-4">
