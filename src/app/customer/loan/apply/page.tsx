@@ -569,23 +569,45 @@ export default function LoanApplication() {
                                 <div className="border-b border-slate-50 pb-3 animate-in fade-in slide-in-from-top-2">
                                     <span className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Repayment Frequency</span>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {(selectedTenureConfig.allowed_frequencies || []).map((freq: string) => (
-                                            <button
-                                                key={freq}
-                                                onClick={() => setSelectedFrequency(freq)}
-                                                className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all relative overflow-hidden ${selectedFrequency === freq
-                                                    ? 'bg-slate-900 text-white border-slate-900'
-                                                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                                                    }`}
-                                            >
-                                                <span>{freq.replace('_', ' ')}</span>
-                                                {selectedTenureConfig.cashback && selectedTenureConfig.cashback[freq] > 0 && (
-                                                    <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] px-1 rounded-bl">
-                                                        ₹{selectedTenureConfig.cashback[freq]} CB
+                                        {(selectedTenureConfig.allowed_frequencies || []).map((freq: string) => {
+                                            const interval = freq === 'DAILY' ? 1 : freq === 'WEEKLY' ? 7 : 30;
+                                            const numEmis = Math.floor(selectedTenureConfig.tenure_days / interval) || 1;
+                                            // Simple Interest Logic for Display (Principal + Interest)
+                                            // Note: If interest > 0, we should add it.
+                                            // The backend logic is: Interest = (P * R/100) * Months.
+                                            // R is monthly rate.
+                                            let totalPayable = selectedOffer.rawAmount;
+                                            const rate = selectedTenureConfig.interest_rates?.[freq] || selectedTenureConfig.interest_rate || 0;
+                                            if (rate > 0) {
+                                                const months = selectedTenureConfig.tenure_days / 30;
+                                                const interest = (selectedOffer.rawAmount * (rate / 100)) * months;
+                                                totalPayable += interest;
+                                            }
+
+                                            const emi = Math.floor(totalPayable / numEmis);
+
+                                            return (
+                                                <button
+                                                    key={freq}
+                                                    onClick={() => setSelectedFrequency(freq)}
+                                                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all relative overflow-hidden flex flex-col items-center justify-center gap-1 ${selectedFrequency === freq
+                                                        ? 'bg-slate-900 text-white border-slate-900'
+                                                        : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                                                        }`}
+                                                >
+                                                    <span className="uppercase tracking-wider">{freq.replace('_', ' ')}</span>
+                                                    <span className={`text-[10px] ${selectedFrequency === freq ? 'text-slate-300' : 'text-slate-800'}`}>
+                                                        ₹{emi.toLocaleString('en-IN')} PER EMI
                                                     </span>
-                                                )}
-                                            </button>
-                                        ))}
+
+                                                    {selectedTenureConfig.cashback && selectedTenureConfig.cashback[freq] > 0 && (
+                                                        <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] px-1 rounded-bl">
+                                                            ₹{selectedTenureConfig.cashback[freq]} CB
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
