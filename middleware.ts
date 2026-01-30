@@ -56,19 +56,22 @@ export async function middleware(request: NextRequest) {
             return response;
         }
 
-        // Onboarding enforcement
-        const user = payload.user || payload; // Adjust based on backend payload structure
-        const isUserOnboarded = user.is_onboarded;
+        // Role enforcement
+        const user = payload.user || payload;
+        const isUserOnboarded = user.is_onboarded === true || user.is_onboarded === 1 || user.is_onboarded === "1";
+        const isAdmin = user.role === 'ADMIN';
 
-        if (!isUserOnboarded && !isOnboardingRoute) {
+        // Skip onboarding check for admins
+        if (!isAdmin && !isUserOnboarded && !isOnboardingRoute) {
             const onboardingPath = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
             if (pathname !== onboardingPath) {
+                console.log(`Middleware: Redirecting to ${onboardingPath} (is_onboarded: ${user.is_onboarded})`);
                 return NextResponse.redirect(new URL(onboardingPath, request.url));
             }
         }
 
         // Role enforcement
-        if (pathname.startsWith('/admin') && user.role !== 'ADMIN') {
+        if (pathname.startsWith('/admin') && !isAdmin) {
             return NextResponse.redirect(new URL('/customer', request.url));
         }
     }

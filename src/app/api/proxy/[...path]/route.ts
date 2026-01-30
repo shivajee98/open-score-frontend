@@ -65,8 +65,33 @@ async function handleRequest(request: NextRequest, pathParts: string[]) {
             return nextResponse;
         }
 
-        const data = await response.json();
-        return NextResponse.json(data, { status: response.status });
+        const contentType = response.headers.get('content-type');
+        let data;
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            console.error(`Backend returned non-JSON response (${response.status}):`, text.slice(0, 100));
+            return NextResponse.json(
+                { error: 'Backend Error', message: 'The server returned an invalid response.' },
+                { status: response.status }
+            );
+        }
+
+        const nextResponse = NextResponse.json(data, { status: response.status });
+
+        // If backend returns a new token (e.g. after onboarding completion), update the cookie
+        if (data && data.access_token) {
+            nextResponse.cookies.set('token', data.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 30, // 30 days
+            });
+        }
+
+        return nextResponse;
     } catch (error) {
         console.error('Proxy error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

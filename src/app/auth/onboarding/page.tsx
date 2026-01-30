@@ -26,24 +26,22 @@ export default function Onboarding() {
             const userStr = localStorage.getItem('user');
             if (userStr) {
                 const user = JSON.parse(userStr);
+
                 if (user.is_onboarded) {
                     if (user.role === 'ADMIN') router.push('/admin');
                     else router.push('/customer');
-                    return;
-                }
-                // If they have a role already, check if they should be in the merchant flow
-                if (user.role) {
+                } else {
+                    // If they have a role already, check if they should be in the merchant flow
                     if (user.role === 'MERCHANT') {
                         router.push('/auth/merchant-onboarding');
-                        return;
+                    } else {
+                        setRole(user.role || 'CUSTOMER');
+                        setCheckingAuth(false);
                     }
-                    setRole(user.role);
                 }
             } else {
                 router.push('/');
-                return;
             }
-            setCheckingAuth(false);
         }
     }, [router]);
 
