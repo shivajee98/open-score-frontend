@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import AuthGuard from './AuthGuard';
 import { toast } from '@/components/ui/Toast';
-import { Volume2, VolumeX, Bell, BellOff, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight, Headphones } from 'lucide-react';
+import { Volume2, VolumeX, Bell, BellOff, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight, Headphones, Ban } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 import SupportModal from './SupportModal';
 
@@ -222,7 +222,31 @@ export default function DashboardLayout({
 
     return (
         <AuthGuard>
-            <div className={`flex flex-col md:flex-row h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans selection:bg-${themeColor}-100 selection:text-${themeColor}-900`}>
+            <div className={cn(
+                "flex flex-col md:flex-row h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans selection:bg-blue-100 selection:text-blue-900",
+                user?.status === 'SUSPENDED' && "pointer-events-none select-none blur-[1px]"
+            )}>
+                {/* Suspension Overlay */}
+                {user?.status === 'SUSPENDED' && (
+                    <div className="fixed inset-0 z-[100] bg-white/60 backdrop-blur-md flex items-center justify-center p-6 pointer-events-auto">
+                        <div className="max-w-md w-full bg-white rounded-[2.5rem] p-8 shadow-2xl border border-rose-100 text-center animate-in fade-in zoom-in-95 duration-500">
+                            <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Ban className="w-10 h-10 text-rose-500" />
+                            </div>
+                            <h2 className="text-2xl font-black text-slate-900 mb-2">Account Suspended</h2>
+                            <p className="text-slate-500 font-bold mb-8 leading-relaxed">
+                                Your access has been restricted by the administrator. Please contact your supervisor to resolve this.
+                            </p>
+                            <button
+                                onClick={handleLogout}
+                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-slate-200"
+                            >
+                                <LogOut size={20} />
+                                Logout Securely
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {/* Desktop Sidebar */}
                 <aside className="w-72 border-r border-slate-200 bg-white hidden md:flex flex-col shadow-xl z-20">
                     <div className="p-6">

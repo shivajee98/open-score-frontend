@@ -61,20 +61,37 @@ export default function LoanStatus() {
     if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loan not found</div>;
 
     const principal = Number(loan.amount);
-    const processingFee = principal === 10000 ? 0 : 1200;
-    const loginFee = principal === 10000 ? 300 : 200;
-    const fieldKycFee = principal === 10000 ? 500 : 600;
-    const totalFeesBeforeGst = processingFee + loginFee + fieldKycFee;
+
+    // Find matching configuration from the plan
+    const config = loan.plan?.configurations?.find((c: any) => {
+        const targetDays = Number(loan.tenure) * 30;
+        return Math.abs(c.tenure_days - targetDays) <= 5;
+    });
+
+    const fees = config?.fees || [];
+    const processingFee = fees.find((f: any) => f.name.toLowerCase().includes('processing'))?.amount || 0;
+    const loginFee = fees.find((f: any) => f.name.toLowerCase().includes('login'))?.amount || 0;
+    const fieldKycFee = fees.find((f: any) => f.name.toLowerCase().includes('field'))?.amount || 0;
+
+    // Sum all other fees if any
+    const otherFees = fees.filter((f: any) =>
+        !f.name.toLowerCase().includes('processing') &&
+        !f.name.toLowerCase().includes('login') &&
+        !f.name.toLowerCase().includes('field')
+    ).reduce((sum: number, f: any) => sum + Number(f.amount), 0);
+
+    const totalFeesBeforeGst = fees.reduce((sum: number, f: any) => sum + Number(f.amount), 0);
     const gstRate = 0.18;
     const gst = Math.round(principal * gstRate);
 
     // Interest calculation if available
-    const interestRate = Number(loan.interest_rate || 0);
-    const totalInterest = Math.round((principal * interestRate) / 100);
+    const interestRate = Number(config?.interest_rate || loan.interest_rate || 0);
+    const months = Number(config?.tenure_days || (loan.tenure * 30)) / 30;
+    const totalInterest = Math.round((principal * interestRate / 100) * months);
 
-    const totalDeductions = totalFeesBeforeGst + gst;
-    const disbursalAmount = principal; // "keep it the actual loan price"
-    const netPayableAmount = principal + totalDeductions; // "users have to pay base + extra fee"
+    const totalDeductions = totalFeesBeforeGst + gst + totalInterest;
+    const disbursalAmount = principal;
+    const netPayableAmount = principal + totalDeductions;
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
@@ -96,11 +113,11 @@ export default function LoanStatus() {
                             <div>
                                 <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-2">Loan ID</p>
                                 <span className={`text-[10px] font-black px-2 py-0.5 border rounded-full uppercase tracking-widest ${(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'bg-slate-50 border-slate-200 text-slate-700' :
-                                        (loan.status === 'DISBURSED' || loan.status === 'APPROVED') ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-                                            loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-                                                loan.status === 'KYC_SENT' ? 'bg-amber-50 border-amber-100 text-amber-600' :
-                                                    loan.status === 'FORM_SUBMITTED' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
-                                                        'bg-slate-50 border-slate-100 text-slate-600'
+                                    (loan.status === 'DISBURSED' || loan.status === 'APPROVED') ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                                        loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                            loan.status === 'KYC_SENT' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                                                loan.status === 'FORM_SUBMITTED' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
+                                                    'bg-slate-50 border-slate-100 text-slate-600'
                                     }`}>{(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'COMPLETED' : loan.status.replace('_', ' ')}</span>
                             </div>
                             <h2 className="text-xl font-normal text-slate-900 tracking-tight">#{loanId}</h2>
@@ -129,6 +146,16 @@ export default function LoanStatus() {
                                 <div className="flex justify-between text-xs text-slate-500">
                                     <span>Field KYC Fee</span>
                                     <span className="text-slate-900 font-medium">₹ {fieldKycFee.toLocaleString()}</span>
+                                </div>
+                                {otherFees > 0 && (
+                                    <div className="flex justify-between text-xs text-slate-500">
+                                        <span>Other Fees</span>
+                                        <span className="text-slate-900 font-medium">₹ {otherFees.toLocaleString()}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-xs text-slate-500">
+                                    <span>Interest ({interestRate}%)</span>
+                                    <span className="text-slate-900 font-medium">₹ {totalInterest.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-xs font-bold text-slate-900 pt-1 border-t border-slate-100">
                                     <span>Total fee and charges</span>

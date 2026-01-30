@@ -14,6 +14,7 @@ export default function LoanList() {
     const [kycLoan, setKycLoan] = useState<any>(null);
     const [activeLoan, setActiveLoan] = useState<any>(null);
     const [cooldown, setCooldown] = useState({ active: false, daysRemaining: 0 });
+    const [closedAmounts, setClosedAmounts] = useState<Set<number>>(new Set());
 
     const [unlockedAmount, setUnlockedAmount] = useState<number>(50000); // Default unlock up to 50k
 
@@ -33,18 +34,16 @@ export default function LoanList() {
                 });
                 setActiveLoan(active);
 
-                // Check for highest CLOSED loan to unlock next stage
-                const highestClosed = loans
-                    .filter((l: any) => l.status === 'CLOSED')
-                    .reduce((max, l) => Math.max(max, Number(l.amount)), 0);
+                // Track all CLOSED or fully paid DISBURSED loan amounts
+                const closed = new Set(
+                    loans
+                        .filter((l: any) => l.status === 'CLOSED' || (l.status === 'DISBURSED' && Number(l.paid_amount || 0) >= Number(l.amount)))
+                        .map((l: any) => Number(l.amount))
+                );
+                setClosedAmounts(closed);
 
-                if (highestClosed >= 100000) {
-                    setUnlockedAmount(500000); // Unlock up to 5 Lakhs if 1 Lakh is paid
-                } else if (highestClosed >= 50000) {
-                    setUnlockedAmount(100000); // Unlock 1 Lakh if 50k is paid
-                } else if (highestClosed >= 30000) {
-                    setUnlockedAmount(50000);
-                }
+                // Legacy: Keep highest closed for backward compatibility if needed elsewhere
+                // const highestClosed = Math.max(0, ...Array.from(closed));
 
                 // Check for 15-day cooldown from last disbursement
                 // We IGNORE cooldown if the loan is CLOSED (Paid) or fully repaid
@@ -86,14 +85,19 @@ export default function LoanList() {
                 const data = await apiFetch('/loan-plans', { cache: 'no-store' });
                 // Map API data to UI format expected by this page
                 // The page expects: amount, title, description, color
-                const mapped = data.map((p: any) => ({
-                    id: p.id,
-                    amount: parseFloat(p.amount),
-                    title: p.tag_text || 'Standard Loan', // 'Starter Boost', 'Micro Start' etc.
-                    description: `${p.tenure_days} Days • ${p.interest_rate}% Interest`,
-                    color: p.plan_color ? p.plan_color.replace('bg-', 'from-').replace('500', '400') + ' to-' + p.plan_color.replace('bg-', '').replace('500', '600') : 'from-blue-400 to-blue-600', // Making a gradient
-                    rawColor: p.plan_color // Keep original for other uses
-                }));
+                const mapped = data.map((p: any) => {
+                    const firstConfig = p.configurations && p.configurations.length > 0 ? p.configurations[0] : null;
+                    return {
+                        id: p.id,
+                        amount: parseFloat(p.amount),
+                        title: p.tag_text || 'Standard Loan',
+                        description: firstConfig
+                            ? `${firstConfig.tenure_days} Days • ${firstConfig.interest_rate}% Interest`
+                            : 'Details Pending',
+                        color: p.plan_color ? p.plan_color.replace('bg-', 'from-').replace('500', '400') + ' to-' + p.plan_color.replace('bg-', '').replace('500', '600') : 'from-blue-400 to-blue-600',
+                        rawColor: p.plan_color
+                    };
+                });
                 const sorted = mapped.sort((a: any, b: any) => a.amount - b.amount);
                 setLoanPlans(sorted);
             } catch (e) {
@@ -152,17 +156,27 @@ export default function LoanList() {
                                     )}
                                     <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">
                                         {recentLoan.status === 'CLOSED' ? 'Loan Successfully Repaid' :
-                                            recentLoan.status === 'DISBURSED' ? 'Your loan score is open on this disbursal' : 'Last Application'}
+                                            recentLoan.status === 'DISBURSED' ? 'Your loan score is open on this disbursal' :
+                                                recentLoan.status === 'CANCELLED' ? 'Cancelled Application' :
+                                                    recentLoan.status === 'REJECTED' ? 'Rejected Application' :
+                                                        'Last Application'}
                                     </span>
                                 </div>
                                 <h3 className="text-lg font-black mb-1">₹ {recentLoan.amount.toLocaleString()} Loan</h3>
                                 <p className="text-xs font-medium text-slate-400">
                                     Applied on {new Date(recentLoan.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} •
-                                    <span className={`ml-1 ${(recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount)))
+                                    <span className={`ml-1 ${recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount))
                                         ? 'text-slate-700 font-black'
-                                        : recentLoan.status === 'DISBURSED' ? 'text-emerald-400' : 'text-amber-400'
+                                        : recentLoan.status === 'DISBURSED' ? 'text-emerald-400' :
+                                            recentLoan.status === 'CANCELLED' ? 'text-rose-400' :
+                                                recentLoan.status === 'REJECTED' ? 'text-rose-600' :
+                                                    'text-amber-400'
                                         }`}>
-                                        {(recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount))) ? 'Completed' : recentLoan.status === 'DISBURSED' ? 'Active' : 'In Progress'}
+                                        {recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount)) ? 'Completed' :
+                                            recentLoan.status === 'DISBURSED' ? 'Active' :
+                                                recentLoan.status === 'CANCELLED' ? 'Cancelled' :
+                                                    recentLoan.status === 'REJECTED' ? 'Rejected' :
+                                                        'In Progress'}
                                     </span>
                                 </p>
                             </div>
@@ -244,7 +258,7 @@ export default function LoanList() {
                                 alert(`Cool-down Period: You can apply for a new loan in ${cooldown.daysRemaining} days. We require a 15-day interval between loans.`);
                                 return;
                             }
-                            router.push(`/customer/loan/${plan.amount}`);
+                            router.push(`/customer/loan/${plan.amount}?planId=${plan.id}`);
                         }}
                         className={cn(
                             "bg-slate-900 rounded-2xl p-3.5 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all",
@@ -290,7 +304,12 @@ export default function LoanList() {
                 </div>
                 <div className="flex flex-col gap-3 mb-8">
                     {loanPlans.filter((p: any) => p.amount > 10000).map((plan: any) => {
-                        const isLocked = plan.amount > unlockedAmount;
+                        // Logic: Unlock all up to 50k. For >50k, check if the plan BEFORE it is CLOSED.
+                        const fullIndex = loanPlans.findIndex(lp => lp.id === plan.id);
+                        const prevPlan = fullIndex > 0 ? loanPlans[fullIndex - 1] : null;
+
+                        const isLocked = plan.amount > 50000 && prevPlan && !closedAmounts.has(prevPlan.amount);
+
                         return (
                             <div
                                 key={plan.id}
@@ -304,10 +323,10 @@ export default function LoanList() {
                                         return;
                                     }
                                     if (isLocked) {
-                                        alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} loan. Please build your eligibility by successfully repaying your current or previous smaller loans.`);
+                                        alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} loan. Please build your eligibility by successfully repaying your previous ₹${prevPlan?.amount.toLocaleString()} loan.`);
                                         return;
                                     }
-                                    router.push(`/customer/loan/${plan.amount}`);
+                                    router.push(`/customer/loan/${plan.amount}?planId=${plan.id}`);
                                 }}
                                 className={cn(
                                     "bg-white rounded-xl p-3 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between",

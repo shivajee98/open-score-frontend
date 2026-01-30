@@ -29,15 +29,56 @@ export default function LoanDetail() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (LOAN_PLANS[amount]) {
-            setPlan(LOAN_PLANS[amount]);
-            // Default tenure (lowest)
-            const defaultTenure = LOAN_PLANS[amount].tenures[0];
-            setTenure(defaultTenure);
-            // Don't auto-select payout yet, force user choice or use useEffect below
-        } else {
-            router.replace('/customer/loan');
-        }
+        const fetchPlan = async () => {
+            try {
+                setLoading(true);
+                const plans = await apiFetch('/loan-plans');
+                // Find by amount or better yet, we should have used ID. 
+                // But for now, if it's the old [amount] route, we find by amount.
+                // However, we should prefer planId if available.
+                const planId = new URLSearchParams(window.location.search).get('planId');
+
+                let found = null;
+                if (planId) {
+                    found = plans.find((p: any) => p.id == planId);
+                } else {
+                    found = plans.find((p: any) => Number(p.amount) === amount);
+                }
+
+                if (found) {
+                    // Map to the format expected by this page's child components
+                    const mappedPlan = {
+                        ...found,
+                        amount: Number(found.amount),
+                        tenures: found.configurations?.map((c: any) => Math.round(c.tenure_days / 30)) || [],
+                        payoutOptions: (tenure: number) => {
+                            const conf = found.configurations?.find((c: any) => Math.round(c.tenure_days / 30) === tenure);
+                            if (!conf) return [];
+                            return (conf.allowed_frequencies || []).map((freq: string) => ({
+                                id: freq,
+                                label: freq.replace('_', ' '),
+                                frequency: freq,
+                                interestRate: conf.interest_rate,
+                                cashback: conf.cashback?.[freq] || 0,
+                                isBestValue: freq === 'Daily' // Default for now
+                            }));
+                        }
+                    };
+                    setPlan(mappedPlan);
+                    if (mappedPlan.tenures.length > 0) {
+                        setTenure(mappedPlan.tenures[0]);
+                    }
+                } else {
+                    router.replace('/customer/loan');
+                }
+            } catch (e) {
+                console.error("Failed to load plan", e);
+                router.replace('/customer/loan');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPlan();
     }, [amount, router]);
 
     // Reset payout when tenure changes
@@ -70,7 +111,8 @@ export default function LoanDetail() {
                     amount: plan.amount,
                     tenure,
                     payout_frequency: payout.frequency,
-                    payout_option_id: payout.id
+                    payout_option_id: payout.id,
+                    loan_plan_id: plan.id
                 })
             });
 

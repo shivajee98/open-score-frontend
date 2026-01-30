@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Check, Zap, CreditCard, Calendar, FileText, Clock, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 
 export default function LoanApplication() {
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     // UI States
     const [entryMode, setEntryMode] = useState(true);
@@ -42,6 +43,25 @@ export default function LoanApplication() {
     useEffect(() => {
         const checkStatus = async () => {
             try {
+                // Fetch User Profile
+                const user = await apiFetch('/auth/me');
+                if (user && user.name) {
+                    setFormData(prev => ({
+                        ...prev,
+                        fullName: user.name || '',
+                        address: user.business_address || '',
+                        pinCode: user.pincode || '',
+                        // city not explicitly in user model? but let's see
+                    }));
+                    // If name and address exist, we can potentially skip step 1
+                    // But maybe we just want to pre-fill.
+                    // The user said: "if a user have already filled that form, then also why are we again opening that form"
+                    // So let's skip to Step 2 if user has name and address.
+                    if (user.name && (user.business_address || user.pincode)) {
+                        setStep(2);
+                    }
+                }
+
                 const data = await apiFetch('/loans');
                 setLoans(data);
 
@@ -151,6 +171,18 @@ export default function LoanApplication() {
 
                 mappedPlans.sort((a: any, b: any) => a.rawAmount - b.rawAmount);
                 setPlans(mappedPlans);
+
+                // Handle pre-selected plan
+                const planId = searchParams.get('planId');
+                if (planId) {
+                    const target = mappedPlans.find((p: any) => p.id == planId);
+                    if (target) {
+                        setSelectedOffer(target);
+                        if (target.configurations && target.configurations.length > 0) {
+                            setSelectedTenureConfig(target.configurations[0]);
+                        }
+                    }
+                }
             } catch (e) {
                 console.error("Failed to load plans", e);
                 toast.error("Could not load loan offers.");
@@ -160,7 +192,15 @@ export default function LoanApplication() {
         if (step === 2) {
             fetchPlans();
         }
-    }, [step]);
+    }, [step, searchParams]);
+
+    // Effect to handle entry mode bypass if planId is provided
+    useEffect(() => {
+        const planId = searchParams.get('planId');
+        if (planId && entryMode) {
+            setEntryMode(false);
+        }
+    }, [searchParams, entryMode]);
 
     const handleApply = async () => {
         if (!selectedOffer || !selectedTenureConfig) return;
