@@ -309,13 +309,14 @@ export default function DashboardLayout({
                                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
                                 </button>
                             </Link>
-                            <button
-                                onClick={() => setSupportOpen(true)}
-                                className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
-                                title="Help & Support"
-                            >
-                                <Headphones size={18} />
-                            </button>
+                            <Link href="/customer/support">
+                                <button
+                                    className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
+                                    title="Help & Support"
+                                >
+                                    <Headphones size={18} />
+                                </button>
+                            </Link>
                         </div>
                         <div className="flex items-center gap-2 md:hidden">
                             <Link href="/customer/profile">
@@ -335,7 +336,6 @@ export default function DashboardLayout({
                         )}
                     </div>
                 </main >
-                <SupportModal isOpen={supportOpen} onClose={() => setSupportOpen(false)} />
             </div >
         </AuthGuard>
     );

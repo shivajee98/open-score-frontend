@@ -58,7 +58,9 @@ export default function LoanDetail() {
                                 id: freq,
                                 label: freq.replace('_', ' '),
                                 frequency: freq,
-                                interestRate: conf.interest_rate,
+                                interestRate: (conf.interest_rates && conf.interest_rates[freq] !== undefined)
+                                    ? conf.interest_rates[freq]
+                                    : (conf.interest_rate || 0),
                                 cashback: conf.cashback?.[freq] || 0,
                                 isBestValue: freq === 'Daily', // Default for now
                                 tenureDays: conf.tenure_days // Exact days for calculation

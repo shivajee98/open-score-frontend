@@ -111,19 +111,22 @@ export default function RepaymentDashboard() {
     const pendingEmi = repayments.find(r => r.status === 'PENDING');
     const totalPaid = Number(loan.paid_amount || 0);
 
-    // Constants for calculations
-    const processingFee = loan.amount == 10000 ? 0 : 1200;
-    const loginFee = loan.amount == 10000 ? 300 : 200;
-    const fieldKycFee = loan.amount == 10000 ? 500 : 600;
-    const gstAmount = Math.round(loan.amount * 0.18);
-    const totalPayable = Number(loan.amount) + processingFee + loginFee + fieldKycFee + gstAmount;
+    // Use Backend Calculations
+    const calculations = loan.calculations || {};
+    const totalPayable = Number(calculations.net_payable_amount || loan.amount);
+    const principal = Number(calculations.principal || loan.amount);
 
-    const progress = Math.min(100, Math.round((totalPaid / totalPayable) * 100));
+    // Fallback if calculations are missing (shouldn't happen with new backend)
+    // const gstAmount = calculations.gst || 0; 
+
+    // Progress Calculation
+    // Ensure we don't divide by zero
+    const progress = totalPayable > 0 ? Math.min(100, Math.round((totalPaid / totalPayable) * 100)) : 0;
 
     // Senior Fintech Analytics
     const cashbackRate = 0.01; // 1% cashback on each repayment
     const totalCashbackEarned = paidEmis.reduce((sum, r) => sum + (Number(r.amount) * cashbackRate), 0);
-    const expectedTotalCashback = (totalPayable * cashbackRate);
+    // const expectedTotalCashback = (totalPayable * cashbackRate);
 
     // Grouping & Filtering for UI
     const filteredRepayments = repayments.filter(r => {
@@ -141,6 +144,9 @@ export default function RepaymentDashboard() {
         acc[week].push(curr);
         return acc;
     }, {});
+
+    // Check if loan is truly cleared
+    const isLoanCleared = loan.status === 'CLOSED' || (repayments.length > 0 && !pendingEmi && totalPaid >= totalPayable);
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-32">
@@ -225,7 +231,7 @@ export default function RepaymentDashboard() {
                         </div>
                     </div>
 
-                    {!pendingEmi && (
+                    {isLoanCleared && (
                         <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-700">
                             <div>
                                 <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5"><CheckCircle2 size={12} /> Status: Cleared</p>
@@ -333,7 +339,7 @@ export default function RepaymentDashboard() {
                             )}
                         </button>
                     </div>
-                ) : (
+                ) : isLoanCleared ? (
                     <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-2xl shadow-blue-900/30 text-center space-y-6 relative overflow-hidden">
                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')] opacity-10"></div>
                         <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center mx-auto mb-4 border border-white/20 shadow-xl">
@@ -353,7 +359,7 @@ export default function RepaymentDashboard() {
                             Apply New Loan <ArrowRightCircle size={16} />
                         </button>
                     </div>
-                )}
+                ) : null}
 
                 {/* Analytical Ledger Section */}
                 <div className="bg-white rounded-2xl shadow-xl shadow-slate-900/5 overflow-hidden border border-slate-50">
