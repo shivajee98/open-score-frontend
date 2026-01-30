@@ -11,10 +11,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const checkAuth = () => {
-            const token = localStorage.getItem('token');
             const userStr = localStorage.getItem('user');
 
-            if (!token || !userStr) {
+            if (!userStr) {
                 router.push('/');
                 return;
             }

@@ -59,7 +59,6 @@ export default function Onboarding() {
             // Update local state
             const updatedUser = { ...res.user, role: 'MERCHANT' };
             localStorage.setItem('user', JSON.stringify(updatedUser));
-            document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/; max-age=2592000; SameSite=Lax`;
 
             router.push('/auth/merchant-onboarding');
         } catch (err: any) {
@@ -86,7 +85,6 @@ export default function Onboarding() {
         try {
             const userLocalStorage = JSON.parse(localStorage.getItem('user') || '{}');
             const mobile = userLocalStorage.mobile_number;
-            const token = localStorage.getItem('token');
 
             // 1. Update role if needed
             await apiFetch('/auth/verify', {
@@ -115,12 +113,6 @@ export default function Onboarding() {
             // On success, update stored user and redirect
             const updatedUser = { ...res.user, is_onboarded: true };
             localStorage.setItem('user', JSON.stringify(updatedUser));
-            document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/; max-age=2592000; SameSite=Lax`;
-
-            if (token) {
-                document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
-                document.cookie = `user=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/; max-age=86400; SameSite=Lax`;
-            }
 
             if (role === 'CUSTOMER') router.push('/customer');
             else if (role === 'MERCHANT') router.push('/auth/merchant-onboarding');

@@ -16,8 +16,8 @@ const nextConfig: NextConfig = {
         destination: `${adminUrl}/admin/:path*`,
       },
       {
-        source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
+        source: '/api/((?!proxy|auth).*)',
+        destination: `${backendUrl}/api/:1`,
       },
     ];
   },

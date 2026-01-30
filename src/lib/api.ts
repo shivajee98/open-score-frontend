@@ -1,19 +1,14 @@
 'use client';
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+const BASE_URL = '/api/proxy';
 
 let isRedirecting = false;
 
-export const clearAuthState = () => {
+export const clearAuthState = async () => {
     if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        // Clear cookies with all common attributes to ensure they are gone
-        const cookies = ['token', 'user'];
-        cookies.forEach(name => {
-            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
-            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname};`;
-        });
+        // Clear server-side session
+        await fetch('/api/auth/logout', { method: 'POST' }).catch(() => { });
 
         // Notify Native WebView
         if ((window as any).ReactNativeWebView) {
@@ -26,46 +21,55 @@ export const clearAuthState = () => {
 
 export const handleUnauthorized = () => {
     if (typeof window !== 'undefined' && !isRedirecting) {
-        console.warn('Handling unauthorized response - clearing state and redirecting to login');
-        isRedirecting = true;
+        const isHomePage = window.location.pathname === '/';
+
+        console.warn('Handling unauthorized response - clearing state');
         clearAuthState();
 
-        // Use setTimeout to avoid race conditions
-        setTimeout(() => {
-            window.location.href = '/';
-            // Reset flag after redirect completes
+        if (!isHomePage) {
+            isRedirecting = true;
+            // Use setTimeout to avoid race conditions
             setTimeout(() => {
-                isRedirecting = false;
-            }, 1000);
-        }, 100);
+                window.location.href = '/';
+                // Reset flag after redirect completes
+                setTimeout(() => {
+                    isRedirecting = false;
+                }, 1000);
+            }, 100);
+        }
     }
 };
 
-export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-    let token = null;
-    if (typeof window !== 'undefined') {
-        token = localStorage.getItem('token');
-    }
+interface ApiOptions extends RequestInit {
+    skipAuthCheck?: boolean;
+}
+
+export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
+    const { skipAuthCheck, ...fetchOptions } = options;
 
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
+        ...fetchOptions.headers,
     };
 
-    const url = endpoint.startsWith('/') ? `${BASE_URL}${endpoint}` : `${BASE_URL}/${endpoint}`;
+    // If it's a login or absolute auth request, handle separately or allow absolute URLs
+    const isExternal = endpoint.startsWith('http');
+    const url = isExternal ? endpoint : (endpoint.startsWith('/') ? `${BASE_URL}${endpoint}` : `${BASE_URL}/${endpoint}`);
 
     try {
         const response = await fetch(url, {
-            ...options,
+            ...fetchOptions,
             headers,
         });
 
         // Handle unauthorized/forbidden
-        if (response.status === 401 || response.status === 403) {
+        if ((response.status === 401 || response.status === 403) && !skipAuthCheck) {
             handleUnauthorized();
             throw new Error('Session expired. Please login again.');
+        } else if (response.status === 401 || response.status === 403) {
+            // Just throw error without redirecting if skipAuthCheck is on
+            throw new Error('Unauthorized');
         }
 
         if (!response.ok) {

@@ -97,11 +97,10 @@ function MerchantOnboardingForm() {
                 })
             });
 
-            // Sync user in local storage and cookies
+            // Sync user in local storage
             const updatedUser = await apiFetch('/auth/me');
             const user = { ...updatedUser, is_onboarded: true };
             localStorage.setItem('user', JSON.stringify(user));
-            document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=2592000; SameSite=Lax`;
 
             router.push('/customer');
         } catch (err: any) {

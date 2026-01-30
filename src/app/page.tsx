@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, clearAuthState } from '@/lib/api';
 import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store } from 'lucide-react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 
@@ -14,7 +14,7 @@ export default function Home() {
   const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | null>(null);
 
   // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'
-  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'>('onboarding');
+  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'>('mobile_entry');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,23 +23,15 @@ export default function Home() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-
       try {
-        if (token && userStr) {
-          const userData = await apiFetch('/auth/me');
-          localStorage.setItem('user', JSON.stringify(userData));
-
-          // Refresh cookies
-          document.cookie = `token=${token}; path=/; max-age=2592000; SameSite=Lax`;
-          document.cookie = `user=${encodeURIComponent(JSON.stringify(userData))}; path=/; max-age=2592000; SameSite=Lax`;
-
-          redirectUser(userData);
-        } else {
-          setCheckingSession(false);
-        }
+        const userData = await apiFetch('/auth/me', { skipAuthCheck: true });
+        // Only store non-sensitive UI-only user data in localStorage if absolutely necessary for speed,
+        // but for high security we should rely on the fetch result.
+        localStorage.setItem('user', JSON.stringify(userData));
+        redirectUser(userData);
       } catch (e) {
+        // Clear locally if session invalid
+        clearAuthState();
         setCheckingSession(false);
       }
     };
@@ -53,17 +45,10 @@ export default function Home() {
   }, [flow, role]);
 
   const redirectUser = (user: any) => {
-    // Sync with Native App
-    const token = localStorage.getItem('token');
-    if (token) {
-      document.cookie = `token=${token}; path=/; max-age=2592000; SameSite=Lax`;
-      document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=2592000; SameSite=Lax`;
-    }
-
+    // Sync with Native App if needed, but avoid sending tokens over JS
     if ((window as any).ReactNativeWebView) {
       (window as any).ReactNativeWebView.postMessage(JSON.stringify({
         type: 'LOGIN',
-        token,
         user
       }));
     }
@@ -98,16 +83,24 @@ export default function Home() {
     setLoading(true);
     setError('');
     try {
-      const data = await apiFetch('/auth/verify', {
+      // Use the internal secure login route
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile_number: mobile, otp }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Verification failed');
+      }
 
       if (data.status === 'NEW_USER') {
         setFlow('role_select');
       } else {
-        localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('hasSeenOnboarding', 'true');
 
         if (data.onboarding_status === 'REQUIRED') {
           data.user.is_onboarded = false;
@@ -132,13 +125,21 @@ export default function Home() {
     setLoading(true);
     setError('');
     try {
-      const authData = await apiFetch('/auth/verify', {
+      // Use the internal secure login route for verification with role
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobile_number: mobile, otp, role }),
       });
 
-      localStorage.setItem('token', authData.access_token);
+      const authData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(authData.error || 'Registration failed');
+      }
+
       localStorage.setItem('user', JSON.stringify(authData.user));
+      localStorage.setItem('hasSeenOnboarding', 'true');
 
       if (role === 'MERCHANT') {
         redirectUser(authData.user);
@@ -148,7 +149,6 @@ export default function Home() {
       await apiFetch('/auth/onboarding', {
         method: 'POST',
         body: JSON.stringify({ name, email }),
-        headers: { 'Authorization': `Bearer ${authData.access_token}` }
       });
 
       const user = { ...authData.user, name, email, is_onboarded: true };

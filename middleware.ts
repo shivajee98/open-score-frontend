@@ -1,84 +1,74 @@
 import { NextResponse, NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
 
-export function middleware(request: NextRequest) {
+const JWT_SECRET = new TextEncoder().encode(
+    process.env.AUTH_SECRET || 'your-fallback-secret'
+);
+
+export async function middleware(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
-    const userStr = request.cookies.get('user')?.value;
     const { pathname } = request.nextUrl;
 
-    // Handle legacy merchant routes
-    if (pathname.startsWith('/merchant')) {
-        return NextResponse.redirect(new URL('/customer', request.url));
-    }
-
-    // Define protected and auth routes
-    const isProtectedRoute = pathname.startsWith('/customer') ||
-        pathname.startsWith('/admin');
+    // Define routes
+    const isProtectedRoute = pathname.startsWith('/customer') || pathname.startsWith('/admin');
     const isAuthRoute = pathname === '/' || pathname.startsWith('/auth');
     const isOnboardingRoute = pathname === '/auth/onboarding' || pathname === '/auth/merchant-onboarding';
+    const isStatic = pathname.startsWith('/_next') || pathname.includes('.');
 
-    // Protected routes require authentication
-    if (isProtectedRoute) {
-        if (!token) {
-            const response = NextResponse.redirect(new URL('/', request.url));
-            // Clear any stale cookies
-            response.cookies.delete('token');
-            response.cookies.delete('user');
-            return response;
-        }
+    if (isStatic) return NextResponse.next();
 
-        // Check if user data exists and is valid
-        if (userStr) {
-            try {
-                const user = JSON.parse(decodeURIComponent(userStr));
-
-                // Redirect to onboarding if not completed
-                if (!user.is_onboarded && !isOnboardingRoute) {
-                    const onboardingPath = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
-
-                    // Prevent redirect loop
-                    if (pathname !== onboardingPath) {
-                        return NextResponse.redirect(new URL(onboardingPath, request.url));
-                    }
-                }
-            } catch (e) {
-                // If user cookie is malformed, clear everything and redirect to login
-                console.error('Malformed user cookie:', e);
+    let payload: any = null;
+    if (token) {
+        try {
+            const verified = await jwtVerify(token, JWT_SECRET);
+            payload = verified.payload;
+        } catch (err) {
+            console.error('JWT verification failed:', err);
+            // If token is invalid, clear it and redirect to login if it's a protected route
+            if (isProtectedRoute) {
                 const response = NextResponse.redirect(new URL('/', request.url));
                 response.cookies.delete('token');
-                response.cookies.delete('user');
                 return response;
             }
-        } else if (token) {
-            // Token exists but no user data - don't clear token, just redirect to home
-            // where client-side checkSession can re-verify and sync cookies
-            return NextResponse.redirect(new URL('/', request.url));
         }
     }
 
-    // Redirect logged-in users away from auth routes
-    if (isAuthRoute && token && userStr) {
-        try {
-            const user = JSON.parse(decodeURIComponent(userStr));
+    // Protected routes require valid payload
+    if (isProtectedRoute) {
+        if (!payload) {
+            const response = NextResponse.redirect(new URL('/', request.url));
+            response.cookies.delete('token');
+            return response;
+        }
 
-            if (user.is_onboarded) {
-                // Redirect based on role
-                const targetPath = user.role === 'ADMIN' ? '/admin' : '/customer';
+        // Onboarding enforcement
+        const user = payload.user || payload; // Adjust based on backend payload structure
+        const isUserOnboarded = user.is_onboarded;
 
-                // Only redirect if not already on the target path
-                if (!pathname.startsWith(targetPath)) {
-                    return NextResponse.redirect(new URL(targetPath, request.url));
-                }
-            } else if (pathname === '/') {
-                // Not onboarded, redirect to appropriate onboarding
-                const onboardingPath = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
+        if (!isUserOnboarded && !isOnboardingRoute) {
+            const onboardingPath = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
+            if (pathname !== onboardingPath) {
                 return NextResponse.redirect(new URL(onboardingPath, request.url));
             }
-        } catch (e) {
-            // Parsing error - clear cookies
-            const response = NextResponse.next();
-            response.cookies.delete('token');
-            response.cookies.delete('user');
-            return response;
+        }
+
+        // Role enforcement
+        if (pathname.startsWith('/admin') && user.role !== 'ADMIN') {
+            return NextResponse.redirect(new URL('/customer', request.url));
+        }
+    }
+
+    // Auth routes (Login): if already logged in, redirect away
+    if (isAuthRoute && payload) {
+        const user = payload.user || payload;
+        if (user.is_onboarded) {
+            const targetPath = user.role === 'ADMIN' ? '/admin' : '/customer';
+            if (!pathname.startsWith(targetPath)) {
+                return NextResponse.redirect(new URL(targetPath, request.url));
+            }
+        } else if (pathname === '/') {
+            const onboardingPath = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
+            return NextResponse.redirect(new URL(onboardingPath, request.url));
         }
     }
 
@@ -89,12 +79,11 @@ export const config = {
     matcher: [
         /*
          * Match all request paths except for the ones starting with:
-         * - api (API routes)
+         * - api (API routes, though we might want to protect some)
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
-         * - icon.svg (icon file)
          */
-        '/((?!api|_next/static|_next/image|favicon.ico|icon.svg).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico).*)',
     ],
 };

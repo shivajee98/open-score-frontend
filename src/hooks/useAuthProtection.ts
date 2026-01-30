@@ -8,8 +8,8 @@ export function useAuthProtection() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
+        const user = localStorage.getItem('user');
+        if (!user) {
             router.push('/');
         } else {
             setIsAuthenticated(true);

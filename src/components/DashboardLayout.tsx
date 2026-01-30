@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, clearAuthState } from '@/lib/api';
 import AuthGuard from './AuthGuard';
 import { toast } from '@/components/ui/Toast';
 import { Volume2, VolumeX, Bell, BellOff, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight, Headphones, Ban } from 'lucide-react';
@@ -67,29 +67,24 @@ export default function DashboardLayout({
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
 
         if (storedUser) {
             setUser(JSON.parse(storedUser));
         }
 
-        // Hydrate latest data from server if token exists
-        if (token) {
-            apiFetch('/auth/me')
-                .then(data => {
-                    setUser(data);
-                    localStorage.setItem('user', JSON.stringify(data));
-                })
-                .catch(err => {
-                    console.error("Hydration failed", err);
-                    if (!storedUser) router.push('/');
-                });
+        // Hydrate latest data from server
+        apiFetch('/auth/me')
+            .then(data => {
+                setUser(data);
+                localStorage.setItem('user', JSON.stringify(data));
+            })
+            .catch(err => {
+                console.error("Hydration failed", err);
+                if (!storedUser) router.push('/');
+            });
 
-            // Initial poll to set ref
-            checkNewTransactions();
-        } else {
-            router.push('/');
-        }
+        // Initial poll to set ref
+        checkNewTransactions();
 
         // Poll for notifications - Faster for Merchants (Almost instant)
         const pollRate = user?.role === 'MERCHANT' ? 2000 : 15000;
@@ -213,9 +208,8 @@ export default function DashboardLayout({
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    const handleLogout = async () => {
+        await clearAuthState();
         setUser(null);
         router.push('/');
     };
