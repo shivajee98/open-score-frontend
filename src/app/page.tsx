@@ -2,78 +2,57 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch, clearAuthState } from '@/lib/api';
-import { Smartphone, Store, ArrowRight, ShieldCheck, User as UserIcon, Check, BadgeCheck } from 'lucide-react';
-import SplashScreen from '@/components/SplashScreen';
+import { apiFetch } from '@/lib/api';
+import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store } from 'lucide-react';
+import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 
 export default function Home() {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
-
-  // Registration Details
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | null>(null);
 
-  // Steps: 0=Phone, 1=OTP, 2=Details, 3=Role
-  const [step, setStep] = useState(0);
+  // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'
+  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'>('onboarding');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showSplash, setShowSplash] = useState(true);
+  const [checkingSession, setCheckingSession] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const checkSession = async () => {
-      const minSplashTime = new Promise(resolve => setTimeout(resolve, 2000));
       const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
 
       try {
         if (token && userStr) {
-          // Verify token with backend
           const userData = await apiFetch('/auth/me');
-
-          // If successful, update user data and ensure cookies are synced
           localStorage.setItem('user', JSON.stringify(userData));
 
-          // Refresh cookies for middleware - 30 days
+          // Refresh cookies
           document.cookie = `token=${token}; path=/; max-age=2592000; SameSite=Lax`;
           document.cookie = `user=${encodeURIComponent(JSON.stringify(userData))}; path=/; max-age=2592000; SameSite=Lax`;
 
-          await minSplashTime;
           redirectUser(userData);
         } else {
-          await minSplashTime;
-          setShowSplash(false);
+          setCheckingSession(false);
         }
-      } catch (e: any) {
-        console.error("Session check failed:", e);
-        await minSplashTime;
-
-        // Only clear if it's explicitly an auth error (401/403)
-        // handleUnauthorized() already calls clearAuthState()
-        if (e.message?.includes('expired') || e.message?.includes('login') || e.message?.includes('status 401')) {
-          // State already cleared by apiFetch -> handleUnauthorized
-        } else {
-          // Network error or other - don't log out, just show login screen
-          // If we have token, we might want to stay on splash or show "Retry"
-          // but for now let's just show login.
-          console.warn("Possible network error, staying on login screen without clearing state");
-        }
-        setShowSplash(false);
+      } catch (e) {
+        setCheckingSession(false);
       }
     };
     checkSession();
   }, [router]);
 
   useEffect(() => {
-    if (step === 4 && role === 'MERCHANT') {
+    if (flow === 'processing' && role === 'MERCHANT') {
       handleRegister();
     }
-  }, [step, role]);
+  }, [flow, role]);
 
   const redirectUser = (user: any) => {
-    // Sync with Native App
     if ((window as any).ReactNativeWebView) {
       (window as any).ReactNativeWebView.postMessage(JSON.stringify({
         type: 'LOGIN',
@@ -82,24 +61,14 @@ export default function Home() {
       }));
     }
 
-    // Set cookies for middleware - 30 days
-    const token = localStorage.getItem('token');
-    if (token) {
-      document.cookie = `token=${token}; path=/; max-age=2592000; SameSite=Lax`;
-      document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=2592000; SameSite=Lax`;
-    }
-
     if (!user.is_onboarded) {
-      if (user.role === 'MERCHANT') {
-        router.push('/auth/merchant-onboarding');
-      } else {
-        router.push('/auth/onboarding');
-      }
+      if (user.role === 'MERCHANT') router.push('/auth/merchant-onboarding');
+      else router.push('/auth/onboarding');
       return;
     }
 
     if (user.role === 'ADMIN') router.push('/admin');
-    else router.push('/customer'); // Unified dashboard for both
+    else router.push('/customer');
   };
 
   const handleSendOtp = async () => {
@@ -110,7 +79,7 @@ export default function Home() {
         method: 'POST',
         body: JSON.stringify({ mobile_number: mobile }),
       });
-      setStep(1);
+      setFlow('otp_verify');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -122,28 +91,22 @@ export default function Home() {
     setLoading(true);
     setError('');
     try {
-      // First try to login without role (checks existence)
       const data = await apiFetch('/auth/verify', {
         method: 'POST',
         body: JSON.stringify({ mobile_number: mobile, otp }),
       });
 
       if (data.status === 'NEW_USER') {
-        // User not found -> Proceed to Role Selection first (User Request)
-        setStep(3);
+        setFlow('role_select');
       } else {
-        // User found -> Login
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
         if (data.onboarding_status === 'REQUIRED') {
           data.user.is_onboarded = false;
           localStorage.setItem('user', JSON.stringify(data.user));
-          if (data.user.role) {
-            redirectUser(data.user);
-          } else {
-            setStep(3); // Go to role selection instead of onboarding page immediately
-          }
+          if (data.user.role) redirectUser(data.user);
+          else setFlow('role_select');
         } else {
           data.user.is_onboarded = true;
           localStorage.setItem('user', JSON.stringify(data.user));
@@ -162,7 +125,6 @@ export default function Home() {
     setLoading(true);
     setError('');
     try {
-      // 1. Create User
       const authData = await apiFetch('/auth/verify', {
         method: 'POST',
         body: JSON.stringify({ mobile_number: mobile, otp, role }),
@@ -171,13 +133,11 @@ export default function Home() {
       localStorage.setItem('token', authData.access_token);
       localStorage.setItem('user', JSON.stringify(authData.user));
 
-      // 2. If Merchant, skip this basic onboarding and go to specialized merchant flow
       if (role === 'MERCHANT') {
         redirectUser(authData.user);
         return;
       }
 
-      // 3. Update Details (For Customer)
       await apiFetch('/auth/onboarding', {
         method: 'POST',
         body: JSON.stringify({ name, email }),
@@ -186,132 +146,129 @@ export default function Home() {
 
       const user = { ...authData.user, name, email, is_onboarded: true };
       localStorage.setItem('user', JSON.stringify(user));
-
       redirectUser(user);
-
     } catch (err: any) {
       setError(err.message);
+      setFlow('details_entry'); // Go back to details on error
     } finally {
       setLoading(false);
     }
   };
 
-  if (showSplash) return <SplashScreen />;
+  if (checkingSession) return null; // Let the splash from OnboardingFlow handle it if needed
+
+  if (flow === 'onboarding') {
+    return (
+      <OnboardingFlow
+        onComplete={(mode) => {
+          if (mode === 'signup') setFlow('mobile_entry');
+          else setFlow('mobile_entry'); // Both go to mobile entry for now as it's the primary gateway
+        }}
+      />
+    );
+  }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
-      <div className="w-full max-w-md bg-white rounded-3xl p-6 md:p-8 shadow-2xl shadow-blue-900/5 relative overflow-hidden">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-white p-6 text-primary overflow-hidden">
+      <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-10 duration-700">
 
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
-
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-600 text-white font-black text-xl mb-4 shadow-lg shadow-blue-600/20">
-            O
-          </div>
-          <h1 className="text-2xl font-black tracking-tighter text-slate-900 mb-2">
-            OpenScore
-          </h1>
-          <p className="text-slate-500 font-medium text-sm">Powered by MSME Shakti</p>
-        </div>
-
-        {error && <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold text-center border border-red-100 mb-6">{error}</div>}
-
-        {step === 0 && (
-          <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Mobile Number</label>
-              <div className="relative">
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm select-none border-r border-slate-200 pr-3 mr-3">+91</div>
-                <input
-                  type="tel"
-                  autoFocus
-                  value={mobile}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/[^0-9]/g, '');
-                    if (val.length <= 10) setMobile(val);
-                  }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-[3.5rem] font-bold text-slate-900 text-base focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all placeholder:text-slate-300 tracking-widest"
-                  placeholder="00000 00000"
-                />
-              </div>
-            </div>
-            <button
-              onClick={handleSendOtp}
-              disabled={loading || mobile.length < 10}
-              className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-base shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : <>Continue <ArrowRight className="w-5 h-5" /></>}
-            </button>
+        {error && (
+          <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold text-center border border-red-100 mb-6">
+            {error}
           </div>
         )}
 
-        {step === 1 && (
-          <div className="space-y-6 animate-in slide-in-from-right-8 fade-in duration-300 text-center">
+        {flow === 'mobile_entry' && (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-black mb-2">Welcome Back</h2>
+              <p className="text-slate-500 text-sm">Enter your mobile number to continue</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Mobile Number</label>
+                <div className="relative">
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm select-none border-r border-slate-100 pr-3mr-3">+91</div>
+                  <input
+                    type="tel"
+                    autoFocus
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 pl-[3.8rem] font-bold text-primary text-lg focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand tracking-widest"
+                    placeholder="00000 00000"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleSendOtp}
+                disabled={loading || mobile.length < 10}
+                className="w-full py-5 bg-primary text-white rounded-2xl font-black text-base shadow-xl shadow-primary/20 transition-brand active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group"
+              >
+                {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : <>Get OTP <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
+              </button>
+            </div>
+            <button onClick={() => setFlow('onboarding')} className="w-full text-center text-xs font-bold text-slate-400 uppercase tracking-widest py-2">Back to Intro</button>
+          </div>
+        )}
+
+        {flow === 'otp_verify' && (
+          <div className="space-y-8 text-center">
             <div>
-              <h3 className="text-lg font-black text-slate-900 mb-2">Verify Identity</h3>
+              <h2 className="text-2xl font-black mb-2">Verify Identity</h2>
               <p className="text-slate-500 text-sm">Enter the code sent to +91 {mobile}</p>
             </div>
 
-            <div className="relative max-w-xs mx-auto">
-              <input
-                type="tel"
-                autoFocus
-                value={otp}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
-                  if (val.length <= 6) setOtp(val);
-                }}
-                className="w-full text-center bg-slate-50 border border-slate-200 rounded-xl p-3 font-black text-xl tracking-[0.5em] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all placeholder:text-slate-300"
-                placeholder="••••••"
-              />
+            <input
+              type="tel"
+              autoFocus
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+              className="w-full text-center bg-slate-50 border border-slate-100 rounded-2xl p-5 font-black text-2xl tracking-[0.5em] text-primary focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand"
+              placeholder="••••••"
+            />
+
+            <div className="space-y-4">
+              <button
+                onClick={handleVerifyOtp}
+                disabled={loading || otp.length < 6}
+                className="w-full py-5 bg-primary text-white rounded-2xl font-black text-base shadow-xl shadow-primary/20 transition-brand active:scale-[0.98] disabled:opacity-50"
+              >
+                {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Verify Code'}
+              </button>
+              <button onClick={() => setFlow('mobile_entry')} className="text-xs font-bold text-slate-400 uppercase tracking-widest">Change Number</button>
             </div>
-
-            <button
-              onClick={handleVerifyOtp}
-              disabled={loading || otp.length < 6}
-              className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-base shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Verify'}
-            </button>
-
-            <button onClick={() => setStep(0)} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">Change Number</button>
           </div>
         )}
 
-        {step === 3 && (
-          <div className="space-y-3 animate-in slide-in-from-right-8 duration-300">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-black text-slate-900">Choose Account Type</h3>
-              <p className="text-slate-500 text-sm">How will you use OpenScore?</p>
+        {flow === 'role_select' && (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-black mb-2">Account Type</h2>
+              <p className="text-slate-500 text-sm">How will you use Open Score?</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-4">
               {[
-                { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon className="w-5 h-5" /> },
-                { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store className="w-5 h-5" /> },
+                { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon /> },
+                { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store /> },
               ].map((item) => (
                 <button
                   key={item.id}
                   onClick={() => {
                     const selectedRole = item.id as any;
                     setRole(selectedRole);
-                    if (selectedRole === 'MERCHANT') {
-                      // Trigger registration immediately for merchants
-                      // We'll handle the rest in the specialized onboarding page
-                      setStep(4); // Internal state for "Processing..."
-                    } else {
-                      setStep(2); // Go to details after role for customers
-                    }
+                    setFlow(selectedRole === 'MERCHANT' ? 'processing' : 'details_entry');
                   }}
-                  className={`w-full p-3 rounded-xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
+                  className="w-full p-5 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:bg-white hover:border-primary/20 text-left transition-brand group active:scale-[0.98]"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${role === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-100 text-slate-400'}`}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-brand">
                       {item.icon}
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-900 text-base">{item.label}</h4>
-                      <p className="text-xs text-slate-500 font-medium">{item.sub}</p>
+                      <h4 className="font-bold text-primary text-lg">{item.label}</h4>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{item.sub}</p>
                     </div>
                   </div>
                 </button>
@@ -320,57 +277,63 @@ export default function Home() {
           </div>
         )}
 
-        {step === 2 && (
-          <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-black text-slate-900">Tell us about yourself</h3>
-              <p className="text-slate-500 text-sm">We need a few details to set up your account.</p>
+        {flow === 'details_entry' && (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-black mb-2">Create Account</h2>
+              <p className="text-slate-500 text-sm">Final few details to get you started</p>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Full Name (As per Aadhaar)</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all"
-                placeholder="e.g. Rahul Sharma"
-              />
-            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Full Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-primary outline-none focus:border-primary transition-brand"
+                  placeholder="e.g. Rahul Sharma"
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all"
-                placeholder="rahul@example.com"
-              />
-            </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-primary outline-none focus:border-primary transition-brand"
+                  placeholder="name@company.com"
+                />
+              </div>
 
-            <button
-              onClick={() => {
-                if (name && email.includes('@')) handleRegister();
-                else setError('Please fill all details correctly.');
-              }}
-              disabled={loading}
-              className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-base shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Create Account'}
-            </button>
+              <button
+                onClick={() => {
+                  if (name && email.includes('@')) {
+                    setFlow('processing');
+                    handleRegister();
+                  } else setError('Please fill all details correctly.');
+                }}
+                disabled={loading}
+                className="w-full py-5 bg-primary text-white rounded-2xl font-black text-base shadow-xl shadow-primary/20 transition-brand active:scale-[0.98]"
+              >
+                {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Set Up Account'}
+              </button>
+            </div>
           </div>
         )}
 
-        {step === 4 && (
-          <div className="py-8 text-center space-y-3 animate-in fade-in duration-500">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="text-slate-500 font-bold text-sm">Pre-configuring your Store...</p>
+        {flow === 'processing' && (
+          <div className="py-12 text-center space-y-6 animate-in fade-in duration-500">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto shadow-xl shadow-primary/10"></div>
+            <div>
+              <h3 className="text-xl font-black mb-2">Almost There</h3>
+              <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Pre-configuring your Store...</p>
+            </div>
           </div>
         )}
 
       </div>
-      <p className="mt-8 text-slate-400 text-xs font-bold uppercase tracking-widest opacity-50">Secure by OpenScore Protocol</p>
     </main>
   );
 }
