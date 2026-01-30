@@ -60,7 +60,8 @@ export default function LoanDetail() {
                                 frequency: freq,
                                 interestRate: conf.interest_rate,
                                 cashback: conf.cashback?.[freq] || 0,
-                                isBestValue: freq === 'Daily' // Default for now
+                                isBestValue: freq === 'Daily', // Default for now
+                                tenureDays: conf.tenure_days // Exact days for calculation
                             }));
                         }
                     };

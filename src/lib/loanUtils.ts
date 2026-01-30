@@ -145,21 +145,27 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
 
 export function calculateRepayment(amount: number, tenureMonths: number, option: PayoutOption): { total: number, breakdown: string, count: number, emi: number } {
     let count = 0;
-    const days = tenureMonths * 30;
+    // Prefer exact tenure days from option if available, otherwise approximation
+    const days = (option as any).tenureDays || (tenureMonths * 30);
 
-    switch (option.frequency) {
-        case 'Daily': count = days; break;
-        case '5 Days': count = Math.floor(days / 5); break;
-        case '7 Days': count = Math.floor(days / 7); break;
-        case '10 Days': count = Math.floor(days / 10); break;
-        case '15 Days': count = Math.floor(days / 15); break;
-        case '20 Days': count = Math.floor(days / 20); break;
-        case '25 Days': count = Math.floor(days / 25); break;
-        case 'Monthly': count = tenureMonths; break;
-        case 'Quarterly': count = Math.floor(tenureMonths / 3); break;
-        case 'Half Yearly': count = Math.floor(tenureMonths / 6); break;
-        default: count = 1;
+    const freqUpper = option.frequency.toUpperCase();
+
+    if (freqUpper === 'DAILY') count = days;
+    else if (freqUpper === '5 DAYS') count = Math.floor(days / 5);
+    else if (freqUpper === '7 DAYS' || freqUpper === 'WEEKLY') count = Math.floor(days / 7);
+    else if (freqUpper === '10 DAYS') count = Math.floor(days / 10);
+    else if (freqUpper === '15 DAYS') count = Math.floor(days / 15);
+    else if (freqUpper === '20 DAYS') count = Math.floor(days / 20);
+    else if (freqUpper === '25 DAYS') count = Math.floor(days / 25);
+    else if (freqUpper === 'MONTHLY') {
+        // If we have exact days, use days/30, else use months
+        count = (option as any).tenureDays ? Math.floor(days / 30) : tenureMonths;
     }
+    else if (freqUpper === 'QUARTERLY') count = Math.floor(tenureMonths / 3);
+    else if (freqUpper === 'HALF YEARLY') count = Math.floor(tenureMonths / 6);
+    else count = 1;
+
+    if (count < 1) count = 1;
 
     if (option.fixedAmount) {
         // Legacy/Fixed mode
