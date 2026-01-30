@@ -28,7 +28,20 @@ export default function LoanStatus() {
                         amount: 30000,
                         status: 'PENDING',
                         tenure: 3,
-                        created_at: new Date().toISOString()
+                        created_at: new Date().toISOString(),
+                        calculations: {
+                            principal: 30000,
+                            gst: 5400,
+                            processing_fee: 1500,
+                            login_fee: 250,
+                            field_kyc_fee: 500,
+                            other_fees: 0,
+                            interest_rate: 2.5,
+                            total_interest: 2250,
+                            total_deductions: 9900,
+                            disbursal_amount: 30000,
+                            net_payable_amount: 39900
+                        }
                     });
                 }
             }
@@ -60,43 +73,19 @@ export default function LoanStatus() {
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div></div>;
     if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loan not found</div>;
 
-    const principal = Number(loan.amount);
-
-    // Find matching configuration from the plan
-    const config = loan.plan?.configurations?.find((c: any) => {
-        const targetDays = Number(loan.tenure) * 30;
-        return Math.abs(c.tenure_days - targetDays) <= 5;
-    });
-
-    const fees = config?.fees || [];
-    const processingFee = fees.find((f: any) => f.name.toLowerCase().includes('processing'))?.amount || 0;
-    const loginFee = fees.find((f: any) => f.name.toLowerCase().includes('login'))?.amount || 0;
-    const fieldKycFee = fees.find((f: any) => f.name.toLowerCase().includes('field'))?.amount || 0;
-
-    // Sum all other fees if any
-    const otherFees = fees.filter((f: any) =>
-        !f.name.toLowerCase().includes('processing') &&
-        !f.name.toLowerCase().includes('login') &&
-        !f.name.toLowerCase().includes('field') &&
-        !f.name.toLowerCase().includes('gst')
-    ).reduce((sum: number, f: any) => sum + Number(f.amount), 0);
-
-    // Filter out GST from the total fees sum because we calculate/add it separately below
-    const totalFeesBeforeGst = fees
-        .filter((f: any) => !f.name.toLowerCase().includes('gst'))
-        .reduce((sum: number, f: any) => sum + Number(f.amount), 0);
-
-    const gstRate = 0.18;
-    const gst = Math.round(principal * gstRate);
-
-    // Interest calculation if available
-    const interestRate = Number(config?.interest_rate || loan.interest_rate || 0);
-    const months = Number(config?.tenure_days || (loan.tenure * 30)) / 30;
-    const totalInterest = Math.round((principal * interestRate / 100) * months);
-
-    const totalDeductions = totalFeesBeforeGst + gst + totalInterest;
-    const disbursalAmount = principal;
-    const netPayableAmount = principal + totalDeductions;
+    const {
+        principal = Number(loan.amount),
+        gst = 0,
+        processing_fee: processingFee = 0,
+        login_fee: loginFee = 0,
+        field_kyc_fee: fieldKycFee = 0,
+        other_fees: otherFees = 0,
+        interest_rate: interestRate = 0,
+        total_interest: totalInterest = 0,
+        total_deductions: totalDeductions = 0,
+        disbursal_amount: disbursalAmount = Number(loan.amount),
+        net_payable_amount: netPayableAmount = 0
+    } = loan.calculations || {};
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-24">
