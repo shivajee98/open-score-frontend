@@ -53,11 +53,18 @@ export default function Home() {
   }, [flow, role]);
 
   const redirectUser = (user: any) => {
+    // Sync with Native App
+    const token = localStorage.getItem('token');
+    if (token) {
+      document.cookie = `token=${token}; path=/; max-age=2592000; SameSite=Lax`;
+      document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=2592000; SameSite=Lax`;
+    }
+
     if ((window as any).ReactNativeWebView) {
       (window as any).ReactNativeWebView.postMessage(JSON.stringify({
         type: 'LOGIN',
-        token: localStorage.getItem('token'),
-        user: user
+        token,
+        user
       }));
     }
 
