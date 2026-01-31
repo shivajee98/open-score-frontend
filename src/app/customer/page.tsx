@@ -125,7 +125,7 @@ export default function CustomerHome() {
         <div className="min-h-screen bg-slate-50 pb-32">
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} />
 
-            {!isMerchant && <MerchantLocator />}
+            <MerchantLocator />
 
             {/* Header Redesign - Tech/Circuit Theme */}
             <div className={`px-4 pt-14 pb-16 relative overflow-hidden shadow-2xl ${isMerchant ? 'bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950' : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950'}`}>
