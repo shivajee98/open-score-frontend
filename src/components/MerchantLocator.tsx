@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { MapPin, Search, X, Store, Navigation } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
+import MerchantDetailsModal from "./MerchantDetailsModal";
 
 interface Merchant {
     id: number;
@@ -12,6 +13,9 @@ interface Merchant {
     pincode: string;
     city: string;
     mobile_number: string;
+    description?: string;
+    name?: string;
+    email?: string;
 }
 
 // Simple debounce hook
@@ -34,6 +38,10 @@ export default function MerchantLocator() {
     const [pincode, setPincode] = useState("");
     const [city, setCity] = useState("");
     const [merchants, setMerchants] = useState<Merchant[]>([]);
+
+    // Details Modal State
+    const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null);
+    const [detailsOpen, setDetailsOpen] = useState(false);
 
     const debouncedPincode = useDebounce(pincode, 500);
     const debouncedCity = useDebounce(city, 500);
@@ -62,6 +70,20 @@ export default function MerchantLocator() {
             setLoading(false);
         }
     }, []);
+
+    // Fetch full details when a merchant is selected
+    const handleMerchantClick = async (merchant: Merchant) => {
+        try {
+            // Optimistically show what we have, then fetch full details
+            setSelectedMerchant(merchant);
+            setDetailsOpen(true);
+
+            const fullDetails = await apiFetch(`/merchants/${merchant.id}`);
+            setSelectedMerchant(fullDetails);
+        } catch (error) {
+            console.error("Failed to fetch merchant details", error);
+        }
+    };
 
     // Initial load from profile
     useEffect(() => {
@@ -95,6 +117,7 @@ export default function MerchantLocator() {
                 <MapPin className="w-6 h-6" />
             </button>
 
+            {/* Locator Modal */}
             {open && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setOpen(false)}></div>
@@ -130,7 +153,6 @@ export default function MerchantLocator() {
                                     className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
                                 />
                             </div>
-                            {/* Hidden search button, kept for semantic or explicit trigger if needed, but styling adjusted or removed if fully auto */}
                         </div>
 
                         <div className="flex-1 overflow-y-auto -mx-2 px-2 space-y-3">
@@ -140,19 +162,23 @@ export default function MerchantLocator() {
                                 </div>
                             ) : merchants.length > 0 ? (
                                 merchants.map((merchant) => (
-                                    <div key={merchant.id} className="p-4 border border-slate-100 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition-all">
-                                        <h3 className="font-bold text-slate-900">{merchant.business_name}</h3>
-                                        <div className="flex items-start gap-2 mt-2 text-slate-500 text-xs font-medium">
-                                            <MapPin size={14} className="mt-0.5 shrink-0" />
-                                            <p>{merchant.business_address}, {merchant.city}, {merchant.pincode}</p>
-                                        </div>
-                                        <div className="mt-3 pt-3 border-t border-slate-200 flex justify-end">
-                                            <a
-                                                href={`tel:${merchant.mobile_number}`}
-                                                className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg border border-emerald-100 uppercase tracking-wider flex items-center gap-1.5"
-                                            >
-                                                Call Merchant
-                                            </a>
+                                    <div
+                                        key={merchant.id}
+                                        onClick={() => handleMerchantClick(merchant)}
+                                        className="p-4 border border-slate-100 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition-all cursor-pointer group"
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{merchant.business_name}</h3>
+                                                <div className="flex items-start gap-2 mt-2 text-slate-500 text-xs font-medium">
+                                                    <MapPin size={14} className="mt-0.5 shrink-0" />
+                                                    <p>{merchant.business_address}, {merchant.city}, {merchant.pincode}</p>
+                                                </div>
+                                            </div>
+                                            {/* Details Arrow */}
+                                            <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                                                <Navigation size={14} className="rotate-90" />
+                                            </div>
                                         </div>
                                     </div>
                                 ))
@@ -166,6 +192,13 @@ export default function MerchantLocator() {
                     </div>
                 </div>
             )}
+
+            {/* Details Modal */}
+            <MerchantDetailsModal
+                isOpen={detailsOpen}
+                onClose={() => setDetailsOpen(false)}
+                merchant={selectedMerchant}
+            />
         </>
     );
 }
