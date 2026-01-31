@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MapPin, Search, X, Store, Navigation } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
@@ -14,6 +14,20 @@ interface Merchant {
     mobile_number: string;
 }
 
+// Simple debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+    return debouncedValue;
+}
+
 export default function MerchantLocator() {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -21,34 +35,35 @@ export default function MerchantLocator() {
     const [city, setCity] = useState("");
     const [merchants, setMerchants] = useState<Merchant[]>([]);
 
-    const fetchMerchants = async () => {
+    const debouncedPincode = useDebounce(pincode, 500);
+    const debouncedCity = useDebounce(city, 500);
+
+    const fetchMerchants = useCallback(async (searchPincode: string, searchCity: string) => {
         setLoading(true);
         try {
-            if (pincode || city) {
-                // Update profile with new location if provided
-                await apiFetch('/auth/update-profile', {
+            // Only update profile if we have valid input
+            if (searchPincode.length >= 3 || searchCity.length >= 3) {
+                apiFetch('/auth/update-profile', {
                     method: 'POST',
-                    body: JSON.stringify({ pincode, city })
-                });
+                    body: JSON.stringify({ pincode: searchPincode, city: searchCity })
+                }).catch(() => { }); // Fire and forget
             }
 
             const params = new URLSearchParams();
-            if (pincode) params.append('pincode', pincode);
-            if (city) params.append('city', city);
+            if (searchPincode) params.append('pincode', searchPincode);
+            if (searchCity) params.append('city', searchCity);
 
             const res = await apiFetch(`/merchants/nearby?${params.toString()}`);
             setMerchants(res);
-            if (res.length === 0) {
-                toast.info("No merchants found in this area.");
-            }
         } catch (error) {
             console.error(error);
-            toast.error("Failed to fetch merchants.");
+            // toast.error("Failed to fetch merchants."); // Optional: suppress to avoid spamming toast on typing
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
+    // Initial load from profile
     useEffect(() => {
         if (open) {
             const fetchProfile = async () => {
@@ -63,6 +78,13 @@ export default function MerchantLocator() {
             fetchProfile();
         }
     }, [open]);
+
+    // Trigger search on debounce
+    useEffect(() => {
+        if (open && (debouncedPincode || debouncedCity)) {
+            fetchMerchants(debouncedPincode, debouncedCity);
+        }
+    }, [debouncedPincode, debouncedCity, open, fetchMerchants]);
 
     return (
         <>
@@ -102,23 +124,21 @@ export default function MerchantLocator() {
                                     className="w-1/3 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
                                 />
                                 <input
-                                    placeholder="City"
+                                    placeholder="City (Search...)"
                                     value={city}
                                     onChange={(e) => setCity(e.target.value)}
                                     className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
                                 />
                             </div>
-                            <button
-                                onClick={fetchMerchants}
-                                disabled={loading}
-                                className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-                            >
-                                {loading ? "Searching..." : <><Search className="w-4 h-4" /> Search Nearby</>}
-                            </button>
+                            {/* Hidden search button, kept for semantic or explicit trigger if needed, but styling adjusted or removed if fully auto */}
                         </div>
 
                         <div className="flex-1 overflow-y-auto -mx-2 px-2 space-y-3">
-                            {merchants.length > 0 ? (
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center h-40">
+                                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            ) : merchants.length > 0 ? (
                                 merchants.map((merchant) => (
                                     <div key={merchant.id} className="p-4 border border-slate-100 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition-all">
                                         <h3 className="font-bold text-slate-900">{merchant.business_name}</h3>
