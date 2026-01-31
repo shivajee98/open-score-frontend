@@ -20,22 +20,15 @@ export const clearAuthState = async () => {
 };
 
 export const handleUnauthorized = () => {
-    if (typeof window !== 'undefined' && !isRedirecting) {
+    if (typeof window !== 'undefined') {
         const isHomePage = window.location.pathname === '/';
 
         console.warn('Handling unauthorized response - clearing state');
         clearAuthState();
 
-        if (!isHomePage) {
+        if (!isHomePage && !isRedirecting) {
             isRedirecting = true;
-            // Use setTimeout to avoid race conditions
-            setTimeout(() => {
-                window.location.href = '/';
-                // Reset flag after redirect completes
-                setTimeout(() => {
-                    isRedirecting = false;
-                }, 1000);
-            }, 100);
+            window.location.replace('/');
         }
     }
 };

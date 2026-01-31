@@ -80,7 +80,11 @@ export default function DashboardLayout({
             })
             .catch(err => {
                 console.error("Hydration failed", err);
-                if (!storedUser) router.push('/');
+                const currentStored = localStorage.getItem('user');
+                // If error is session related or no user found currently, redirect
+                if (!currentStored || err.message.includes('Session expired')) {
+                    router.push('/');
+                }
             });
 
         // Initial poll to set ref
