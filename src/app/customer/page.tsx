@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import MerchantClaimModal from '@/components/MerchantClaimModal';
 import SupportModal from '@/components/SupportModal';
@@ -82,9 +83,19 @@ export default function CustomerHome() {
         const loadData = async () => {
             if (!user) return;
             try {
+                // Fetch fresh user data to get active locked balance (loans)
+                const freshUser = await apiFetch('/auth/me');
+                setUser(freshUser);
+                localStorage.setItem('user', JSON.stringify(freshUser));
+
+                // If user has active locked balance from loans, prioritize that.
+                // Otherwise fall back to wallet locked balance (if any)
+                const loanLocked = freshUser.active_locked_balance || 0;
+
                 const w = await apiFetch('/wallet/balance');
                 setBalance(w.balance);
-                setLockedBalance(w.locked_balance || '0');
+
+                setLockedBalance(loanLocked > 0 ? loanLocked : (w.locked_balance || '0'));
 
                 if (user.role === 'CUSTOMER') {
                     const loans = await apiFetch('/loans');
@@ -96,7 +107,7 @@ export default function CustomerHome() {
             }
         };
         loadData();
-    }, [user]);
+    }, [user?.id]); // Only re-run if user ID changes or on mount (if user is set)
 
     const handleClaimSuccess = (updatedUser: any) => {
         setShowClaimModal(false);
@@ -218,9 +229,12 @@ export default function CustomerHome() {
                                         ₹ {showBalance ? balance : '••••••'}
                                     </p>
                                     {Number(lockedBalance) > 0 && showBalance && (
-                                        <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10">
-                                            <Lock size={8} className="text-yellow-400" />
-                                            <span className="text-[9px] font-black text-white tracking-tight">₹{lockedBalance}</span>
+                                        <div
+                                            onClick={() => toast.info("Funds are locked. Contact your supervisor.")}
+                                            className="flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10 cursor-pointer hover:bg-black/30 transition-colors active:scale-95"
+                                        >
+                                            <Lock size={10} className="text-yellow-400" />
+                                            <span className="text-[10px] font-black text-white tracking-tight">₹{lockedBalance}</span>
                                         </div>
                                     )}
                                 </div>
