@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MapPin, Search, X, Store, Navigation } from "lucide-react";
-import axios from "axios";
+import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 
 interface Merchant {
@@ -25,23 +25,20 @@ export default function MerchantLocator() {
         setLoading(true);
         try {
             if (pincode || city) {
-                const token = localStorage.getItem("token");
                 // Update profile with new location if provided
-                await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/update-profile`, {
-                    pincode,
-                    city
-                }, {
-                    headers: { Authorization: `Bearer ${token}` }
+                await apiFetch('/auth/update-profile', {
+                    method: 'POST',
+                    body: JSON.stringify({ pincode, city })
                 });
             }
 
-            const token = localStorage.getItem("token");
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/merchants/nearby`, {
-                params: { pincode, city },
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setMerchants(res.data);
-            if (res.data.length === 0) {
+            const params = new URLSearchParams();
+            if (pincode) params.append('pincode', pincode);
+            if (city) params.append('city', city);
+
+            const res = await apiFetch(`/merchants/nearby?${params.toString()}`);
+            setMerchants(res);
+            if (res.length === 0) {
                 toast.info("No merchants found in this area.");
             }
         } catch (error) {
@@ -56,12 +53,9 @@ export default function MerchantLocator() {
         if (open) {
             const fetchProfile = async () => {
                 try {
-                    const token = localStorage.getItem("token");
-                    const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/me`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    if (res.data.pincode) setPincode(res.data.pincode);
-                    if (res.data.city) setCity(res.data.city);
+                    const res = await apiFetch('/auth/me');
+                    if (res.pincode) setPincode(res.pincode);
+                    if (res.city) setCity(res.city);
                 } catch (e) {
                     console.error(e);
                 }
