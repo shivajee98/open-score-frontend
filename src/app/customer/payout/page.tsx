@@ -17,17 +17,24 @@ export default function PayoutPage() {
     const isAuthenticated = useAuthProtection();
 
     useEffect(() => {
-        apiFetch('/auth/me').then(data => {
-            setUser(data);
-            if (!data.bank_name || !data.account_number) {
-                toast.error("Please update your bank details in profile first");
-                router.push('/customer/profile');
-            }
-        });
+        const fetchData = async () => {
+            try {
+                const userData = await apiFetch('/auth/me');
+                const walletData = await apiFetch('/wallet/balance');
 
-        apiFetch('/wallet/balance').then(data => {
-            setBalance(data.balance);
-        });
+                // Merge wallet data (daily_earnings) into user object for UI check
+                setUser({ ...userData, daily_earnings: walletData.daily_earnings });
+                setBalance(walletData.balance);
+
+                if (!userData.bank_name || !userData.account_number) {
+                    toast.error("Please update your bank details in profile first");
+                    router.push('/customer/profile');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        fetchData();
     }, [router]);
 
     const handlePayout = async () => {
@@ -103,6 +110,11 @@ export default function PayoutPage() {
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Available Balance</p>
                             <h2 className="text-3xl font-black text-slate-900 tracking-tight">₹{balance.toLocaleString()}</h2>
+                            {user.role === 'MERCHANT' && (
+                                <p className="text-xs font-bold text-emerald-600 mt-1">
+                                    Withdrawable Today: ₹{(user.daily_earnings || 0).toLocaleString()}
+                                </p>
+                            )}
                         </div>
                     </div>
 
