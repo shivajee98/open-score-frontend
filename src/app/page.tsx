@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store } from 'lucide-react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
+import ReferralHandler from '@/components/ReferralHandler';
 
 export default function Home() {
   const [mobile, setMobile] = useState('');
@@ -89,12 +90,20 @@ export default function Home() {
   const handleVerifyOtp = async () => {
     setLoading(true);
     setError('');
+
+    // Get Referral Code if exists
+    const referralCode = localStorage.getItem('referral_code');
+
     try {
       // Use the internal secure login route
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile_number: mobile, otp }),
+        body: JSON.stringify({
+          mobile_number: mobile,
+          otp,
+          referral_code: referralCode
+        }),
       });
 
       const data = await response.json();
@@ -108,6 +117,8 @@ export default function Home() {
       } else {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('hasSeenOnboarding', 'true');
+        // Clear referral code after successful use
+        if (referralCode) localStorage.removeItem('referral_code');
 
         if (data.onboarding_status === 'REQUIRED') {
           data.user.is_onboarded = false;
@@ -131,12 +142,21 @@ export default function Home() {
     if (!role) return;
     setLoading(true);
     setError('');
+
+    // Get Referral Code if exists (might be used here too if NEW_USER flow flowed to here)
+    const referralCode = localStorage.getItem('referral_code');
+
     try {
       // Use the internal secure login route for verification with role
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile_number: mobile, otp, role }),
+        body: JSON.stringify({
+          mobile_number: mobile,
+          otp,
+          role,
+          referral_code: referralCode
+        }),
       });
 
       const authData = await response.json();
@@ -184,6 +204,9 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white p-6 text-primary overflow-hidden">
+      <Suspense fallback={null}>
+        <ReferralHandler />
+      </Suspense>
       <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-10 duration-700">
 
         {error && (
