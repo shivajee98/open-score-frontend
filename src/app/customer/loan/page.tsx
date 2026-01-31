@@ -95,7 +95,8 @@ export default function LoanList() {
                             ? `${firstConfig.tenure_days} Days • ${firstConfig.interest_rate}% Interest`
                             : 'Details Pending',
                         color: p.plan_color ? p.plan_color.replace('bg-', 'from-').replace('500', '400') + ' to-' + p.plan_color.replace('bg-', '').replace('500', '600') : 'from-blue-400 to-blue-600',
-                        rawColor: p.plan_color
+                        rawColor: p.plan_color,
+                        is_locked: p.is_locked, // Pass through backend flag
                     };
                 });
                 const sorted = mapped.sort((a: any, b: any) => a.amount - b.amount);
@@ -304,11 +305,11 @@ export default function LoanList() {
                 </div>
                 <div className="flex flex-col gap-3 mb-8">
                     {loanPlans.filter((p: any) => p.amount > 10000).map((plan: any) => {
-                        // Logic: Unlock all up to 50k. For >50k, check if the plan BEFORE it is CLOSED.
+                        const isLocked = plan.is_locked; // Use backend flag
+
+                        // Need prevPlan for the error message
                         const fullIndex = loanPlans.findIndex(lp => lp.id === plan.id);
                         const prevPlan = fullIndex > 0 ? loanPlans[fullIndex - 1] : null;
-
-                        const isLocked = plan.amount > 50000 && prevPlan && !closedAmounts.has(prevPlan.amount);
 
                         return (
                             <div
@@ -374,21 +375,30 @@ export default function LoanList() {
                 <div>
                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">More Options</h3>
                     <div className="flex flex-col gap-3">
-                        {[
-                            { title: 'Business Loan', icon: '💼', desc: 'For heavy inventory' },
-                            { title: 'Personal Loan', icon: '🏠', desc: 'For personal use' }
-                        ].map((item, i) => (
-                            <div key={i} className="bg-white rounded-2xl p-4 border border-slate-100 opacity-60 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="text-2xl grayscale">{item.icon}</div>
-                                    <div>
-                                        <h4 className="font-black text-slate-900 text-sm">{item.title}</h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{item.desc}</p>
-                                    </div>
+                        <div
+                            onClick={() => router.push('/customer/loan/business')}
+                            className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all active:scale-[0.98]"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="text-2xl grayscale">💼</div>
+                                <div>
+                                    <h4 className="font-black text-slate-900 text-sm">Business Loan</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">For heavy inventory</p>
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Upcoming</span>
                             </div>
-                        ))}
+                            <span className="text-[10px] font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Apply</span>
+                        </div>
+
+                        <div className="bg-white rounded-2xl p-4 border border-slate-100 opacity-60 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="text-2xl grayscale">🏠</div>
+                                <div>
+                                    <h4 className="font-black text-slate-900 text-sm">Personal Loan</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">For personal use</p>
+                                </div>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Upcoming</span>
+                        </div>
                     </div>
                 </div>
             </div>
