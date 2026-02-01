@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -238,11 +238,19 @@ export default function Profile() {
 
                         <div className="mt-8 mb-4">
                             <h3 className="px-1 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Bank Details (For Payouts)</h3>
+                            {user.account_number && (
+                                <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl mb-4 flex items-center gap-2">
+                                    <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+                                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                    </div>
+                                    <p className="text-[10px] font-bold text-emerald-800">Bank details are verified and locked. Contact support to update.</p>
+                                </div>
+                            )}
                             <div className="space-y-4">
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Bank Name</p>
-                                        {isEditing ? (
+                                        {isEditing && !user.account_number ? (
                                             <input
                                                 type="text"
                                                 value={formData.bank_name}
@@ -259,7 +267,7 @@ export default function Profile() {
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Account Number</p>
-                                        {isEditing ? (
+                                        {isEditing && !user.account_number ? (
                                             <input
                                                 type="text"
                                                 value={formData.account_number}
@@ -276,7 +284,7 @@ export default function Profile() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">IFSC Code</p>
-                                        {isEditing ? (
+                                        {isEditing && !user.account_number ? (
                                             <input
                                                 type="text"
                                                 value={formData.ifsc_code}
@@ -290,7 +298,7 @@ export default function Profile() {
                                     </div>
                                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">A/C Holder Name</p>
-                                        {isEditing ? (
+                                        {isEditing && !user.account_number ? (
                                             <input
                                                 type="text"
                                                 value={formData.account_holder_name}

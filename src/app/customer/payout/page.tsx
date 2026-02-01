@@ -22,6 +22,21 @@ export default function PayoutPage() {
                 const userData = await apiFetch('/auth/me');
                 const walletData = await apiFetch('/wallet/balance');
 
+                // Fetch loans to check eligibility (Must have active loan >= 50k)
+                if (userData.role === 'CUSTOMER') {
+                    const loans = await apiFetch('/loans');
+                    const eligibleLoan = loans.find((l: any) =>
+                        ['ACTIVE', 'DISBURSED', 'APPROVED', 'PROCEEDED'].includes(l.status) &&
+                        Number(l.amount) >= 50000
+                    );
+
+                    if (!eligibleLoan) {
+                        toast.error("Withdrawals are only enabled for Premium Loans (₹50,000+). Use Scan & Pay.");
+                        router.push('/customer');
+                        return;
+                    }
+                }
+
                 // Merge wallet data (daily_earnings) into user object for UI check
                 setUser({ ...userData, daily_earnings: walletData.daily_earnings });
                 setBalance(walletData.balance);
