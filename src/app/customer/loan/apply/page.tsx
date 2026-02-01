@@ -565,7 +565,24 @@ export default function LoanApplication() {
                                     <span className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Repayment Frequency</span>
                                     <div className="grid grid-cols-2 gap-2">
                                         {(selectedTenureConfig.allowed_frequencies || []).map((freq: string) => {
-                                            const interval = freq === 'DAILY' ? 1 : freq === 'WEEKLY' ? 7 : 30;
+                                            // Parse frequency to get interval days
+                                            let interval = 30; // Default to monthly
+                                            const freqUpper = freq.toUpperCase();
+
+                                            if (freqUpper === 'DAILY') {
+                                                interval = 1;
+                                            } else if (freqUpper === 'WEEKLY') {
+                                                interval = 7;
+                                            } else if (freqUpper === 'MONTHLY') {
+                                                interval = 30;
+                                            } else {
+                                                // Match custom day patterns like "3 DAYS", "15 DAYS", etc.
+                                                const match = freqUpper.match(/(\d+)\s*DAYS?/);
+                                                if (match) {
+                                                    interval = parseInt(match[1], 10);
+                                                }
+                                            }
+
                                             const numEmis = Math.floor(selectedTenureConfig.tenure_days / interval) || 1;
                                             // Simple Interest Logic for Display (Principal + Interest)
                                             // Note: If interest > 0, we should add it.

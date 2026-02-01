@@ -150,20 +150,28 @@ export function calculateRepayment(amount: number, tenureMonths: number, option:
 
     const freqUpper = option.frequency.toUpperCase();
 
-    if (freqUpper === 'DAILY') count = days;
-    else if (freqUpper === '5 DAYS') count = Math.floor(days / 5);
-    else if (freqUpper === '7 DAYS' || freqUpper === 'WEEKLY') count = Math.floor(days / 7);
-    else if (freqUpper === '10 DAYS') count = Math.floor(days / 10);
-    else if (freqUpper === '15 DAYS') count = Math.floor(days / 15);
-    else if (freqUpper === '20 DAYS') count = Math.floor(days / 20);
-    else if (freqUpper === '25 DAYS') count = Math.floor(days / 25);
-    else if (freqUpper === 'MONTHLY') {
+    // Handle standard frequencies
+    if (freqUpper === 'DAILY') {
+        count = days;
+    } else if (freqUpper === 'WEEKLY' || freqUpper === '7 DAYS') {
+        count = Math.floor(days / 7);
+    } else if (freqUpper === 'MONTHLY') {
         // If we have exact days, use days/30, else use months
         count = (option as any).tenureDays ? Math.floor(days / 30) : tenureMonths;
+    } else if (freqUpper === 'QUARTERLY') {
+        count = Math.floor(tenureMonths / 3);
+    } else if (freqUpper === 'HALF YEARLY') {
+        count = Math.floor(tenureMonths / 6);
+    } else {
+        // Match custom day patterns like "3 DAYS", "5 DAYS", "15 DAYS", etc.
+        const match = freqUpper.match(/(\d+)\s*DAYS?/);
+        if (match) {
+            const intervalDays = parseInt(match[1], 10);
+            count = Math.floor(days / intervalDays);
+        } else {
+            count = 1; // Fallback
+        }
     }
-    else if (freqUpper === 'QUARTERLY') count = Math.floor(tenureMonths / 3);
-    else if (freqUpper === 'HALF YEARLY') count = Math.floor(tenureMonths / 6);
-    else count = 1;
 
     if (count < 1) count = 1;
 
