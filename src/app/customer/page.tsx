@@ -223,8 +223,8 @@ export default function CustomerHome() {
 
 
             {/* Quick Actions - Floating Card */}
-            <div className="px-6 -mt-8 relative z-20 mb-8">
-                <div className="bg-white py-3 px-2 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-50">
+            <div className="px-6 -mt-8 relative z-20 mb-3">
+                <div className="bg-white py-1 px-1 rounded-xl shadow-xl shadow-slate-200/50 border border-slate-50">
                     <div className="grid grid-cols-3 gap-1">
                         {[
                             { label: 'Scan QR', icon: <ScanBarcode size={20} strokeWidth={2.5} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50/50' },
@@ -247,7 +247,7 @@ export default function CustomerHome() {
 
 
             {/* Marketing Banner - Get Needs Done */}
-            <div className="px-4 mb-8">
+            <div className="px-4 mb-3">
                 <div onClick={() => router.push('/customer/pay?scan=true')} className="cursor-pointer group">
                     <div className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 p-0.5 rounded-2xl shadow-xl shadow-amber-500/20 active:scale-[0.98] transition-transform">
                         <div className="bg-slate-900 rounded-[0.9rem] px-4 py-3 relative overflow-hidden">

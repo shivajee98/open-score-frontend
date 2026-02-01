@@ -16,7 +16,9 @@ export default function PayoutPage() {
 
     const [amount, setAmount] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false); // Simulated processing state
     const [isSuccess, setIsSuccess] = useState(false);
+    const [showRestricted, setShowRestricted] = useState(false); // Show restriction screen after attempt
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
@@ -24,7 +26,7 @@ export default function PayoutPage() {
     const user = userData ? { ...userData, daily_earnings: walletData?.daily_earnings } : null;
     const balance = walletData?.balance || 0;
 
-    // Check restrictions
+    // Check restrictions (Logic kept for reference, but not for immediate blocking)
     const isRestricted = userData?.role === 'CUSTOMER' &&
         !loans?.some((l: any) =>
             ['ACTIVE', 'DISBURSED', 'APPROVED', 'PROCEEDED'].includes(l.status) &&
@@ -53,24 +55,54 @@ export default function PayoutPage() {
         }
 
         setIsSubmitting(true);
+        setIsProcessing(true); // Start simulated processing UI
+
         try {
-            await apiFetch('/wallet/request-withdrawal', {
+            // Start both API call and Timer in parallel
+            // We ensure at least 10 seconds of processing time for UX
+            const minDelayPromise = new Promise(resolve => setTimeout(resolve, 10000));
+
+            const apiPromise = apiFetch('/wallet/request-withdrawal', {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: payoutAmount,
-                    bank_name: user.bank_name,
-                    account_number: user.account_number,
-                    ifsc_code: user.ifsc_code,
-                    account_holder_name: user.account_holder_name
+                    bank_name: user?.bank_name,
+                    account_number: user?.account_number,
+                    ifsc_code: user?.ifsc_code,
+                    account_holder_name: user?.account_holder_name
                 })
             });
-            await mutateWallet(); // Refresh balance
-            setIsSuccess(true);
-            toast.success("Cred-out request submitted!");
+
+            // Wait for both
+            const [_, apiResult] = await Promise.allSettled([minDelayPromise, apiPromise]);
+
+            if (apiResult.status === 'fulfilled') {
+                // Success
+                await mutateWallet(); // Refresh balance
+                setIsSuccess(true);
+                toast.success("Cred-out request submitted!");
+            } else {
+                // Failed - Check if it was because of restriction logic (simulated or real)
+                // If backend returns a specific error for restriction or if we know user is restricted
+                // We show the "Access Locked" screen as the "result" of the processing.
+                const error = apiResult.reason;
+                const errorMsg = error?.message || "";
+
+                // Heuristic: If backend says "Daily limit" or specific unlocking msg, currently it returns 400.
+                // If we know user is restricted based on our frontend logic, show the restricted screen.
+                if (isRestricted || errorMsg.toLowerCase().includes('limit') || errorMsg.toLowerCase().includes('unlock')) {
+                    setShowRestricted(true);
+                } else {
+                    toast.error(errorMsg || "Failed to submit request");
+                }
+            }
+
         } catch (e: any) {
-            toast.error(e.message || "Failed to submit request");
+            console.error(e);
+            toast.error("An unexpected error occurred");
         } finally {
             setIsSubmitting(false);
+            setIsProcessing(false);
         }
     };
 
@@ -85,10 +117,44 @@ export default function PayoutPage() {
         );
     }
 
+    // Processing UI (Simulated Wait)
+    if (isProcessing) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center font-sans relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+
+                <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-24 h-24 mb-8 relative">
+                        <div className="absolute inset-0 border-4 border-indigo-500/30 rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <Landmark className="w-8 h-8 text-indigo-400 animate-pulse" />
+                        </div>
+                    </div>
+
+                    <h2 className="text-2xl font-black text-white mb-2 tracking-tight animate-pulse">Processing Request</h2>
+                    <p className="text-slate-400 font-medium text-sm max-w-xs leading-relaxed">
+                        Verifying eligibility and bank connectivity. Please do not close this window.
+                    </p>
+
+                    <div className="mt-8 w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-500 rounded-full animate-[progress_10s_ease-in-out_forwards]" style={{ width: '0%' }}></div>
+                    </div>
+                    <style jsx>{`
+                        @keyframes progress {
+                            0% { width: 0%; }
+                            100% { width: 100%; }
+                        }
+                    `}</style>
+                </div>
+            </div>
+        );
+    }
+
     if (isSuccess) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center font-sans">
-                <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100">
+                <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100 animate-in zoom-in-50 duration-500">
                     <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8">
                         <CheckCircle2 className="w-12 h-12 text-emerald-500" />
                     </div>
@@ -108,23 +174,24 @@ export default function PayoutPage() {
         );
     }
 
-    if (isRestricted) {
+    // The "Rejected" Screen (Access Locked) - Only shown AFTER processing if failed/restricted
+    if (showRestricted) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans animate-in fade-in duration-500">
                 <div className="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200 border border-slate-100 text-center relative overflow-hidden">
                     {/* Background Pattern */}
                     <div className="absolute inset-0 opacity-[0.03] z-0" style={{ backgroundImage: 'radial-gradient(circle at center, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
                     <div className="relative z-10 flex flex-col items-center">
-                        <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-slate-50 shadow-inner">
-                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-100">
-                                <Lock className="w-8 h-8 text-slate-800" strokeWidth={2.5} />
+                        <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50 shadow-inner">
+                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-rose-100">
+                                <Lock className="w-8 h-8 text-rose-500" strokeWidth={2.5} />
                             </div>
                         </div>
 
-                        <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Access Locked</h2>
+                        <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Request Declined</h2>
                         <p className="text-slate-500 font-medium text-sm px-2 mb-8 leading-relaxed">
-                            To protect our community, direct bank withdrawals (Cred-out) are reserved for verified members with active credit history.
+                            Our system could not approve this withdrawal request at this time.
                         </p>
 
                         <div className="w-full bg-rose-50 border border-rose-100 rounded-2xl p-5 mb-8 text-left relative overflow-hidden group">
@@ -135,9 +202,9 @@ export default function PayoutPage() {
                                     <AlertCircle className="w-5 h-5 text-rose-500 fill-rose-50" />
                                 </div>
                                 <div>
-                                    <h4 className="font-black text-rose-950 text-xs uppercase tracking-widest mb-1.5 opacity-80">Action Required</h4>
+                                    <h4 className="font-black text-rose-950 text-xs uppercase tracking-widest mb-1.5 opacity-80">Reason: Access Locked</h4>
                                     <p className="text-slate-700 text-xs font-bold leading-relaxed">
-                                        You need an active loan of <span className="text-rose-600 font-black bg-rose-100/50 px-1 rounded">₹50,000 or more</span> to unlock this feature.
+                                        You need an active loan of <span className="text-rose-600 font-black bg-rose-100/50 px-1 rounded">₹50,000 or more</span> to unlock direct bank withdrawals.
                                     </p>
                                 </div>
                             </div>
@@ -152,10 +219,10 @@ export default function PayoutPage() {
                                 Apply Now & Unlock
                             </button>
                             <button
-                                onClick={() => router.back()}
+                                onClick={() => { setShowRestricted(false); setAmount(''); }}
                                 className="w-full py-4 text-slate-400 font-bold text-xs hover:text-slate-600 transition-colors uppercase tracking-widest"
                             >
-                                Go Back
+                                Try Different Amount
                             </button>
                         </div>
                     </div>
