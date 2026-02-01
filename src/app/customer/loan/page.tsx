@@ -23,7 +23,7 @@ export default function LoanList() {
             const loans = Array.isArray(data) ? data : (data?.data || []);
             if (loans && loans.length > 0) {
                 const filteredRecent = loans.filter((l: any) => l.status !== 'CANCELLED');
-                const sorted = filteredRecent.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                const sorted = filteredRecent.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 setRecentLoan(sorted[0]);
 
                 const pendingKyc = loans.find((l: any) => l.status === 'KYC_SENT');
@@ -37,7 +37,7 @@ export default function LoanList() {
                 setActiveLoan(active);
 
                 // Track all CLOSED or fully paid DISBURSED loan amounts
-                const closed = new Set(
+                const closed = new Set<number>(
                     loans
                         .filter((l: any) => l.status === 'CLOSED' || (l.status === 'DISBURSED' && Number(l.paid_amount || 0) >= Number(l.amount)))
                         .map((l: any) => Number(l.amount))
