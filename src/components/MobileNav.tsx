@@ -19,8 +19,9 @@ export default function MobileNav() {
 
     useEffect(() => {
         if (user?.role === 'CUSTOMER') {
-            apiFetch('/loans').then((loans: any[]) => {
-                const activeLoans = loans?.filter(l => {
+            apiFetch('/loans').then((data: any) => {
+                const loans = Array.isArray(data) ? data : (data?.data || []);
+                const activeLoans = loans?.filter((l: any) => {
                     if (l.status !== 'DISBURSED') return false;
                     const principal = Number(l.amount);
                     const processingFee = principal === 10000 ? 0 : 1200;

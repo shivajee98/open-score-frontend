@@ -85,8 +85,9 @@ export default function PayoutPage() {
     const balance = walletData?.balance || 0;
 
     // Check restrictions (Logic kept for reference, but not for immediate blocking)
+    const loansList = Array.isArray(loans) ? loans : (loans?.data || []);
     const isRestricted = userData?.role === 'CUSTOMER' &&
-        !loans?.some((l: any) =>
+        !loansList.some((l: any) =>
             ['ACTIVE', 'DISBURSED', 'APPROVED', 'PROCEEDED'].includes(l.status) &&
             Number(l.amount) >= 50000
         );
