@@ -63,7 +63,7 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
         title: "Micro Start",
         description: "Interest Free with High Cashback",
         tenures: [1, 3],
-        color: "from-emerald-500 to-teal-600",
+        color: "from-blue-500 to-indigo-600",
         payoutOptions: (tenure) => [
             // 30K Loan. 3 Month. Interest Free 0%. Repayment 30k.
             { id: 'daily', label: 'Daily', frequency: 'Daily', interestRate: 0, cashback: 25, val: 'Big Cashback', isBestValue: true },

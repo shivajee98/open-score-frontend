@@ -248,7 +248,7 @@ export default function LoanList() {
             )}
 
             {/* Virtual Credit */}
-            <div className="mb-6">
+            <div className="mb-4">
                 {loanPlans.filter((p: any) => p.amount === 10000).map((plan: any) => (
                     <div
                         key={plan.id}
@@ -264,37 +264,36 @@ export default function LoanList() {
                             router.push(`/customer/loan/${plan.amount}?planId=${plan.id}`);
                         }}
                         className={cn(
-                            "bg-[#0f1021] rounded-[2.8rem] p-8 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all min-h-[220px] flex flex-col justify-between",
+                            "bg-[#0f1021] rounded-3xl p-6 relative overflow-hidden group cursor-pointer shadow-sm active:scale-[0.98] transition-all flex flex-col justify-between",
                             (activeLoan || cooldown.active) && "opacity-75 grayscale-[0.5]"
                         )}
                     >
                         <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px] -mr-32 -mt-32"></div>
 
                         <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-900/20">
-                                    <Zap size={18} className="text-white fill-white" />
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="bg-indigo-600 p-1.5 rounded-lg shadow-sm">
+                                    <Zap size={14} className="text-white fill-white" />
                                 </div>
-                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">Priority Fast-Track</span>
+                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em]">Priority Fast-Track</span>
                             </div>
 
-                            <h2 className="text-[32px] font-black text-white mb-2 tracking-tight leading-none">Virtual Credit</h2>
-                            <p className="text-indigo-200/50 font-medium text-xs max-w-[240px] leading-relaxed mb-8">
-                                Instant activation with nominal KYC • Get funds in seconds.
+                            <h2 className="text-2xl font-black text-white mb-1.5 tracking-tight leading-none">Virtual Credit</h2>
+                            <p className="text-indigo-200/50 font-medium text-[10px] max-w-[240px] leading-relaxed mb-6">
+                                Instant activation • Funds in seconds.
                             </p>
                         </div>
 
-                        <div className="relative z-10 flex justify-between items-end">
-                            <div className="flex items-center gap-4">
-                                <span className="text-4xl font-black text-white tracking-tighter">₹10,000</span>
-                                <div className="h-10 w-[1px] bg-white/10"></div>
-                                <div className="bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex flex-col items-center justify-center min-w-[100px]">
-                                    <span className="text-[10px] font-black text-[#8e94f2] uppercase tracking-widest leading-none">Active</span>
-                                    <span className="text-[10px] font-black text-[#8e94f2] uppercase tracking-widest leading-none mt-1">Instantly</span>
+                        <div className="relative z-10 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <span className="text-3xl font-black text-white tracking-tighter">₹10,000</span>
+                                <div className="h-8 w-[1px] bg-white/10"></div>
+                                <div className="bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex flex-col items-center justify-center min-w-[80px]">
+                                    <span className="text-[9px] font-black text-[#8e94f2] uppercase tracking-widest leading-none">Instant</span>
                                 </div>
                             </div>
-                            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all shadow-xl">
-                                {cooldown.active ? <Lock size={24} /> : <ChevronRight size={24} />}
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all shadow-sm">
+                                {cooldown.active ? <Lock size={16} /> : <ChevronRight size={18} />}
                             </div>
                         </div>
                     </div>
@@ -314,8 +313,22 @@ export default function LoanList() {
                         const fullIndex = loanPlans.findIndex(lp => lp.id === plan.id);
                         const prevPlan = fullIndex > 0 ? loanPlans[fullIndex - 1] : null;
 
-                        // Solid color version of plan.color (removing from- and the to- part)
-                        const solidColorClass = plan.rawColor || plan.color.split(' ')[0].replace('from-', 'bg-');
+                        // Robust color extraction:
+                        // 1. Try to use rawColor if available
+                        // 2. Try to match 'from-COLOR-NUMBER' pattern
+                        // 3. Fallback to a default blue
+                        let solidColorClass = plan.rawColor;
+                        if (!solidColorClass && plan.color) {
+                            const match = plan.color.match(/from-([a-z]+-\d+)/);
+                            if (match) {
+                                solidColorClass = `bg-${match[1]}`;
+                            } else {
+                                // If plain color class (e.g. 'bg-blue-500')
+                                solidColorClass = plan.color.startsWith('bg-') ? plan.color : 'bg-blue-600';
+                            }
+                        } else if (!solidColorClass) {
+                            solidColorClass = 'bg-blue-600';
+                        }
 
                         return (
                             <div
