@@ -163,8 +163,8 @@ export function calculateRepayment(amount: number, tenureMonths: number, option:
     } else if (freqUpper === 'HALF YEARLY') {
         count = Math.floor(tenureMonths / 6);
     } else {
-        // Match custom day patterns like "3 DAYS", "5 DAYS", "15 DAYS", etc.
-        const match = freqUpper.match(/(\d+)\s*DAYS?/);
+        // Match custom day patterns like "3 DAYS", "5 DAYS", "15 DAYS", "3_DAYS", "15_DAYS" etc.
+        const match = freqUpper.match(/(\d+)[\s_]*DAYS?/);
         if (match) {
             const intervalDays = parseInt(match[1], 10);
             count = Math.floor(days / intervalDays);

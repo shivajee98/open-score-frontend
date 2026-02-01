@@ -117,6 +117,11 @@ export default function LoanApplication() {
                 await Promise.all(
                     frequencies.map(async (freq: string) => {
                         try {
+                            console.log(`Calling calculate-preview for ${freq}`, {
+                                amount: selectedOffer.rawAmount,
+                                tenure_days: selectedTenureConfig.tenure_days,
+                                frequency: freq
+                            });
                             const response = await apiFetch('/loans/calculate-preview', {
                                 method: 'POST',
                                 body: JSON.stringify({
@@ -126,6 +131,7 @@ export default function LoanApplication() {
                                     loan_plan_id: selectedOffer.id
                                 })
                             });
+                            console.log(`Response for ${freq}:`, response);
                             previews[freq] = response;
                         } catch (error) {
                             console.error(`Failed to calculate preview for ${freq}:`, error);
@@ -234,7 +240,7 @@ export default function LoanApplication() {
             }
         };
 
-        if (step === 2) {
+        if (step === 2 || searchParams.get('planId')) {
             fetchPlans();
         }
     }, [step, searchParams]);
