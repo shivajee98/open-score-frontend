@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
@@ -12,12 +13,14 @@ import MerchantLocator from '@/components/MerchantLocator';
 
 export default function CustomerHome() {
     const router = useRouter();
-    const [balance, setBalance] = useState('0');
-    const [lockedBalance, setLockedBalance] = useState('0');
-    const [user, setUser] = useState<any>(null);
-    const [kycLoan, setKycLoan] = useState<any>(null);
+
+    // Data Fetching with Cache
+    const { data: user, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
+    const { data: walletData, isLoading: walletLoading, mutate: mutateWallet } = useApi('/wallet/balance');
+    // Only fetch loans if user is CUSTOMER to check for KYC
+    const { data: loans, isLoading: loansLoading } = useApi(user?.role === 'CUSTOMER' ? '/loans' : null);
+
     const [showBalance, setShowBalance] = useState(true);
-    const [loading, setLoading] = useState(true);
     const [dynamicText, setDynamicText] = useState("Apply Now & Get 0% Interest Credit");
     const [activeBanner, setActiveBanner] = useState(0);
     const [showClaimModal, setShowClaimModal] = useState(false);
@@ -74,50 +77,20 @@ export default function CustomerHome() {
     }, []);
 
 
-    useEffect(() => {
-        const u = JSON.parse(localStorage.getItem('user') || '{}');
-        setUser(u);
-    }, []);
+    // Derived State
+    const balance = walletData?.balance || '0';
+    // Prioritize active_locked_balance from user profile (loans), else wallet locked balance
+    const lockedBalance = (user?.active_locked_balance || 0) > 0
+        ? user.active_locked_balance
+        : (walletData?.locked_balance || '0');
 
-    useEffect(() => {
-        const loadData = async () => {
-            if (!user) return;
-            try {
-                // Fetch fresh user data to get active locked balance (loans)
-                const freshUser = await apiFetch('/auth/me');
-                setUser(freshUser);
-                localStorage.setItem('user', JSON.stringify(freshUser));
+    const kycLoan = loans?.find((l: any) => l.status === 'KYC_SENT') || null;
+    const loading = userLoading || walletLoading || (user?.role === 'CUSTOMER' && loansLoading);
 
-                // If user has active locked balance from loans, prioritize that.
-                // Otherwise fall back to wallet locked balance (if any)
-                const loanLocked = freshUser.active_locked_balance || 0;
-
-                const w = await apiFetch('/wallet/balance');
-                setBalance(w.balance);
-
-                setLockedBalance(loanLocked > 0 ? loanLocked : (w.locked_balance || '0'));
-
-                if (user.role === 'CUSTOMER') {
-                    const loans = await apiFetch('/loans');
-                    const pendingKyc = loans.find((l: any) => l.status === 'KYC_SENT');
-                    if (pendingKyc) setKycLoan(pendingKyc);
-                }
-            } catch (e) { } finally {
-                setLoading(false);
-            }
-        };
-        loadData();
-    }, [user?.id]); // Only re-run if user ID changes or on mount (if user is set)
-
-    const handleClaimSuccess = (updatedUser: any) => {
+    const handleClaimSuccess = async (updatedUser: any) => {
         setShowClaimModal(false);
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        // Refresh wallet balance
-        apiFetch('/wallet/balance').then(w => {
-            setBalance(w.balance);
-            setLockedBalance(w.locked_balance || '0');
-        });
+        // Refresh all data
+        await Promise.all([mutateUser(), mutateWallet()]);
     };
 
     if (!user || loading) return (

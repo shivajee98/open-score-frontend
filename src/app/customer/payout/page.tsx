@@ -3,58 +3,42 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
 export default function PayoutPage() {
-    const [user, setUser] = useState<any>(null);
-    const [balance, setBalance] = useState(0);
+    // Data Fetching
+    const { data: userData, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
+    const { data: walletData, isLoading: walletLoading, mutate: mutateWallet } = useApi('/wallet/balance');
+    const { data: loans, isLoading: loansLoading } = useApi(userData?.role === 'CUSTOMER' ? '/loans' : null);
+
     const [amount, setAmount] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    const [isRestricted, setIsRestricted] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
+    // Derived State
+    const user = userData ? { ...userData, daily_earnings: walletData?.daily_earnings } : null;
+    const balance = walletData?.balance || 0;
+
+    // Check restrictions
+    const isRestricted = userData?.role === 'CUSTOMER' &&
+        !loans?.some((l: any) =>
+            ['ACTIVE', 'DISBURSED', 'APPROVED', 'PROCEEDED'].includes(l.status) &&
+            Number(l.amount) >= 50000
+        );
+
+    const isLoading = userLoading || walletLoading || (userData?.role === 'CUSTOMER' && loansLoading);
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const userData = await apiFetch('/auth/me');
-                const walletData = await apiFetch('/wallet/balance');
-
-                // Fetch loans to check eligibility (Must have active loan >= 50k)
-                let isRestrictedLocal = false;
-                if (userData.role === 'CUSTOMER') {
-                    const loans = await apiFetch('/loans');
-                    const eligibleLoan = loans.find((l: any) =>
-                        ['ACTIVE', 'DISBURSED', 'APPROVED', 'PROCEEDED'].includes(l.status) &&
-                        Number(l.amount) >= 50000
-                    );
-
-                    if (!eligibleLoan) {
-                        setIsRestricted(true);
-                        isRestrictedLocal = true;
-                    }
-                }
-
-                // Merge wallet data (daily_earnings) into user object for UI check
-                setUser({ ...userData, daily_earnings: walletData.daily_earnings });
-                setBalance(walletData.balance);
-
-                if (!isRestrictedLocal && (!userData.bank_name || !userData.account_number)) {
-                    toast.error("Please update your bank details in profile first");
-                    router.push('/customer/profile');
-                }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
-    }, [router]);
+        if (!isLoading && user && !isRestricted && (!user.bank_name || !user.account_number)) {
+            toast.error("Please update your bank details in profile first");
+            router.push('/customer/profile');
+        }
+    }, [isLoading, user, isRestricted, router]);
 
     const handlePayout = async () => {
         const payoutAmount = parseFloat(amount);
@@ -80,6 +64,7 @@ export default function PayoutPage() {
                     account_holder_name: user.account_holder_name
                 })
             });
+            await mutateWallet(); // Refresh balance
             setIsSuccess(true);
             toast.success("Cred-out request submitted!");
         } catch (e: any) {

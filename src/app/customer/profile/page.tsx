@@ -7,9 +7,12 @@ import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphone
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
+import { useApi } from '@/hooks/useApi';
 
 export default function Profile() {
-    const [user, setUser] = useState<any>(null);
+    const { data: user, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
+    const { data: pinData, mutate: mutatePin } = useApi('/wallet/check-pin');
+
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -20,9 +23,10 @@ export default function Profile() {
         account_holder_name: ''
     });
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-    const [hasPin, setHasPin] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+    const hasPin = pinData?.has_pin || false;
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
@@ -81,22 +85,17 @@ export default function Profile() {
     };
 
     useEffect(() => {
-        apiFetch('/auth/me').then(data => {
-            setUser(data);
+        if (user) {
             setFormData({
-                name: data.name,
-                email: data.email || '',
-                bank_name: data.bank_name || '',
-                account_number: data.account_number || '',
-                ifsc_code: data.ifsc_code || '',
-                account_holder_name: data.account_holder_name || ''
+                name: user.name || '',
+                email: user.email || '',
+                bank_name: user.bank_name || '',
+                account_number: user.account_number || '',
+                ifsc_code: user.ifsc_code || '',
+                account_holder_name: user.account_holder_name || ''
             });
-        }).catch(console.error);
-
-        apiFetch('/wallet/check-pin').then(data => {
-            setHasPin(data.has_pin);
-        }).catch(() => setHasPin(false));
-    }, []);
+        }
+    }, [user]);
 
     const handleBack = () => {
         if (user?.role === 'ADMIN') router.push('/admin');
@@ -110,7 +109,8 @@ export default function Profile() {
                 body: JSON.stringify(formData)
             });
             if (res.error) throw new Error(res.error);
-            setUser({ ...user, ...formData });
+            if (res.error) throw new Error(res.error);
+            await mutateUser(); // Refresh user data
             setIsEditing(false);
             toast.success('Profile updated successfully!');
         } catch (e: any) {
@@ -158,7 +158,7 @@ export default function Profile() {
                     })
                 });
                 toast.success('PIN updated successfully!');
-                setHasPin(true);
+                mutatePin(); // Refresh pin status
                 setIsPinModalOpen(false);
             } catch (e: any) {
                 toast.error(e.message || 'Failed to update PIN');
