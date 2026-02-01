@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, useRef, useCallback } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
