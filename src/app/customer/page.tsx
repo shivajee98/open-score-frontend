@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import MerchantClaimModal from '@/components/MerchantClaimModal';
 import SupportModal from '@/components/SupportModal';
 import MerchantLocator from '@/components/MerchantLocator';
+import HomeBannerCarousel from '@/components/HomeBannerCarousel';
 
 export default function CustomerHome() {
     const router = useRouter();
@@ -21,10 +22,11 @@ export default function CustomerHome() {
     const { data: loans, isLoading: loansLoading } = useApi(user?.role === 'CUSTOMER' ? '/loans' : null);
 
     const [showBalance, setShowBalance] = useState(true);
-    const [dynamicText, setDynamicText] = useState("Apply Now & Get 0% Interest Credit");
-    const [activeBanner, setActiveBanner] = useState(0);
+    // Promotional Banner State - Show on load
+    const [showPromotionalBanner, setShowPromotionalBanner] = useState(true);
     const [showClaimModal, setShowClaimModal] = useState(false);
-    const [supportOpen, setSupportOpen] = useState(false);
+    const [activeBanner, setActiveBanner] = useState(0);
+    const [dynamicText, setDynamicText] = useState("Apply Now & Get 0% Interest Credit");
 
     const banners = [
         {
@@ -76,7 +78,6 @@ export default function CustomerHome() {
         return () => clearInterval(timer);
     }, []);
 
-
     // Derived State
     const balance = walletData?.balance || '0';
     // Prioritize active_locked_balance from user profile (loans), else wallet locked balance
@@ -107,6 +108,7 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
+            <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} />
 
             <MerchantLocator />
@@ -240,31 +242,9 @@ export default function CustomerHome() {
                         ))}
                     </div>
                 </div>
-
-                {/* Smaller Arrows - Always Visible */}
-                <button
-                    onClick={() => setActiveBanner((prev) => (prev === 0 ? banners.length - 1 : prev - 1))}
-                    className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-slate-500 hover:text-slate-900 z-40 transition-all hover:bg-white shadow-lg"
-                >
-                    <ChevronLeft size={16} />
-                </button>
-                <button
-                    onClick={() => setActiveBanner((prev) => (prev === banners.length - 1 ? 0 : prev + 1))}
-                    className="absolute right-6 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-slate-500 hover:text-slate-900 z-40 transition-all hover:bg-white shadow-lg"
-                >
-                    <ChevronRight size={16} />
-                </button>
-
-                {/* Progress Indicators */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-30">
-                    {banners.map((_, i) => (
-                        <div
-                            key={i}
-                            className={`h-0.5 rounded-full transition-all duration-300 ${i === activeBanner ? 'w-3 bg-white' : 'w-1 bg-white/30'}`}
-                        />
-                    ))}
-                </div>
             </div>
+
+
 
             {/* Marketing Banner - Get Needs Done */}
             <div className="px-4 mb-8">
@@ -400,6 +380,9 @@ export default function CustomerHome() {
                     <ChevronRight size={14} />
                 </button>
             </div>
+
+
+
 
             {/* Recharge & Bills Section */}
             <div className="px-4 mb-24">
