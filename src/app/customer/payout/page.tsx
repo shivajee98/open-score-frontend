@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
@@ -13,7 +13,64 @@ export default function PayoutPage() {
     const { data: userData, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
     const { data: walletData, isLoading: walletLoading, mutate: mutateWallet } = useApi('/wallet/balance');
     const { data: loans, isLoading: loansLoading } = useApi(userData?.role === 'CUSTOMER' ? '/loans' : null);
-    const { data: withdrawals, mutate: mutateWithdrawals } = useApi('/wallet/withdrawals');
+
+    // Pagination for withdrawals
+    const [withdrawals, setWithdrawals] = useState<any[]>([]);
+    const [wPage, setWPage] = useState(1);
+    const [hasMoreW, setHasMoreW] = useState(true);
+    const [fetchingMoreW, setFetchingMoreW] = useState(false);
+    const [initialLoadingW, setInitialLoadingW] = useState(true);
+
+    const withdrawalsObserver = useRef<IntersectionObserver | null>(null);
+    const lastWithdrawalRef = useCallback((node: any) => {
+        if (fetchingMoreW || initialLoadingW) return;
+        if (withdrawalsObserver.current) withdrawalsObserver.current.disconnect();
+
+        withdrawalsObserver.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMoreW) {
+                setWPage(prev => prev + 1);
+            }
+        });
+
+        if (node) withdrawalsObserver.current.observe(node);
+    }, [fetchingMoreW, initialLoadingW, hasMoreW]);
+
+    const fetchWithdrawals = async (page: number) => {
+        if (page === 1) setInitialLoadingW(true);
+        else setFetchingMoreW(true);
+
+        try {
+            const data = await apiFetch(`/wallet/withdrawals?page=${page}`);
+            const newW = data.data || [];
+
+            if (page === 1) {
+                setWithdrawals(newW);
+            } else {
+                setWithdrawals(prev => [...prev, ...newW]);
+            }
+
+            if (data.current_page !== undefined) {
+                setHasMoreW(data.current_page < data.last_page);
+            } else {
+                setHasMoreW(false);
+            }
+        } catch (e) {
+            console.error(e);
+            setHasMoreW(false);
+        } finally {
+            setInitialLoadingW(false);
+            setFetchingMoreW(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchWithdrawals(wPage);
+    }, [wPage]);
+
+    const mutateWithdrawals = () => {
+        setWPage(1);
+        fetchWithdrawals(1);
+    };
 
     const [amount, setAmount] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -137,12 +194,6 @@ export default function PayoutPage() {
                     <div className="mt-8 w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                         <div className="h-full bg-indigo-500 rounded-full animate-[progress_30s_linear_forwards]" style={{ width: '0%' }}></div>
                     </div>
-                    <style jsx>{`
-                        @keyframes progress {
-                            0% { width: 0%; }
-                            100% { width: 100%; }
-                        }
-                    `}</style>
                 </div>
             </div>
         );
@@ -150,126 +201,112 @@ export default function PayoutPage() {
 
     if (isSuccess) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center font-sans">
-                <div className="max-w-md w-full bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100 animate-in zoom-in-50 duration-500">
-                    <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8">
-                        <CheckCircle2 className="w-12 h-12 text-emerald-500" />
-                    </div>
-                    <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Request Received</h2>
-                    <p className="text-slate-500 font-bold mb-10 leading-relaxed">
-                        Your Cred-out request for <span className="text-slate-900 font-black">₹{amount}</span> has been submitted to the administrator for approval.
-                    </p>
-                    <button
-                        onClick={() => router.push('/customer')}
-                        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-slate-200"
-                    >
-                        Back to Home
-                        <ArrowRight size={20} />
-                    </button>
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center font-sans">
+                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                    <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                 </div>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Withdrawal Requested</h2>
+                <p className="text-slate-500 font-bold text-sm max-w-xs mb-8">
+                    Your request for ₹{parseFloat(amount).toLocaleString('en-IN')} has been submitted successfully and is under verification.
+                </p>
+                <button
+                    onClick={() => { setIsSuccess(false); setAmount(''); }}
+                    className="w-full max-w-xs py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200"
+                >
+                    Back to Payments
+                </button>
             </div>
         );
     }
 
-    // The "Rejected" Screen (Access Locked) - Only shown AFTER processing if failed/restricted
     if (showRestricted) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans animate-in fade-in duration-500">
-                <div className="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200 border border-slate-100 text-center relative overflow-hidden">
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 opacity-[0.03] z-0" style={{ backgroundImage: 'radial-gradient(circle at center, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-
-                    <div className="relative z-10 flex flex-col items-center">
-                        <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50 shadow-inner">
-                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-rose-100">
-                                <Lock className="w-8 h-8 text-rose-500" strokeWidth={2.5} />
-                            </div>
-                        </div>
-
-                        <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Request Declined</h2>
-                        <p className="text-slate-500 font-medium text-sm px-2 mb-8 leading-relaxed">
-                            Our system could not approve this withdrawal request at this time.
-                        </p>
-
-                        <div className="w-full bg-rose-50 border border-rose-100 rounded-2xl p-5 mb-8 text-left relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-100 rounded-full blur-2xl -mr-10 -mt-10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
-
-                            <div className="flex items-start gap-4 relative z-10">
-                                <div className="mt-1 bg-white p-1.5 rounded-lg shadow-sm">
-                                    <AlertCircle className="w-5 h-5 text-rose-500 fill-rose-50" />
-                                </div>
-                                <div>
-                                    <h4 className="font-black text-rose-950 text-xs uppercase tracking-widest mb-1.5 opacity-80">Reason: Access Locked</h4>
-                                    <p className="text-slate-700 text-xs font-bold leading-relaxed">
-                                        You need an active loan of <span className="text-rose-600 font-black bg-rose-100/50 px-1 rounded">₹50,000 or more</span> to unlock direct bank withdrawals.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="w-full space-y-3">
-                            <button
-                                onClick={() => router.push('/customer/loan/apply')}
-                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200 flex items-center justify-center gap-2 group"
-                            >
-                                <span className="w-2 h-2 rounded-full bg-yellow-400 group-hover:animate-pulse"></span>
-                                Apply Now & Unlock
-                            </button>
-                            <button
-                                onClick={() => { setShowRestricted(false); setAmount(''); }}
-                                className="w-full py-4 text-slate-400 font-bold text-xs hover:text-slate-600 transition-colors uppercase tracking-widest"
-                            >
-                                Try Different Amount
-                            </button>
-                        </div>
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center font-sans">
+                <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mb-10 relative">
+                    <Lock className="w-10 h-10 text-indigo-600" />
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center text-white">
+                        <AlertCircle size={14} strokeWidth={3} />
                     </div>
                 </div>
+
+                <div className="space-y-4 mb-12">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight">Cred-out Locked</h2>
+                    <p className="text-slate-400 font-bold text-sm leading-relaxed uppercase tracking-wider">
+                        Withdrawals are currently restricted for applications under ₹50,000.
+                    </p>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-indigo-900/5 w-full max-w-sm text-left relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                    <h4 className="font-black text-slate-900 text-sm mb-6 flex items-center gap-2">
+                        <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
+                        How to Unlock?
+                    </h4>
+                    <ul className="space-y-6">
+                        <li className="flex items-start gap-4">
+                            <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shrink-0 mt-0.5">1</div>
+                            <p className="text-slate-500 text-xs font-bold leading-normal">Complete your current loan repayment cycles on time.</p>
+                        </li>
+                        <li className="flex items-start gap-4">
+                            <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 shrink-0 mt-0.5">2</div>
+                            <p className="text-slate-500 text-xs font-bold leading-normal">Apply for a loan of ₹50,000 or above to enable full withdrawal access.</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <button
+                    onClick={() => router.push('/customer/loan')}
+                    className="mt-12 w-full max-w-sm py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all active:scale-95 shadow-2xl shadow-indigo-100 flex items-center justify-center gap-3"
+                >
+                    Upgrade Loan Plan
+                    <ArrowRight size={18} />
+                </button>
+                <button
+                    onClick={() => setShowRestricted(false)}
+                    className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors"
+                >
+                    Back to Wallet
+                </button>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 font-sans box-border selection:bg-blue-100 selection:text-blue-900 pb-20">
-            <div className="max-w-md mx-auto">
-                <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> Go Back
-                </button>
-
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200 border border-slate-100 mb-8">
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner">
-                            <Wallet className="w-7 h-7" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Available Balance</p>
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">₹{balance.toLocaleString()}</h2>
-                            {user.role === 'MERCHANT' && (
-                                <p className="text-xs font-bold text-emerald-600 mt-1">
-                                    Withdrawable Today: ₹{(user.daily_earnings || 0).toLocaleString()}
-                                </p>
-                            )}
-                        </div>
+        <div className="min-h-screen bg-slate-50 pb-safe">
+            <div className="max-w-4xl mx-auto p-4 md:p-8">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                    <button onClick={() => router.push('/customer')} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm text-slate-400 hover:text-slate-900 transition-all active:scale-90">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div className="text-right">
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Cred-out</h1>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Bank Settlement</p>
                     </div>
+                </div>
 
+                {/* Main Card */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    {/* Input Side */}
                     <div className="space-y-6">
-                        <div className="relative group">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 mb-2 block">Cred-out Amount</label>
-                            <div className="relative">
-                                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">₹</span>
-                                <input
-                                    type="number"
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    placeholder="0"
-                                    className="w-full pl-12 pr-8 py-5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-2xl font-black text-slate-900 focus:outline-none focus:border-indigo-500 transition-all font-mono"
-                                />
+                        <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700"></div>
+                            <div className="flex items-center gap-3 mb-8 opacity-60">
+                                <Wallet size={16} />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Withdrawable Balance</span>
                             </div>
-                            <div className="mt-4 flex flex-wrap gap-2">
-                                {[100, 500, 1000, 5000].map(val => (
+                            <div className="mb-8">
+                                <span className="text-lg opacity-40 font-black mr-2">₹</span>
+                                <span className="text-5xl font-black tracking-tighter">
+                                    {balance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                </span>
+                            </div>
+                            <div className="flex gap-2">
+                                {[100, 500, 1000, 2000].map(val => (
                                     <button
                                         key={val}
                                         onClick={() => setAmount(val.toString())}
-                                        className="px-4 py-2 bg-slate-50 border border-slate-100 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all active:scale-95"
+                                        className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black transition-colors"
                                     >
                                         +₹{val}
                                     </button>
@@ -277,28 +314,45 @@ export default function PayoutPage() {
                             </div>
                         </div>
 
-                        <div className="bg-indigo-50/50 rounded-3xl p-6 border border-indigo-100/50 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-20 h-20 bg-indigo-100/30 rounded-full blur-2xl -mr-10 -mt-10"></div>
-
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-50">
-                                    <Landmark className="w-4 h-4" />
+                        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-900/5">
+                            <div className="mb-6">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Transfer Amount</label>
+                                <div className="relative group">
+                                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300 group-focus-within:text-slate-900 transition-colors">₹</span>
+                                    <input
+                                        type="number"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                        placeholder="Enter Amount"
+                                        className="w-full bg-slate-50 border-none rounded-3xl py-6 pl-12 pr-6 text-2xl font-black text-slate-900 focus:ring-2 focus:ring-slate-900/5 placeholder:text-slate-200 outline-none transition-all"
+                                    />
                                 </div>
-                                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.15em]">Settlement Target</h3>
                             </div>
+                        </div>
+                    </div>
 
-                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm space-y-3.5 border border-indigo-100/30">
-                                <div className="flex justify-between items-center text-[11px]">
+                    {/* Bank Side */}
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-900/5">
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                                <Landmark className="w-3.5 h-3.5" />
+                                Settlement Bank Account
+                            </h3>
+
+                            <div className="space-y-4">
+                                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
                                     <span className="font-bold text-slate-400 uppercase tracking-tighter">Bank</span>
-                                    <span className="font-black text-slate-900">{user.bank_name}</span>
+                                    <span className="font-black text-slate-900 uppercase">{user?.bank_name}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-[11px]">
-                                    <span className="font-bold text-slate-400 uppercase tracking-tighter">A/C Number</span>
-                                    <span className="font-black text-slate-900 font-mono tracking-wider">{user.account_number}</span>
+                                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                                    <span className="font-bold text-slate-400 uppercase tracking-tighter">A/C No.</span>
+                                    <span className="font-black text-slate-900 font-mono italic">
+                                        {'*'.repeat(Math.max(0, (user?.account_number?.length || 0) - 4)) + user?.account_number?.slice(-4)}
+                                    </span>
                                 </div>
-                                <div className="flex justify-between items-center text-[11px]">
+                                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
                                     <span className="font-bold text-slate-400 uppercase tracking-tighter">IFSC</span>
-                                    <span className="font-black text-slate-900 font-mono px-1.5 py-0.5 bg-slate-100 rounded">{user.ifsc_code}</span>
+                                    <span className="font-black text-slate-900 font-mono px-1.5 py-0.5 bg-slate-100 rounded">{user?.ifsc_code}</span>
                                 </div>
                             </div>
 
@@ -330,17 +384,21 @@ export default function PayoutPage() {
                     <div className="flex items-center justify-between px-4 mb-6">
                         <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Withdrawal History</h3>
                         <div className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[9px] font-black text-slate-400 uppercase shadow-sm">
-                            {withdrawals?.length || 0} Requests
+                            Activity Log
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        {withdrawals?.map((w: any) => (
-                            <div key={w.id} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-all">
+                        {withdrawals?.map((w: any, idx) => (
+                            <div
+                                key={w.id}
+                                ref={idx === withdrawals.length - 1 ? lastWithdrawalRef : null}
+                                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-all"
+                            >
                                 <div className="flex items-center gap-4">
                                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${w.status === 'PAID' ? 'bg-emerald-50 text-emerald-600' :
-                                            w.status === 'REJECTED' ? 'bg-rose-50 text-rose-600' :
-                                                'bg-amber-50 text-amber-600'
+                                        w.status === 'REJECTED' ? 'bg-rose-50 text-rose-600' :
+                                            'bg-amber-50 text-amber-600'
                                         }`}>
                                         <Landmark size={20} />
                                     </div>
@@ -353,8 +411,8 @@ export default function PayoutPage() {
                                 </div>
                                 <div className="text-right">
                                     <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${w.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
-                                            w.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
-                                                'bg-amber-100 text-amber-700'
+                                        w.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
+                                            'bg-amber-100 text-amber-700'
                                         }`}>
                                         {w.status}
                                     </span>
@@ -365,10 +423,28 @@ export default function PayoutPage() {
                             </div>
                         ))}
 
-                        {(!withdrawals || withdrawals.length === 0) && (
+                        {initialLoadingW && withdrawals.length === 0 && (
+                            <div className="space-y-3">
+                                {[1, 2, 3].map(i => <div key={i} className="h-20 bg-white border border-slate-50 rounded-3xl animate-pulse"></div>)}
+                            </div>
+                        )}
+
+                        {fetchingMoreW && (
+                            <div className="flex justify-center py-6">
+                                <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                            </div>
+                        )}
+
+                        {!initialLoadingW && withdrawals.length === 0 && (
                             <div className="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">No transactions</p>
                                 <p className="text-[10px] text-slate-400 font-medium">Your withdrawal history will appear here.</p>
+                            </div>
+                        )}
+
+                        {!hasMoreW && withdrawals.length > 0 && (
+                            <div className="text-center py-8">
+                                <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">End of withdrawal history</p>
                             </div>
                         )}
                     </div>
