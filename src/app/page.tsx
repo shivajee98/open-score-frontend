@@ -13,6 +13,7 @@ export default function Home() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
 
   // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'
   const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'>('onboarding');
@@ -43,7 +44,25 @@ export default function Home() {
         setCheckingSession(false);
       }
     };
+
     checkSession();
+
+    // Check for referral code periodically or on mount
+    const checkReferral = () => {
+      const code = localStorage.getItem('referral_code');
+      if (code) setReferralCode(code);
+    };
+    checkReferral();
+
+    // Also set up a listener for storage events (cross-tab) and custom events (same-tab)
+    window.addEventListener('storage', checkReferral);
+    const customListener = () => checkReferral();
+    window.addEventListener('referral_code_updated', customListener);
+
+    return () => {
+      window.removeEventListener('storage', checkReferral);
+      window.removeEventListener('referral_code_updated', customListener);
+    };
   }, [router]);
 
   useEffect(() => {
@@ -235,6 +254,12 @@ export default function Home() {
                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 pl-[3.8rem] font-bold text-primary text-lg focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand tracking-widest"
                     placeholder="00000 00000"
                   />
+                  {referralCode && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-black uppercase tracking-wider animate-in fade-in slide-in-from-right-4">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                      Applied: {referralCode}
+                    </div>
+                  )}
                 </div>
               </div>
               <button
@@ -373,7 +398,7 @@ export default function Home() {
       </div>
 
       <div className="absolute bottom-6 left-0 right-0 text-center opacity-60 pointer-events-none animate-in fade-in duration-1000 delay-500">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by MSME Shakti</p>
+        <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Powered by MSME Shakti</p>
       </div>
     </main>
   );

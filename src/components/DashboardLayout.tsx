@@ -267,7 +267,7 @@ export default function DashboardLayout({
                             <div className={`w-8 h-8 rounded-lg bg-${themeColor}-600 flex items-center justify-center text-white font-black text-lg`}>O</div>
                             <h1 className="text-xl font-black tracking-tight text-slate-900">OpenScore</h1>
                         </div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-11">Powered by MSME Shakti</p>
+                        <p className="text-xs font-bold text-slate-700 uppercase tracking-widest pl-11">Powered by MSME Shakti</p>
                     </div>
 
                     <nav className="flex-1 px-4 space-y-2">
@@ -354,7 +354,7 @@ export default function DashboardLayout({
                             </div>
                         )}
                         <div className="py-8 text-center opacity-50">
-                            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Powered by MSME Shakti</p>
+                            <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Powered by MSME Shakti</p>
                         </div>
                     </div>
                 </main >
