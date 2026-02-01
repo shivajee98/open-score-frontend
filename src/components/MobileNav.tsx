@@ -86,7 +86,7 @@ export default function MobileNav() {
                     </Link>
                     <Link href="/customer/payout" className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname === '/customer/payout' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
                         <Landmark size={20} className={pathname === '/customer/payout' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/payout' ? 3 : 2} />
-                        <span className="text-[8px] font-black uppercase tracking-widest">Payout</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest">Cred-out</span>
                     </Link>
 
                     <Link href="/customer/loan/history" className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname === '/customer/loan/history' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>

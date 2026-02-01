@@ -13,6 +13,7 @@ export default function PayoutPage() {
     const [amount, setAmount] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [isRestricted, setIsRestricted] = useState(false);
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
@@ -23,6 +24,7 @@ export default function PayoutPage() {
                 const walletData = await apiFetch('/wallet/balance');
 
                 // Fetch loans to check eligibility (Must have active loan >= 50k)
+                let isRestrictedLocal = false;
                 if (userData.role === 'CUSTOMER') {
                     const loans = await apiFetch('/loans');
                     const eligibleLoan = loans.find((l: any) =>
@@ -31,9 +33,8 @@ export default function PayoutPage() {
                     );
 
                     if (!eligibleLoan) {
-                        toast.error("Withdrawals are only enabled for Premium Loans (₹50,000+). Use Scan & Pay.");
-                        router.push('/customer');
-                        return;
+                        setIsRestricted(true);
+                        isRestrictedLocal = true;
                     }
                 }
 
@@ -41,7 +42,7 @@ export default function PayoutPage() {
                 setUser({ ...userData, daily_earnings: walletData.daily_earnings });
                 setBalance(walletData.balance);
 
-                if (!userData.bank_name || !userData.account_number) {
+                if (!isRestrictedLocal && (!userData.bank_name || !userData.account_number)) {
                     toast.error("Please update your bank details in profile first");
                     router.push('/customer/profile');
                 }
@@ -77,7 +78,7 @@ export default function PayoutPage() {
                 })
             });
             setIsSuccess(true);
-            toast.success("Payout request submitted!");
+            toast.success("Cred-out request submitted!");
         } catch (e: any) {
             toast.error(e.message || "Failed to submit request");
         } finally {
@@ -96,7 +97,7 @@ export default function PayoutPage() {
                     </div>
                     <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Request Received</h2>
                     <p className="text-slate-500 font-bold mb-10 leading-relaxed">
-                        Your payout request for <span className="text-slate-900 font-black">₹{amount}</span> has been submitted to the administrator for approval.
+                        Your Cred-out request for <span className="text-slate-900 font-black">₹{amount}</span> has been submitted to the administrator for approval.
                     </p>
                     <button
                         onClick={() => router.push('/customer')}
@@ -105,6 +106,70 @@ export default function PayoutPage() {
                         Back to Home
                         <ArrowRight size={20} />
                     </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (isRestricted) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+                <div className="max-w-md w-full bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200 border border-slate-100 text-center relative overflow-hidden">
+                    {/* Decorative Elements */}
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-400 to-rose-500"></div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+                    <div className="w-20 h-20 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-rose-100 relative z-10">
+                        <Landmark className="w-10 h-10 text-rose-500" />
+                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 border border-rose-100">
+                            <AlertCircle size={16} className="text-rose-500 fill-rose-50" />
+                        </div>
+                    </div>
+
+                    <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Access Denied</h2>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-6">Pending Requirements</p>
+
+                    <div className="bg-slate-50 rounded-2xl p-5 mb-8 text-left border border-slate-100">
+                        <p className="text-slate-600 text-sm font-bold leading-relaxed mb-4">
+                            Direct bank withdrawals (Cred-out) are exclusively available for our <span className="text-slate-900 font-black">Premium Members</span>.
+                        </p>
+                        <div className="space-y-3">
+                            <div className="flex gap-3">
+                                <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <span className="text-[10px] font-black">X</span>
+                                </div>
+                                <p className="text-xs text-slate-500 font-medium">You cannot withdraw to bank account.</p>
+                            </div>
+                            <div className="flex gap-3">
+                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <CheckCircle2 size={12} strokeWidth={3} />
+                                </div>
+                                <p className="text-xs text-slate-500 font-medium">To unlock, get an active loan of <span className="text-slate-900 font-black">₹50,000+</span>.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <button
+                            onClick={() => router.push('/customer/pay')}
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xl shadow-slate-200"
+                        >
+                            <Wallet size={18} />
+                            Use Scan & Pay Instead
+                        </button>
+                        <button
+                            onClick={() => router.push('/customer/loan')}
+                            className="w-full py-4 bg-white text-slate-900 border-2 border-slate-100 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                            Check Loan Eligibility
+                        </button>
+                        <button
+                            onClick={() => router.back()}
+                            className="w-full py-3 text-slate-400 font-black text-xs uppercase tracking-widest hover:text-slate-600"
+                        >
+                            Go Back
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -135,7 +200,7 @@ export default function PayoutPage() {
 
                     <div className="space-y-6">
                         <div className="relative group">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 mb-2 block">Payout Amount</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 mb-2 block">Cred-out Amount</label>
                             <div className="relative">
                                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">₹</span>
                                 <input
@@ -197,7 +262,7 @@ export default function PayoutPage() {
                                 <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
                             ) : (
                                 <>
-                                    Request Payout
+                                    Request Cred-out
                                     <ArrowRight size={20} />
                                 </>
                             )}
