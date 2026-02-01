@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, clearAuthState } from '@/lib/api';
 import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
@@ -349,13 +349,16 @@ export default function Profile() {
                                     </div>
                                 </div>
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-rose-50 hover:border-rose-100 transition-colors group"
-                                    onClick={() => {
-                                        localStorage.removeItem('token');
-                                        localStorage.removeItem('user');
-                                        if ((window as any).ReactNativeWebView) {
-                                            (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'LOGOUT' }));
-                                        }
-                                        router.push('/');
+                                    onClick={async () => {
+                                        // Use centralized auth clearing to handle cookies & backend session
+                                        await clearAuthState();
+
+                                        toast.success("Logged out successfully");
+
+                                        // Hard redirect to home/login to ensure clean state
+                                        setTimeout(() => {
+                                            window.location.href = '/';
+                                        }, 500);
                                     }}
                                 >
                                     <div className="flex items-center gap-3">

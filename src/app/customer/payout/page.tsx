@@ -14,6 +14,7 @@ export default function PayoutPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [isRestricted, setIsRestricted] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
@@ -48,6 +49,8 @@ export default function PayoutPage() {
                 }
             } catch (e) {
                 console.error(e);
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchData();
@@ -87,6 +90,15 @@ export default function PayoutPage() {
     };
 
     if (!isAuthenticated || !user) return null;
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+                <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4"></div>
+                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading Profile...</p>
+            </div>
+        );
+    }
 
     if (isSuccess) {
         return (
