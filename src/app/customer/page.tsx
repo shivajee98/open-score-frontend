@@ -85,7 +85,9 @@ export default function CustomerHome() {
         ? user.active_locked_balance
         : (walletData?.locked_balance || '0');
 
-    const kycLoan = loans?.find((l: any) => l.status === 'KYC_SENT') || null;
+    // Handle both array (legacy) and paginated object (new) responses
+    const loansList = Array.isArray(loans) ? loans : (loans?.data || []);
+    const kycLoan = loansList.find((l: any) => l.status === 'KYC_SENT') || null;
     const loading = userLoading || walletLoading || (user?.role === 'CUSTOMER' && loansLoading);
 
     const handleClaimSuccess = async (updatedUser: any) => {

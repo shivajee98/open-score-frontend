@@ -60,7 +60,8 @@ export default function RepaymentsPage() {
 
     const loadLoans = async () => {
         try {
-            const data = await apiFetch('/loans');
+            const response = await apiFetch('/loans');
+            const data = Array.isArray(response) ? response : (response?.data || []);
             setLoans(data);
         } catch (e) {
             console.error("Failed to load loans", e);

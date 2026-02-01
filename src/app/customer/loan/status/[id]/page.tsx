@@ -16,7 +16,8 @@ export default function LoanStatus() {
 
     const fetchLoan = async () => {
         try {
-            const loans = await apiFetch('/loans');
+            const data = await apiFetch('/loans');
+            const loans = Array.isArray(data) ? data : (data?.data || []);
             const found = loans.find((l: any) => l.id == loanId || l.loan_id == loanId);
 
             if (found) {

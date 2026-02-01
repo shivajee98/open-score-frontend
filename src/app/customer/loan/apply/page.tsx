@@ -64,7 +64,8 @@ export default function LoanApplication() {
                     }
                 }
 
-                const data = await apiFetch('/loans');
+                const response = await apiFetch('/loans');
+                const data = Array.isArray(response) ? response : (response?.data || []);
                 setLoans(data);
 
                 // Identify Active Loan (Not closed/rejected/cancelled)
