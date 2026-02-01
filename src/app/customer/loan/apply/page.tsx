@@ -28,7 +28,9 @@ export default function LoanApplication() {
     // Selection States for V2
     const [selectedOffer, setSelectedOffer] = useState<any>(null);
     const [selectedTenureConfig, setSelectedTenureConfig] = useState<any>(null);
-    const [selectedFrequency, setSelectedFrequency] = useState<string>('');
+    const [selectedFrequency, setSelectedFrequency] = useState<string | null>(null);
+    const [emiPreviews, setEmiPreviews] = useState<Record<string, any>>({});  // Store EMI calculations from backend
+    const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
     const [formData, setFormData] = useState({
         fullName: '',
@@ -100,6 +102,49 @@ export default function LoanApplication() {
         };
         checkStatus();
     }, []);
+
+    // NEW: Fetch EMI previews from backend whenever tenure config changes
+    useEffect(() => {
+        if (!selectedTenureConfig || !selectedOffer) return;
+
+        const fetchPreviews = async () => {
+            setIsLoadingPreview(true);
+            const previews: Record<string, any> = {};
+
+            try {
+                // Fetch calculations for each allowed frequency
+                const frequencies = selectedTenureConfig.allowed_frequencies || [];
+                await Promise.all(
+                    frequencies.map(async (freq: string) => {
+                        try {
+                            const response = await apiFetch('/loans/calculate-preview', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    amount: selectedOffer.rawAmount,
+                                    tenure_days: selectedTenureConfig.tenure_days,
+                                    frequency: freq,
+                                    loan_plan_id: selectedOffer.id
+                                })
+                            });
+                            previews[freq] = response;
+                        } catch (error) {
+                            console.error(`Failed to calculate preview for ${freq}:`, error);
+                            // Set fallback values on error
+                            previews[freq] = { emi_amount: 0, num_emis: 0 };
+                        }
+                    })
+                );
+
+                setEmiPreviews(previews);
+            } catch (error) {
+                console.error('Failed to fetch EMI previews:', error);
+            } finally {
+                setIsLoadingPreview(false);
+            }
+        };
+
+        fetchPreviews();
+    }, [selectedTenureConfig, selectedOffer]);
 
     const handleNewLoanClick = () => {
         if (activeLoan) {
@@ -565,38 +610,10 @@ export default function LoanApplication() {
                                     <span className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Repayment Frequency</span>
                                     <div className="grid grid-cols-2 gap-2">
                                         {(selectedTenureConfig.allowed_frequencies || []).map((freq: string) => {
-                                            // Parse frequency to get interval days
-                                            let interval = 30; // Default to monthly
-                                            const freqUpper = freq.toUpperCase();
-
-                                            if (freqUpper === 'DAILY') {
-                                                interval = 1;
-                                            } else if (freqUpper === 'WEEKLY') {
-                                                interval = 7;
-                                            } else if (freqUpper === 'MONTHLY') {
-                                                interval = 30;
-                                            } else {
-                                                // Match custom day patterns like "3 DAYS", "15 DAYS", etc.
-                                                const match = freqUpper.match(/(\d+)\s*DAYS?/);
-                                                if (match) {
-                                                    interval = parseInt(match[1], 10);
-                                                }
-                                            }
-
-                                            const numEmis = Math.floor(selectedTenureConfig.tenure_days / interval) || 1;
-                                            // Simple Interest Logic for Display (Principal + Interest)
-                                            // Note: If interest > 0, we should add it.
-                                            // The backend logic is: Interest = (P * R/100) * Months.
-                                            // R is monthly rate.
-                                            let totalPayable = selectedOffer.rawAmount;
-                                            const rate = selectedTenureConfig.interest_rates?.[freq] || selectedTenureConfig.interest_rate || 0;
-                                            if (rate > 0) {
-                                                const months = selectedTenureConfig.tenure_days / 30;
-                                                const interest = (selectedOffer.rawAmount * (rate / 100)) * months;
-                                                totalPayable += interest;
-                                            }
-
-                                            const emi = Math.floor(totalPayable / numEmis);
+                                            // Get precalculated EMI data from backend
+                                            const preview = emiPreviews[freq];
+                                            const emi = preview?.emi_amount || 0;
+                                            const numEmis = preview?.num_emis || 0;
 
                                             return (
                                                 <button
@@ -609,8 +626,13 @@ export default function LoanApplication() {
                                                 >
                                                     <span className="uppercase tracking-wider">{freq.replace('_', ' ')}</span>
                                                     <span className={`text-[10px] ${selectedFrequency === freq ? 'text-slate-300' : 'text-slate-800'}`}>
-                                                        ₹{emi.toLocaleString('en-IN')} PER EMI
+                                                        {isLoadingPreview ? 'Calculating...' : `₹${emi.toLocaleString('en-IN')} PER EMI`}
                                                     </span>
+                                                    {preview && !isLoadingPreview && (
+                                                        <span className="text-[9px] opacity-75">
+                                                            {numEmis} EMIs
+                                                        </span>
+                                                    )}
 
                                                     {selectedTenureConfig.cashback && selectedTenureConfig.cashback[freq] > 0 && (
                                                         <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] px-1 rounded-bl">
