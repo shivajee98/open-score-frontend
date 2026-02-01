@@ -123,7 +123,7 @@ export default function PayoutPage() {
                         </div>
                     </div>
 
-                    <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Access Denied</h2>
+                    <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Feature Locked</h2>
                     <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-6">Pending Requirements</p>
 
                     <div className="bg-slate-50 rounded-2xl p-5 mb-8 text-left border border-slate-100">
@@ -135,7 +135,7 @@ export default function PayoutPage() {
                                 <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
                                     <span className="text-[10px] font-black">X</span>
                                 </div>
-                                <p className="text-xs text-slate-500 font-medium">You cannot withdraw to bank account.</p>
+                                <p className="text-xs text-slate-500 font-medium">Unlock instantly with an active loan of ₹50,000 or more.</p>
                             </div>
                             <div className="flex gap-3">
                                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
