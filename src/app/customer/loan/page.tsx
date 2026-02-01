@@ -21,7 +21,8 @@ export default function LoanList() {
     const fetchLoans = () => {
         apiFetch('/loans').then((loans: any[]) => {
             if (loans && loans.length > 0) {
-                const sorted = loans.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                const filteredRecent = loans.filter((l: any) => l.status !== 'CANCELLED');
+                const sorted = filteredRecent.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 setRecentLoan(sorted[0]);
 
                 const pendingKyc = loans.find((l: any) => l.status === 'KYC_SENT');
@@ -246,7 +247,7 @@ export default function LoanList() {
             )}
 
             {/* Virtual Credit */}
-            <div className="mb-10">
+            <div className="mb-6">
                 {loanPlans.filter((p: any) => p.amount === 10000).map((plan: any) => (
                     <div
                         key={plan.id}
@@ -262,35 +263,37 @@ export default function LoanList() {
                             router.push(`/customer/loan/${plan.amount}?planId=${plan.id}`);
                         }}
                         className={cn(
-                            "bg-slate-900 rounded-2xl p-3.5 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all",
+                            "bg-[#0f1021] rounded-[2.8rem] p-8 relative overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-900/40 active:scale-[0.98] transition-all min-h-[220px] flex flex-col justify-between",
                             (activeLoan || cooldown.active) && "opacity-75 grayscale-[0.5]"
                         )}
                     >
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/30 rounded-full blur-[80px] -mr-20 -mt-20 group-hover:bg-indigo-600/40 transition-colors"></div>
-                        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl"></div>
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px] -mr-32 -mt-32"></div>
 
-                        <div className="relative z-10 flex justify-between items-center">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="bg-indigo-500 p-1.5 rounded-lg">
-                                        <Zap size={14} className="text-white fill-white" />
-                                    </div>
-                                    <span className="text-[9px] font-semibold text-indigo-300 uppercase tracking-[0.2em]">Priority Fast-Track</span>
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-900/20">
+                                    <Zap size={18} className="text-white fill-white" />
                                 </div>
-                                <h2 className="text-xl font-medium text-white mb-0.5 tracking-tight">{plan.title}</h2>
-                                <p className="text-indigo-200/60 font-normal text-[11px] max-w-[200px] leading-relaxed mb-3">
-                                    {plan.description} • Get funds in seconds.
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-2xl font-semibold text-white">₹{plan.amount.toLocaleString()}</span>
-                                    <div className="h-6 w-[1.5px] bg-white/10 mx-1"></div>
-                                    <div className="bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
-                                        <span className="text-[9px] font-medium text-white uppercase tracking-widest">Active Instantly</span>
-                                    </div>
+                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em]">Priority Fast-Track</span>
+                            </div>
+
+                            <h2 className="text-[32px] font-black text-white mb-2 tracking-tight leading-none">Virtual Credit</h2>
+                            <p className="text-indigo-200/50 font-medium text-xs max-w-[240px] leading-relaxed mb-8">
+                                Instant activation with nominal KYC • Get funds in seconds.
+                            </p>
+                        </div>
+
+                        <div className="relative z-10 flex justify-between items-end">
+                            <div className="flex items-center gap-4">
+                                <span className="text-4xl font-black text-white tracking-tighter">₹10,000</span>
+                                <div className="h-10 w-[1px] bg-white/10"></div>
+                                <div className="bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex flex-col items-center justify-center min-w-[100px]">
+                                    <span className="text-[10px] font-black text-[#8e94f2] uppercase tracking-widest leading-none">Active</span>
+                                    <span className="text-[10px] font-black text-[#8e94f2] uppercase tracking-widest leading-none mt-1">Instantly</span>
                                 </div>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all">
-                                {cooldown.active ? <Lock size={20} /> : <ChevronRight size={20} />}
+                            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all shadow-xl">
+                                {cooldown.active ? <Lock size={24} /> : <ChevronRight size={24} />}
                             </div>
                         </div>
                     </div>
@@ -299,17 +302,19 @@ export default function LoanList() {
 
             {/* Loan Plans List Section */}
             <div>
-                <div className="flex justify-between items-end mb-4">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Select Term Loan</h3>
+                <div className="flex justify-between items-end mb-4 px-2">
+                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Select Term Loan</h3>
                     <span className="text-[10px] font-bold text-slate-400">Fixed Tenure</span>
                 </div>
-                <div className="flex flex-col gap-3 mb-8">
+                <div className="flex flex-col gap-2.5 mb-8">
                     {loanPlans.filter((p: any) => p.amount > 10000).map((plan: any) => {
-                        const isLocked = plan.is_locked; // Use backend flag
+                        const isLocked = plan.is_locked;
 
-                        // Need prevPlan for the error message
                         const fullIndex = loanPlans.findIndex(lp => lp.id === plan.id);
                         const prevPlan = fullIndex > 0 ? loanPlans[fullIndex - 1] : null;
+
+                        // Solid color version of plan.color (removing from- and the to- part)
+                        const solidColorClass = plan.rawColor || plan.color.split(' ')[0].replace('from-', 'bg-');
 
                         return (
                             <div
@@ -330,37 +335,40 @@ export default function LoanList() {
                                     router.push(`/customer/loan/${plan.amount}?planId=${plan.id}`);
                                 }}
                                 className={cn(
-                                    "bg-white rounded-xl p-3 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between",
-                                    (isLocked || activeLoan || cooldown.active) ? "opacity-75 grayscale-[0.5]" : "hover:border-blue-200"
+                                    "bg-white rounded-[1.5rem] p-4 shadow-sm border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between",
+                                    (isLocked || activeLoan || cooldown.active) ? "opacity-75" : "hover:border-blue-200"
                                 )}
                             >
-                                <div className={`absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b ${plan.color}`}></div>
+                                <div className={`absolute top-0 left-0 bottom-0 w-2 ${solidColorClass}`}></div>
 
-                                <div className="flex items-center gap-3 flex-1">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shrink-0 ${isLocked
-                                        ? "bg-slate-100 text-slate-400"
-                                        : "bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white"
+                                <div className="flex items-center gap-4 flex-1 ml-2">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0 border-2 ${isLocked
+                                        ? "bg-slate-50 border-slate-100 text-slate-300"
+                                        : "bg-slate-50 border-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white"
                                         }`}>
-                                        {isLocked ? <Lock size={20} /> : <Zap size={20} className="fill-current" />}
+                                        {isLocked ? <Lock size={20} strokeWidth={2.5} /> : <Zap size={20} className="fill-current" />}
                                     </div>
 
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-gradient-to-r ${plan.color} uppercase tracking-wide flex items-center gap-1 w-fit`}>
-                                                {plan.title}
+                                            <span className={cn(
+                                                "text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 w-fit",
+                                                isLocked ? "bg-slate-100 text-slate-400" : `bg-indigo-50 text-indigo-600`
+                                            )}>
+                                                {plan.title.replace('Standard Loan', 'Growth Pro')}
                                             </span>
-                                            {(isLocked || activeLoan) && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeLoan ? 'Blocked' : 'Locked'}</span>}
+                                            {isLocked && <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Locked</span>}
                                         </div>
-                                        <h3 className="text-lg font-black text-slate-900">
-                                            ₹ {plan.amount.toLocaleString()}
+                                        <h3 className="text-[22px] font-black text-slate-900 tracking-tighter leading-none">
+                                            ₹{plan.amount.toLocaleString()}
                                         </h3>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-1.5">
                                             {isLocked ? 'Building Eligibility...' : plan.description}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="ml-4 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
+                                <div className="ml-4 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
                                     <ChevronRight size={20} />
                                 </div>
                             </div>
