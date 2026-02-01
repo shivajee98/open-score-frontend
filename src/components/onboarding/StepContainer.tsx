@@ -67,6 +67,9 @@ export default function StepContainer({
                     {ctaText}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
+                <div className="mt-6 text-center">
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Powered by MSME Shakti</p>
+                </div>
             </div>
         </div>
     );

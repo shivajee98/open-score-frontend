@@ -353,6 +353,9 @@ export default function DashboardLayout({
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Verifying Session...</p>
                             </div>
                         )}
+                        <div className="py-8 text-center opacity-50">
+                            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Powered by MSME Shakti</p>
+                        </div>
                     </div>
                 </main >
             </div >

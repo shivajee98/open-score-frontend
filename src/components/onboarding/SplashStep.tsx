@@ -30,6 +30,10 @@ export default function SplashStep({ onComplete }: { onComplete: () => void }) {
                 </div>
             </div>
 
+            <div className="absolute bottom-12 left-0 right-0 text-center opacity-0 animate-[fade-in_1s_ease-out_1000ms_forwards]">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by MSME Shakti</p>
+            </div>
+
             <style jsx global>{`
                 @keyframes scale-up {
                     from { transform: scale(0.98); opacity: 0; }

@@ -371,6 +371,10 @@ export default function Home() {
         )}
 
       </div>
+
+      <div className="absolute bottom-6 left-0 right-0 text-center opacity-60 pointer-events-none animate-in fade-in duration-1000 delay-500">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by MSME Shakti</p>
+      </div>
     </main>
   );
 }
