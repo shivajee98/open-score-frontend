@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
@@ -111,61 +111,53 @@ export default function PayoutPage() {
     if (isRestricted) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
-                <div className="max-w-md w-full bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-slate-200 border border-slate-100 text-center relative overflow-hidden">
-                    {/* Decorative Elements */}
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-400 to-rose-500"></div>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                <div className="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200 border border-slate-100 text-center relative overflow-hidden">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-[0.03] z-0" style={{ backgroundImage: 'radial-gradient(circle at center, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
-                    <div className="w-20 h-20 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-rose-100 relative z-10">
-                        <Landmark className="w-10 h-10 text-rose-500" />
-                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 border border-rose-100">
-                            <AlertCircle size={16} className="text-rose-500 fill-rose-50" />
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-slate-50 shadow-inner">
+                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg border border-slate-100">
+                                <Lock className="w-8 h-8 text-slate-800" strokeWidth={2.5} />
+                            </div>
                         </div>
-                    </div>
 
-                    <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Feature Locked</h2>
-                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-6">Pending Requirements</p>
-
-                    <div className="bg-slate-50 rounded-2xl p-5 mb-8 text-left border border-slate-100">
-                        <p className="text-slate-600 text-sm font-bold leading-relaxed mb-4">
-                            Direct bank withdrawals (Cred-out) are exclusively available for our <span className="text-slate-900 font-black">Premium Members</span>.
+                        <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Access Locked</h2>
+                        <p className="text-slate-500 font-medium text-sm px-2 mb-8 leading-relaxed">
+                            To protect our community, direct bank withdrawals (Cred-out) are reserved for verified members with active credit history.
                         </p>
-                        <div className="space-y-3">
-                            <div className="flex gap-3">
-                                <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
-                                    <span className="text-[10px] font-black">X</span>
+
+                        <div className="w-full bg-rose-50 border border-rose-100 rounded-2xl p-5 mb-8 text-left relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-100 rounded-full blur-2xl -mr-10 -mt-10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+
+                            <div className="flex items-start gap-4 relative z-10">
+                                <div className="mt-1 bg-white p-1.5 rounded-lg shadow-sm">
+                                    <AlertCircle className="w-5 h-5 text-rose-500 fill-rose-50" />
                                 </div>
-                                <p className="text-xs text-slate-500 font-medium">Unlock instantly with an active loan of ₹50,000 or more.</p>
-                            </div>
-                            <div className="flex gap-3">
-                                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                                    <CheckCircle2 size={12} strokeWidth={3} />
+                                <div>
+                                    <h4 className="font-black text-rose-950 text-xs uppercase tracking-widest mb-1.5 opacity-80">Action Required</h4>
+                                    <p className="text-slate-700 text-xs font-bold leading-relaxed">
+                                        You need an active loan of <span className="text-rose-600 font-black bg-rose-100/50 px-1 rounded">₹50,000 or more</span> to unlock this feature.
+                                    </p>
                                 </div>
-                                <p className="text-xs text-slate-500 font-medium">To unlock, get an active loan of <span className="text-slate-900 font-black">₹50,000+</span>.</p>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="space-y-3">
-                        <button
-                            onClick={() => router.push('/customer/pay')}
-                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xl shadow-slate-200"
-                        >
-                            <Wallet size={18} />
-                            Use Scan & Pay Instead
-                        </button>
-                        <button
-                            onClick={() => router.push('/customer/loan')}
-                            className="w-full py-4 bg-white text-slate-900 border-2 border-slate-100 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2 active:scale-95"
-                        >
-                            Check Loan Eligibility
-                        </button>
-                        <button
-                            onClick={() => router.back()}
-                            className="w-full py-3 text-slate-400 font-black text-xs uppercase tracking-widest hover:text-slate-600"
-                        >
-                            Go Back
-                        </button>
+                        <div className="w-full space-y-3">
+                            <button
+                                onClick={() => router.push('/customer/loan/apply')}
+                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200 flex items-center justify-center gap-2 group"
+                            >
+                                <span className="w-2 h-2 rounded-full bg-yellow-400 group-hover:animate-pulse"></span>
+                                Apply Now & Unlock
+                            </button>
+                            <button
+                                onClick={() => router.back()}
+                                className="w-full py-4 text-slate-400 font-bold text-xs hover:text-slate-600 transition-colors uppercase tracking-widest"
+                            >
+                                Go Back
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
