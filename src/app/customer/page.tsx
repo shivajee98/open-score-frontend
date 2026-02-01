@@ -244,6 +244,9 @@ export default function CustomerHome() {
                 </div>
             </div>
 
+
+
+
             {/* Quick Actions - Floating Card */}
             <div className="px-6 -mt-12 relative z-20 mb-8">
                 <div className="bg-white py-4 px-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-50">
@@ -290,42 +293,70 @@ export default function CustomerHome() {
                 </div>
             </div>
 
-            {/* KYC Alert (If any) */}
-            {!isMerchant && kycLoan && (
-                <div className="px-4 mb-8">
-                    <Link href={`/customer/loan/status/${kycLoan.id}`}>
-                        <div className="bg-yellow-400 p-4 rounded-3xl shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-12 h-12 rounded-xl bg-slate-900 text-yellow-400 flex items-center justify-center shadow-lg">
-                                    <ShieldCheck size={36} />
+            {/* Marketing Banner - Get Needs Done */}
+            <div className="px-4 mb-8">
+                <div onClick={() => router.push('/customer/pay?scan=true')} className="cursor-pointer group">
+                    <div className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 p-0.5 rounded-2xl shadow-xl shadow-amber-500/20 active:scale-[0.98] transition-transform">
+                        <div className="bg-slate-900 rounded-[0.9rem] px-5 py-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-2xl -mr-16 -mt-16 animate-pulse"></div>
+                            <div className="flex items-center justify-between relative z-10">
+                                <div className="flex-1">
+                                    <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-100 font-black text-lg leading-tight tracking-tight mb-1">
+                                        Get Your Need Done
+                                    </h3>
+                                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                                        By using this app or paying via this app
+                                    </p>
                                 </div>
-                                <div>
-                                    <h3 className="text-slate-900 font-black text-lg leading-tight uppercase tracking-tight">Complete KYC Now</h3>
-                                    <p className="text-slate-800 text-[10px] font-black leading-tight mt-1 opacity-60 uppercase tracking-widest">Required for Loan #{kycLoan.id}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </Link>
-                </div>
-            )}
-
-            {isMerchant && !user.pincode && (
-                <div className="px-4 mb-6">
-                    <div onClick={() => setShowClaimModal(true)} className="cursor-pointer">
-                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 rounded-2xl shadow-xl shadow-purple-900/30 border-4 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
-                                    <Zap size={24} className="fill-white" />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim ₹250 Cashback</h3>
-                                    <p className="text-white/80 text-[9px] font-black leading-tight mt-0.5 opacity-80 uppercase tracking-widest">Complete Setup Now</p>
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-300 to-yellow-600 flex items-center justify-center text-slate-900 shadow-lg group-hover:scale-110 transition-transform">
+                                    <ScanBarcode size={20} strokeWidth={2.5} />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
+
+            {/* KYC Alert (If any) */}
+            {
+                !isMerchant && kycLoan && (
+                    <div className="px-4 mb-8">
+                        <Link href={`/customer/loan/status/${kycLoan.id}`}>
+                            <div className="bg-yellow-400 p-4 rounded-3xl shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="w-12 h-12 rounded-xl bg-slate-900 text-yellow-400 flex items-center justify-center shadow-lg">
+                                        <ShieldCheck size={36} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-slate-900 font-black text-lg leading-tight uppercase tracking-tight">Complete KYC Now</h3>
+                                        <p className="text-slate-800 text-[10px] font-black leading-tight mt-1 opacity-60 uppercase tracking-widest">Required for Loan #{kycLoan.id}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
+                )
+            }
+
+            {
+                isMerchant && !user.pincode && (
+                    <div className="px-4 mb-6">
+                        <div onClick={() => setShowClaimModal(true)} className="cursor-pointer">
+                            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 rounded-2xl shadow-xl shadow-purple-900/30 border-4 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                        <Zap size={24} className="fill-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim ₹250 Cashback</h3>
+                                        <p className="text-white/80 text-[9px] font-black leading-tight mt-0.5 opacity-80 uppercase tracking-widest">Complete Setup Now</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* Banners - Full Width Carousel */}
             <div className="relative mt-4 z-30 mb-10 group px-1">
