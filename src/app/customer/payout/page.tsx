@@ -359,7 +359,7 @@ export default function PayoutPage() {
 
                             <p className="mt-3 flex items-start gap-2 text-[10px] font-bold text-indigo-700/80 leading-relaxed italic">
                                 <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-70" />
-                                Funds will reach your account within 24-48 hours once verified by the treasury.
+                                Update Details for Transfer
                             </p>
                         </div>
 
