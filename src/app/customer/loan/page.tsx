@@ -248,7 +248,7 @@ export default function LoanList() {
             )}
 
             {/* Virtual Credit */}
-            <div className="mb-6 px-4">
+            <div className="mb-4">
                 {loanPlans.filter((p: any) => p.amount === 10000).map((plan: any) => (
                     <div
                         key={plan.id}
@@ -264,36 +264,32 @@ export default function LoanList() {
                             router.push(`/customer/loan/${plan.amount}?planId=${plan.id}`);
                         }}
                         className={cn(
-                            "bg-[#0f1021] rounded-3xl p-5 relative overflow-hidden group cursor-pointer shadow-sm active:scale-[0.98] transition-all flex flex-col justify-between mx-auto max-w-[95%]",
+                            "bg-[#0f1021] rounded-[2rem] p-4 relative overflow-hidden group cursor-pointer shadow-sm active:scale-[0.98] transition-all flex items-center justify-between mx-auto max-w-[95%]",
                             (activeLoan || cooldown.active) && "opacity-75 grayscale-[0.5]"
                         )}
                     >
-                        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/20 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[80px] -mr-20 -mt-20"></div>
 
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="bg-indigo-600 p-1.5 rounded-lg shadow-sm">
-                                    <Zap size={14} className="text-white fill-white" />
+                        <div className="relative z-10 flex-1">
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <div className="bg-indigo-600 p-1 rounded-md shadow-sm">
+                                    <Zap size={10} className="text-white fill-white" />
                                 </div>
-                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em]">Priority Fast-Track</span>
+                                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-[0.2em]">Priority Fast-Track</span>
                             </div>
 
-                            <h2 className="text-2xl font-black text-white mb-1.5 tracking-tight leading-none">Virtual Credit</h2>
-                            <p className="text-indigo-200/50 font-medium text-[10px] max-w-[240px] leading-relaxed mb-6">
-                                Instant activation • Funds in seconds.
-                            </p>
+                            <h2 className="text-lg font-black text-white leading-none">Virtual Credit</h2>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className="text-2xl font-black text-white tracking-tighter leading-none">₹10,000</span>
+                                <div className="bg-white/5 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10">
+                                    <span className="text-[8px] font-black text-[#8e94f2] uppercase tracking-widest">Instant</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="relative z-10 flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <span className="text-3xl font-black text-white tracking-tighter">₹10,000</span>
-                                <div className="h-8 w-[1px] bg-white/10"></div>
-                                <div className="bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex flex-col items-center justify-center min-w-[80px]">
-                                    <span className="text-[9px] font-black text-[#8e94f2] uppercase tracking-widest leading-none">Instant</span>
-                                </div>
-                            </div>
-                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all shadow-sm">
-                                {cooldown.active ? <Lock size={16} /> : <ChevronRight size={18} />}
+                        <div className="relative z-10 flex items-center gap-4">
+                            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all shadow-sm">
+                                {cooldown.active ? <Lock size={14} /> : <ChevronRight size={18} />}
                             </div>
                         </div>
                     </div>
@@ -313,34 +309,45 @@ export default function LoanList() {
                         const fullIndex = loanPlans.findIndex(lp => lp.id === plan.id);
                         const prevPlan = fullIndex > 0 ? loanPlans[fullIndex - 1] : null;
 
-                        // Robust color extraction:
-                        // 1. Try to use rawColor if available
-                        // 2. Try to match 'from-COLOR-NUMBER' pattern
-                        // 3. Fallback to a default blue
-                        let solidColorClass = plan.rawColor;
+                        // Extract color name from plan config
+                        const sourceColor = plan.rawColor || plan.color || '';
                         let colorName = 'blue';
 
-                        if (!solidColorClass && plan.color) {
-                            const match = plan.color.match(/from-([a-z]+)-\d+/);
+                        if (sourceColor) {
+                            const match = sourceColor.match(/(?:bg|from|text)-([a-z]+)-/);
                             if (match) {
                                 colorName = match[1];
-                                solidColorClass = `bg-${colorName}-500`;
-                            } else {
-                                // If plain color class (e.g. 'bg-blue-500')
-                                solidColorClass = plan.color.startsWith('bg-') ? plan.color : 'bg-blue-600';
-                                const colorMatch = solidColorClass.match(/bg-([a-z]+)-/);
-                                if (colorMatch) colorName = colorMatch[1];
                             }
-                        } else if (!solidColorClass) {
-                            solidColorClass = 'bg-blue-600';
-                        } else {
-                            const colorMatch = solidColorClass.match(/bg-([a-z]+)-/);
-                            if (colorMatch) colorName = colorMatch[1];
                         }
 
-                        // Determine badge colors based on the plan color
-                        const badgeBg = `bg-${colorName}-100`;
-                        const badgeText = `text-${colorName}-600`;
+                        // Use switch for explicit class strings (Tailwind v4 compatibility)
+                        let solidColorClass = 'bg-blue-600';
+                        let badgeClasses = 'bg-blue-600 text-white';
+
+                        switch (colorName) {
+                            case 'slate': solidColorClass = 'bg-slate-600'; badgeClasses = 'bg-slate-600 text-white'; break;
+                            case 'gray': solidColorClass = 'bg-gray-600'; badgeClasses = 'bg-gray-600 text-white'; break;
+                            case 'zinc': solidColorClass = 'bg-zinc-600'; badgeClasses = 'bg-zinc-600 text-white'; break;
+                            case 'neutral': solidColorClass = 'bg-neutral-600'; badgeClasses = 'bg-neutral-600 text-white'; break;
+                            case 'stone': solidColorClass = 'bg-stone-600'; badgeClasses = 'bg-stone-600 text-white'; break;
+                            case 'red': solidColorClass = 'bg-red-600'; badgeClasses = 'bg-red-600 text-white'; break;
+                            case 'orange': solidColorClass = 'bg-orange-600'; badgeClasses = 'bg-orange-600 text-white'; break;
+                            case 'amber': solidColorClass = 'bg-amber-600'; badgeClasses = 'bg-amber-600 text-white'; break;
+                            case 'yellow': solidColorClass = 'bg-yellow-600'; badgeClasses = 'bg-yellow-600 text-white'; break;
+                            case 'lime': solidColorClass = 'bg-lime-600'; badgeClasses = 'bg-lime-600 text-white'; break;
+                            case 'green': solidColorClass = 'bg-green-600'; badgeClasses = 'bg-green-600 text-white'; break;
+                            case 'emerald': solidColorClass = 'bg-emerald-600'; badgeClasses = 'bg-emerald-600 text-white'; break;
+                            case 'teal': solidColorClass = 'bg-teal-600'; badgeClasses = 'bg-teal-600 text-white'; break;
+                            case 'cyan': solidColorClass = 'bg-cyan-600'; badgeClasses = 'bg-cyan-600 text-white'; break;
+                            case 'sky': solidColorClass = 'bg-sky-600'; badgeClasses = 'bg-sky-600 text-white'; break;
+                            case 'blue': solidColorClass = 'bg-blue-600'; badgeClasses = 'bg-blue-600 text-white'; break;
+                            case 'indigo': solidColorClass = 'bg-indigo-600'; badgeClasses = 'bg-indigo-600 text-white'; break;
+                            case 'violet': solidColorClass = 'bg-violet-600'; badgeClasses = 'bg-violet-600 text-white'; break;
+                            case 'purple': solidColorClass = 'bg-purple-600'; badgeClasses = 'bg-purple-600 text-white'; break;
+                            case 'fuchsia': solidColorClass = 'bg-fuchsia-600'; badgeClasses = 'bg-fuchsia-600 text-white'; break;
+                            case 'pink': solidColorClass = 'bg-pink-600'; badgeClasses = 'bg-pink-600 text-white'; break;
+                            case 'rose': solidColorClass = 'bg-rose-600'; badgeClasses = 'bg-rose-600 text-white'; break;
+                        }
 
                         return (
                             <div
@@ -362,7 +369,7 @@ export default function LoanList() {
                                 }}
                                 className={cn(
                                     "bg-white rounded-[1.5rem] p-4 shadow-sm border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between",
-                                    (isLocked || activeLoan || cooldown.active) ? "opacity-75" : "hover:border-blue-200"
+                                    "hover:border-blue-200"
                                 )}
                             >
                                 <div className={`absolute top-0 left-0 bottom-0 w-1.5 ${solidColorClass}`}></div>
@@ -379,7 +386,7 @@ export default function LoanList() {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className={cn(
                                                 "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 w-fit",
-                                                isLocked ? "bg-slate-100 text-slate-400" : `${badgeBg} ${badgeText}`
+                                                badgeClasses
                                             )}>
                                                 {plan.title.replace('Standard Loan', 'Growth Pro')}
                                             </span>
