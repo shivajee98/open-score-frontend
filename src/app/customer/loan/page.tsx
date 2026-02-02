@@ -248,7 +248,7 @@ export default function LoanList() {
             )}
 
             {/* Virtual Credit */}
-            <div className="mb-4">
+            <div className="mb-6 px-4">
                 {loanPlans.filter((p: any) => p.amount === 10000).map((plan: any) => (
                     <div
                         key={plan.id}
@@ -264,7 +264,7 @@ export default function LoanList() {
                             router.push(`/customer/loan/${plan.amount}?planId=${plan.id}`);
                         }}
                         className={cn(
-                            "bg-[#0f1021] rounded-3xl p-6 relative overflow-hidden group cursor-pointer shadow-sm active:scale-[0.98] transition-all flex flex-col justify-between",
+                            "bg-[#0f1021] rounded-3xl p-5 relative overflow-hidden group cursor-pointer shadow-sm active:scale-[0.98] transition-all flex flex-col justify-between mx-auto max-w-[95%]",
                             (activeLoan || cooldown.active) && "opacity-75 grayscale-[0.5]"
                         )}
                     >
@@ -318,17 +318,29 @@ export default function LoanList() {
                         // 2. Try to match 'from-COLOR-NUMBER' pattern
                         // 3. Fallback to a default blue
                         let solidColorClass = plan.rawColor;
+                        let colorName = 'blue';
+
                         if (!solidColorClass && plan.color) {
-                            const match = plan.color.match(/from-([a-z]+-\d+)/);
+                            const match = plan.color.match(/from-([a-z]+)-\d+/);
                             if (match) {
-                                solidColorClass = `bg-${match[1]}`;
+                                colorName = match[1];
+                                solidColorClass = `bg-${colorName}-500`;
                             } else {
                                 // If plain color class (e.g. 'bg-blue-500')
                                 solidColorClass = plan.color.startsWith('bg-') ? plan.color : 'bg-blue-600';
+                                const colorMatch = solidColorClass.match(/bg-([a-z]+)-/);
+                                if (colorMatch) colorName = colorMatch[1];
                             }
                         } else if (!solidColorClass) {
                             solidColorClass = 'bg-blue-600';
+                        } else {
+                            const colorMatch = solidColorClass.match(/bg-([a-z]+)-/);
+                            if (colorMatch) colorName = colorMatch[1];
                         }
+
+                        // Determine badge colors based on the plan color
+                        const badgeBg = `bg-${colorName}-100`;
+                        const badgeText = `text-${colorName}-600`;
 
                         return (
                             <div
@@ -353,77 +365,76 @@ export default function LoanList() {
                                     (isLocked || activeLoan || cooldown.active) ? "opacity-75" : "hover:border-blue-200"
                                 )}
                             >
-                                <div className={`absolute top-0 left-0 bottom-0 w-2 ${solidColorClass}`}></div>
+                                <div className={`absolute top-0 left-0 bottom-0 w-1.5 ${solidColorClass}`}></div>
 
                                 <div className="flex items-center gap-4 flex-1 ml-2">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0 border-2 ${isLocked
-                                        ? "bg-slate-50 border-slate-100 text-slate-300"
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors shrink-0 border-2 ${isLocked
+                                        ? "bg-amber-50 border-amber-100 text-amber-500"
                                         : "bg-slate-50 border-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white"
                                         }`}>
-                                        {isLocked ? <Lock size={20} strokeWidth={2.5} /> : <Zap size={20} className="fill-current" />}
+                                        {isLocked ? <Lock size={18} strokeWidth={2.5} /> : <Zap size={18} className="fill-current" />}
                                     </div>
 
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className={cn(
-                                                "text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 w-fit",
-                                                isLocked ? "bg-slate-100 text-slate-400" : `bg-indigo-50 text-indigo-600`
+                                                "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 w-fit",
+                                                isLocked ? "bg-slate-100 text-slate-400" : `${badgeBg} ${badgeText}`
                                             )}>
                                                 {plan.title.replace('Standard Loan', 'Growth Pro')}
                                             </span>
-                                            {isLocked && <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Locked</span>}
+                                            {isLocked && <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Locked</span>}
                                         </div>
-                                        <h3 className="text-[22px] font-black text-slate-900 tracking-tighter leading-none">
+                                        <h3 className="text-[18px] font-black text-slate-900 tracking-tighter leading-none">
                                             ₹{plan.amount.toLocaleString()}
                                         </h3>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-1.5">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-1">
                                             {isLocked ? 'Building Eligibility...' : plan.description}
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="ml-4 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
-                                    <ChevronRight size={20} />
+                                <div className="ml-4 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
+                                    <ChevronRight size={18} />
                                 </div>
                             </div>
                         );
                     })}
-                </div>
 
-                <div>
-                </div>
+                    <div>
+                    </div>
 
-                {/* Other Loans */}
-                <div>
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">More Options</h3>
-                    <div className="flex flex-col gap-3">
-                        <div
-                            onClick={() => router.push('/customer/loan/business')}
-                            className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all active:scale-[0.98]"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="text-2xl grayscale">💼</div>
-                                <div>
-                                    <h4 className="font-black text-slate-900 text-sm">Business Loan</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">For heavy inventory</p>
+                    {/* Other Loans */}
+                    <div>
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">More Options</h3>
+                        <div className="flex flex-col gap-3">
+                            <div
+                                onClick={() => router.push('/customer/loan/business')}
+                                className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all active:scale-[0.98]"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="text-2xl grayscale">💼</div>
+                                    <div>
+                                        <h4 className="font-black text-slate-900 text-sm">Business Loan</h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">For heavy inventory</p>
+                                    </div>
                                 </div>
+                                <span className="text-[10px] font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Apply</span>
                             </div>
-                            <span className="text-[10px] font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Apply</span>
-                        </div>
 
-                        <div className="bg-white rounded-2xl p-4 border border-slate-100 opacity-60 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="text-2xl grayscale">🏠</div>
-                                <div>
-                                    <h4 className="font-black text-slate-900 text-sm">Personal Loan</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">For personal use</p>
+                            <div className="bg-white rounded-2xl p-4 border border-slate-100 opacity-60 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="text-2xl grayscale">🏠</div>
+                                    <div>
+                                        <h4 className="font-black text-slate-900 text-sm">Personal Loan</h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">For personal use</p>
+                                    </div>
                                 </div>
+                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Upcoming</span>
                             </div>
-                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Upcoming</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+            );
 }
