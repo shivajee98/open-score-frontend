@@ -332,48 +332,48 @@ export default function Profile() {
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Profile */}
                                 <div onClick={() => setIsEditing(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
-                                        <User className="w-5 h-5" />
+                                    <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
+                                        <User className="w-4 h-4" />
                                     </div>
                                     <span className="text-sm font-black text-slate-700">Profile</span>
                                 </div>
 
                                 {/* Tutorial */}
                                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 shadow-sm">
-                                        <Lightbulb className="w-5 h-5" />
+                                    <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 shadow-sm">
+                                        <Lightbulb className="w-4 h-4" />
                                     </div>
                                     <span className="text-sm font-black text-slate-700">Tutorial</span>
                                 </div>
 
                                 {/* Help */}
                                 <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shadow-sm">
-                                        <HelpCircle className="w-5 h-5" />
+                                    <div className="w-8 h-8 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shadow-sm">
+                                        <HelpCircle className="w-4 h-4" />
                                     </div>
                                     <span className="text-sm font-black text-slate-700">Help</span>
                                 </div>
 
                                 {/* T&C */}
                                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 shadow-sm">
-                                        <FileText className="w-5 h-5" />
+                                    <div className="w-8 h-8 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 shadow-sm">
+                                        <FileText className="w-4 h-4" />
                                     </div>
                                     <span className="text-sm font-black text-slate-700">T&C</span>
                                 </div>
 
                                 {/* Privacy */}
                                 <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
-                                        <Shield className="w-5 h-5" />
+                                    <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                        <Shield className="w-4 h-4" />
                                     </div>
                                     <span className="text-sm font-black text-slate-700">Privacy</span>
                                 </div>
 
                                 {/* Contact Us */}
                                 <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
-                                        <Mail className="w-5 h-5" />
+                                    <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
+                                        <Mail className="w-4 h-4" />
                                     </div>
                                     <span className="text-sm font-black text-slate-700">Contact Us</span>
                                 </div>
