@@ -19,7 +19,7 @@ export function useApi<T = any>(endpoint: string | null, options: UseApiOptions 
         endpoint,
         (url: string) => apiFetch(url),
         {
-            revalidateOnFocus: options.revalidateOnFocus ?? true,
+            revalidateOnFocus: options.revalidateOnFocus ?? false,
             revalidateOnReconnect: options.revalidateOnReconnect ?? true,
             refreshInterval: options.refreshInterval ?? 0,
             shouldRetryOnError: options.shouldRetryOnError ?? false,

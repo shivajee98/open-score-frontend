@@ -149,19 +149,19 @@ export default function CustomerHome() {
 
                     <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-1.5">
-                            <Link href="/customer/notifications">
+                            <Link href="/customer/notifications" prefetch={false}>
                                 <button className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 relative">
                                     <Bell size={12} strokeWidth={2.5} />
                                     <span className="absolute top-1.5 right-1.5 w-1 h-1 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
                                 </button>
                             </Link>
-                            <Link href="/customer/profile">
+                            <Link href="/customer/profile" prefetch={false}>
                                 <div className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-[10px] shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 overflow-hidden">
                                     {user?.name?.[0] || 'U'}
                                 </div>
                             </Link>
                         </div>
-                        <Link href="/customer/support">
+                        <Link href="/customer/support" prefetch={false}>
                             <button
                                 className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"
                                 title="Help & Support"
@@ -234,7 +234,7 @@ export default function CustomerHome() {
                             { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50/50' },
                         ].map((item, i) => (
                             <div key={i} className="flex flex-col items-center gap-1 active:scale-95 transition-all cursor-pointer">
-                                <Link href={item.href || '#'} className="contents">
+                                <Link href={item.href || '#'} prefetch={false} className="contents">
                                     <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1`}>
                                         {item.icon}
                                     </div>
@@ -276,7 +276,7 @@ export default function CustomerHome() {
             {
                 !isMerchant && kycLoan && (
                     <div className="px-4 mb-8">
-                        <Link href={`/customer/loan/status/${kycLoan.id}`}>
+                        <Link href={`/customer/loan/status/${kycLoan.id}`} prefetch={false}>
                             <div className="bg-yellow-400 p-4 rounded-3xl shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
                                 <div className="flex items-center gap-3 relative z-10">
                                     <div className="w-12 h-12 rounded-xl bg-slate-900 text-yellow-400 flex items-center justify-center shadow-lg">
