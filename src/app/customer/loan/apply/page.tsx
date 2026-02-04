@@ -169,7 +169,7 @@ export default function LoanApplication() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleFormSubmit = (e: any) => {
+    const handleFormSubmit = async (e: any) => {
         e.preventDefault();
 
         // Age Validation
@@ -187,12 +187,27 @@ export default function LoanApplication() {
         }
 
         setLoading(true);
-        // Simulate API check
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            // Save user KYC data to profile so it's only filled once
+            await apiFetch('/auth/me/update', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    name: formData.fullName,
+                    business_address: formData.address,
+                    city: formData.city,
+                    pincode: formData.pinCode,
+                    // We can store DOB and alt mobile in additional fields if needed
+                    // For now, these are saved for this loan application
+                })
+            });
+
             setStep(2);
             setShowExcitement(true);
-        }, 1500);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to save information');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // States for Plans
