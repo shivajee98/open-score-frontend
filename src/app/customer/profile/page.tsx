@@ -109,7 +109,6 @@ export default function Profile() {
                 body: JSON.stringify(formData)
             });
             if (res.error) throw new Error(res.error);
-            if (res.error) throw new Error(res.error);
             await mutateUser(); // Refresh user data
             setIsEditing(false);
             toast.success('Profile updated successfully!');

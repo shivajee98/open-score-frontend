@@ -5,10 +5,17 @@ let isRedirecting = false;
 
 export const clearAuthState = async () => {
     if (typeof window !== 'undefined') {
+        // Clear all local storage auth-related items
         localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('access_token');
 
         // Clear server-side session
-        await fetch('/api/auth/logout', { method: 'POST' }).catch(() => { });
+        try {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch (e) {
+            console.warn('Logout request failed', e);
+        }
 
         // Notify Native WebView
         if ((window as any).ReactNativeWebView) {

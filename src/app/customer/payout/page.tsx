@@ -94,12 +94,7 @@ export default function PayoutPage() {
 
     const isLoading = userLoading || walletLoading || (userData?.role === 'CUSTOMER' && loansLoading);
 
-    useEffect(() => {
-        if (!isLoading && user && !isRestricted && (!user.bank_name || !user.account_number)) {
-            toast.error("Please update your bank details in profile first");
-            router.push('/customer/profile');
-        }
-    }, [isLoading, user, isRestricted, router]);
+    // Removed auto-redirect - let users see the payout page and add bank details from there
 
     const handlePayout = async () => {
         const payoutAmount = parseFloat(amount);
@@ -334,34 +329,57 @@ export default function PayoutPage() {
 
                     {/* Bank Side */}
                     <div className="space-y-4">
-                        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                                <Landmark className="w-3.5 h-3.5" />
-                                Settlement Bank Account
-                            </h3>
+                        {user?.bank_name && user?.account_number ? (
+                            <>
+                                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                        <Landmark className="w-3.5 h-3.5" />
+                                        Settlement Bank Account
+                                    </h3>
 
-                            <div className="space-y-3">
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">Bank</span>
-                                    <span className="font-black text-slate-900 uppercase text-sm">{user?.bank_name}</span>
+                                    <div className="space-y-3">
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                            <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">Bank</span>
+                                            <span className="font-black text-slate-900 uppercase text-sm">{user?.bank_name}</span>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                            <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">A/C No.</span>
+                                            <span className="font-black text-slate-900 font-mono italic text-sm">
+                                                {'*'.repeat(Math.max(0, (user?.account_number?.length || 0) - 4)) + user?.account_number?.slice(-4)}
+                                            </span>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                            <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">IFSC</span>
+                                            <span className="font-black text-slate-900 font-mono px-1.5 py-0.5 bg-slate-100 rounded text-sm">{user?.ifsc_code}</span>
+                                        </div>
+                                    </div>
+
+                                    <p className="mt-3 flex items-start gap-2 text-[10px] font-bold text-indigo-700/80 leading-relaxed italic">
+                                        <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-70" />
+                                        Contact support to update bank details
+                                    </p>
                                 </div>
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">A/C No.</span>
-                                    <span className="font-black text-slate-900 font-mono italic text-sm">
-                                        {'*'.repeat(Math.max(0, (user?.account_number?.length || 0) - 4)) + user?.account_number?.slice(-4)}
-                                    </span>
+                            </>
+                        ) : (
+                            <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl p-6 border-2 border-rose-200 shadow-sm">
+                                <div className="text-center mb-4">
+                                    <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <Landmark className="w-8 h-8 text-rose-600" />
+                                    </div>
+                                    <h3 className="text-lg font-black text-slate-900 mb-2">Add Bank Details</h3>
+                                    <p className="text-xs font-bold text-slate-500 leading-relaxed">
+                                        You need to add your bank account details to receive payouts
+                                    </p>
                                 </div>
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">IFSC</span>
-                                    <span className="font-black text-slate-900 font-mono px-1.5 py-0.5 bg-slate-100 rounded text-sm">{user?.ifsc_code}</span>
-                                </div>
+                                <button
+                                    onClick={() => router.push('/customer/profile')}
+                                    className="w-full py-3 bg-rose-600 text-white rounded-xl font-black text-sm hover:bg-rose-700 transition-all active:scale-95 shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
+                                >
+                                    Go to Profile & Add Details
+                                    <ArrowRight size={16} />
+                                </button>
                             </div>
-
-                            <p className="mt-3 flex items-start gap-2 text-[10px] font-bold text-indigo-700/80 leading-relaxed italic">
-                                <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-70" />
-                                Update Details for Transfer
-                            </p>
-                        </div>
+                        )}
 
                         <button
                             onClick={handlePayout}
