@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -313,63 +313,83 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        {/* Support Section */}
+                        {/* Settings Section */}
                         <div className="mt-8 mb-4">
-                            <h3 className="px-1 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Support & Settings</h3>
-
-                            <div className="space-y-3">
-                                <div
-                                    onClick={() => router.push('/customer/support')}
-                                    className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-rose-500 shadow-sm group-hover:scale-110 transition-transform"><Headphones className="w-5 h-5" /></div>
-                                        <div>
-                                            <p className="text-sm font-black text-slate-900">Help & Support</p>
-                                            <p className="text-[10px] font-bold text-slate-400">help@openscore.in • +91 98765 43210</p>
-                                        </div>
-                                    </div>
-                                    <ArrowRight className="w-4 h-4 text-slate-300" />
-                                </div>
-
-                                <div
-                                    onClick={toggleNotifications}
-                                    className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-amber-500 shadow-sm group-hover:scale-110 transition-transform"><Bell className="w-5 h-5" /></div>
-                                        <div>
-                                            <p className="text-sm font-black text-slate-900">Notifications</p>
-                                            <p className="text-[10px] font-bold text-slate-400">Manage your alerts</p>
-                                        </div>
-                                    </div>
-                                    <div className={`w-10 h-5 ${notificationsEnabled ? `bg-${themeColor}-600` : 'bg-slate-200'} rounded-full relative shadow-inner transition-colors duration-200`}>
-                                        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-200 ${notificationsEnabled ? 'right-1' : 'left-1'}`}></div>
-                                    </div>
-                                </div>
-                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-rose-50 hover:border-rose-100 transition-colors group"
+                            <div className="flex items-center justify-between px-1 mb-6">
+                                <h3 className="text-xl font-black text-slate-900 tracking-tight">Settings</h3>
+                                <button
                                     onClick={async () => {
-                                        // Use centralized auth clearing to handle cookies & backend session
                                         await clearAuthState();
-
                                         toast.success("Logged out successfully");
-
-                                        // Hard redirect to home/login to ensure clean state
-                                        setTimeout(() => {
-                                            window.location.href = '/';
-                                        }, 500);
+                                        setTimeout(() => { window.location.href = '/'; }, 500);
                                     }}
+                                    className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-rose-600 transition-colors"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-rose-500 shadow-sm group-hover:scale-110 transition-transform"><LogOut className="w-5 h-5" /></div>
-                                        <div>
-                                            <p className="text-sm font-black text-slate-900 group-hover:text-rose-600">Log Out</p>
-                                            <p className="text-[10px] font-bold text-slate-400 group-hover:text-rose-400">Sign out of your account</p>
-                                        </div>
+                                    <LogOut className="w-4 h-4" /> Logout
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Profile */}
+                                <div onClick={() => setIsEditing(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
+                                        <User className="w-5 h-5" />
                                     </div>
-                                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center group-hover:bg-rose-200">
-                                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-rose-500" />
+                                    <span className="text-sm font-black text-slate-700">Profile</span>
+                                </div>
+
+                                {/* Tutorial */}
+                                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 shadow-sm">
+                                        <Lightbulb className="w-5 h-5" />
                                     </div>
+                                    <span className="text-sm font-black text-slate-700">Tutorial</span>
+                                </div>
+
+                                {/* Help */}
+                                <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shadow-sm">
+                                        <HelpCircle className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-sm font-black text-slate-700">Help</span>
+                                </div>
+
+                                {/* T&C */}
+                                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 shadow-sm">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-sm font-black text-slate-700">T&C</span>
+                                </div>
+
+                                {/* Privacy */}
+                                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                        <Shield className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-sm font-black text-slate-700">Privacy</span>
+                                </div>
+
+                                {/* Contact Us */}
+                                <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
+                                        <Mail className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-sm font-black text-slate-700">Contact Us</span>
+                                </div>
+                            </div>
+
+                            {/* Notifications Toggle */}
+                            <div className="mt-4 bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors" onClick={toggleNotifications}>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-amber-500 shadow-sm"><Bell className="w-5 h-5" /></div>
+                                    <div>
+                                        <p className="text-sm font-black text-slate-900">Notifications</p>
+                                        <p className="text-[10px] font-bold text-slate-400">Manage alerts</p>
+                                    </div>
+                                </div>
+                                <div className={`w-10 h-5 ${notificationsEnabled ? `bg-${themeColor}-600` : 'bg-slate-200'} rounded-full relative shadow-inner transition-colors duration-200`}>
+                                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-200 ${notificationsEnabled ? 'right-1' : 'left-1'}`}></div>
                                 </div>
                             </div>
                         </div>
