@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { MapPin, Search, X, Store, Navigation } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
@@ -33,6 +34,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function MerchantLocator() {
+    const router = useRouter();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [pincode, setPincode] = useState("");
@@ -72,17 +74,8 @@ export default function MerchantLocator() {
     }, []);
 
     // Fetch full details when a merchant is selected
-    const handleMerchantClick = async (merchant: Merchant) => {
-        try {
-            // Optimistically show what we have, then fetch full details
-            setSelectedMerchant(merchant);
-            setDetailsOpen(true);
-
-            const fullDetails = await apiFetch(`/merchants/${merchant.id}`);
-            setSelectedMerchant(fullDetails);
-        } catch (error) {
-            console.error("Failed to fetch merchant details", error);
-        }
+    const handleMerchantClick = (merchant: Merchant) => {
+        router.push(`/merchants/${merchant.id}`);
     };
 
     // Initial load from profile
