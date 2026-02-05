@@ -100,6 +100,8 @@ export default function LoanStatus() {
             if (!data.city) data.city = userData.city || '';
             if (!data.postal_code) data.postal_code = userData.pincode || '';
             if (!data.employer) data.employer = userData.business_name || '';
+            if (!data.aadhar_number) data.aadhar_number = userData.aadhar_number || '';
+            if (!data.pan_number) data.pan_number = userData.pan_number || '';
         }
 
         return data;

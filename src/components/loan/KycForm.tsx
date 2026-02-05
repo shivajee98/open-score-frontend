@@ -23,6 +23,8 @@ interface KycFormData {
     address_duration: string;
     employer: string;
     occupation: string;
+    aadhar_number: string;
+    pan_number: string;
     experience_years: string;
     gross_monthly_income: string;
     rent_mortgage: string;
@@ -62,6 +64,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         address_duration: '',
         employer: '',
         occupation: '',
+        aadhar_number: '',
+        pan_number: '',
         experience_years: '',
         gross_monthly_income: '',
         rent_mortgage: '',
@@ -229,6 +233,34 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 <div>
                     <label className={labelClasses}>How long have you lived at this address?</label>
                     <input required name="address_duration" value={formData.address_duration} onChange={handleChange} placeholder="e.g. 2 years" className={inputClasses} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className={labelClasses}>Aadhar Card Number</label>
+                        <input
+                            required
+                            name="aadhar_number"
+                            value={formData.aadhar_number}
+                            onChange={handleChange}
+                            placeholder="12-digit number"
+                            maxLength={12}
+                            pattern="\d{12}"
+                            className={inputClasses}
+                        />
+                    </div>
+                    <div>
+                        <label className={labelClasses}>PAN Card Number</label>
+                        <input
+                            required
+                            name="pan_number"
+                            value={formData.pan_number}
+                            onChange={handleChange}
+                            placeholder="ABCDE1234F"
+                            maxLength={10}
+                            className={`${inputClasses} uppercase`}
+                        />
+                    </div>
                 </div>
             </div>
 
