@@ -4,6 +4,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import KycForm from '@/components/loan/KycForm';
+import { toast } from '@/components/ui/Toast';
 
 export default function LoanStatus() {
     const router = useRouter();
@@ -14,6 +16,11 @@ export default function LoanStatus() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
+    // KYC Form State
+    const [showKycForm, setShowKycForm] = useState(false);
+    const [userData, setUserData] = useState<any>(null);
+    const [existingKycData, setExistingKycData] = useState<any>(null);
+
     const fetchLoan = async () => {
         try {
             const data = await apiFetch('/loans');
@@ -22,6 +29,10 @@ export default function LoanStatus() {
 
             if (found) {
                 setLoan(found);
+                // If loan has form_data, use it as existing KYC data
+                if (found.form_data) {
+                    setExistingKycData(found.form_data);
+                }
             } else {
                 if (loanId === 'L-10293') {
                     setLoan({
@@ -53,22 +64,78 @@ export default function LoanStatus() {
         }
     };
 
+    const fetchUserData = async () => {
+        try {
+            const user = await apiFetch('/auth/me');
+            setUserData(user);
+        } catch (e) {
+            console.error("Failed to fetch user data", e);
+        }
+    };
+
     useEffect(() => {
         fetchLoan();
+        fetchUserData();
     }, [loanId]);
 
-    const handleFinalConfirm = async () => {
+    // Prepare initial KYC data from user profile and existing form data
+    const getInitialKycData = () => {
+        const data: any = {};
+
+        // From existing form_data (if user edited before)
+        if (existingKycData) {
+            Object.assign(data, existingKycData);
+        }
+
+        // From user profile (pre-populate if not already in form_data)
+        if (userData) {
+            if (!data.first_name && userData.name) {
+                const nameParts = userData.name.split(' ');
+                data.first_name = nameParts[0] || '';
+                data.last_name = nameParts.slice(1).join(' ') || '';
+            }
+            if (!data.email) data.email = userData.email || '';
+            if (!data.phone) data.phone = userData.mobile_number || '';
+            if (!data.street_address) data.street_address = userData.business_address || '';
+            if (!data.city) data.city = userData.city || '';
+            if (!data.postal_code) data.postal_code = userData.pincode || '';
+            if (!data.employer) data.employer = userData.business_name || '';
+        }
+
+        return data;
+    };
+
+    const handleConfirmClick = () => {
+        // Always show KYC form before confirmation
+        setShowKycForm(true);
+    };
+
+    const handleKycSubmit = async (kycData: any) => {
         setSubmitting(true);
         try {
+            // First, save the KYC data to the loan
+            await apiFetch(`/loans/${loan.id}/kyc-data`, {
+                method: 'POST',
+                body: JSON.stringify(kycData)
+            });
+
+            // Then confirm the application
             await apiFetch(`/loans/${loan.id}/confirm`, {
                 method: 'POST'
             });
+
+            toast.success('Application confirmed successfully!');
+            setShowKycForm(false);
             fetchLoan();
-        } catch (e) {
-            alert('Confirmation failed');
+        } catch (e: any) {
+            toast.error(e.message || 'Confirmation failed');
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleKycCancel = () => {
+        setShowKycForm(false);
     };
 
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div></div>;
@@ -245,17 +312,17 @@ export default function LoanStatus() {
                             <IndianRupee className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="text-base font-black uppercase tracking-tight">Confirm Your Loan</h3>
-                            <p className="text-slate-400 text-xs font-medium mt-1">Please review the fee breakdown above before final confirmation.</p>
+                            <h3 className="text-base font-black uppercase tracking-tight">Complete Application</h3>
+                            <p className="text-slate-400 text-xs font-medium mt-1">Fill your KYC details to confirm and submit your application.</p>
                         </div>
                         <button
-                            onClick={handleFinalConfirm}
+                            onClick={handleConfirmClick}
                             disabled={submitting}
                             className="w-full py-3 bg-white text-slate-900 rounded-lg font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
                         >
                             {submitting ? (
                                 <div className="w-4 h-4 border-2 border-slate-900 rounded-full animate-spin border-t-transparent"></div>
-                            ) : `Confirm Application`}
+                            ) : `Fill KYC & Confirm`}
                         </button>
                     </div>
                 )}
@@ -279,15 +346,31 @@ export default function LoanStatus() {
                     </div>
                 )}
 
-                {/* Special Info: Contact Supervisor */}
+                {/* Special Info: Contact Supervisor - Clickable to raise support ticket */}
                 {loan.status === 'APPROVED' && (
-                    <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-100 text-emerald-800 shadow-xl shadow-emerald-900/5 flex flex-col items-center text-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div
+                        onClick={() => {
+                            // Navigate to support page with pre-filled ticket data
+                            const ticketData = encodeURIComponent(JSON.stringify({
+                                prefill: true,
+                                subject: `Fund Release Request - Loan #${loan.id}`,
+                                message: `Hello,\n\nMy loan application #${loan.id} for ₹${Number(loan.amount).toLocaleString()} has been approved, but the funds have not been released to my account yet.\n\nPlease release the approved amount to my wallet at the earliest.\n\nThank you.`,
+                                category: 'LOAN',
+                                loanId: loan.id
+                            }));
+                            router.push(`/customer/support?ticket=${ticketData}`);
+                        }}
+                        className="bg-emerald-50 rounded-lg p-4 border border-emerald-100 text-emerald-800 shadow-xl shadow-emerald-900/5 flex flex-col items-center text-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500 cursor-pointer hover:bg-emerald-100 transition-colors active:scale-[0.98]"
+                    >
                         <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
                             <IndianRupee className="w-6 h-6" />
                         </div>
                         <div>
                             <h3 className="text-base font-black uppercase tracking-tight">Loan Approved!</h3>
-                            <p className="font-medium text-xs mt-1">Please contact your supervisor for amount transfer and final disbursement.</p>
+                            <p className="font-medium text-xs mt-1">Tap here to contact support and request fund release to your account.</p>
+                        </div>
+                        <div className="w-full py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs uppercase tracking-widest">
+                            Contact Support for Release
                         </div>
                     </div>
                 )}
@@ -341,6 +424,17 @@ export default function LoanStatus() {
                 </div>
             </div>
 
+            {/* KYC Form Modal */}
+            {showKycForm && (
+                <KycForm
+                    isModal={true}
+                    loanAmount={Number(loan.amount)}
+                    onSubmit={handleKycSubmit}
+                    onCancel={handleKycCancel}
+                    loading={submitting}
+                    initialData={getInitialKycData()}
+                />
+            )}
         </div>
     );
 }

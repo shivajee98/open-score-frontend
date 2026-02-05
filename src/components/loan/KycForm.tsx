@@ -1,16 +1,48 @@
 'use client';
 
-import { useState } from 'react';
-import { Shield, ChevronRight, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Shield, ChevronRight, Check, X } from 'lucide-react';
 
-interface KycFormProps {
-    onSubmit: (data: any) => void;
-    loanAmount: number;
-    loading?: boolean;
+interface KycFormData {
+    desired_amount: number;
+    annual_income: string;
+    loan_usage: string;
+    first_name: string;
+    last_name: string;
+    birth_month: string;
+    birth_day: string;
+    birth_year: string;
+    marital_status: string;
+    email: string;
+    phone: string;
+    street_address: string;
+    street_address_2: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    address_duration: string;
+    employer: string;
+    occupation: string;
+    experience_years: string;
+    gross_monthly_income: string;
+    rent_mortgage: string;
+    down_payment: string;
+    comments: string;
+    bank_references: string;
+    consent: boolean;
 }
 
-export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps) {
-    const [formData, setFormData] = useState({
+interface KycFormProps {
+    onSubmit: (data: KycFormData) => void;
+    onCancel?: () => void;
+    loanAmount: number;
+    loading?: boolean;
+    initialData?: Partial<KycFormData>;
+    isModal?: boolean;
+}
+
+export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false }: KycFormProps) {
+    const [formData, setFormData] = useState<KycFormData>({
         desired_amount: loanAmount,
         annual_income: '',
         loan_usage: '',
@@ -39,6 +71,17 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
         consent: false
     });
 
+    // Pre-populate with initial data when available
+    useEffect(() => {
+        if (initialData) {
+            setFormData(prev => ({
+                ...prev,
+                ...initialData,
+                desired_amount: loanAmount
+            }));
+        }
+    }, [initialData, loanAmount]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         setFormData(prev => ({
@@ -55,12 +98,23 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
     const inputClasses = "w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all";
     const labelClasses = "block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1";
 
-    return (
-        <form onSubmit={handleSubmit} className="space-y-12">
+    const formContent = (
+        <form onSubmit={handleSubmit} className="space-y-8">
             {/* Header */}
-            <div>
-                <h2 className="text-xl font-black text-slate-900 mb-2">Loan Application Form</h2>
-                <p className="text-slate-500 text-sm">Please provide accurate information for quick verification.</p>
+            <div className="flex items-start justify-between">
+                <div>
+                    <h2 className="text-xl font-black text-slate-900 mb-2">Loan Application Form</h2>
+                    <p className="text-slate-500 text-sm">Please provide accurate information for quick verification.</p>
+                </div>
+                {isModal && onCancel && (
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
             </div>
 
             {/* Basic Info */}
@@ -101,7 +155,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                         value={formData.loan_usage}
                         onChange={handleChange}
                         className={inputClasses}
-                        rows={3}
+                        rows={2}
                         placeholder="Purpose of your loan..."
                     />
                 </div>
@@ -125,19 +179,19 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                 <div>
                     <label className={labelClasses}>Birth Date</label>
                     <div className="grid grid-cols-3 gap-2">
-                        <select name="birth_month" value={formData.birth_month} onChange={handleChange} className={inputClasses}>
+                        <select name="birth_month" value={formData.birth_month} onChange={handleChange} className={inputClasses} required>
                             <option value="">Month</option>
                             {Array.from({ length: 12 }, (_, i) => (
                                 <option key={i} value={i + 1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
                             ))}
                         </select>
-                        <select name="birth_day" value={formData.birth_day} onChange={handleChange} className={inputClasses}>
+                        <select name="birth_day" value={formData.birth_day} onChange={handleChange} className={inputClasses} required>
                             <option value="">Day</option>
                             {Array.from({ length: 31 }, (_, i) => (
                                 <option key={i} value={i + 1}>{i + 1}</option>
                             ))}
                         </select>
-                        <select name="birth_year" value={formData.birth_year} onChange={handleChange} className={inputClasses}>
+                        <select name="birth_year" value={formData.birth_year} onChange={handleChange} className={inputClasses} required>
                             <option value="">Year</option>
                             {Array.from({ length: 80 }, (_, i) => (
                                 <option key={i} value={2026 - i}>{2026 - i}</option>
@@ -153,7 +207,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                     </div>
                     <div>
                         <label className={labelClasses}>Phone</label>
-                        <input type="tel" required name="phone" value={formData.phone} onChange={handleChange} placeholder="(000) 000-0000" className={inputClasses} />
+                        <input type="tel" required name="phone" value={formData.phone} onChange={handleChange} placeholder="9999999999" className={inputClasses} />
                     </div>
                 </div>
 
@@ -162,19 +216,19 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                     <input required name="street_address" value={formData.street_address} onChange={handleChange} className={inputClasses} />
                 </div>
                 <div>
-                    <label className={labelClasses}>Street Address Line 2</label>
+                    <label className={labelClasses}>Street Address Line 2 (Optional)</label>
                     <input name="street_address_2" value={formData.street_address_2} onChange={handleChange} className={inputClasses} />
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                     <input required name="city" value={formData.city} onChange={handleChange} placeholder="City" className={inputClasses} />
                     <input required name="state" value={formData.state} onChange={handleChange} placeholder="State" className={inputClasses} />
-                    <input required name="postal_code" value={formData.postal_code} onChange={handleChange} placeholder="ZIP" className={inputClasses} />
+                    <input required name="postal_code" value={formData.postal_code} onChange={handleChange} placeholder="PIN Code" className={inputClasses} />
                 </div>
 
                 <div>
                     <label className={labelClasses}>How long have you lived at this address?</label>
-                    <input required name="address_duration" value={formData.address_duration} onChange={handleChange} className={inputClasses} />
+                    <input required name="address_duration" value={formData.address_duration} onChange={handleChange} placeholder="e.g. 2 years" className={inputClasses} />
                 </div>
             </div>
 
@@ -183,7 +237,7 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                 <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">EMPLOYMENT INFORMATION</h3>
 
                 <div>
-                    <label className={labelClasses}>Present Employer</label>
+                    <label className={labelClasses}>Present Employer / Business Name</label>
                     <input required name="employer" value={formData.employer} onChange={handleChange} className={inputClasses} />
                 </div>
 
@@ -201,29 +255,29 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className={labelClasses}>Gross Monthly Income</label>
-                        <input type="number" required name="gross_monthly_income" value={formData.gross_monthly_income} onChange={handleChange} placeholder="1500" className={inputClasses} />
+                        <input type="number" required name="gross_monthly_income" value={formData.gross_monthly_income} onChange={handleChange} placeholder="₹" className={inputClasses} />
                     </div>
                     <div>
                         <label className={labelClasses}>Monthly Rent/Mortgage</label>
-                        <input type="number" required name="rent_mortgage" value={formData.rent_mortgage} onChange={handleChange} placeholder="0" className={inputClasses} />
+                        <input type="number" required name="rent_mortgage" value={formData.rent_mortgage} onChange={handleChange} placeholder="₹" className={inputClasses} />
                     </div>
                 </div>
             </div>
 
-            {/* Others */}
+            {/* References & Consent */}
             <div className="space-y-4">
                 <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">REFERENCES & CONSENT</h3>
 
                 <div>
-                    <label className={labelClasses}>Bank References (List Here)</label>
-                    <textarea name="bank_references" value={formData.bank_references} onChange={handleChange} className={inputClasses} rows={3} />
+                    <label className={labelClasses}>Bank References (Optional)</label>
+                    <textarea name="bank_references" value={formData.bank_references} onChange={handleChange} className={inputClasses} rows={2} placeholder="Bank name, account type, years with bank..." />
                 </div>
 
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[10px] text-slate-500 leading-relaxed mb-4">
-                        I authorize prospective Credit Grantors/Lending/Leasing Companies to obtain personal and credit information about me from my employer and credit bureau, or credit reporting agency... (full text omitted for brevity)
+                        I authorize Open Score and its partners to obtain personal and credit information about me from my employer, bank, and credit bureaus for the purpose of evaluating this loan application. I certify that all information provided is accurate and complete.
                     </p>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-3 cursor-pointer">
                         <input
                             type="checkbox"
                             name="consent"
@@ -236,14 +290,37 @@ export default function KycForm({ onSubmit, loanAmount, loading }: KycFormProps)
                 </div>
             </div>
 
-            <button
-                type="submit"
-                disabled={!formData.consent || loading}
-                className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-base hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-                {loading ? 'Submitting...' : 'Send Application Now'}
-                {!loading && <ChevronRight className="w-5 h-5" />}
-            </button>
+            <div className="flex gap-3">
+                {isModal && onCancel && (
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-black text-base hover:bg-slate-200 transition-all"
+                    >
+                        Cancel
+                    </button>
+                )}
+                <button
+                    type="submit"
+                    disabled={!formData.consent || loading}
+                    className={`${isModal && onCancel ? 'flex-1' : 'w-full'} py-3 bg-slate-900 text-white rounded-xl font-black text-base hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2`}
+                >
+                    {loading ? 'Submitting...' : 'Confirm & Submit'}
+                    {!loading && <ChevronRight className="w-5 h-5" />}
+                </button>
+            </div>
         </form>
     );
+
+    if (isModal) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/80 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
+                <div className="w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl my-8 animate-in slide-in-from-bottom-10 duration-300">
+                    {formContent}
+                </div>
+            </div>
+        );
+    }
+
+    return formContent;
 }

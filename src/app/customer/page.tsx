@@ -161,14 +161,25 @@ export default function CustomerHome() {
                                 </div>
                             </Link>
                         </div>
-                        <Link href="/customer/support" prefetch={false}>
-                            <button
-                                className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"
-                                title="Help & Support"
-                            >
-                                <Headphones size={12} strokeWidth={2.5} />
-                            </button>
-                        </Link>
+                        <div className="flex items-center gap-1.5">
+                            {/* Add Money Button */}
+                            <Link href="/customer/add-money" prefetch={false}>
+                                <button
+                                    className="w-6 h-6 rounded-lg bg-emerald-500 border border-emerald-400 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-emerald-600 font-black text-sm"
+                                    title="Add Money"
+                                >
+                                    +
+                                </button>
+                            </Link>
+                            <Link href="/customer/support" prefetch={false}>
+                                <button
+                                    className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"
+                                    title="Help & Support"
+                                >
+                                    <Headphones size={12} strokeWidth={2.5} />
+                                </button>
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
@@ -444,7 +455,6 @@ export default function CustomerHome() {
                 </div>
             </div>
 
-        </div >
+        </div>
     );
 }
-

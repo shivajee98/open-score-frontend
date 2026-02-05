@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import TicketList from '@/components/support/TicketList';
 import ChatWindow from '@/components/support/ChatWindow';
@@ -15,7 +16,8 @@ const navItems = [
     { label: 'Profile', href: '/customer/profile', icon: <User size={20} /> },
 ];
 
-export default function CustomerSupportPage() {
+function SupportPageContent() {
+    const searchParams = useSearchParams();
     const [tickets, setTickets] = useState<any[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
     const [messages, setMessages] = useState<any[]>([]);
@@ -23,12 +25,38 @@ export default function CustomerSupportPage() {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    // Pre-filled ticket data from URL
+    const [prefillData, setPrefillData] = useState<{
+        subject?: string;
+        message?: string;
+        category?: string;
+    } | null>(null);
+
     useEffect(() => {
         // Load user
         const stored = localStorage.getItem('user');
         if (stored) setCurrentUser(JSON.parse(stored));
         fetchTickets();
-    }, []);
+
+        // Check for pre-filled ticket data in URL
+        const ticketParam = searchParams.get('ticket');
+        if (ticketParam) {
+            try {
+                const data = JSON.parse(decodeURIComponent(ticketParam));
+                if (data.prefill) {
+                    setPrefillData({
+                        subject: data.subject || '',
+                        message: data.message || '',
+                        category: data.category || ''
+                    });
+                    // Auto-open the create ticket modal
+                    setIsCreateModalOpen(true);
+                }
+            } catch (e) {
+                console.error('Failed to parse ticket data:', e);
+            }
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         // Polling removed in favor of WebSockets
@@ -102,6 +130,8 @@ export default function CustomerSupportPage() {
                 body: JSON.stringify({ subject, message, priority })
             });
             fetchTickets();
+            // Clear prefill data after creating
+            setPrefillData(null);
         } catch (error) {
             console.error(error);
         }
@@ -118,6 +148,11 @@ export default function CustomerSupportPage() {
         } catch (error) {
             console.error(error);
         }
+    };
+
+    const handleCloseModal = () => {
+        setIsCreateModalOpen(false);
+        setPrefillData(null); // Clear prefill when modal is closed
     };
 
     return (
@@ -183,9 +218,23 @@ export default function CustomerSupportPage() {
 
             <CreateTicketModal
                 isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
+                onClose={handleCloseModal}
                 onSubmit={handleCreateTicket}
+                prefillSubject={prefillData?.subject}
+                prefillMessage={prefillData?.message}
             />
         </DashboardLayout>
+    );
+}
+
+export default function CustomerSupportPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div>
+            </div>
+        }>
+            <SupportPageContent />
+        </Suspense>
     );
 }
