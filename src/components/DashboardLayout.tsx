@@ -89,17 +89,15 @@ export default function DashboardLayout({
                 }
             });
 
-        // Initial poll to set ref
-        // checkNewTransactions(); // Removed direct call, handled by loop below
-
-        // Poll for notifications - Safe Polling to avoid Stampede
+        // Poll for notifications - Reduced frequency to save compute
         let isMounted = true;
         let timeoutId: NodeJS.Timeout;
 
         const loop = async () => {
             if (!isMounted) return;
             await checkNewTransactions();
-            const pollRate = user?.role === 'MERCHANT' ? 3000 : 15000; // Increased slighty 2s->3s
+            // Reduced from 2-3s to 10-30s to save Vercel compute time
+            const pollRate = user?.role === 'MERCHANT' ? 10000 : 30000;
             if (isMounted) {
                 timeoutId = setTimeout(loop, pollRate);
             }

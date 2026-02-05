@@ -19,6 +19,25 @@ export default function MobileNav() {
 
     useEffect(() => {
         if (user?.role === 'CUSTOMER') {
+            // Check cache first
+            const cacheKey = `loanStatus_${user.id}`;
+            const cached = localStorage.getItem(cacheKey);
+
+            if (cached) {
+                try {
+                    const { data, timestamp } = JSON.parse(cached);
+                    const now = Date.now();
+                    // Cache valid for 5 minutes
+                    if (now - timestamp < 5 * 60 * 1000) {
+                        setHasActiveLoan(data.hasActiveLoan);
+                        setActiveLoanId(data.activeLoanId);
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Cache parse error', e);
+                }
+            }
+
             apiFetch('/loans').then((data: any) => {
                 const loans = Array.isArray(data) ? data : (data?.data || []);
                 const activeLoans = loans?.filter((l: any) => {
@@ -32,15 +51,20 @@ export default function MobileNav() {
                     return Number(l.paid_amount || 0) < totalPayable;
                 });
 
-                setHasActiveLoan(activeLoans?.length > 0);
-                if (activeLoans?.length === 1) {
-                    setActiveLoanId(activeLoans[0].id);
-                } else {
-                    setActiveLoanId(null);
-                }
+                const hasActive = activeLoans?.length > 0;
+                const activeId = activeLoans?.length === 1 ? activeLoans[0].id : null;
+
+                setHasActiveLoan(hasActive);
+                setActiveLoanId(activeId);
+
+                // Cache the result
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    data: { hasActiveLoan: hasActive, activeLoanId: activeId },
+                    timestamp: Date.now()
+                }));
             }).catch(() => { });
         }
-    }, [user]); // Removed pathname dependency to stop re-fetching on navigation
+    }, [user?.id]); // Only depend on user ID, not pathname
 
     // Only show on main app routes
     const baseRole = pathname.split('/')[1];
