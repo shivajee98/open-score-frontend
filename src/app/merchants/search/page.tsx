@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MapPin, Search, Filter, Phone, Navigation, ArrowLeft, Store, ImageIcon } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
@@ -20,7 +20,7 @@ interface Merchant {
     map_location_url?: string;
 }
 
-export default function MerchantSearchPage() {
+function MerchantSearchContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -268,5 +268,17 @@ export default function MerchantSearchPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function MerchantSearchPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="w-10 h-10 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        }>
+            <MerchantSearchContent />
+        </Suspense>
     );
 }
