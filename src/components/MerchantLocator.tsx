@@ -182,6 +182,19 @@ export default function MerchantLocator() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Advanced Search Button */}
+                        <div className="pt-4 border-t border-slate-100 mt-2">
+                            <button
+                                onClick={() => {
+                                    setOpen(false);
+                                    router.push(`/merchants/search?pincode=${pincode}&city=${city}`);
+                                }}
+                                className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                <Search size={16} /> Advanced Search & Filters
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

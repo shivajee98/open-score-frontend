@@ -20,7 +20,11 @@ export default function Profile() {
         bank_name: '',
         account_number: '',
         ifsc_code: '',
-        account_holder_name: ''
+        account_holder_name: '',
+        business_segment: '',
+        business_type: '',
+        map_location_url: '',
+        shop_images: '[]'
     });
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
@@ -83,19 +87,6 @@ export default function Profile() {
             toast.error("Notifications are blocked. Please enable in browser settings.");
         }
     };
-
-    useEffect(() => {
-        if (user) {
-            setFormData({
-                name: user.name || '',
-                email: user.email || '',
-                bank_name: user.bank_name || '',
-                account_number: user.account_number || '',
-                ifsc_code: user.ifsc_code || '',
-                account_holder_name: user.account_holder_name || ''
-            });
-        }
-    }, [user]);
 
     const handleBack = () => {
         if (user?.role === 'ADMIN') router.push('/admin');
@@ -225,14 +216,156 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        {user.business_name && (
-                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><Briefcase className="w-5 h-5" /></div>
-                                <div>
-                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Business Name</p>
-                                    <p className="text-base font-black text-slate-900">{user.business_name}</p>
+                        {isMerchant && (
+                            <>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><Briefcase className="w-5 h-5" /></div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Business Name</p>
+                                        <p className="text-base font-black text-slate-900">{user.business_name}</p>
+                                    </div>
                                 </div>
-                            </div>
+
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Segment</p>
+                                        {isEditing ? (
+                                            <select
+                                                value={formData.business_segment}
+                                                onChange={(e) => setFormData({ ...formData, business_segment: e.target.value })}
+                                                className={`text-sm font-bold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
+                                            >
+                                                <option value="">Select Segment</option>
+                                                <option value="retailer">Retailer</option>
+                                                <option value="wholesaler">Wholesaler</option>
+                                                <option value="distributor">Distributor</option>
+                                                <option value="super_distributor">Super Distributor</option>
+                                            </select>
+                                        ) : (
+                                            <p className="text-base font-black text-slate-900 capitalize">{user.business_segment?.replace('_', ' ') || 'Not Set'}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Type</p>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={formData.business_type}
+                                                onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
+                                                className={`text-sm font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                placeholder="e.g. Grocery, Electronics"
+                                            />
+                                        ) : (
+                                            <p className="text-base font-black text-slate-900">{user.business_type || 'Not Set'}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Google Maps Link</p>
+                                        {isEditing ? (
+                                            <div>
+                                                <input
+                                                    type="url"
+                                                    value={formData.map_location_url}
+                                                    onChange={(e) => setFormData({ ...formData, map_location_url: e.target.value })}
+                                                    className={`text-sm font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="https://maps.google.com/..."
+                                                />
+                                                <a
+                                                    href="https://www.google.com/maps"
+                                                    target="_blank"
+                                                    className="text-[10px] text-blue-500 font-bold mt-1 inline-block"
+                                                >
+                                                    Open Google Maps to copy link
+                                                </a>
+                                            </div>
+                                        ) : (
+                                            <a
+                                                href={user.map_location_url}
+                                                target="_blank"
+                                                className={`text-sm font-bold text-${themeColor}-600 underline truncate block`}
+                                            >
+                                                {user.map_location_url || 'Not Set'}
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Shop Images Section */}
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Shop Images</p>
+                                        {isEditing && (
+                                            <label className={`cursor-pointer bg-${themeColor}-100 text-${themeColor}-700 px-2 py-1 rounded text-[10px] font-bold uppercase`}>
+                                                + Add Image
+                                                <input
+                                                    type="file"
+                                                    className="hidden"
+                                                    accept="image/*"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (!file) return;
+
+                                                        const uploadToCloudinary = async () => {
+                                                            try {
+                                                                toast.info("Uploading image...");
+                                                                const uploadData = new FormData();
+                                                                uploadData.append('file', file);
+                                                                uploadData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+                                                                uploadData.append('cloud_name', process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
+
+                                                                const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                                                                    method: 'POST',
+                                                                    body: uploadData
+                                                                });
+                                                                const data = await res.json();
+                                                                if (data.secure_url) {
+                                                                    const currentImages = formData.shop_images ? JSON.parse(formData.shop_images) : [];
+                                                                    const newImages = [...currentImages, data.secure_url];
+                                                                    setFormData(prev => ({ ...prev, shop_images: JSON.stringify(newImages) }));
+                                                                    toast.success("Image uploaded!");
+                                                                }
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                                toast.error("Upload failed");
+                                                            }
+                                                        };
+                                                        uploadToCloudinary();
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
+                                    </div>
+
+                                    <div className="flex gap-2 overflow-x-auto pb-2">
+                                        {formData.shop_images && JSON.parse(formData.shop_images).map((img: string, idx: number) => (
+                                            <div key={idx} className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-slate-200">
+                                                <img src={img} className="w-full h-full object-cover" alt="Shop" />
+                                                {isEditing && (
+                                                    <button
+                                                        onClick={() => {
+                                                            const current = JSON.parse(formData.shop_images);
+                                                            const updated = current.filter((_: any, i: number) => i !== idx);
+                                                            setFormData(prev => ({ ...prev, shop_images: JSON.stringify(updated) }));
+                                                        }}
+                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"
+                                                    >
+                                                        <LogOut className="w-3 h-3 rotate-45" /> {/* X icon workaround */}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {(!formData.shop_images || JSON.parse(formData.shop_images).length === 0) && (
+                                            <p className="text-xs text-slate-400 italic">No images added</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
                         )}
 
                         <div className="mt-8 mb-4">
