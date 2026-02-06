@@ -148,7 +148,7 @@ export default function CustomerTransactions() {
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-slate-900 text-[11px] tracking-tight">
-                                                        {t.counterparty_vpa === 'System'
+                                                        {(t.counterparty_vpa === 'System' || t.counterparty_vpa === 'Open Score')
                                                             ? (t.type === 'CREDIT' ? t.counterparty_name : 'Paid')
                                                             : (t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`)
                                                         }
