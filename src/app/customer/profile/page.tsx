@@ -39,6 +39,24 @@ export default function Profile() {
         if (saved === 'true') setNotificationsEnabled(true);
     }, []);
 
+    // Synchronize form data with user data when it arrives
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                name: user.name || '',
+                email: user.email || '',
+                bank_name: user.bank_name || '',
+                account_number: user.account_number || '',
+                ifsc_code: user.ifsc_code || '',
+                account_holder_name: user.account_holder_name || '',
+                business_segment: user.business_segment || '',
+                business_type: user.business_type || '',
+                map_location_url: user.map_location_url || '',
+                shop_images: user.shop_images || '[]'
+            });
+        }
+    }, [user]);
+
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
 
