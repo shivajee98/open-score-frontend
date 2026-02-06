@@ -87,7 +87,10 @@ export default function MerchantProfilePage() {
             <div className="relative h-72 w-full bg-slate-900 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/20 to-slate-900/60 z-10"></div>
                 {merchant.profile_image ? (
-                    <img src={merchant.profile_image} className="w-full h-full object-cover" alt={merchant.business_name} />
+                    <>
+                        <img src={merchant.profile_image} className="absolute inset-0 w-full h-full object-cover opacity-30 blur-2xl scale-110" alt="" />
+                        <img src={merchant.profile_image} className="relative w-full h-full object-contain z-0 transition-transform duration-700 hover:scale-105" alt={merchant.business_name} />
+                    </>
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <ShoppingBag size={120} className="text-slate-800 opacity-20" />

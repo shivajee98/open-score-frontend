@@ -17,7 +17,9 @@ import {
     Mail,
     User,
     ChevronDown,
-    Lock
+    Lock,
+    Upload,
+    Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 
@@ -65,6 +67,18 @@ function MerchantOnboardingForm() {
         confirm_pin: ''
     });
 
+    // Image Upload State
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
     const turnoverOptions = [
         { label: "₹1,00,000 - ₹5,00,000", sub: "Cashback: ₹500 - ₹2,000", value: "1l-5l" },
         { label: "₹5,00,000 - ₹10,00,000", sub: "Cashback: ₹2,000 - ₹5,000", value: "5l-10l" },
@@ -89,12 +103,17 @@ function MerchantOnboardingForm() {
         setError('');
         try {
             // Complete Onboarding (Basic Info)
+            const data = new FormData();
+            data.append('name', formData.name);
+            data.append('email', formData.email);
+            data.append('business_name', formData.business_name);
+            if (imageFile) {
+                data.append('shop_image', imageFile);
+            }
+
             await apiFetch('/auth/onboarding', {
                 method: 'POST',
-                body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email
-                })
+                body: data
             });
 
             // Sync user in local storage
@@ -169,9 +188,42 @@ function MerchantOnboardingForm() {
                                 onChange={e => setFormData({ ...formData, email: e.target.value })}
                             />
                         </div>
+                        <div className="relative">
+                            <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Shop / Business Name"
+                                className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
+                                value={formData.business_name}
+                                onChange={e => setFormData({ ...formData, business_name: e.target.value })}
+                            />
+                        </div>
+
+                        {/* Image Upload */}
+                        <div className="relative">
+                            <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all ${imagePreview ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
+                                {imagePreview ? (
+                                    <div className="relative w-full h-full p-2">
+                                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-lg" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                                            <p className="text-white text-xs font-bold">Change Image</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <div className="w-10 h-10 mb-3 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                            <Upload size={20} />
+                                        </div>
+                                        <p className="mb-1 text-xs font-bold text-slate-500">Upload Shop Image</p>
+                                        <p className="text-[10px] text-slate-400">PNG, JPG up to 5MB</p>
+                                    </div>
+                                )}
+                                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                            </label>
+                        </div>
                     </div>
                     <button
-                        disabled={!formData.name || !formData.email.includes('@') || loading}
+                        disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || loading}
                         onClick={handleSubmit}
                         className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/10 hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 group disabled:opacity-50"
                     >

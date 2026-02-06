@@ -47,9 +47,11 @@ interface ApiOptions extends RequestInit {
 export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
     const { skipAuthCheck, ...fetchOptions } = options;
 
+    const isFormData = fetchOptions.body instanceof FormData;
+
     const headers: HeadersInit = {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...fetchOptions.headers,
     };
 
