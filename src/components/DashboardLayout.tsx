@@ -28,8 +28,16 @@ export default function DashboardLayout({
     const [user, setUser] = useState<any>(null);
     const [isAudioEnabled, setIsAudioEnabled] = useState(false);
     const [supportOpen, setSupportOpen] = useState(false);
+    const [showLogoutHint, setShowLogoutHint] = useState(false);
     const isMerchant = user?.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'blue';
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowLogoutHint(true);
+        }, 6000);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Load audio preference with Merchant default logic
     useEffect(() => {
@@ -348,9 +356,25 @@ export default function DashboardLayout({
 
                     <div className="flex-1 overflow-y-auto p-3 md:p-8 custom-scrollbar scroll-smooth">
                         {user ? children : (
-                            <div className="flex flex-col items-center justify-center h-64 space-y-3">
-                                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Verifying Session...</p>
+                            <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-6 p-6 text-center">
+                                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                <div className="space-y-2">
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Verifying Session...</p>
+                                    <p className="text-[10px] text-slate-400 font-medium">Please wait a moment</p>
+                                </div>
+
+                                {showLogoutHint && (
+                                    <div className="mt-8 pt-6 border-t border-slate-100 max-w-xs animate-in fade-in slide-in-from-top-4 duration-500">
+                                        <p className="text-rose-500 text-[10px] font-black uppercase tracking-widest mb-3">Login taking too long?</p>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full py-3 px-6 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                                        >
+                                            Logout & Relogin
+                                        </button>
+                                        <p className="mt-3 text-[9px] text-slate-400 font-bold leading-tight uppercase tracking-tighter">This clears stuck sessions and fixes buffering</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                         <div className="py-8 text-center opacity-50">

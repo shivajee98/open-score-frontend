@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
@@ -96,11 +96,41 @@ export default function CustomerHome() {
         await Promise.all([mutateUser(), mutateWallet()]);
     };
 
+    const [showLogoutHint, setShowLogoutHint] = useState(false);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (loading || !user) {
+            timer = setTimeout(() => {
+                setShowLogoutHint(true);
+            }, 6000);
+        }
+        return () => clearTimeout(timer);
+    }, [loading, user]);
+
     if (!user || loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="flex flex-col items-center gap-3">
                 <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading Dashboard...</p>
+
+                {showLogoutHint && (
+                    <div className="mt-8 pt-6 border-t border-slate-200 w-64 text-center animate-in fade-in slide-in-from-top-4 duration-500">
+                        <p className="text-rose-500 text-[10px] font-black uppercase tracking-widest mb-3">Taking too long?</p>
+                        <button
+                            onClick={async () => {
+                                await clearAuthState();
+                                window.location.reload();
+                            }}
+                            className="w-full py-3 px-6 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all mb-2"
+                        >
+                            Logout & Refresh
+                        </button>
+                        <p className="text-[9px] text-slate-400 font-bold leading-tight uppercase tracking-tighter">
+                            Fixes stuck sessions & buffering loops
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

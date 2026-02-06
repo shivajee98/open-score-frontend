@@ -21,45 +21,41 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
+  const [showLogoutHint, setShowLogoutHint] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const checkSession = async () => {
       try {
         const userData = await apiFetch('/auth/me', { skipAuthCheck: true });
-        // Only store non-sensitive UI-only user data in localStorage if absolutely necessary for speed,
-        // but for high security we should rely on the fetch result.
         localStorage.setItem('user', JSON.stringify(userData));
         redirectUser(userData);
       } catch (e) {
-        // Clear locally if session invalid
         clearAuthState();
-
-        // Check if user has already authenticated in this browser before
         const seen = localStorage.getItem('hasSeenOnboarding') === 'true';
-        if (seen) {
-          setFlow('mobile_entry');
-        }
-
+        if (seen) setFlow('mobile_entry');
         setCheckingSession(false);
       }
     };
 
     checkSession();
 
-    // Check for referral code periodically or on mount
+    const timer = setTimeout(() => {
+      setShowLogoutHint(true);
+    }, 6000);
+
     const checkReferral = () => {
       const code = localStorage.getItem('referral_code');
       if (code) setReferralCode(code);
     };
     checkReferral();
 
-    // Also set up a listener for storage events (cross-tab) and custom events (same-tab)
     window.addEventListener('storage', checkReferral);
     const customListener = () => checkReferral();
     window.addEventListener('referral_code_updated', customListener);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('storage', checkReferral);
       window.removeEventListener('referral_code_updated', customListener);
     };
@@ -72,7 +68,6 @@ export default function Home() {
   }, [flow, role]);
 
   const redirectUser = (user: any) => {
-    // Sync with Native App if needed, but avoid sending tokens over JS
     if ((window as any).ReactNativeWebView) {
       (window as any).ReactNativeWebView.postMessage(JSON.stringify({
         type: 'LOGIN',
@@ -93,8 +88,6 @@ export default function Home() {
   const handleSendOtp = async () => {
     setLoading(true);
     setError('');
-
-    // Transfer temp referral code to permanent storage if exists
     const tempCode = localStorage.getItem('temp_referral_code');
     if (tempCode && tempCode.trim()) {
       localStorage.setItem('referral_code', tempCode.trim().toUpperCase());
@@ -117,12 +110,9 @@ export default function Home() {
   const handleVerifyOtp = async () => {
     setLoading(true);
     setError('');
-
-    // Get Referral Code if exists
     const referralCode = localStorage.getItem('referral_code');
 
     try {
-      // Use the internal secure login route
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -134,17 +124,13 @@ export default function Home() {
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Verification failed');
-      }
+      if (!response.ok) throw new Error(data.error || 'Verification failed');
 
       if (data.status === 'NEW_USER') {
         setFlow('role_select');
       } else {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('hasSeenOnboarding', 'true');
-        // Clear referral code after successful use
         if (referralCode) localStorage.removeItem('referral_code');
 
         if (data.onboarding_status === 'REQUIRED') {
@@ -169,12 +155,9 @@ export default function Home() {
     if (!role) return;
     setLoading(true);
     setError('');
-
-    // Get Referral Code if exists (might be used here too if NEW_USER flow flowed to here)
     const referralCode = localStorage.getItem('referral_code');
 
     try {
-      // Use the internal secure login route for verification with role
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -187,10 +170,7 @@ export default function Home() {
       });
 
       const authData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(authData.error || 'Registration failed');
-      }
+      if (!response.ok) throw new Error(authData.error || 'Registration failed');
 
       localStorage.setItem('user', JSON.stringify(authData.user));
       localStorage.setItem('hasSeenOnboarding', 'true');
@@ -210,13 +190,41 @@ export default function Home() {
       redirectUser(user);
     } catch (err: any) {
       setError(err.message);
-      setFlow('details_entry'); // Go back to details on error
+      setFlow('details_entry');
     } finally {
       setLoading(false);
     }
   };
 
-  if (checkingSession) return null; // Let the splash from OnboardingFlow handle it if needed
+  const handleApplyLogout = async () => {
+    await clearAuthState();
+    window.location.reload();
+  };
+
+  if (checkingSession) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white p-6 text-center animate-in fade-in duration-700">
+        <div className="w-16 h-16 border-4 border-slate-900 border-t-transparent rounded-full animate-spin mb-8 shadow-2xl shadow-slate-200"></div>
+        <div className="space-y-4 max-w-xs transition-all animate-in slide-in-from-bottom-5">
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">Syncing Session</h3>
+          <p className="text-slate-500 text-sm font-medium">Please wait while we secure your connection...</p>
+
+          {showLogoutHint && (
+            <div className="mt-8 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-4 duration-500">
+              <p className="text-rose-500 text-xs font-bold uppercase tracking-widest mb-4">Taking too much time?</p>
+              <button
+                onClick={handleApplyLogout}
+                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-95 transition-all"
+              >
+                Logout & Refresh
+              </button>
+              <p className="mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-tighter">This will clear your session and fix loading loops</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (flow === 'onboarding') {
     return (
