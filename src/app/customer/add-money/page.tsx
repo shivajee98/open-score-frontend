@@ -34,7 +34,7 @@ const QUICK_AMOUNTS = [100, 500, 1000, 2000, 5000, 10000];
 export default function AddMoneyPage() {
     const router = useRouter();
     const [amount, setAmount] = useState('');
-    const [upiId, setUpiId] = useState('');
+    // const [upiId, setUpiId] = useState(''); // Removed as we use intent
     const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card'>('upi');
     const [processing, setProcessing] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
@@ -51,65 +51,38 @@ export default function AddMoneyPage() {
      * 4. Backend verifies payment and credits wallet
      */
     const handlePayment = async () => {
-        if (!amount || Number(amount) < 10) {
-            toast.error('Minimum amount is ₹10');
-            return;
-        }
-
-        if (paymentMethod === 'upi' && !upiId) {
-            toast.error('Please enter your UPI ID');
+        if (!amount || Number(amount) < 1) {
+            toast.error('Minimum amount is ₹1');
             return;
         }
 
         setProcessing(true);
         setPaymentStatus('processing');
 
-        // TODO: INTEGRATE REAL PAYMENT GATEWAY HERE
-        // Example with Razorpay:
-        // 
-        // const order = await apiFetch('/payments/create-order', {
-        //     method: 'POST',
-        //     body: JSON.stringify({ amount: Number(amount) * 100 }) // Razorpay uses paise
-        // });
-        //
-        // const options = {
-        //     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
-        //     amount: order.amount,
-        //     currency: 'INR',
-        //     order_id: order.id,
-        //     handler: async (response) => {
-        //         // Verify payment on backend
-        //         await apiFetch('/payments/verify', {
-        //             method: 'POST',
-        //             body: JSON.stringify(response)
-        //         });
-        //     }
-        // };
-        // const rzp = new Razorpay(options);
-        // rzp.open();
+        // UPI Intent Logic
+        const payeeVpa = "9430083275@naviaxis";
+        const payeeName = "OpenScore";
+        const transactionRef = `TXN${Date.now()}`;
+        const transactionNote = "Wallet Topup";
+        const currency = "INR";
 
-        // DUMMY: Simulate payment processing delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Construct the UPI Intent URL
+        // upi://pay?pa=...&pn=...&tr=...&tn=...&am=...&cu=...
+        const upiUrl = `upi://pay?pa=${payeeVpa}&pn=${payeeName}&tr=${transactionRef}&tn=${transactionNote}&am=${amount}&cu=${currency}`;
 
-        // DUMMY: Simulate random success/failure (80% success rate for demo)
-        const isSuccess = Math.random() > 0.2;
+        // Create a hidden link and click it - standard way to trigger intent on mobile
+        const link = document.createElement('a');
+        link.href = upiUrl;
+        link.click();
 
-        if (isSuccess) {
-            setPaymentStatus('success');
-            toast.success(`₹${Number(amount).toLocaleString()} added successfully!`);
+        toast.info("Opening UPI App...");
 
-            // In real implementation, wallet would be updated via backend webhook
-            // For demo, we just show success message
-
-            setTimeout(() => {
-                router.push('/customer');
-            }, 2000);
-        } else {
-            setPaymentStatus('failed');
-            toast.error('Payment failed. Please try again.');
-        }
-
-        setProcessing(false);
+        // We can't verify transaction status on frontend for UPI intents easily.
+        // Resetting state after a delay.
+        setTimeout(() => {
+            setProcessing(false);
+            setPaymentStatus('idle');
+        }, 3000);
     };
 
     return (
@@ -158,8 +131,8 @@ export default function AddMoneyPage() {
                                 onClick={() => setAmount(amt.toString())}
                                 disabled={processing}
                                 className={`py-2.5 rounded-xl font-bold text-sm transition-all ${amount === amt.toString()
-                                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                     }`}
                             >
                                 ₹{amt.toLocaleString()}
@@ -177,20 +150,20 @@ export default function AddMoneyPage() {
                             onClick={() => setPaymentMethod('upi')}
                             disabled={processing}
                             className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === 'upi'
-                                    ? 'border-emerald-500 bg-emerald-50'
-                                    : 'border-slate-200 hover:border-slate-300'
+                                ? 'border-emerald-500 bg-emerald-50'
+                                : 'border-slate-200 hover:border-slate-300'
                                 }`}
                         >
                             <Smartphone className={`w-6 h-6 ${paymentMethod === 'upi' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                            <span className={`font-bold text-sm ${paymentMethod === 'upi' ? 'text-emerald-700' : 'text-slate-600'}`}>UPI</span>
+                            <span className={`font-bold text-sm ${paymentMethod === 'upi' ? 'text-emerald-700' : 'text-slate-600'}`}>UPI App</span>
                         </button>
 
                         <button
                             onClick={() => setPaymentMethod('card')}
                             disabled={processing}
                             className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === 'card'
-                                    ? 'border-emerald-500 bg-emerald-50'
-                                    : 'border-slate-200 hover:border-slate-300'
+                                ? 'border-emerald-500 bg-emerald-50'
+                                : 'border-slate-200 hover:border-slate-300'
                                 }`}
                         >
                             <CreditCard className={`w-6 h-6 ${paymentMethod === 'card' ? 'text-emerald-600' : 'text-slate-400'}`} />
@@ -198,27 +171,12 @@ export default function AddMoneyPage() {
                         </button>
                     </div>
 
-                    {/* UPI ID Input */}
-                    {paymentMethod === 'upi' && (
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">UPI ID</label>
-                            <input
-                                type="text"
-                                value={upiId}
-                                onChange={(e) => setUpiId(e.target.value)}
-                                placeholder="yourname@upi"
-                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 transition-colors"
-                                disabled={processing}
-                            />
-                        </div>
-                    )}
-
                     {/* Card Notice */}
                     {paymentMethod === 'card' && (
                         <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl">
                             <p className="text-amber-700 text-xs font-medium">
                                 <AlertTriangle className="w-4 h-4 inline mr-1" />
-                                Card payments coming soon! Please use UPI for now.
+                                Card payments coming soon! Please use UPI.
                             </p>
                         </div>
                     )}
@@ -227,27 +185,25 @@ export default function AddMoneyPage() {
                 {/* Payment Status */}
                 {paymentStatus !== 'idle' && (
                     <div className={`rounded-2xl p-5 flex flex-col items-center text-center gap-3 animate-in fade-in slide-in-from-bottom-4 ${paymentStatus === 'processing' ? 'bg-blue-50 border border-blue-100' :
-                            paymentStatus === 'success' ? 'bg-emerald-50 border border-emerald-100' :
-                                'bg-rose-50 border border-rose-100'
+                        paymentStatus === 'success' ? 'bg-emerald-50 border border-emerald-100' :
+                            'bg-rose-50 border border-rose-100'
                         }`}>
                         {paymentStatus === 'processing' && (
                             <>
                                 <div className="w-12 h-12 border-4 border-blue-600 rounded-full animate-spin border-t-transparent" />
-                                <p className="text-blue-800 font-bold">Processing payment...</p>
+                                <p className="text-blue-800 font-bold">Opening UPI App...</p>
                             </>
                         )}
                         {paymentStatus === 'success' && (
                             <>
                                 <CheckCircle className="w-12 h-12 text-emerald-600" />
-                                <p className="text-emerald-800 font-bold">Payment Successful!</p>
-                                <p className="text-emerald-600 text-sm">₹{Number(amount).toLocaleString()} added to your wallet</p>
+                                <p className="text-emerald-800 font-bold">Payment Initiated</p>
                             </>
                         )}
                         {paymentStatus === 'failed' && (
                             <>
                                 <AlertTriangle className="w-12 h-12 text-rose-600" />
                                 <p className="text-rose-800 font-bold">Payment Failed</p>
-                                <p className="text-rose-600 text-sm">Please try again or use a different method</p>
                             </>
                         )}
                     </div>
@@ -265,7 +221,7 @@ export default function AddMoneyPage() {
                         ) : (
                             <>
                                 <IndianRupee className="w-5 h-5" />
-                                Add ₹{amount ? Number(amount).toLocaleString() : '0'}
+                                Pay ₹{amount ? Number(amount).toLocaleString() : '0'}
                             </>
                         )}
                     </button>
@@ -276,18 +232,6 @@ export default function AddMoneyPage() {
                     <p className="text-slate-500 text-xs font-medium text-center">
                         🔒 All payments are secured with 256-bit encryption
                     </p>
-                </div>
-
-                {/* TODO Notice for Developers */}
-                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200 hidden">
-                    {/* 
-                        DEVELOPER NOTE: 
-                        This is a dummy payment page. To integrate real payments:
-                        1. Sign up for Razorpay/PayU/Paytm Business
-                        2. Get API keys and configure in .env
-                        3. Create backend endpoints for order creation and verification
-                        4. Replace handlePayment with real gateway SDK
-                    */}
                 </div>
             </div>
         </div>
