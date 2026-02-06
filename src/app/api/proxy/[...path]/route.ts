@@ -42,11 +42,14 @@ async function handleRequest(request: NextRequest, pathParts: string[]) {
     });
 
     if (token) {
+        console.log(`Token found in cookie: ${token.slice(0, 10)}...`);
         headers.set('Authorization', `Bearer ${token}`);
+    } else {
+        console.log('No token found in cookie');
     }
 
     try {
-        const body = request.method !== 'GET' ? await request.text() : undefined;
+        const body = request.method !== 'GET' ? await request.arrayBuffer() : undefined;
 
         const response = await fetch(url, {
             method: request.method,
@@ -71,9 +74,14 @@ async function handleRequest(request: NextRequest, pathParts: string[]) {
             data = await response.json();
         } else {
             const text = await response.text();
-            console.error(`Backend returned non-JSON response (${response.status}):`, text.slice(0, 100));
+            console.error(`Backend returned non-JSON response (${response.status}) for ${url}:`, text.slice(0, 500));
             return NextResponse.json(
-                { error: 'Backend Error', message: 'The server returned an invalid response.' },
+                {
+                    error: 'Backend Error',
+                    message: 'The server returned an invalid response.',
+                    url: url,
+                    raw: text.slice(0, 200)
+                },
                 { status: response.status }
             );
         }
