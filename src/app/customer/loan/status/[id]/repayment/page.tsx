@@ -27,7 +27,8 @@ import {
     ReceiptIcon,
     HistoryIcon,
     Bell,
-    Headphones
+    Headphones,
+    Smartphone
 } from 'lucide-react';
 
 export default function RepaymentDashboard() {
@@ -68,6 +69,27 @@ export default function RepaymentDashboard() {
             return;
         }
         setPinModalOpen(true);
+    };
+
+    const handleUpiPayment = () => {
+        if (!pendingEmi) return;
+
+        const amount = pendingEmi.amount;
+        const payeeVpa = "9430083275@naviaxis";
+        const payeeName = "OpenScore";
+        const transactionRef = `EMI${loanId}${Date.now()}`;
+        const transactionNote = `EMI Payment for Loan #${loanId}`;
+        const currency = "INR";
+
+        // Construct the UPI Intent URL
+        const upiUrl = `upi://pay?pa=${payeeVpa}&pn=${payeeName}&tr=${transactionRef}&tn=${transactionNote}&am=${amount}&cu=${currency}`;
+
+        // Create a hidden link and click it
+        const link = document.createElement('a');
+        link.href = upiUrl;
+        link.click();
+
+        toast.info("Opening UPI App...");
     };
 
     const handleFinishRepay = async (pin: string) => {
@@ -327,17 +349,27 @@ export default function RepaymentDashboard() {
                             </div>
                         </div>
 
-                        <button
-                            onClick={handleRepay}
-                            disabled={paying}
-                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-                        >
-                            {paying ? (
-                                <div className="w-5 h-5 border-2 border-white rounded-full animate-spin border-t-transparent" />
-                            ) : (
-                                <>Verify & Pay EMI <ArrowRightCircle size={18} /></>
-                            )}
-                        </button>
+                        <div className="space-y-3">
+                            <button
+                                onClick={handleRepay}
+                                disabled={paying}
+                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
+                            >
+                                {paying ? (
+                                    <div className="w-5 h-5 border-2 border-white rounded-full animate-spin border-t-transparent" />
+                                ) : (
+                                    <>Verify & Pay EMI <ArrowRightCircle size={18} /></>
+                                )}
+                            </button>
+
+                            <button
+                                onClick={handleUpiPayment}
+                                disabled={paying}
+                                className="w-full py-4 bg-white text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 border border-slate-200"
+                            >
+                                <Smartphone size={18} className="text-blue-600" /> Pay via UPI App
+                            </button>
+                        </div>
                     </div>
                 ) : isLoanCleared ? (
                     <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-2xl shadow-blue-900/30 text-center space-y-6 relative overflow-hidden">
