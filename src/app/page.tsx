@@ -93,6 +93,14 @@ export default function Home() {
   const handleSendOtp = async () => {
     setLoading(true);
     setError('');
+
+    // Transfer temp referral code to permanent storage if exists
+    const tempCode = localStorage.getItem('temp_referral_code');
+    if (tempCode && tempCode.trim()) {
+      localStorage.setItem('referral_code', tempCode.trim().toUpperCase());
+      localStorage.removeItem('temp_referral_code');
+    }
+
     try {
       await apiFetch('/auth/otp', {
         method: 'POST',
@@ -262,6 +270,30 @@ export default function Home() {
                   )}
                 </div>
               </div>
+
+              {/* Add Referral Code Input */}
+              {!referralCode && (
+                <div className="animate-in fade-in slide-in-from-bottom-2">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">
+                    Referral Code (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={localStorage.getItem('temp_referral_code') || ''}
+                    onChange={(e) => {
+                      const code = e.target.value.toUpperCase();
+                      localStorage.setItem('temp_referral_code', code);
+                    }}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-primary text-lg focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand tracking-widest uppercase"
+                    placeholder="ENTER CODE"
+                    maxLength={20}
+                  />
+                  <p className="text-xs text-slate-400 mt-2 ml-4">
+                    Have a referral code? Enter it to get bonus rewards!
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={handleSendOtp}
                 disabled={loading || mobile.length < 10}

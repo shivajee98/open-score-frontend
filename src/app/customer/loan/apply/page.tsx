@@ -186,6 +186,14 @@ export default function LoanApplication() {
             return;
         }
 
+        // Handle loan referral code - transfer to main storage if not already set
+        const loanReferralCode = localStorage.getItem('loan_referral_code');
+        const existingReferralCode = localStorage.getItem('referral_code');
+        if (loanReferralCode && loanReferralCode.trim() && !existingReferralCode) {
+            localStorage.setItem('referral_code', loanReferralCode.trim().toUpperCase());
+            localStorage.removeItem('loan_referral_code');
+        }
+
         setLoading(true);
         try {
             // Save user KYC data to profile so it's only filled once
@@ -489,6 +497,26 @@ export default function LoanApplication() {
                                         placeholder="+91"
                                         required
                                     />
+                                </div>
+
+                                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-2">
+                                        Have a Referral Code? (Optional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={localStorage.getItem('loan_referral_code') || ''}
+                                        onChange={(e) => {
+                                            const code = e.target.value.toUpperCase();
+                                            localStorage.setItem('loan_referral_code', code);
+                                        }}
+                                        className="w-full bg-white border border-blue-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm uppercase tracking-wider"
+                                        placeholder="ENTER REFERRAL CODE"
+                                        maxLength={20}
+                                    />
+                                    <p className="text-xs text-blue-600 mt-2">
+                                        Enter a referral code to help both you and your referrer earn rewards!
+                                    </p>
                                 </div>
 
                                 <button
