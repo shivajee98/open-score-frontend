@@ -142,22 +142,43 @@ function MerchantOnboardingForm() {
         setStep(2);
     };
 
+    const uploadToCloudinary = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+        formData.append('cloud_name', process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!res.ok) {
+            throw new Error('Image upload to Cloudinary failed');
+        }
+
+        const data = await res.json();
+        return data.secure_url;
+    };
+
     const handleSubmit = async () => {
         setLoading(true);
         setError('');
         try {
-            // Complete Onboarding (Basic Info)
-            const data = new FormData();
-            data.append('name', formData.name);
-            data.append('email', formData.email);
-            data.append('business_name', formData.business_name);
+            let shopImageUrl = '';
             if (imageFile) {
-                data.append('shop_image', imageFile);
+                shopImageUrl = await uploadToCloudinary(imageFile);
             }
 
+            // Complete Onboarding (Basic Info)
             await apiFetch('/auth/onboarding', {
                 method: 'POST',
-                body: data
+                body: JSON.stringify({
+                    name: formData.name,
+                    email: formData.email,
+                    business_name: formData.business_name,
+                    profile_image: shopImageUrl
+                })
             });
 
             // Sync user in local storage
