@@ -1,5 +1,6 @@
 'use client';
 const BASE_URL = '/api/proxy';
+// Trigger redeploy to bake in new API URL: https://api.msmeloan.sbs/api
 
 let isRedirecting = false;
 
