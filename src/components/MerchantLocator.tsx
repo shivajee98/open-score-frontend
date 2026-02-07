@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { MapPin, Search, X, Store, Navigation } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
@@ -34,7 +34,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function MerchantLocator() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [pincode, setPincode] = useState("");
@@ -75,7 +75,7 @@ export default function MerchantLocator() {
 
     // Fetch full details when a merchant is selected
     const handleMerchantClick = (merchant: Merchant) => {
-        router.push(`/merchants/${merchant.id}`);
+        navigate(`/merchants/${merchant.id}`);
     };
 
     // Initial load from profile
@@ -188,7 +188,7 @@ export default function MerchantLocator() {
                             <button
                                 onClick={() => {
                                     setOpen(false);
-                                    router.push(`/merchants/search?pincode=${pincode}&city=${city}`);
+                                    navigate(`/merchants/search?pincode=${pincode}&city=${city}`);
                                 }}
                                 className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
                             >

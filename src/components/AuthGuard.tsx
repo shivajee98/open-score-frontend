@@ -1,12 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { clearAuthState } from '@/lib/api';
 
-export default function AuthGuard({ children }: { children: React.ReactNode }) {
-    const router = useRouter();
-    const pathname = usePathname();
+interface AuthGuardProps {
+    children: React.ReactNode;
+    allowedRoles?: string[];
+}
+
+export default function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
+    const navigate = useNavigate();
+    const location = useLocation(); const pathname = location.pathname;
     const [authorized, setAuthorized] = useState(false);
 
     useEffect(() => {
@@ -14,7 +19,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             const userStr = localStorage.getItem('user');
 
             if (!userStr) {
-                router.push('/');
+                navigate('/');
                 return;
             }
 
@@ -28,14 +33,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                     if (user.role === 'MERCHANT' && pathname.startsWith('/customer')) {
                         // proceed
                     } else {
-                        router.push(user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding');
+                        navigate(user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding');
                         return;
                     }
                 }
 
                 // Prevent access to wrong roles
+                if (allowedRoles && !allowedRoles.includes(user.role)) {
+                    navigate(user.role === 'ADMIN' ? '/admin' : '/customer');
+                    return;
+                }
+
                 if (pathname.startsWith('/admin') && user.role !== 'ADMIN') {
-                    router.push('/customer');
+                    navigate('/customer');
                     return;
                 }
 
@@ -45,12 +55,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 setAuthorized(true);
             } catch (e) {
                 console.error("AuthGuard parse error:", e);
-                router.push('/');
+                navigate('/');
             }
         };
 
         checkAuth();
-    }, [pathname, router]);
+    }, [pathname, navigate]);
 
     if (!authorized) {
         let themeColor = 'blue';

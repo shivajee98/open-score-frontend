@@ -2,12 +2,12 @@
 
 import { useEffect } from 'react';
 import { App } from '@capacitor/app';
-import { useRouter, usePathname } from 'next/navigation';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from '@/components/ui/Toast';
 
 export default function MobileNavigationHandler() {
-    const router = useRouter();
-    const pathname = usePathname();
+    const navigate = useNavigate();
+    const location = useLocation(); const pathname = location.pathname;
 
     useEffect(() => {
         let lastBackPress = 0;
@@ -39,7 +39,7 @@ export default function MobileNavigationHandler() {
         };
 
         setupListener();
-    }, [pathname, router]);
+    }, [pathname, navigate]);
 
     return null;
 }

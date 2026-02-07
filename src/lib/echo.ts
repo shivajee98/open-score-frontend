@@ -13,13 +13,13 @@ window.Pusher = Pusher;
 export const createEcho = (token?: string) => {
     return new Echo({
         broadcaster: 'reverb',
-        key: process.env.NEXT_PUBLIC_REVERB_APP_KEY,
-        wsHost: process.env.NEXT_PUBLIC_REVERB_HOST,
-        wsPort: parseInt(process.env.NEXT_PUBLIC_REVERB_PORT ?? '8081'),
-        wssPort: parseInt(process.env.NEXT_PUBLIC_REVERB_PORT ?? '443'),
-        forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME ?? 'http') === 'https',
+        key: import.meta.env.VITE_REVERB_APP_KEY,
+        wsHost: import.meta.env.VITE_REVERB_HOST,
+        wsPort: parseInt(import.meta.env.VITE_REVERB_PORT ?? '8081'),
+        wssPort: parseInt(import.meta.env.VITE_REVERB_PORT ?? '443'),
+        forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
         enabledTransports: ['ws', 'wss'],
-        authEndpoint: `${process.env.NEXT_PUBLIC_API_URL}/broadcasting/auth`,
+        authEndpoint: `${import.meta.env.VITE_API_URL}/broadcasting/auth`,
         auth: {
             headers: {
                 Authorization: `Bearer ${token}`,

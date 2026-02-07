@@ -1,20 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 export function useAuthProtection() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         const user = localStorage.getItem('user');
         if (!user) {
-            router.push('/');
+            navigate('/');
         } else {
             setIsAuthenticated(true);
         }
-    }, [router]);
+    }, [navigate]);
 
     return isAuthenticated;
 }

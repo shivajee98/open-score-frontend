@@ -1,10 +1,10 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 
 export default function ReferralHandler() {
-    const searchParams = useSearchParams();
+    const [searchParams] = useSearchParams();
 
     useEffect(() => {
         // Method 1: Next.js Search Params

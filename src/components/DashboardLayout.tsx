@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import AuthGuard from './AuthGuard';
 import { toast } from '@/components/ui/Toast';
@@ -58,7 +58,7 @@ export default function DashboardLayout({
         }
     }, [isAudioEnabled]);
 
-    const router = useRouter();
+    const navigate = useNavigate();
     const lastTxRef = React.useRef<string | null>(null);
     const audioContextRef = React.useRef<AudioContext | null>(null);
 
@@ -93,7 +93,7 @@ export default function DashboardLayout({
                 const currentStored = localStorage.getItem('user');
                 // If error is session related or no user found currently, redirect
                 if (!currentStored || err.message.includes('Session expired')) {
-                    router.push('/');
+                    navigate('/');
                 }
             });
 
@@ -117,7 +117,7 @@ export default function DashboardLayout({
             isMounted = false;
             clearTimeout(timeoutId);
         };
-    }, [router, user?.role]);
+    }, [navigate, user?.role]);
 
     useEffect(() => {
         const handleFirstInteraction = () => {
@@ -238,7 +238,7 @@ export default function DashboardLayout({
     const handleLogout = async () => {
         await clearAuthState();
         setUser(null);
-        router.push('/');
+        navigate('/');
     };
 
     return (
@@ -249,7 +249,7 @@ export default function DashboardLayout({
             )}>
                 {/* Suspension Overlay */}
                 {user?.status === 'SUSPENDED' && (
-                    <div className="fixed inset-0 z-[100] bg-white/60 backdrop-blur-md flex items-center justify-center p-6 pointer-events-auto">
+                    <div className="fixed inset-0 z-100 bg-white/60 backdrop-blur-md flex items-center justify-center p-6 pointer-events-auto">
                         <div className="max-w-md w-full bg-white rounded-[2.5rem] p-8 shadow-2xl border border-rose-100 text-center animate-in fade-in zoom-in-95 duration-500">
                             <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Ban className="w-10 h-10 text-rose-500" />
@@ -282,7 +282,7 @@ export default function DashboardLayout({
                         {navItems.map((item) => (
                             <Link
                                 key={item.href}
-                                href={item.href}
+                                to={item.href}
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition-all text-slate-500 font-bold",
                                     `hover:text-${themeColor}-600 group`
@@ -298,7 +298,7 @@ export default function DashboardLayout({
 
 
                     <div className="p-4 border-t border-slate-100">
-                        <Link href="/customer/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer group">
+                        <Link to="/customer/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer group">
                             <div className={`w-10 h-10 rounded-full bg-${themeColor}-100 text-${themeColor}-600 flex items-center justify-center font-black text-sm group-hover:scale-110 transition-transform`}>
                                 {user?.name?.[0] || 'U'}
                             </div>
@@ -311,7 +311,7 @@ export default function DashboardLayout({
                 </aside >
 
                 {/* Main Content */}
-                < main className="flex-1 flex flex-col overflow-hidden relative pb-[5.5rem] md:pb-0 bg-slate-50" >
+                < main className="flex-1 flex flex-col overflow-hidden relative pb-22 md:pb-0 bg-slate-50" >
                     <header className="px-4 py-2.5 md:py-4 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
                         <div className="flex items-center gap-3">
                             <h2 className="text-lg md:text-2xl font-black tracking-tight text-slate-900">{title}</h2>
@@ -327,7 +327,7 @@ export default function DashboardLayout({
                             >
                                 {isAudioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                             </button>
-                            <Link href="/customer/notifications">
+                            <Link to="/customer/notifications">
                                 <button
                                     className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95 relative"
                                     title="Notifications"
@@ -336,7 +336,7 @@ export default function DashboardLayout({
                                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
                                 </button>
                             </Link>
-                            <Link href="/customer/support">
+                            <Link to="/customer/support">
                                 <button
                                     className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
                                     title="Help & Support"
@@ -346,7 +346,7 @@ export default function DashboardLayout({
                             </Link>
                         </div>
                         <div className="flex items-center gap-2 md:hidden">
-                            <Link href="/customer/profile">
+                            <Link to="/customer/profile">
                                 <div className={`w-9 h-9 rounded-full bg-${themeColor}-100 flex items-center justify-center text-${themeColor}-600 font-black text-sm border border-${themeColor}-200 cursor-pointer active:scale-90 transition-transform`}>
                                     {user?.name?.[0] || 'U'}
                                 </div>

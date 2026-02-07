@@ -26,7 +26,7 @@ export default function SplashStep({ onComplete }: { onComplete: () => void }) {
                 <Tagline className="opacity-0 animate-[fade-in_1s_ease-out_500ms_forwards]" />
 
                 <div className="absolute -bottom-2 left-0 right-0 h-[2px] overflow-hidden">
-                    <div className={`h-full bg-gradient-to-r from-blue-600 to-purple-600 ${animateLine ? 'animate-draw-line' : 'w-0'}`} />
+                    <div className={`h-full bg-linear-to-r from-blue-600 to-purple-600 ${animateLine ? 'animate-draw-line' : 'w-0'}`} />
                 </div>
             </div>
 
@@ -34,7 +34,7 @@ export default function SplashStep({ onComplete }: { onComplete: () => void }) {
                 <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Powered by MSME Shakti</p>
             </div>
 
-            <style jsx global>{`
+            <style>{`
                 @keyframes scale-up {
                     from { transform: scale(0.98); opacity: 0; }
                     to { transform: scale(1); opacity: 1; }
