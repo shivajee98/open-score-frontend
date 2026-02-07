@@ -326,7 +326,7 @@ export default function RepaymentDashboard() {
                                 </span>
                                 <div>
                                     <h4 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">Installment Amount</h4>
-                                    <p className="text-4xl font-black tracking-tighter">₹{pendingEmi.amount.toLocaleString()}</p>
+                                    <p className="text-4xl font-black tracking-tighter">₹{Number(pendingEmi.amount).toLocaleString()}</p>
                                 </div>
                             </div>
                             <div className="flex flex-col items-end gap-2">
@@ -340,11 +340,11 @@ export default function RepaymentDashboard() {
                         {/* Breakdown for Next EMI */}
                         <div className="grid grid-cols-2 gap-3 mb-8">
                             <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Principal + Fees</p>
-                                <p className="text-sm font-black">₹{(Number(pendingEmi.amount) * 0.9).toFixed(0)}</p>
+                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Due Date</p>
+                                <p className="text-sm font-black">{new Date(pendingEmi.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
                             </div>
                             <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                                <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Cashback Reward</p>
+                                <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Estimated Cashback</p>
                                 <p className="text-sm font-black text-emerald-400">+ ₹{(Number(pendingEmi.amount) * cashbackRate).toFixed(0)}</p>
                             </div>
                         </div>
@@ -459,9 +459,9 @@ export default function RepaymentDashboard() {
                                                     {rep.status === 'PAID' ? new Date(rep.paid_at || '').toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : new Date(rep.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                                 </span>
 
-                                                <span className="text-[8px] font-black text-blue-400/60 uppercase tracking-[0.1em] border-r border-slate-100 pr-2">Principal</span>
+                                                <span className="text-[8px] font-black text-blue-400/60 uppercase tracking-[0.1em] border-r border-slate-100 pr-2">Due Date</span>
                                                 <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest pl-2">
-                                                    ₹{(Number(rep.amount) * 0.92).toFixed(0)}
+                                                    {new Date(rep.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                                 </span>
                                             </div>
                                         </div>
