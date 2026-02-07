@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff } from 'lucide-react';
+import { useStore } from '@/store/useStore';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -13,13 +14,24 @@ import MerchantLocator from '@/components/MerchantLocator';
 import HomeBannerCarousel from '@/components/HomeBannerCarousel';
 
 export default function CustomerHome() {
+    const { user: cachedUser, wallet: cachedWallet, loans: cachedLoans, setUser, setWallet, setLoans } = useStore();
     const router = useRouter();
 
     // Data Fetching with Cache
-    const { data: user, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
-    const { data: walletData, isLoading: walletLoading, mutate: mutateWallet } = useApi('/wallet/balance');
-    // Only fetch loans if user is CUSTOMER to check for KYC
-    const { data: loans, isLoading: loansLoading } = useApi(user?.role === 'CUSTOMER' ? '/loans' : null);
+    const { data: user, isLoading: userLoading, mutate: mutateUser, isValidating: userValidating } = useApi('/auth/me');
+    const { data: walletData, isLoading: walletLoading, mutate: mutateWallet, isValidating: walletValidating } = useApi('/wallet/balance');
+    const { data: loans, isLoading: loansLoading, mutate: mutateLoans, isValidating: loansValidating } = useApi(user?.role === 'CUSTOMER' ? '/loans' : null);
+
+    // Sync SWR data to Zustand Store for persistent caching
+    useEffect(() => { if (user) setUser(user); }, [user, setUser]);
+    useEffect(() => { if (walletData) setWallet(walletData); }, [walletData, setWallet]);
+    useEffect(() => { if (loans) setLoans(Array.isArray(loans) ? loans : (loans.data || [])); }, [loans, setLoans]);
+
+    const activeUser = user || cachedUser;
+    const activeWallet = walletData || cachedWallet;
+    const activeLoans = (loans ? (Array.isArray(loans) ? loans : (loans.data || [])) : cachedLoans) || [];
+
+    const isRefreshing = userValidating || walletValidating || loansValidating;
 
     const [showBalance, setShowBalance] = useState(true);
     // Promotional Banner State - Show on load
@@ -79,16 +91,16 @@ export default function CustomerHome() {
     }, []);
 
     // Derived State
-    const balance = walletData?.balance || '0';
+    const balance = activeWallet?.balance || '0';
     // Prioritize active_locked_balance from user profile (loans), else wallet locked balance
-    const lockedBalance = (user?.active_locked_balance || 0) > 0
-        ? user.active_locked_balance
-        : (walletData?.locked_balance || '0');
+    const lockedBalance = (activeUser?.active_locked_balance || 0) > 0
+        ? activeUser.active_locked_balance
+        : (activeWallet?.locked_balance || '0');
 
     // Handle both array (legacy) and paginated object (new) responses
-    const loansList = Array.isArray(loans) ? loans : (loans?.data || []);
-    const kycLoan = loansList.find((l: any) => l.status === 'KYC_SENT') || null;
-    const loading = userLoading || walletLoading || (user?.role === 'CUSTOMER' && loansLoading);
+    const loansList = activeLoans;
+    const kycLoan = loansList?.find((l: any) => l.status === 'KYC_SENT') || null;
+    const loading = !activeUser && (userLoading || walletLoading);
 
     const handleClaimSuccess = async (updatedUser: any) => {
         setShowClaimModal(false);

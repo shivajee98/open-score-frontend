@@ -18,6 +18,8 @@ export const viewport = {
   userScalable: false,
 };
 
+import MobileNavigationHandler from "@/components/MobileNavigationHandler";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,6 +30,7 @@ export default function RootLayout({
       <body
         className={`antialiased font-sans`}
       >
+        <MobileNavigationHandler />
         <ToastContainer />
         {children}
         <MobileNav />

@@ -20,10 +20,12 @@ export function useApi<T = any>(endpoint: string | null, options: UseApiOptions 
         (url: string) => apiFetch(url),
         {
             revalidateOnFocus: options.revalidateOnFocus ?? false,
-            revalidateOnReconnect: options.revalidateOnReconnect ?? false,
+            revalidateOnReconnect: options.revalidateOnReconnect ?? true,
             refreshInterval: options.refreshInterval ?? 0,
             shouldRetryOnError: options.shouldRetryOnError ?? false,
-            dedupingInterval: 60000, // 1 minute deduping - prevents duplicate requests
+            dedupingInterval: 300000, // 5 minutes deduping - very aggressive for performance
+            focusThrottleInterval: 60000,
+            errorRetryInterval: 10000,
             ...options
         }
     );
