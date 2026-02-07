@@ -4,7 +4,8 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import TransactionDetailModal from '@/components/TransactionDetailModal';
-import { Home, Smartphone, QrCode, Receipt, ArrowDownLeft, ArrowUpRight, Search, Landmark, Loader2 } from 'lucide-react';
+import { Home, Smartphone, QrCode, Receipt, ArrowDownLeft, ArrowUpRight, Search, Landmark, Loader2, FileText } from 'lucide-react';
+import { toast } from '@/components/ui/Toast';
 
 export default function CustomerTransactions() {
     const [transactions, setTransactions] = useState<any[]>([]);
@@ -120,6 +121,13 @@ export default function CustomerTransactions() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                         <input type="text" placeholder="Search payments..." className={`w-full pl-9 pr-4 py-2.5 bg-white rounded-lg border border-slate-100 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-${themeColor}-100 outline-none`} />
                     </div>
+                    <button
+                        onClick={() => toast.info("Statement generation started. You will be notified when ready.")}
+                        className="flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                    >
+                        <FileText className="w-3 h-3" />
+                        Download Statement
+                    </button>
                 </div>
 
                 {loading && transactions.length === 0 ? (
@@ -149,7 +157,7 @@ export default function CustomerTransactions() {
                                                 <div>
                                                     <p className="font-bold text-slate-900 text-[11px] tracking-tight">
                                                         {(t.counterparty_vpa === 'System' || t.counterparty_vpa === 'Open Score')
-                                                            ? (t.type === 'CREDIT' ? t.counterparty_name : 'Paid')
+                                                            ? (t.type === 'CREDIT' ? t.counterparty_name || 'System Credit' : t.counterparty_name || 'System Debit')
                                                             : (t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`)
                                                         }
                                                     </p>
