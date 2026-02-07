@@ -80,11 +80,30 @@ function SupportPageContent() {
         }
     };
 
-    const fetchMessages = async (ticketId: number) => {
+    // Ref for polling to access latest state
+    const messagesRef = React.useRef(messages);
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
+
+    const fetchMessages = async (ticketId: number, afterId?: number) => {
         try {
-            const res = await apiFetch(`/support/tickets/${ticketId}`);
-            if (res && res.messages) {
-                setMessages(res.messages);
+            let url = `/support/tickets/${ticketId}/messages`;
+            if (afterId) {
+                url += `?after_id=${afterId}`;
+            }
+            const res = await apiFetch(url);
+            if (res && Array.isArray(res)) {
+                if (res.length === 0) return; // No new messages
+
+                setMessages(prev => {
+                    if (afterId) {
+                        // Filter duplicates
+                        const newMsgs = res.filter(m => !prev.find(p => p.id === m.id));
+                        return [...prev, ...newMsgs];
+                    }
+                    return res;
+                });
             }
         } catch (error) {
             console.error(error);
@@ -94,32 +113,21 @@ function SupportPageContent() {
     useEffect(() => {
         if (!selectedTicket) return;
 
-        // Fetch initial
+        // Initial Fetch
         fetchMessages(selectedTicket.id);
 
-        // Setup Echo Listener
-        let echoInstance: any;
-        import('@/lib/echo').then(({ createEcho }) => {
-            const token = localStorage.getItem('token');
-            const echo = createEcho(token || undefined);
-            echoInstance = echo;
+        // Setup Polling (3 seconds)
+        const intervalId = setInterval(() => {
+            const currentMsgs = messagesRef.current;
+            const lastMsg = currentMsgs.length > 0 ? currentMsgs[currentMsgs.length - 1] : null;
+            const afterId = lastMsg ? lastMsg.id : 0;
 
-            echo.private(`support.ticket.${selectedTicket.id}`)
-                .listen('.MessageSent', (e: any) => {
-                    console.log('New Message:', e.message);
-                    setMessages(prev => {
-                        // Avoid duplicates
-                        if (prev.find(m => m.id === e.message.id)) return prev;
-                        return [...prev, e.message];
-                    });
-                });
-        });
+            fetchMessages(selectedTicket.id, afterId);
+        }, 3000);
 
         // Cleanup
         return () => {
-            if (echoInstance) {
-                echoInstance.leave(`support.ticket.${selectedTicket.id}`);
-            }
+            clearInterval(intervalId);
         };
     }, [selectedTicket]);
 
