@@ -43,16 +43,17 @@ export default function LoanStatus() {
                         created_at: new Date().toISOString(),
                         calculations: {
                             principal: 30000,
-                            gst: 5400,
+                            gst: 270, // 18% of 1500 (processing fee)
+                            gst_rate: 18,
                             processing_fee: 1500,
                             login_fee: 250,
                             field_kyc_fee: 500,
                             other_fees: 0,
                             interest_rate: 2.5,
                             total_interest: 2250,
-                            total_deductions: 9900,
+                            total_deductions: 2520, // 270+1500+250+500
                             disbursal_amount: 30000,
-                            net_payable_amount: 39900
+                            net_payable_amount: 34770 // 30000+2250+2520
                         }
                     });
                 }
@@ -196,7 +197,7 @@ export default function LoanStatus() {
                                     <span className="text-slate-900 font-bold">₹ {principal.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500">
-                                    <span>GST (18%)</span>
+                                    <span>GST ({loan.calculations?.gst_rate ?? 18}%)</span>
                                     <span className="text-slate-900 font-medium">₹ {gst.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500">
