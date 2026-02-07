@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -211,6 +211,14 @@ export default function CustomerHome() {
                                     title="Add Money"
                                 >
                                     +
+                                </button>
+                            </Link>
+                            <Link href="/customer/referral" prefetch={false}>
+                                <button
+                                    className="w-6 h-6 rounded-lg bg-amber-400 border border-amber-300 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-slate-900 hover:bg-amber-500"
+                                    title="Refer & Earn"
+                                >
+                                    <Gift size={12} strokeWidth={2.5} />
                                 </button>
                             </Link>
                             <Link href="/customer/support" prefetch={false}>
