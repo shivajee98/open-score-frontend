@@ -200,23 +200,34 @@ export default function LoanStatus() {
                                     <span>GST ({loan.calculations?.gst_rate ?? 18}%)</span>
                                     <span className="text-slate-900 font-medium">₹ {gst.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Processing Fee</span>
-                                    <span className="text-slate-900 font-medium">₹ {processingFee.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Login Fee</span>
-                                    <span className="text-slate-900 font-medium">₹ {loginFee.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Field KYC Fee</span>
-                                    <span className="text-slate-900 font-medium">₹ {fieldKycFee.toLocaleString()}</span>
-                                </div>
-                                {otherFees > 0 && (
-                                    <div className="flex justify-between text-xs text-slate-500">
-                                        <span>Other Fees</span>
-                                        <span className="text-slate-900 font-medium">₹ {otherFees.toLocaleString()}</span>
-                                    </div>
+                                {loan.calculations?.fee_structure && loan.calculations.fee_structure.length > 0 ? (
+                                    loan.calculations.fee_structure.map((fee: any, idx: number) => (
+                                        <div key={idx} className="flex justify-between text-xs text-slate-500">
+                                            <span>{fee.name}</span>
+                                            <span className="text-slate-900 font-medium">₹ {Number(fee.amount).toLocaleString()}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <>
+                                        <div className="flex justify-between text-xs text-slate-500">
+                                            <span>Processing Fee</span>
+                                            <span className="text-slate-900 font-medium">₹ {processingFee.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs text-slate-500">
+                                            <span>Login Fee</span>
+                                            <span className="text-slate-900 font-medium">₹ {loginFee.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs text-slate-500">
+                                            <span>Field KYC Fee</span>
+                                            <span className="text-slate-900 font-medium">₹ {fieldKycFee.toLocaleString()}</span>
+                                        </div>
+                                        {otherFees > 0 && (
+                                            <div className="flex justify-between text-xs text-slate-500">
+                                                <span>Other Fees</span>
+                                                <span className="text-slate-900 font-medium">₹ {otherFees.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                                 <div className="flex justify-between text-xs text-slate-500">
                                     <span>Interest ({interestRate}%)</span>
