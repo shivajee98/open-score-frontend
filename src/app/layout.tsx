@@ -19,6 +19,7 @@ export const viewport = {
 };
 
 import MobileNavigationHandler from "@/components/MobileNavigationHandler";
+import NotificationHandler from "@/components/NotificationHandler";
 
 export default function RootLayout({
   children,
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body
         className={`antialiased font-sans`}
       >
+        <NotificationHandler />
         <MobileNavigationHandler />
         <ToastContainer />
         {children}
