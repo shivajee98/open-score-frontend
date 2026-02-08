@@ -130,6 +130,7 @@ export default function Home() {
         setFlow('role_select');
       } else {
         localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.access_token) localStorage.setItem('token', data.access_token);
         localStorage.setItem('hasSeenOnboarding', 'true');
         if (referralCode) localStorage.removeItem('referral_code');
 
@@ -173,6 +174,7 @@ export default function Home() {
       if (!response.ok) throw new Error(authData.error || 'Registration failed');
 
       localStorage.setItem('user', JSON.stringify(authData.user));
+      if (authData.access_token) localStorage.setItem('token', authData.access_token);
       localStorage.setItem('hasSeenOnboarding', 'true');
 
       if (role === 'MERCHANT') {

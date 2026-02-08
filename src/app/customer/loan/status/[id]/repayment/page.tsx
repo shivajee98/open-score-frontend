@@ -125,10 +125,19 @@ export default function RepaymentDashboard() {
         formData.append('amount', pendingEmi.amount);
 
         try {
-            const data = await apiFetch(`/loans/${loanId}/manual-repay`, {
+            const token = localStorage.getItem('token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.msmeloan.sbs/api';
+
+            const res = await fetch(`${apiUrl}/loans/${loanId}/manual-repay`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData
             });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || data.message || "Upload failed");
 
             toast.success("Payment proof submitted! Verification pending.");
             setShowManualPay(false);

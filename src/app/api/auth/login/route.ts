@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         const res = NextResponse.json({
             success: true,
             user: data.user,
+            access_token: data.access_token, // Expose for direct uploads (bypassing proxy limits)
             status: data.status,
             onboarding_status: data.onboarding_status
         });
