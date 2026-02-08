@@ -23,7 +23,7 @@ export default function LoanDetail() {
     const amount = Number(params.amount);
 
     const [plan, setPlan] = useState<any>(null);
-    const [tenure, setTenure] = useState<TenureMonths>(3); // Initial placeholder, updated in useEffect
+    const [selectedTenureIndex, setSelectedTenureIndex] = useState<number>(0);
     const [payout, setPayout] = useState<PayoutOption | null>(null);
     const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -51,9 +51,12 @@ export default function LoanDetail() {
                         ...found,
                         amount: Number(found.amount),
                         tenure_type: found.tenure_type || 'months',
-                        tenures: found.configurations?.map((c: any) => c.tenure_days) || [],
-                        payoutOptions: (tenureDays: number) => {
-                            const conf = found.configurations?.find((c: any) => c.tenure_days === tenureDays);
+                        tenures: found.configurations?.map((c: any, idx: number) => ({
+                            days: c.tenure_days,
+                            index: idx
+                        })) || [],
+                        payoutOptions: (index: number) => {
+                            const conf = found.configurations?.[index];
                             if (!conf) return [];
                             return (conf.allowed_frequencies || []).map((freq: string) => ({
                                 id: freq,
@@ -70,7 +73,7 @@ export default function LoanDetail() {
                     };
                     setPlan(mappedPlan);
                     if (mappedPlan.tenures.length > 0) {
-                        setTenure(mappedPlan.tenures[0]);
+                        setSelectedTenureIndex(0);
                     }
                 } else {
                     router.replace('/customer/loan');
@@ -88,17 +91,17 @@ export default function LoanDetail() {
     // Reset payout when tenure changes
     useEffect(() => {
         setPayout(null);
-    }, [tenure]);
+    }, [selectedTenureIndex]);
 
     // Auto-select 'Best Value' if available? 
     // Prompt says: "Auto-select it initially".
     // We should run this when options change (i.e. tenure changes).
     useEffect(() => {
         if (!plan) return;
-        const options = plan.payoutOptions(tenure);
+        const options = plan.payoutOptions(selectedTenureIndex);
         const best = options.find((o: PayoutOption) => o.isBestValue);
         if (best) setPayout(best);
-    }, [plan, tenure]);
+    }, [plan, selectedTenureIndex]);
 
 
     const [showOverlay, setShowOverlay] = useState(false);
@@ -108,12 +111,13 @@ export default function LoanDetail() {
 
         setLoading(true);
         try {
+            const tenureDays = plan.configurations[selectedTenureIndex].tenure_days;
             // Use real backend API
             const res = await apiFetch('/loans/apply', {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: plan.amount,
-                    tenure: tenure > 6 ? tenure : Math.round(tenure / 30), // Backend heuristic: > 6 is days, <= 6 is months
+                    tenure: tenureDays > 6 ? tenureDays : Math.round(tenureDays / 30), // Backend heuristic: > 6 is days, <= 6 is months
                     payout_frequency: payout.frequency,
                     payout_option_id: payout.id,
                     loan_plan_id: plan.id
@@ -139,8 +143,9 @@ export default function LoanDetail() {
 
     if (!plan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4"><div className="animate-pulse w-full max-w-md h-96 bg-slate-200 rounded-2xl"></div></div>;
 
-    const currentOptions = plan.payoutOptions(tenure);
-    const { total, breakdown, count, emi } = payout ? calculateRepayment(plan.amount, tenure, payout) : { total: 0, breakdown: '-', count: 0, emi: 0 };
+    const tenureDays = plan.configurations[selectedTenureIndex]?.tenure_days || 0;
+    const currentOptions = plan.payoutOptions(selectedTenureIndex);
+    const { total, breakdown, count, emi } = payout ? calculateRepayment(plan.amount, tenureDays, payout) : { total: 0, breakdown: '-', count: 0, emi: 0 };
 
     // Calculate Breakdown Details
     // Principal: plan.amount
@@ -161,7 +166,7 @@ export default function LoanDetail() {
                 {/* Ideally we should rename EarningsCard to LoanSummaryCard. For now let's pass new props if component supports, or we update component next. */}
                 <RepaymentCard
                     plan={plan}
-                    tenure={tenure}
+                    tenure={tenureDays}
                     payout={payout}
                     isEmi={true}
                     totalEmi={total}
@@ -172,8 +177,8 @@ export default function LoanDetail() {
 
                 <TenureSelector
                     options={plan.tenures}
-                    selected={tenure}
-                    onChange={setTenure}
+                    selected={selectedTenureIndex}
+                    onChange={setSelectedTenureIndex}
                     payoutCount={payout ? count : undefined}
                     tenureType={plan.tenure_type}
                 />
@@ -183,7 +188,7 @@ export default function LoanDetail() {
                     selected={payout}
                     onChange={setPayout}
                     planAmount={plan.amount}
-                    tenureDays={tenure}
+                    tenureDays={tenureDays}
                 />
 
 
