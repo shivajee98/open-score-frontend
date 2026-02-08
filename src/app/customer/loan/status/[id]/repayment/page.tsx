@@ -125,18 +125,10 @@ export default function RepaymentDashboard() {
         formData.append('amount', pendingEmi.amount);
 
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/loans/${loanId}/manual-repay`, {
+            const data = await apiFetch(`/loans/${loanId}/manual-repay`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
                 body: formData
             });
-
-            const data = await res.json();
-
-            if (!res.ok) throw new Error(data.error || data.message || "Upload failed");
 
             toast.success("Payment proof submitted! Verification pending.");
             setShowManualPay(false);
