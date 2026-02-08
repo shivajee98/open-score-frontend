@@ -100,8 +100,8 @@ export default function MobileNav() {
                 </>
             ) : (
                 <>
-                    <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname.includes('/customer/loan') && !pathname.includes('/repayment') ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
-                        <Zap size={20} className={pathname.includes('/customer/loan') && !pathname.includes('/repayment') ? 'scale-110' : ''} strokeWidth={pathname.includes('/customer/loan') && !pathname.includes('/repayment') ? 3 : 2} />
+                    <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname.includes('/customer/loan') && !pathname.includes('/repayment') && pathname !== '/customer/loan/history' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}>
+                        <Zap size={20} className={pathname.includes('/customer/loan') && !pathname.includes('/repayment') && pathname !== '/customer/loan/history' ? 'scale-110' : ''} strokeWidth={pathname.includes('/customer/loan') && !pathname.includes('/repayment') && pathname !== '/customer/loan/history' ? 3 : 2} />
                         <span className="text-[8px] font-black uppercase tracking-widest">Loans</span>
                     </Link>
 
