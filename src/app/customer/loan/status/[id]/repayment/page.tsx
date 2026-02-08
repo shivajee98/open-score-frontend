@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/loanUtils';
 import PinModal from '@/components/PinModal';
@@ -28,7 +28,9 @@ import {
     HistoryIcon,
     Bell,
     Headphones,
-    Smartphone
+    Smartphone,
+    Upload,
+    X
 } from 'lucide-react';
 
 export default function RepaymentDashboard() {
@@ -40,12 +42,18 @@ export default function RepaymentDashboard() {
     const [repayments, setRepayments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
-    const [historyOpen, setHistoryOpen] = useState(true); // Default open for better visibility
+    const [historyOpen, setHistoryOpen] = useState(true);
     const [pinModalOpen, setPinModalOpen] = useState(false);
     const [successData, setSuccessData] = useState<any>(null);
 
-    // Filter states for EMIs
-    const [emiFilter, setEmiFilter] = useState('ALL'); // ALL, PAID, PENDING, OVERDUE
+    // Manual Payment State
+    const [showManualPay, setShowManualPay] = useState(false);
+    const [proofFile, setProofFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Filter states
+    const [emiFilter, setEmiFilter] = useState('ALL');
 
     const fetchData = async () => {
         try {
@@ -71,11 +79,11 @@ export default function RepaymentDashboard() {
         setPinModalOpen(true);
     };
 
-    const handleUpiPayment = () => {
+    const handleUpiClick = () => {
         if (!pendingEmi) return;
 
         const amount = pendingEmi.amount;
-        const payeeVpa = "9430083275@naviaxis";
+        const payeeVpa = "rzpy.test@icici"; // Testing VPA or user config
         const payeeName = "OpenScore";
         const transactionRef = `EMI${loanId}${Date.now()}`;
         const transactionNote = `EMI Payment for Loan #${loanId}`;
@@ -89,7 +97,57 @@ export default function RepaymentDashboard() {
         link.href = upiUrl;
         link.click();
 
-        toast.info("Opening UPI App...");
+        toast.info("Opening UPI App... Please come back and upload screenshot.");
+        setShowManualPay(true);
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error("File too large. Max 10MB allows.");
+                return;
+            }
+            setProofFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const submitManualPayment = async () => {
+        if (!proofFile) {
+            toast.error("Please upload payment screenshot");
+            return;
+        }
+
+        setPaying(true);
+        const formData = new FormData();
+        formData.append('proof_image', proofFile);
+        formData.append('amount', pendingEmi.amount);
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/loans/${loanId}/manual-repay`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || data.message || "Upload failed");
+
+            toast.success("Payment proof submitted! Verification pending.");
+            setShowManualPay(false);
+            setProofFile(null);
+            setPreviewUrl(null);
+            fetchData();
+        } catch (e: any) {
+            toast.error(e.message || "Failed to submit proof");
+        } finally {
+            setPaying(false);
+        }
     };
 
     const handleFinishRepay = async (pin: string) => {
@@ -135,19 +193,13 @@ export default function RepaymentDashboard() {
     // Use Backend Calculations
     const calculations = loan.calculations || {};
     const totalPayable = Number(calculations.net_payable_amount || loan.amount);
-    const principal = Number(calculations.principal || loan.amount);
-
-    // Fallback if calculations are missing (shouldn't happen with new backend)
-    // const gstAmount = calculations.gst || 0; 
 
     // Progress Calculation
-    // Ensure we don't divide by zero
     const progress = totalPayable > 0 ? Math.min(100, Math.round((totalPaid / totalPayable) * 100)) : 0;
 
-    // Senior Fintech Analytics
+    // Fintech Analytics
     const cashbackRate = 0.01; // 1% cashback on each repayment
     const totalCashbackEarned = paidEmis.reduce((sum, r) => sum + (Number(r.amount) * cashbackRate), 0);
-    // const expectedTotalCashback = (totalPayable * cashbackRate);
 
     // Grouping & Filtering for UI
     const filteredRepayments = repayments.filter(r => {
@@ -158,15 +210,6 @@ export default function RepaymentDashboard() {
         return true;
     });
 
-    const groupedPaid = paidEmis.reduce((acc: any, curr: any) => {
-        const date = new Date(curr.paid_at);
-        const week = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
-        if (!acc[week]) acc[week] = [];
-        acc[week].push(curr);
-        return acc;
-    }, {});
-
-    // Check if loan is truly cleared
     const isLoanCleared = loan.status === 'CLOSED' || (repayments.length > 0 && !pendingEmi && totalPaid >= totalPayable);
 
     return (
@@ -186,13 +229,9 @@ export default function RepaymentDashboard() {
                 onClose={() => setSuccessData(null)}
             />
 
-            {/* Premium Multi-Layer Header - Optimized Height & Layout */}
+            {/* Premium Multi-Layer Header */}
             <div className="bg-slate-900 pt-8 pb-16 px-4 rounded-b-3xl shadow-2xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900/50 via-slate-900 to-indigo-900/30"></div>
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] -mr-32 -mt-32"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[100px] -ml-20 -mb-20"></div>
-
                 <div className="relative z-10">
                     <div className="flex justify-between items-start mb-6">
                         <button
@@ -201,7 +240,6 @@ export default function RepaymentDashboard() {
                         >
                             <ArrowLeft className="w-4 h-4" /> Application Root
                         </button>
-
                         <div className="flex items-center gap-2">
                             <button className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
                                 <Bell size={16} />
@@ -230,6 +268,7 @@ export default function RepaymentDashboard() {
                             <span className="text-xl font-black text-white leading-none tracking-tight">₹{totalPayable.toLocaleString()}</span>
                         </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3 px-0.5">
                         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
                             <Coins size={16} className="text-emerald-400 mb-2" />
@@ -271,12 +310,11 @@ export default function RepaymentDashboard() {
             </div>
 
             <div className="px-4 -mt-12 relative z-20 space-y-6">
-
                 {/* Main Progress & Health Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-50 overflow-hidden relative group">
+                <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-50 overflow-hidden relative group">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 group-hover:scale-110 transition-transform shadow-sm flex-shrink-0">
+                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 group-hover:scale-110 transition-transform flex-shrink-0">
                                 <PieChart size={28} />
                             </div>
                             <div className="min-w-0">
@@ -293,11 +331,10 @@ export default function RepaymentDashboard() {
                         </div>
                     </div>
 
-                    {/* Progress Bar Visualization */}
                     <div className="relative pt-2">
                         <div className="h-6 bg-slate-100 rounded-full overflow-hidden p-1 border border-slate-100">
                             <div
-                                className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 rounded-full transition-all duration-1000 shadow-[0_0_20px_rgba(37,99,235,0.3)] relative"
+                                className="h-full bg-gradient-to-r from-blue-600 to-blue-500 rounded-full transition-all duration-1000 shadow-[0_0_20px_rgba(37,99,235,0.3)] relative"
                                 style={{ width: `${progress}%` }}
                             >
                                 {progress > 15 && (
@@ -314,11 +351,10 @@ export default function RepaymentDashboard() {
                     </div>
                 </div>
 
-                {/* Next Payment CTA / Action Card */}
+                {/* Next Payment CTA */}
                 {pendingEmi ? (
                     <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-2xl shadow-blue-900/40 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-
                         <div className="flex justify-between items-start mb-8">
                             <div className="space-y-4">
                                 <span className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest border border-white/5">
@@ -337,7 +373,6 @@ export default function RepaymentDashboard() {
                             </div>
                         </div>
 
-                        {/* Breakdown for Next EMI */}
                         <div className="grid grid-cols-2 gap-3 mb-8">
                             <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
                                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Due Date</p>
@@ -350,51 +385,66 @@ export default function RepaymentDashboard() {
                         </div>
 
                         <div className="space-y-3">
-                            <button
-                                onClick={handleRepay}
-                                disabled={paying}
-                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-600/20 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-                            >
-                                {paying ? (
-                                    <div className="w-5 h-5 border-2 border-white rounded-full animate-spin border-t-transparent" />
-                                ) : (
-                                    <>Verify & Pay EMI <ArrowRightCircle size={18} /></>
-                                )}
-                            </button>
-
-                            <button
-                                onClick={handleUpiPayment}
-                                disabled={paying}
-                                className="w-full py-4 bg-white text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 border border-slate-200"
-                            >
-                                <Smartphone size={18} className="text-blue-600" /> Pay via UPI App
-                            </button>
+                            {!showManualPay ? (
+                                <>
+                                    <button
+                                        onClick={handleRepay}
+                                        disabled={paying}
+                                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
+                                    >
+                                        {paying ? <div className="w-5 h-5 border-2 border-white rounded-full animate-spin border-t-transparent" /> : <>Pay via Wallet <ArrowRightCircle size={18} /></>}
+                                    </button>
+                                    <button
+                                        onClick={handleUpiClick}
+                                        disabled={paying}
+                                        className="w-full py-4 bg-white text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 border border-slate-200"
+                                    >
+                                        <Smartphone size={18} className="text-blue-600" /> Pay via UPI App
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                                    <div
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="border-2 border-dashed border-slate-600 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors"
+                                    >
+                                        {previewUrl ? (
+                                            <div className="relative w-full h-40">
+                                                <img src={previewUrl} alt="Proof" className="w-full h-full object-contain rounded-lg" />
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setProofFile(null); setPreviewUrl(null); }}
+                                                    className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-rose-500"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Upload size={24} className="text-blue-400 mb-2" />
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tap to Upload Screenshot</p>
+                                                <p className="text-[9px] text-slate-500 mt-1">Upload transaction screenshot to verify your payment</p>
+                                            </>
+                                        )}
+                                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button onClick={() => setShowManualPay(false)} className="w-full py-3 bg-white/10 text-white rounded-xl font-bold text-xs uppercase tracking-widest">Cancel</button>
+                                        <button onClick={submitManualPayment} disabled={!proofFile || paying} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest disabled:opacity-50">{paying ? 'Uploading...' : 'Submit Proof'}</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : isLoanCleared ? (
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-2xl shadow-blue-900/30 text-center space-y-6 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')] opacity-10"></div>
-                        <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center mx-auto mb-4 border border-white/20 shadow-xl">
-                            <Sparkles size={40} className="text-white animate-bounce" />
-                        </div>
-                        <div>
-                            <h2 className="text-3xl font-black tracking-tight mb-2">Loan Cleared!</h2>
-                            <p className="text-blue-50 text-xs font-bold uppercase tracking-widest opacity-80">Profile Level: Financial Master</p>
-                        </div>
-                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 max-w-[240px] mx-auto">
-                            <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed">Your credit score grew by <span className="text-emerald-300">+24 points</span> through this loan cycle.</p>
-                        </div>
-                        <button
-                            onClick={() => router.push('/customer/loan')}
-                            className="bg-white text-blue-600 px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg active:scale-95 flex items-center gap-2 mx-auto"
-                        >
-                            Apply New Loan <ArrowRightCircle size={16} />
-                        </button>
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-2xl shadow-blue-900/40 text-center space-y-6 relative overflow-hidden">
+                        <Sparkles size={40} className="text-white animate-bounce mx-auto" />
+                        <h2 className="text-3xl font-black tracking-tight mb-2">Loan Cleared!</h2>
+                        <button onClick={() => router.push('/customer/loan')} className="bg-white text-blue-600 px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest flex items-center gap-2 mx-auto">Apply New Loan <ArrowRightCircle size={16} /></button>
                     </div>
                 ) : null}
 
                 {/* Analytical Ledger Section */}
-                <div className="bg-white rounded-2xl shadow-xl shadow-slate-900/5 overflow-hidden border border-slate-50">
+                <div className="bg-white rounded-2xl shadow-xl border border-slate-50 overflow-hidden">
                     <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                         <div>
                             <h3 className="text-xl font-black text-slate-900 tracking-tight">Analytical Ledger</h3>
@@ -403,7 +453,6 @@ export default function RepaymentDashboard() {
                         <HistoryIcon size={24} className="text-slate-300" />
                     </div>
 
-                    {/* Advanced List Filters */}
                     <div className="px-8 py-4 bg-slate-50 flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-100">
                         {['ALL', 'PAID', 'PENDING', 'OVERDUE'].map(f => (
                             <button
@@ -411,7 +460,7 @@ export default function RepaymentDashboard() {
                                 onClick={() => setEmiFilter(f)}
                                 className={cn(
                                     "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                                    emiFilter === f ? "bg-slate-900 text-white shadow-lg" : "bg-white text-slate-400 border border-slate-100 hover:bg-slate-50"
+                                    emiFilter === f ? "bg-slate-900 text-white" : "bg-white text-slate-400 border border-slate-100"
                                 )}
                             >
                                 {f}
@@ -422,65 +471,30 @@ export default function RepaymentDashboard() {
                     <div className="p-4 space-y-2">
                         {filteredRepayments.length > 0 ? (
                             filteredRepayments.map((rep, idx) => (
-                                <div
-                                    key={rep.id}
-                                    className={cn(
-                                        "p-5 rounded-[2rem] border transition-all flex items-center justify-between group",
-                                        rep.status === 'PAID' ? "bg-white border-slate-100" : "bg-slate-50 border-transparent"
-                                    )}
-                                >
+                                <div key={rep.id} className={cn("p-5 rounded-[2rem] border transition-all flex items-center justify-between group", rep.status === 'PAID' ? "bg-white border-slate-100" : "bg-slate-50 border-transparent")}>
                                     <div className="flex items-center gap-4">
-                                        <div className={cn(
-                                            "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs border transition-all",
-                                            rep.status === 'PAID'
-                                                ? "bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white"
-                                                : "bg-white text-slate-300 border-slate-100 group-hover:border-blue-200 group-hover:text-blue-500"
-                                        )}>
+                                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs border transition-all", rep.status === 'PAID' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-white text-slate-300 border-slate-100")}>
                                             {idx + 1}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3 mb-3">
-                                                <p className="font-black text-lg text-slate-900 tracking-tight leading-none">₹{parseFloat(rep.amount).toLocaleString()}</p>
-                                                {rep.status === 'PAID' ? (
-                                                    <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[7px] font-black uppercase">
-                                                        +₹{(Number(rep.amount) * cashbackRate).toFixed(0)} Cashback
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-400 rounded-full border border-slate-200 text-[7px] font-black uppercase">
-                                                        Standard EMI
-                                                    </span>
-                                                )}
+                                                <p className="font-black text-lg text-slate-900 tracking-tight">₹{parseFloat(rep.amount).toLocaleString()}</p>
+                                                {rep.status === 'PAID' && <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[7px] font-black uppercase">+₹{(Number(rep.amount) * cashbackRate).toFixed(0)} Cashback</span>}
                                             </div>
-
-                                            {/* Tabular Layout for Alignment */}
                                             <div className="grid grid-cols-[60px_1fr] gap-y-1.5 items-center">
-                                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.1em] border-r border-slate-100 pr-2">Settled</span>
-                                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest pl-2">
-                                                    {rep.status === 'PAID' ? new Date(rep.paid_at || '').toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : new Date(rep.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                </span>
-
-                                                <span className="text-[8px] font-black text-blue-400/60 uppercase tracking-[0.1em] border-r border-slate-100 pr-2">Due Date</span>
-                                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest pl-2">
-                                                    {new Date(rep.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                </span>
+                                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.1em] border-r border-slate-100 pr-2">Due Date</span>
+                                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest pl-2">{new Date(rep.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="text-right">
                                         {rep.status === 'PAID' ? (
-                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-[0.1em]">
-                                                <CheckCircle2 size={10} /> Verified
-                                            </div>
+                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-[0.1em]"><CheckCircle2 size={10} /> Verified</div>
                                         ) : (
                                             new Date(rep.due_date) < new Date() ? (
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[9px] font-black uppercase tracking-[0.1em]">
-                                                    <AlertCircle size={10} /> Overdue
-                                                </div>
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[9px] font-black uppercase tracking-[0.1em]"><AlertCircle size={10} /> Overdue</div>
                                             ) : (
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100 text-[9px] font-black uppercase tracking-[0.1em]">
-                                                    Upcoming
-                                                </div>
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100 text-[9px] font-black uppercase tracking-[0.1em]">Upcoming</div>
                                             )
                                         )}
                                     </div>
@@ -488,42 +502,31 @@ export default function RepaymentDashboard() {
                             ))
                         ) : (
                             <div className="py-20 text-center space-y-3">
-                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-200 border border-slate-100">
-                                    <Search size={32} />
-                                </div>
+                                <Search size={32} className="mx-auto text-slate-200" />
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No matching EMIs found</p>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Senior Insight Hook: Credit Health Tip */}
+                {/* Impact Analysis */}
                 <div className="p-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl text-white overflow-hidden relative group">
-                    <div className="absolute bottom-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mb-10 group-hover:scale-125 transition-transform duration-1000"></div>
                     <div className="relative z-10 space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
-                                <TrendingUp size={20} className="text-white" />
-                            </div>
+                            <TrendingUp size={20} />
                             <h3 className="text-lg font-black tracking-tight">Loan Impact Analysis</h3>
                         </div>
-                        <div className="space-y-3">
-                            <p className="text-sm font-medium text-blue-100 leading-relaxed">
-                                By clearing this loan on time, you are unlocking a <span className="text-white font-black text-base italic underline decoration-blue-400 underline-offset-4 tracking-tight">₹25,000 credit upgrade</span> in your next cycle.
-                            </p>
-                            <div className="flex items-center gap-4 pt-2">
-                                <div className="flex -space-x-2">
-                                    {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-indigo-700 bg-blue-400 flex items-center justify-center text-[8px] font-black uppercase">Lv{i}</div>)}
-                                </div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-blue-200">You are in Top 5% Payers</p>
+                        <p className="text-sm font-medium text-blue-100 leading-relaxed">By clearing this loan on time, you are unlocking a <span className="text-white font-black text-base italic underline">₹25,000 credit upgrade</span> in your next cycle.</p>
+                        <div className="flex items-center gap-4 pt-2">
+                            <div className="flex -space-x-2">
+                                {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-indigo-700 bg-blue-400 flex items-center justify-center text-[8px] font-black uppercase">Lv{i}</div>)}
                             </div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-200">You are in Top 5% Payers</p>
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            {/* Sticky Bottom Insight */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100 flex items-center justify-center z-40">
                 <div className="flex items-center gap-3 px-6 py-2 bg-slate-900 rounded-full text-[10px] font-black text-white uppercase tracking-widest shadow-2xl">
                     <AlertCircle size={14} className="text-blue-400" />
