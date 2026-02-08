@@ -7,16 +7,16 @@ interface PayoutSelectorProps {
     selected: PayoutOption | null;
     onChange: (o: PayoutOption) => void;
     planAmount: number;
-    tenure: TenureMonths;
+    tenureDays: number;
 }
 
-export default function PayoutSelector({ options, selected, onChange, planAmount, tenure }: PayoutSelectorProps) {
+export default function PayoutSelector({ options, selected, onChange, planAmount, tenureDays }: PayoutSelectorProps) {
     return (
         <div className="mb-8">
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Select EMI Plan</h3>
             <div className="space-y-3">
                 {options.map(option => {
-                    const { total, count, emi } = calculateRepayment(planAmount, tenure, option);
+                    const { total, count, emi } = calculateRepayment(planAmount, tenureDays, option);
                     const isSelected = selected?.id === option.id;
 
                     return (

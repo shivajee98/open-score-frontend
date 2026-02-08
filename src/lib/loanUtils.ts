@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 
 // --- Types ---
 
-export type TenureMonths = 1 | 3 | 6;
+export type TenureMonths = number;
 
 export type PayoutFrequency = 'Daily' | '5 Days' | '7 Days' | '10 Days' | '15 Days' | '20 Days' | '25 Days' | 'Monthly' | 'Quarterly' | 'Half Yearly';
 
@@ -143,10 +143,11 @@ export const LOAN_PLANS: Record<number, LoanPlan> = {
 
 // --- Utilities ---
 
-export function calculateRepayment(amount: number, tenureMonths: number, option: PayoutOption): { total: number, breakdown: string, count: number, emi: number } {
+export function calculateRepayment(amount: number, tenureValue: number, option: PayoutOption): { total: number, breakdown: string, count: number, emi: number } {
     let count = 0;
-    // Prefer exact tenure days from option if available, otherwise approximation
-    const days = (option as any).tenureDays || (tenureMonths * 30);
+    // Prefer exact tenure days from option if available, otherwise assume tenureValue is in months if not specified as days
+    const days = (option as any).tenureDays || (tenureValue > 15 ? tenureValue : tenureValue * 30);
+    const monthsForFrequency = (option as any).tenureDays ? (option as any).tenureDays / 30 : (tenureValue > 15 ? tenureValue / 30 : tenureValue);
 
     const freqUpper = option.frequency.toUpperCase();
 
@@ -157,11 +158,11 @@ export function calculateRepayment(amount: number, tenureMonths: number, option:
         count = Math.floor(days / 7);
     } else if (freqUpper === 'MONTHLY') {
         // If we have exact days, use days/30, else use months
-        count = (option as any).tenureDays ? Math.floor(days / 30) : tenureMonths;
+        count = (option as any).tenureDays ? Math.floor(days / 30) : tenureValue;
     } else if (freqUpper === 'QUARTERLY') {
-        count = Math.floor(tenureMonths / 3);
+        count = Math.floor(monthsForFrequency / 3);
     } else if (freqUpper === 'HALF YEARLY') {
-        count = Math.floor(tenureMonths / 6);
+        count = Math.floor(monthsForFrequency / 6);
     } else {
         // Match custom day patterns like "3 DAYS", "5 DAYS", "15 DAYS", "3_DAYS", "15_DAYS" etc.
         const match = freqUpper.match(/(\d+)[\s_]*DAYS?/);

@@ -50,9 +50,10 @@ export default function LoanDetail() {
                     const mappedPlan = {
                         ...found,
                         amount: Number(found.amount),
-                        tenures: found.configurations?.map((c: any) => Math.round(c.tenure_days / 30)) || [],
-                        payoutOptions: (tenure: number) => {
-                            const conf = found.configurations?.find((c: any) => Math.round(c.tenure_days / 30) === tenure);
+                        tenure_type: found.tenure_type || 'months',
+                        tenures: found.configurations?.map((c: any) => c.tenure_days) || [],
+                        payoutOptions: (tenureDays: number) => {
+                            const conf = found.configurations?.find((c: any) => c.tenure_days === tenureDays);
                             if (!conf) return [];
                             return (conf.allowed_frequencies || []).map((freq: string) => ({
                                 id: freq,
@@ -112,7 +113,7 @@ export default function LoanDetail() {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: plan.amount,
-                    tenure,
+                    tenure: tenure > 6 ? tenure : Math.round(tenure / 30), // Backend heuristic: > 6 is days, <= 6 is months
                     payout_frequency: payout.frequency,
                     payout_option_id: payout.id,
                     loan_plan_id: plan.id
@@ -173,6 +174,7 @@ export default function LoanDetail() {
                     selected={tenure}
                     onChange={setTenure}
                     payoutCount={payout ? count : undefined}
+                    tenureType={plan.tenure_type}
                 />
 
                 <PayoutSelector
@@ -180,7 +182,7 @@ export default function LoanDetail() {
                     selected={payout}
                     onChange={setPayout}
                     planAmount={plan.amount}
-                    tenure={tenure}
+                    tenureDays={tenure}
                 />
 
 
