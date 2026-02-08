@@ -10,9 +10,19 @@ interface EarningsCardProps {
     totalEmi?: number;
     breakdown?: string;
     count?: number;
+    tenureType?: 'months' | 'days' | 'decimal';
 }
 
-export default function EarningsCard({ plan, tenure, payout, isEmi, totalEmi, breakdown: propBreakdown, count: propCount }: EarningsCardProps) {
+export default function EarningsCard({ plan, tenure, payout, isEmi, totalEmi, breakdown: propBreakdown, count: propCount, tenureType = 'months' }: EarningsCardProps) {
+    const formatTenure = (days: number) => {
+        if (tenureType === 'days') return `${days} Days`;
+        if (tenureType === 'decimal') return `${(days / 30).toFixed(1)} Months`;
+
+        // Default: Months (rounded)
+        if (days % 30 === 0) return `${days / 30} Months`;
+        return `${Math.round(days / 30)} Months`;
+    };
+
     const result = isEmi && totalEmi !== undefined
         ? { total: totalEmi, breakdown: propBreakdown || '-', count: propCount || 0 }
         : (payout ? calculateEarnings(plan.amount, tenure, payout) : { total: 0, breakdown: '-', count: 0 });
@@ -37,7 +47,7 @@ export default function EarningsCard({ plan, tenure, payout, isEmi, totalEmi, br
                         <Clock size={12} />
                         <span className="text-[10px] font-bold uppercase tracking-widest">Tenure</span>
                     </div>
-                    <p className="text-base font-bold">{tenure} Months</p>
+                    <p className="text-base font-bold">{formatTenure(tenure)}</p>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                     <div className="flex items-center gap-2 mb-1 text-slate-400">

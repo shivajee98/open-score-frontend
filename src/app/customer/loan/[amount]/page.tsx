@@ -167,6 +167,7 @@ export default function LoanDetail() {
                     totalEmi={total}
                     breakdown={breakdown}
                     count={count}
+                    tenureType={plan.tenure_type}
                 />
 
                 <TenureSelector
