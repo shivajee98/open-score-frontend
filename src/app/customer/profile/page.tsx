@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 import { useApi } from '@/hooks/useApi';
+import TutorialPlayer from '@/components/TutorialPlayer';
 
 export default function Profile() {
-    const { data: user, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
+    const { data: user, error: userError, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
     const { data: pinData, mutate: mutatePin } = useApi('/wallet/check-pin');
 
     const [isEditing, setIsEditing] = useState(false);
@@ -29,6 +30,7 @@ export default function Profile() {
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
     const hasPin = pinData?.has_pin || false;
     const router = useRouter();
@@ -177,20 +179,61 @@ export default function Profile() {
     const isMerchant = user?.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'blue';
 
-    if (!isAuthenticated || !user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-400 font-bold uppercase text-xs animate-pulse">Loading Profile...</div>;
+    if (userError) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+                <div className="bg-white p-6 rounded-2xl shadow-xl text-center max-w-sm w-full">
+                    <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-600">
+                        <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">Unable to Load Profile</h3>
+                    <p className="text-slate-500 text-sm mb-6">{userError.message || "Please check your internet connection."}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors"
+                    >
+                        Retry
+                    </button>
+                    <button
+                        onClick={async () => { await clearAuthState(); window.location.href = '/'; }}
+                        className="mt-3 text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-rose-500"
+                    >
+                        Log Out
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated || userLoading || !user) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-400 font-bold uppercase text-xs animate-pulse">Loading Profile...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 selection:bg-blue-100 selection:text-blue-900 font-sans">
-            <div className="max-w-2xl mx-auto">
-                <button onClick={handleBack} className="mb-6 flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest hover:text-slate-900 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-                </button>
+        <div className="min-h-screen bg-slate-50 relative pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
+            {/* Themed Header */}
+            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-950 via-green-900 to-teal-950' : 'from-slate-900 via-indigo-950 to-violet-950'} pt-12 pb-24 px-4 relative overflow-hidden shadow-2xl`}>
+                <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/20' : 'bg-blue-600/20'} rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse`}></div>
+                <div className="relative z-10 max-w-2xl mx-auto">
+                    <button onClick={handleBack} className="mb-6 flex items-center gap-2 text-white/50 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors">
+                        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+                    </button>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-tight">Security & Profile</h1>
+                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Identity Protocol</p>
+                        </div>
+                        <div className={`w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center text-white`}>
+                            <User className="w-5 h-5" />
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <div className="bg-white rounded-[3rem] p-6 md:p-8 shadow-2xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
-                    <div className={`absolute top-0 right-0 w-64 h-64 bg-${themeColor}-500/10 rounded-full blur-3xl -mr-16 -mt-16`}></div>
+            <div className="max-w-2xl mx-auto px-4 -mt-12 relative z-20">
+                <div className="bg-white rounded-[3rem] p-6 md:p-8 shadow-2xl shadow-slate-300/50 border border-slate-100 relative overflow-hidden">
+                    <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-500/10' : 'bg-blue-500/10'} rounded-full blur-3xl -mr-16 -mt-16`}></div>
 
                     <div className="relative text-center mb-12">
-                        <div className="w-32 h-32 mx-auto bg-slate-900 text-white rounded-2xl flex items-center justify-center text-4xl font-black shadow-xl mb-6">
+                        <div className="w-32 h-32 mx-auto bg-slate-900 text-white rounded-2xl flex items-center justify-center text-4xl font-bold shadow-xl mb-6">
                             {user.name?.[0]}
                         </div>
                         {isEditing ? (
@@ -198,10 +241,10 @@ export default function Profile() {
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className={`text-2xl font-black text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                className={`text-2xl font-bold text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                             />
                         ) : (
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">{user.name}</h2>
+                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">{user.name}</h2>
                         )}
                         <div className={`inline-flex items-center gap-2 px-4 py-2 bg-${themeColor}-50 text-${themeColor}-600 rounded-full font-bold text-xs uppercase tracking-wide`}>
                             <Shield className="w-3 h-3" /> {user.role} Account
@@ -213,7 +256,7 @@ export default function Profile() {
                             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><Phone className="w-5 h-5" /></div>
                             <div>
                                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Mobile Number</p>
-                                <p className="text-base font-black text-slate-900">+91 {user.mobile_number}</p>
+                                <p className="text-base font-bold text-slate-900">+91 {user.mobile_number}</p>
                             </div>
                         </div>
 
@@ -226,10 +269,10 @@ export default function Profile() {
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                        className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                     />
                                 ) : (
-                                    <p className="text-base font-black text-slate-900 truncate" title={user.email}>{user.email || 'Not verified'}</p>
+                                    <p className="text-base font-bold text-slate-900 truncate" title={user.email}>{user.email || 'Not verified'}</p>
                                 )}
                             </div>
                         </div>
@@ -240,7 +283,7 @@ export default function Profile() {
                                     <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><Briefcase className="w-5 h-5" /></div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Business Name</p>
-                                        <p className="text-base font-black text-slate-900">{user.business_name}</p>
+                                        <p className="text-base font-bold text-slate-900">{user.business_name}</p>
                                     </div>
                                 </div>
 
@@ -260,7 +303,7 @@ export default function Profile() {
                                                 <option value="super_distributor">Super Distributor</option>
                                             </select>
                                         ) : (
-                                            <p className="text-base font-black text-slate-900 capitalize">{user.business_segment?.replace('_', ' ') || 'Not Set'}</p>
+                                            <p className="text-base font-bold text-slate-900 capitalize">{user.business_segment?.replace('_', ' ') || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -277,7 +320,7 @@ export default function Profile() {
                                                 placeholder="e.g. Grocery, Electronics"
                                             />
                                         ) : (
-                                            <p className="text-base font-black text-slate-900">{user.business_type || 'Not Set'}</p>
+                                            <p className="text-base font-bold text-slate-900">{user.business_type || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -343,7 +386,11 @@ export default function Profile() {
                                                                 });
                                                                 const data = await res.json();
                                                                 if (data.secure_url) {
-                                                                    const currentImages = formData.shop_images ? JSON.parse(formData.shop_images) : [];
+                                                                    let currentImages: string[] = [];
+                                                                    try {
+                                                                        currentImages = formData.shop_images ? JSON.parse(formData.shop_images) : [];
+                                                                    } catch (e) { currentImages = []; }
+
                                                                     const newImages = [...currentImages, data.secure_url];
                                                                     setFormData(prev => ({ ...prev, shop_images: JSON.stringify(newImages) }));
                                                                     toast.success("Image uploaded!");
@@ -361,33 +408,40 @@ export default function Profile() {
                                     </div>
 
                                     <div className="flex gap-2 overflow-x-auto pb-2">
-                                        {formData.shop_images && JSON.parse(formData.shop_images).map((img: string, idx: number) => (
-                                            <div key={idx} className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-slate-200">
-                                                <img src={img} className="w-full h-full object-cover" alt="Shop" />
-                                                {isEditing && (
-                                                    <button
-                                                        onClick={() => {
-                                                            const current = JSON.parse(formData.shop_images);
-                                                            const updated = current.filter((_: any, i: number) => i !== idx);
-                                                            setFormData(prev => ({ ...prev, shop_images: JSON.stringify(updated) }));
-                                                        }}
-                                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"
-                                                    >
-                                                        <LogOut className="w-3 h-3 rotate-45" /> {/* X icon workaround */}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                        {(!formData.shop_images || JSON.parse(formData.shop_images).length === 0) && (
-                                            <p className="text-xs text-slate-400 italic">No images added</p>
-                                        )}
+                                        {(() => {
+                                            let images: string[] = [];
+                                            try {
+                                                images = formData.shop_images ? JSON.parse(formData.shop_images) : [];
+                                            } catch (e) { images = []; }
+
+                                            if (images.length === 0) {
+                                                return <p className="text-xs text-slate-400 italic">No images added</p>;
+                                            }
+
+                                            return images.map((img: string, idx: number) => (
+                                                <div key={idx} className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-slate-200">
+                                                    <img src={img} className="w-full h-full object-cover" alt="Shop" />
+                                                    {isEditing && (
+                                                        <button
+                                                            onClick={() => {
+                                                                const updated = images.filter((_, i) => i !== idx);
+                                                                setFormData(prev => ({ ...prev, shop_images: JSON.stringify(updated) }));
+                                                            }}
+                                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"
+                                                        >
+                                                            <LogOut className="w-3 h-3 rotate-45" /> {/* X icon workaround */}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ));
+                                        })()}
                                     </div>
                                 </div>
                             </>
                         )}
 
                         <div className="mt-8 mb-4">
-                            <h3 className="px-1 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Bank Details (For Payouts)</h3>
+                            <h3 className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Bank Details (For Payouts)</h3>
                             {user.account_number && (
                                 <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl mb-4 flex items-center gap-2">
                                     <div className="w-5 h-5 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
@@ -405,11 +459,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.bank_name}
                                                 onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                                                className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="e.g. HDFC Bank"
                                             />
                                         ) : (
-                                            <p className="text-base font-black text-slate-900">{user.bank_name || 'Not Set'}</p>
+                                            <p className="text-base font-bold text-slate-900">{user.bank_name || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -422,11 +476,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.account_number}
                                                 onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
-                                                className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="Enter account number"
                                             />
                                         ) : (
-                                            <p className="text-base font-black text-slate-900">{user.account_number || 'Not Set'}</p>
+                                            <p className="text-base font-bold text-slate-900">{user.account_number || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -439,11 +493,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.ifsc_code}
                                                 onChange={(e) => setFormData({ ...formData, ifsc_code: e.target.value.toUpperCase() })}
-                                                className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="HDFC0001234"
                                             />
                                         ) : (
-                                            <p className="text-base font-black text-slate-900 uppercase">{user.ifsc_code || 'Not Set'}</p>
+                                            <p className="text-base font-bold text-slate-900 uppercase">{user.ifsc_code || 'Not Set'}</p>
                                         )}
                                     </div>
                                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
@@ -453,11 +507,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.account_holder_name}
                                                 onChange={(e) => setFormData({ ...formData, account_holder_name: e.target.value })}
-                                                className={`text-base font-black text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="As per bank records"
                                             />
                                         ) : (
-                                            <p className="text-base font-black text-slate-900 truncate">{user.account_holder_name || 'Not Set'}</p>
+                                            <p className="text-base font-bold text-slate-900 truncate">{user.account_holder_name || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -467,7 +521,7 @@ export default function Profile() {
                         {/* Settings Section */}
                         <div className="mt-8 mb-4">
                             <div className="flex items-center justify-between px-1 mb-6">
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight">Settings</h3>
+                                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Settings</h3>
                                 <button
                                     onClick={async () => {
                                         await clearAuthState();
@@ -486,15 +540,15 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
                                         <User className="w-4 h-4" />
                                     </div>
-                                    <span className="text-sm font-black text-slate-700">Profile</span>
+                                    <span className="text-xs font-bold text-slate-700">Profile</span>
                                 </div>
 
                                 {/* Tutorial */}
-                                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div onClick={() => setIsTutorialOpen(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
                                     <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 shadow-sm">
                                         <Lightbulb className="w-4 h-4" />
                                     </div>
-                                    <span className="text-sm font-black text-slate-700">Tutorial</span>
+                                    <span className="text-xs font-bold text-slate-700">Tutorial</span>
                                 </div>
 
                                 {/* Help */}
@@ -502,7 +556,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shadow-sm">
                                         <HelpCircle className="w-4 h-4" />
                                     </div>
-                                    <span className="text-sm font-black text-slate-700">Help</span>
+                                    <span className="text-xs font-bold text-slate-700">Help</span>
                                 </div>
 
                                 {/* T&C */}
@@ -510,7 +564,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 shadow-sm">
                                         <FileText className="w-4 h-4" />
                                     </div>
-                                    <span className="text-sm font-black text-slate-700">T&C</span>
+                                    <span className="text-xs font-bold text-slate-700">T&C</span>
                                 </div>
 
                                 {/* Privacy */}
@@ -518,7 +572,15 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
                                         <Shield className="w-4 h-4" />
                                     </div>
-                                    <span className="text-sm font-black text-slate-700">Privacy</span>
+                                    <span className="text-xs font-bold text-slate-700">Privacy</span>
+                                </div>
+
+                                {/* Share & Earn */}
+                                <div onClick={() => router.push('/customer/referral')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                        <Trophy className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-700">Share & Earn</span>
                                 </div>
 
                                 {/* Contact Us */}
@@ -526,7 +588,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
                                         <Mail className="w-4 h-4" />
                                     </div>
-                                    <span className="text-sm font-black text-slate-700">Contact Us</span>
+                                    <span className="text-xs font-bold text-slate-700">Contact Us</span>
                                 </div>
                             </div>
 
@@ -535,7 +597,7 @@ export default function Profile() {
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-amber-500 shadow-sm"><Bell className="w-5 h-5" /></div>
                                     <div>
-                                        <p className="text-sm font-black text-slate-900">Notifications</p>
+                                        <p className="text-sm font-bold text-slate-900">Notifications</p>
                                         <p className="text-[10px] font-bold text-slate-400">Manage alerts</p>
                                     </div>
                                 </div>
@@ -548,19 +610,19 @@ export default function Profile() {
                         <div className="flex gap-3 mt-8">
                             {isEditing ? (
                                 <>
-                                    <button onClick={handleUpdateProfile} className="flex-1 bg-black text-white py-2.5 rounded-lg font-bold hover:bg-slate-800 transition-colors">
+                                    <button onClick={handleUpdateProfile} className="flex-1 bg-black text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors">
                                         Save Changes
                                     </button>
-                                    <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-200 text-slate-600 py-2.5 rounded-lg font-bold hover:bg-slate-300 transition-colors">
+                                    <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-200 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-300 transition-colors">
                                         Cancel
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={() => setIsEditing(true)} className="flex-1 bg-white border border-slate-200 text-slate-900 py-2.5 rounded-lg font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+                                <button onClick={() => setIsEditing(true)} className="flex-1 bg-white border border-slate-200 text-slate-900 py-3 rounded-xl font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
                                     <Edit2 className="w-4 h-4" /> Edit Profile
                                 </button>
                             )}
-                            <button onClick={handleChangePinClick} className={`flex-1 bg-${themeColor}-500 text-white py-2.5 rounded-lg font-bold hover:bg-${themeColor}-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-${themeColor}-500/20`}>
+                            <button onClick={handleChangePinClick} className={`flex-1 bg-${themeColor}-500 text-white py-3 rounded-xl font-bold hover:bg-${themeColor}-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-${themeColor}-500/20`}>
                                 <Lock className="w-4 h-4" /> Change PIN
                             </button>
                         </div>
@@ -571,6 +633,11 @@ export default function Profile() {
                     <p className="text-xs text-slate-300 font-bold uppercase tracking-widest">Member since {new Date(user.created_at).getFullYear()}</p>
                 </div>
             </div>
+
+            <TutorialPlayer
+                isOpen={isTutorialOpen}
+                onClose={() => setIsTutorialOpen(false)}
+            />
 
             <PinModal
                 isOpen={isPinModalOpen}
