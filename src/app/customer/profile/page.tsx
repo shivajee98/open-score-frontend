@@ -241,10 +241,10 @@ export default function Profile() {
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className={`text-2xl font-bold text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                className={`text-2xl font-semibold text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                             />
                         ) : (
-                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">{user.name}</h2>
+                            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight mb-2">{user.name}</h2>
                         )}
                         <div className={`inline-flex items-center gap-2 px-4 py-2 bg-${themeColor}-50 text-${themeColor}-600 rounded-full font-bold text-xs uppercase tracking-wide`}>
                             <Shield className="w-3 h-3" /> {user.role} Account
@@ -256,7 +256,7 @@ export default function Profile() {
                             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><Phone className="w-5 h-5" /></div>
                             <div>
                                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Mobile Number</p>
-                                <p className="text-base font-bold text-slate-900">+91 {user.mobile_number}</p>
+                                <p className="text-base font-semibold text-slate-900">+91 {user.mobile_number}</p>
                             </div>
                         </div>
 
@@ -269,10 +269,10 @@ export default function Profile() {
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                        className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                     />
                                 ) : (
-                                    <p className="text-base font-bold text-slate-900 truncate" title={user.email}>{user.email || 'Not verified'}</p>
+                                    <p className="text-base font-semibold text-slate-900 truncate" title={user.email}>{user.email || 'Not verified'}</p>
                                 )}
                             </div>
                         </div>
@@ -283,7 +283,7 @@ export default function Profile() {
                                     <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><Briefcase className="w-5 h-5" /></div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Business Name</p>
-                                        <p className="text-base font-bold text-slate-900">{user.business_name}</p>
+                                        <p className="text-base font-semibold text-slate-900">{user.business_name}</p>
                                     </div>
                                 </div>
 
@@ -294,7 +294,7 @@ export default function Profile() {
                                             <select
                                                 value={formData.business_segment}
                                                 onChange={(e) => setFormData({ ...formData, business_segment: e.target.value })}
-                                                className={`text-sm font-bold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
+                                                className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
                                             >
                                                 <option value="">Select Segment</option>
                                                 <option value="retailer">Retailer</option>
@@ -303,7 +303,7 @@ export default function Profile() {
                                                 <option value="super_distributor">Super Distributor</option>
                                             </select>
                                         ) : (
-                                            <p className="text-base font-bold text-slate-900 capitalize">{user.business_segment?.replace('_', ' ') || 'Not Set'}</p>
+                                            <p className="text-base font-semibold text-slate-900 capitalize">{user.business_segment?.replace('_', ' ') || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -316,11 +316,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.business_type}
                                                 onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
-                                                className={`text-sm font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="e.g. Grocery, Electronics"
                                             />
                                         ) : (
-                                            <p className="text-base font-bold text-slate-900">{user.business_type || 'Not Set'}</p>
+                                            <p className="text-base font-semibold text-slate-900">{user.business_type || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -334,7 +334,7 @@ export default function Profile() {
                                                     type="url"
                                                     value={formData.map_location_url}
                                                     onChange={(e) => setFormData({ ...formData, map_location_url: e.target.value })}
-                                                    className={`text-sm font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                     placeholder="https://maps.google.com/..."
                                                 />
                                                 <a
@@ -459,11 +459,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.bank_name}
                                                 onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                                                className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="e.g. HDFC Bank"
                                             />
                                         ) : (
-                                            <p className="text-base font-bold text-slate-900">{user.bank_name || 'Not Set'}</p>
+                                            <p className="text-base font-semibold text-slate-900">{user.bank_name || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -476,11 +476,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.account_number}
                                                 onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
-                                                className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="Enter account number"
                                             />
                                         ) : (
-                                            <p className="text-base font-bold text-slate-900">{user.account_number || 'Not Set'}</p>
+                                            <p className="text-base font-semibold text-slate-900">{user.account_number || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -493,11 +493,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.ifsc_code}
                                                 onChange={(e) => setFormData({ ...formData, ifsc_code: e.target.value.toUpperCase() })}
-                                                className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="HDFC0001234"
                                             />
                                         ) : (
-                                            <p className="text-base font-bold text-slate-900 uppercase">{user.ifsc_code || 'Not Set'}</p>
+                                            <p className="text-base font-semibold text-slate-900 uppercase">{user.ifsc_code || 'Not Set'}</p>
                                         )}
                                     </div>
                                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
@@ -507,11 +507,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.account_holder_name}
                                                 onChange={(e) => setFormData({ ...formData, account_holder_name: e.target.value })}
-                                                className={`text-base font-bold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="As per bank records"
                                             />
                                         ) : (
-                                            <p className="text-base font-bold text-slate-900 truncate">{user.account_holder_name || 'Not Set'}</p>
+                                            <p className="text-base font-semibold text-slate-900 truncate">{user.account_holder_name || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -521,7 +521,7 @@ export default function Profile() {
                         {/* Settings Section */}
                         <div className="mt-8 mb-4">
                             <div className="flex items-center justify-between px-1 mb-6">
-                                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Settings</h3>
+                                <h3 className="text-xl font-semibold text-slate-900 tracking-tight">Settings</h3>
                                 <button
                                     onClick={async () => {
                                         await clearAuthState();
@@ -540,7 +540,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
                                         <User className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700">Profile</span>
+                                    <span className="text-xs font-medium text-slate-700">Profile</span>
                                 </div>
 
                                 {/* Tutorial */}
@@ -548,7 +548,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 shadow-sm">
                                         <Lightbulb className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700">Tutorial</span>
+                                    <span className="text-xs font-medium text-slate-700">Tutorial</span>
                                 </div>
 
                                 {/* Help */}
@@ -556,7 +556,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shadow-sm">
                                         <HelpCircle className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700">Help</span>
+                                    <span className="text-xs font-medium text-slate-700">Help</span>
                                 </div>
 
                                 {/* T&C */}
@@ -564,7 +564,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 shadow-sm">
                                         <FileText className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700">T&C</span>
+                                    <span className="text-xs font-medium text-slate-700">T&C</span>
                                 </div>
 
                                 {/* Privacy */}
@@ -572,7 +572,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
                                         <Shield className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700">Privacy</span>
+                                    <span className="text-xs font-medium text-slate-700">Privacy</span>
                                 </div>
 
                                 {/* Share & Earn */}
@@ -580,7 +580,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
                                         <Trophy className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700">Share & Earn</span>
+                                    <span className="text-xs font-medium text-slate-700">Share & Earn</span>
                                 </div>
 
                                 {/* Contact Us */}
@@ -588,7 +588,7 @@ export default function Profile() {
                                     <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
                                         <Mail className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700">Contact Us</span>
+                                    <span className="text-xs font-medium text-slate-700">Contact Us</span>
                                 </div>
                             </div>
 
@@ -597,7 +597,7 @@ export default function Profile() {
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-amber-500 shadow-sm"><Bell className="w-5 h-5" /></div>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-900">Notifications</p>
+                                        <p className="text-sm font-semibold text-slate-900">Notifications</p>
                                         <p className="text-[10px] font-bold text-slate-400">Manage alerts</p>
                                     </div>
                                 </div>
