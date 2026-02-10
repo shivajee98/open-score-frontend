@@ -406,7 +406,7 @@ export default function LoanList() {
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className={cn(
-                                                    "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 w-fit",
+                                                    "text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 w-fit",
                                                     badgeClasses
                                                 )}>
                                                     {plan.title.replace('Standard Loan', 'Growth Pro')}

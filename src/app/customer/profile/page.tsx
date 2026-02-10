@@ -241,10 +241,10 @@ export default function Profile() {
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className={`text-2xl font-semibold text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                className={`text-xl font-medium text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                             />
                         ) : (
-                            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight mb-2">{user.name}</h2>
+                            <h2 className="text-xl font-medium text-slate-900 tracking-tight mb-2">{user.name}</h2>
                         )}
                         <div className={`inline-flex items-center gap-2 px-4 py-2 bg-${themeColor}-50 text-${themeColor}-600 rounded-full font-bold text-xs uppercase tracking-wide`}>
                             <Shield className="w-3 h-3" /> {user.role} Account
@@ -256,7 +256,7 @@ export default function Profile() {
                             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><Phone className="w-5 h-5" /></div>
                             <div>
                                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Mobile Number</p>
-                                <p className="text-base font-semibold text-slate-900">+91 {user.mobile_number}</p>
+                                <p className="text-sm font-medium text-slate-900">+91 {user.mobile_number}</p>
                             </div>
                         </div>
 
@@ -269,10 +269,10 @@ export default function Profile() {
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                        className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                     />
                                 ) : (
-                                    <p className="text-base font-semibold text-slate-900 truncate" title={user.email}>{user.email || 'Not verified'}</p>
+                                    <p className="text-sm font-medium text-slate-900 truncate" title={user.email}>{user.email || 'Not verified'}</p>
                                 )}
                             </div>
                         </div>
@@ -459,11 +459,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.bank_name}
                                                 onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                                                className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="e.g. HDFC Bank"
                                             />
                                         ) : (
-                                            <p className="text-base font-semibold text-slate-900">{user.bank_name || 'Not Set'}</p>
+                                            <p className="text-sm font-medium text-slate-900 truncate">{user.bank_name || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -476,11 +476,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.account_number}
                                                 onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
-                                                className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="Enter account number"
                                             />
                                         ) : (
-                                            <p className="text-base font-semibold text-slate-900">{user.account_number || 'Not Set'}</p>
+                                            <p className="text-sm font-medium text-slate-900 truncate">{user.account_number || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -493,11 +493,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.ifsc_code}
                                                 onChange={(e) => setFormData({ ...formData, ifsc_code: e.target.value.toUpperCase() })}
-                                                className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="HDFC0001234"
                                             />
                                         ) : (
-                                            <p className="text-base font-semibold text-slate-900 uppercase">{user.ifsc_code || 'Not Set'}</p>
+                                            <p className="text-sm font-medium text-slate-900 uppercase truncate">{user.ifsc_code || 'Not Set'}</p>
                                         )}
                                     </div>
                                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
@@ -507,11 +507,11 @@ export default function Profile() {
                                                 type="text"
                                                 value={formData.account_holder_name}
                                                 onChange={(e) => setFormData({ ...formData, account_holder_name: e.target.value })}
-                                                className={`text-base font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="As per bank records"
                                             />
                                         ) : (
-                                            <p className="text-base font-semibold text-slate-900 truncate">{user.account_holder_name || 'Not Set'}</p>
+                                            <p className="text-sm font-medium text-slate-900 truncate">{user.account_holder_name || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
