@@ -49,6 +49,7 @@ export default function RepaymentDashboard() {
 
     // Manual Payment State
     const [showManualPay, setShowManualPay] = useState(false);
+    const [transactionId, setTransactionId] = useState('');
     const [proofFile, setProofFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,6 +125,9 @@ export default function RepaymentDashboard() {
         const formData = new FormData();
         formData.append('proof_image', proofFile);
         formData.append('amount', pendingEmi.amount);
+        if (transactionId) {
+            formData.append('transaction_id', transactionId);
+        }
 
         try {
             const token = localStorage.getItem('token');
@@ -144,6 +148,7 @@ export default function RepaymentDashboard() {
             setShowManualPay(false);
             setProofFile(null);
             setPreviewUrl(null);
+            setTransactionId('');
             fetchData();
         } catch (e: any) {
             toast.error(e.message || "Failed to submit proof");
@@ -428,6 +433,18 @@ export default function RepaymentDashboard() {
                                             </>
                                         )}
                                         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                                    </div>
+
+                                    {/* Transaction ID Input */}
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Transaction ID (Optional)</p>
+                                        <input
+                                            type="text"
+                                            value={transactionId}
+                                            onChange={(e) => setTransactionId(e.target.value)}
+                                            placeholder="Enter UPI Ref No / TXN ID"
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500 outline-none transition-all placeholder:text-slate-600"
+                                        />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button onClick={() => setShowManualPay(false)} className="w-full py-3 bg-white/10 text-white rounded-xl font-bold text-xs uppercase tracking-widest">Cancel</button>

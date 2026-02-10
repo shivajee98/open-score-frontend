@@ -100,6 +100,8 @@ export default function CustomerHome() {
     // Handle both array (legacy) and paginated object (new) responses
     const loansList = activeLoans;
     const kycLoan = loansList?.find((l: any) => l.status === 'KYC_SENT') || null;
+    const activeLoan = loansList?.find((l: any) => l.status === 'DISBURSED');
+    const hasActiveLoan = !!activeLoan;
     const loading = !activeUser && (userLoading || walletLoading);
 
     const handleClaimSuccess = async (updatedUser: any) => {
@@ -293,14 +295,15 @@ export default function CustomerHome() {
             {/* Quick Actions - Floating Card */}
             <div className="px-6 -mt-8 relative z-20 mb-3">
                 <div className="bg-white py-1 px-1 rounded-xl shadow-xl shadow-slate-200/50 border border-slate-50">
-                    <div className="grid grid-cols-3 gap-1">
+                    <div className={`grid ${hasActiveLoan ? 'grid-cols-4' : 'grid-cols-3'} gap-1`}>
                         {[
-                            { label: 'Scan QR', icon: <ScanBarcode size={20} strokeWidth={2.5} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50/50' },
-                            { label: 'Pay ID', icon: <Send size={20} strokeWidth={2.5} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50/50' },
-                            { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50/50' },
-                        ].map((item, i) => (
-                            <div key={i} className="flex flex-col items-center gap-1 active:scale-95 transition-all cursor-pointer">
-                                <Link href={item.href || '#'} prefetch={false} className="contents">
+                            { label: 'Scan QR', icon: <ScanBarcode size={20} strokeWidth={2.5} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50/50', show: true },
+                            { label: 'Pay ID', icon: <Send size={20} strokeWidth={2.5} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50/50', show: true },
+                            { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50/50', show: true },
+                            { label: 'Repay', icon: <CreditCard size={20} strokeWidth={2.5} />, href: `/customer/loan/status/repayment?id=${activeLoan?.id}`, color: 'text-blue-600 bg-blue-50/50', show: hasActiveLoan },
+                        ].filter(item => item.show).map((item, i) => (
+                            <div key={i} className="flex flex-col items-center gap-1 transition-all active:scale-95 cursor-pointer">
+                                <Link href={item.href} prefetch={false} className="contents">
                                     <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1`}>
                                         {item.icon}
                                     </div>

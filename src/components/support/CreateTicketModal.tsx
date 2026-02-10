@@ -22,13 +22,54 @@ export default function CreateTicketModal({
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
 
-    const [issueType, setIssueType] = useState('general');
+    const [issueType, setIssueType] = useState<string>('');
+    const [categories, setCategories] = useState<{ id: string; label: string }[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
+    // Fetch categories on mount
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                // We use the public endpoint for categories
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://api.msmeloan.sbs/api'}/support/categories`);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Map API response to component structure
+                    const formatted = data.map((cat: any) => ({
+                        id: cat.id.toString(), // Ensure ID is string for select comparison
+                        label: cat.label || cat.name
+                    }));
+                    setCategories(formatted);
+
+                    // Set default if not prefilled
+                    if (!prefillCategory && formatted.length > 0) {
+                        setIssueType(formatted[0].id);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch support categories', error);
+                // Fallback hardcoded if API fails
+                setCategories([
+                    { id: 'loan', label: 'Loan Related' },
+                    { id: 'cashback_not_received', label: 'Cashback Issue' },
+                    { id: 'general', label: 'Loan / Payment / General / Other' },
+                ]);
+            } finally {
+                setIsLoadingCategories(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
 
     // Update fields when prefill data changes
     useEffect(() => {
         if (prefillSubject) setSubject(prefillSubject);
         if (prefillMessage) setMessage(prefillMessage);
+
+        // If prefillCategory comes in (e.g. from query param or parent), try to match it
+        // Note: prefillCategory might be an ID or a slug. 
         if (prefillCategory) setIssueType(prefillCategory);
 
     }, [prefillSubject, prefillMessage, prefillCategory]);
@@ -46,9 +87,8 @@ export default function CreateTicketModal({
             // Reset form
             setSubject('');
             setMessage('');
-            setIssueType('general');
-
-            setIssueType('general');
+            // Keep the last selected type or reset to first?
+            // setIssueType(categories[0]?.id || ''); 
         } catch (error) {
             console.error(error);
         } finally {
@@ -57,12 +97,6 @@ export default function CreateTicketModal({
     };
 
     const isPrefilled = !!prefillSubject || !!prefillMessage;
-
-    const issueTypes = [
-        { id: 'loan', label: 'Loan Related' },
-        { id: 'cashback_not_received', label: 'Cashback Issue' },
-        { id: 'general', label: 'General / Other' },
-    ];
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
@@ -102,28 +136,34 @@ export default function CreateTicketModal({
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 ml-1">Issue Category</label>
-                        <div className="grid grid-cols-1 gap-2">
-                            {issueTypes.map((type) => (
-                                <button
-                                    key={type.id}
-                                    type="button"
-                                    onClick={() => setIssueType(type.id)}
-                                    className={cn(
-                                        "p-4 rounded-xl text-left transition-all border flex items-center justify-between",
-                                        issueType === type.id
-                                            ? "bg-blue-50 border-blue-600 text-blue-700 shadow-sm"
-                                            : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
-                                    )}
-                                >
-                                    <span className="font-bold">{type.label}</span>
-                                    {issueType === type.id && (
-                                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                                            <div className="w-2 h-2 bg-white rounded-full"></div>
-                                        </div>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
+                        {isLoadingCategories ? (
+                            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-slate-400 text-sm">
+                                Loading categories...
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-2">
+                                {categories.map((type) => (
+                                    <button
+                                        key={type.id}
+                                        type="button"
+                                        onClick={() => setIssueType(type.id)}
+                                        className={cn(
+                                            "p-4 rounded-xl text-left transition-all border flex items-center justify-between",
+                                            issueType === type.id
+                                                ? "bg-blue-50 border-blue-600 text-blue-700 shadow-sm"
+                                                : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
+                                        )}
+                                    >
+                                        <span className="font-bold">{type.label}</span>
+                                        {issueType === type.id && (
+                                            <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">
@@ -137,8 +177,6 @@ export default function CreateTicketModal({
                             required
                         />
                     </div>
-
-
 
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 ml-1">Message</label>

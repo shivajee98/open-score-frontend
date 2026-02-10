@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, MessageSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import KycForm from '@/components/loan/KycForm';
@@ -197,10 +197,6 @@ export default function LoanStatus() {
                                     <span>Loan Amount</span>
                                     <span className="text-slate-900 font-bold">₹ {principal.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between text-xs text-slate-500">
-                                    <span>GST ({loan.calculations?.gst_rate ?? 18}%)</span>
-                                    <span className="text-slate-900 font-medium">₹ {gst.toLocaleString()}</span>
-                                </div>
                                 {loan.calculations?.fee_structure && loan.calculations.fee_structure.length > 0 ? (
                                     loan.calculations.fee_structure.map((fee: any, idx: number) => (
                                         <div key={idx} className="flex justify-between text-xs text-slate-500">
@@ -231,6 +227,10 @@ export default function LoanStatus() {
                                     </>
                                 )}
                                 <div className="flex justify-between text-xs text-slate-500">
+                                    <span>GST ({loan.calculations?.gst_rate ?? 18}%)</span>
+                                    <span className="text-slate-900 font-medium">₹ {gst.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-slate-500">
                                     <span>Interest ({interestRate}%)</span>
                                     <span className="text-slate-900 font-medium">₹ {totalInterest.toLocaleString()}</span>
                                 </div>
@@ -259,6 +259,26 @@ export default function LoanStatus() {
                     >
                         {isDetailsOpen ? 'View Less' : 'View More'} <ChevronDown className={`w-4 h-4 transition-transform ${isDetailsOpen ? 'rotate-180' : ''}`} />
                     </button>
+
+                    {/* Fast Disbursal CTA */}
+                    {!['DISBURSED', 'CLOSED', 'REJECTED', 'CANCELLED'].includes(loan.status) && (
+                        <button
+                            onClick={() => {
+                                const ticketData = encodeURIComponent(JSON.stringify({
+                                    prefill: true,
+                                    subject: `Fast Disbursal Request - Loan #${loan.id}`,
+                                    message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
+                                    category: 'LOAN',
+                                    loanId: loan.id
+                                }));
+                                router.push(`/customer/support?ticket=${ticketData}`);
+                            }}
+                            className="w-full py-2.5 flex items-center justify-center gap-2 text-emerald-600 text-xs font-bold hover:bg-emerald-50 transition-colors rounded-b-lg"
+                        >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            Click here for fast disbursal
+                        </button>
+                    )}
                 </div>
 
                 {/* Timeline Stepper */}

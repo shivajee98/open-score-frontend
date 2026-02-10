@@ -1,5 +1,5 @@
 // Static Export: Always talk directly to backend
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.msmeloan.sbs/api';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.msmeloan.sbs/api';
 
 // Loop Prevention
 let isRedirecting = false;
@@ -82,7 +82,7 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
     // Construct URL
     const url = isExternal
         ? endpoint
-        : (endpoint.startsWith('/') ? `${BASE_URL}${endpoint}` : `${BASE_URL}/${endpoint}`);
+        : (endpoint.startsWith('/') ? `${API_BASE_URL}${endpoint}` : `${API_BASE_URL}/${endpoint}`);
 
     try {
         const response = await fetch(url, {

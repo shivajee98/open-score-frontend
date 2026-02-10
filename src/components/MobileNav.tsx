@@ -44,13 +44,9 @@ export default function MobileNav() {
                 const loans = Array.isArray(data) ? data : (data?.data || []);
                 const activeLoans = loans?.filter((l: any) => {
                     if (l.status !== 'DISBURSED') return false;
-                    const principal = Number(l.amount);
-                    const processingFee = principal === 10000 ? 0 : 1200;
-                    const loginFee = principal === 10000 ? 300 : 200;
-                    const fieldKycFee = principal === 10000 ? 500 : 600;
-                    const gst = Math.round(principal * 0.18);
-                    const totalPayable = principal + processingFee + loginFee + fieldKycFee + gst;
-                    return Number(l.paid_amount || 0) < totalPayable;
+                    // Use the API's calculations instead of hardcoding fees
+                    const netPayable = l.calculations?.net_payable_amount || Number(l.amount);
+                    return Number(l.paid_amount || 0) < netPayable;
                 });
 
                 const hasActive = activeLoans?.length > 0;
@@ -97,11 +93,6 @@ export default function MobileNav() {
                 <span className="text-[8px] font-black uppercase tracking-widest">Loans</span>
             </Link>
 
-            <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isHistory ? activeClass : 'text-slate-400'}`}>
-                <History size={20} className={isHistory ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">{isMerchant ? 'Sales' : 'History'}</span>
-            </Link>
-
             <Link href="/customer/qr" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isQR ? activeClass : 'text-slate-400'}`}>
                 <QrCode size={20} className={isQR ? 'scale-110' : ''} strokeWidth={2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">My QR</span>
@@ -126,6 +117,11 @@ export default function MobileNav() {
             <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isProfile ? activeClass : 'text-slate-400'}`}>
                 <User size={20} className={isProfile ? 'scale-110' : ''} strokeWidth={isProfile ? 3 : 2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">Profile</span>
+            </Link>
+
+            <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isHistory ? activeClass : 'text-slate-400'}`}>
+                <History size={20} className={isHistory ? 'scale-110' : ''} strokeWidth={2} />
+                <span className="text-[8px] font-black uppercase tracking-widest">{isMerchant ? 'Sales' : 'History'}</span>
             </Link>
         </div>
     );

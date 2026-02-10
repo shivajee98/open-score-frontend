@@ -1,7 +1,15 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, Paperclip, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Send, Paperclip, X, Image as ImageIcon, Loader2, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 import { format } from 'date-fns';
+import { API_BASE_URL } from '@/lib/api';
+
+const getStorageUrl = (path: string) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    const base = API_BASE_URL.replace('/api', '');
+    return `${base}/storage/${path}`;
+};
 
 interface Message {
     id: number;
@@ -28,6 +36,8 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
     const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [localMessages, setLocalMessages] = useState<Message[]>(messages);
+    const [attachment, setAttachment] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setLocalMessages(messages);
@@ -60,12 +70,13 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || isSending) return;
+        if ((!newMessage.trim() && !attachment) || isSending) return;
 
         setIsSending(true);
         try {
-            await onSendMessage(newMessage);
+            await onSendMessage(newMessage, attachment);
             setNewMessage('');
+            setAttachment(null);
         } catch (error) {
             console.error("Failed to send", error);
         } finally {
@@ -127,6 +138,20 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                                         </p>
                                     )}
                                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+
+                                    {msg.attachment_url && (
+                                        <div className="mt-3 rounded-xl overflow-hidden border border-white/20 shadow-inner group relative">
+                                            <img
+                                                src={getStorageUrl(msg.attachment_url!)}
+                                                alt="Attachment"
+                                                className="w-full max-h-60 object-cover cursor-pointer hover:scale-105 transition-transform duration-500"
+                                                onClick={() => window.open(getStorageUrl(msg.attachment_url!), '_blank')}
+                                            />
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                                <ExternalLink size={20} className="text-white drop-shadow-lg" />
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className={cn(
                                         "text-[10px] font-bold mt-2 text-right opacity-60",
                                         isMe ? "text-blue-100" : "text-slate-400"
@@ -148,23 +173,53 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                         <p className="text-sm font-bold text-slate-500">This ticket is closed. You can't send new messages.</p>
                     </div>
                 ) : (
-                    <form onSubmit={handleSend} className="flex items-end gap-2">
-                        <div className="flex-1 bg-slate-50 border border-slate-200 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all rounded-2xl overflow-hidden relative">
-                            <input
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                placeholder="Type your message..."
-                                className="w-full bg-transparent border-none p-3.5 focus:outline-none text-slate-900 placeholder:text-slate-400 text-sm font-medium"
-                                disabled={isSending}
-                            />
+                    <form onSubmit={handleSend} className="flex flex-col gap-2">
+                        {attachment && (
+                            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg w-fit border border-slate-200">
+                                <ImageIcon size={16} className="text-blue-600" />
+                                <span className="text-xs font-bold text-slate-600 truncate max-w-[200px]">{attachment.name}</span>
+                                <button type="button" onClick={() => setAttachment(null)} className="p-1 hover:bg-slate-200 rounded-full text-slate-400 hover:text-rose-500 transition-colors">
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        )}
+                        <div className="flex items-end gap-2">
+
+                            <div className="flex-1 bg-slate-50 border border-slate-200 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all rounded-2xl overflow-hidden relative flex items-center">
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="p-3 text-slate-400 hover:text-blue-600 transition-colors"
+                                >
+                                    <Paperclip size={20} />
+                                </button>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        if (e.target.files?.[0]) {
+                                            setAttachment(e.target.files[0]);
+                                        }
+                                    }}
+                                />
+                                <input
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    placeholder={attachment ? "Add a caption..." : "Type your message..."}
+                                    className="flex-1 bg-transparent border-none p-3.5 focus:outline-none text-slate-900 placeholder:text-slate-400 text-sm font-medium"
+                                    disabled={isSending}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={(!newMessage.trim() && !attachment) || isSending}
+                                className="p-3.5 rounded-2xl bg-blue-600 text-white hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center justify-center min-w-[3.5rem]"
+                            >
+                                {isSending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                            </button>
                         </div>
-                        <button
-                            type="submit"
-                            disabled={!newMessage.trim() || isSending}
-                            className="p-3.5 rounded-2xl bg-blue-600 text-white hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center justify-center min-w-[3.5rem]"
-                        >
-                            {isSending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-                        </button>
                     </form>
                 )}
             </div>
