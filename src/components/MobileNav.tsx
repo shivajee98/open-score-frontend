@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Wallet, User, Zap, CreditCard, QrCode, History, Landmark } from 'lucide-react';
+import { LayoutDashboard, User, Zap, CreditCard, QrCode, History, Landmark } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 
 export default function MobileNav() {
-    const pathname = usePathname();
+    const rawPathname = usePathname();
+    // Fix: Strip trailing slash so exact comparisons work with trailingSlash: true
+    const pathname = rawPathname.endsWith('/') && rawPathname !== '/' ? rawPathname.slice(0, -1) : rawPathname;
     const [user, setUser] = useState<any>(null);
     const [activeLoanId, setActiveLoanId] = useState<string | null>(null);
     const [hasActiveLoan, setHasActiveLoan] = useState(false);
@@ -15,7 +17,7 @@ export default function MobileNav() {
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user') || '{}');
         setUser(u);
-    }, [pathname]);
+    }, [rawPathname]);
 
     useEffect(() => {
         if (user?.role === 'CUSTOMER') {
@@ -72,47 +74,57 @@ export default function MobileNav() {
 
     const isMerchant = user?.role === 'MERCHANT';
 
+    // Helper: active class
+    const activeClass = isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50';
+
+    const isHome = pathname === '/customer';
+    const isLoans = pathname.includes('/customer/loan') && !pathname.includes('/repayment') && !pathname.includes('/customer/loan/history');
+    const isHistory = pathname === '/customer/transactions';
+    const isQR = pathname === '/customer/qr';
+    const isCredOut = pathname === '/customer/payout';
+    const isRepay = pathname.includes('/repayment');
+    const isProfile = pathname === '/customer/profile';
+
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-200 p-1.5 md:hidden z-50 flex justify-around items-center pb-safe ring-1 ring-slate-900/5 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-            <Link href="/customer" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${pathname === '/customer' ? (isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50') : 'text-slate-400 hover:text-slate-600'}`}>
-                <LayoutDashboard size={20} className={pathname === '/customer' ? 'scale-110' : ''} strokeWidth={pathname === '/customer' ? 3 : 2} />
+            <Link href="/customer" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${isHome ? activeClass : 'text-slate-400 hover:text-slate-600'}`}>
+                <LayoutDashboard size={20} className={isHome ? 'scale-110' : ''} strokeWidth={isHome ? 3 : 2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
             </Link>
 
-            {/* Shared Primary Navigation */}
-            <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${pathname.includes('/customer/loan') && !pathname.includes('/repayment') && !pathname.includes('/customer/loan/history') ? (isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50') : 'text-slate-400'}`}>
-                <Zap size={20} className={pathname.includes('/customer/loan') && !pathname.includes('/repayment') ? 'scale-110' : ''} strokeWidth={3} />
+            <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isLoans ? activeClass : 'text-slate-400'}`}>
+                <Zap size={20} className={isLoans ? 'scale-110' : ''} strokeWidth={3} />
                 <span className="text-[8px] font-black uppercase tracking-widest">Loans</span>
             </Link>
 
-            <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${pathname === '/customer/transactions' ? (isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50') : 'text-slate-400'}`}>
-                <Wallet size={20} className={pathname === '/customer/transactions' ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">{isMerchant ? 'Sales' : 'Wallet'}</span>
+            <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isHistory ? activeClass : 'text-slate-400'}`}>
+                <History size={20} className={isHistory ? 'scale-110' : ''} strokeWidth={2} />
+                <span className="text-[8px] font-black uppercase tracking-widest">{isMerchant ? 'Sales' : 'History'}</span>
             </Link>
 
-            <Link href="/customer/qr" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${pathname === '/customer/qr' ? (isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50') : 'text-slate-400'}`}>
-                <QrCode size={20} className={pathname === '/customer/qr' ? 'scale-110' : ''} strokeWidth={2} />
+            <Link href="/customer/qr" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isQR ? activeClass : 'text-slate-400'}`}>
+                <QrCode size={20} className={isQR ? 'scale-110' : ''} strokeWidth={2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">My QR</span>
             </Link>
 
-            <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${pathname === '/customer/payout' ? (isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50') : 'text-slate-400'}`}>
-                <Landmark size={20} className={pathname === '/customer/payout' ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Payout</span>
+            <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isCredOut ? activeClass : 'text-slate-400'}`}>
+                <Landmark size={20} className={isCredOut ? 'scale-110' : ''} strokeWidth={2} />
+                <span className="text-[8px] font-black uppercase tracking-widest">Cred-Out</span>
             </Link>
 
             {hasActiveLoan && (
                 <Link
                     href={activeLoanId ? `/customer/loan/status/repayment?id=${activeLoanId}` : "/customer/repayments"}
                     prefetch={false}
-                    className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${pathname.includes('/repayment') ? (isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50') : 'text-slate-400'}`}
+                    className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isRepay ? activeClass : 'text-slate-400'}`}
                 >
-                    <CreditCard size={20} className={pathname.includes('/repayment') ? 'scale-110' : ''} strokeWidth={pathname.includes('/repayment') ? 3 : 2} />
+                    <CreditCard size={20} className={isRepay ? 'scale-110' : ''} strokeWidth={isRepay ? 3 : 2} />
                     <span className="text-[8px] font-black uppercase tracking-widest">Repay</span>
                 </Link>
             )}
 
-            <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${pathname === '/customer/profile' ? (isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50') : 'text-slate-400'}`}>
-                <User size={20} className={pathname === '/customer/profile' ? 'scale-110' : ''} strokeWidth={pathname === '/customer/profile' ? 3 : 2} />
+            <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isProfile ? activeClass : 'text-slate-400'}`}>
+                <User size={20} className={isProfile ? 'scale-110' : ''} strokeWidth={isProfile ? 3 : 2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">Profile</span>
             </Link>
         </div>
