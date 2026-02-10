@@ -131,11 +131,11 @@ function SupportPageContent() {
         };
     }, [selectedTicket]);
 
-    const handleCreateTicket = async (subject: string, message: string, priority: string) => {
+    const handleCreateTicket = async (subject: string, message: string, priority: string, issueType: string) => {
         try {
             await apiFetch('/support/tickets', {
                 method: 'POST',
-                body: JSON.stringify({ subject, message, priority })
+                body: JSON.stringify({ subject, message, priority, issue_type: issueType })
             });
             fetchTickets();
             // Clear prefill data after creating
@@ -230,6 +230,7 @@ function SupportPageContent() {
                 onSubmit={handleCreateTicket}
                 prefillSubject={prefillData?.subject}
                 prefillMessage={prefillData?.message}
+                prefillCategory={prefillData?.category}
             />
         </DashboardLayout>
     );

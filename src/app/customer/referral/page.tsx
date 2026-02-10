@@ -10,8 +10,8 @@ import { toast } from '@/components/ui/Toast';
 
 export default function ReferralPage() {
     const router = useRouter();
-    const { data: referralData, isLoading, error } = useApi('/referrals/my-code');
-    const { data: statsData, isLoading: statsLoading } = useApi('/referrals/stats');
+    const { data: referralData, isLoading, error } = useApi('/referral/my-code');
+    const { data: statsData, isLoading: statsLoading } = useApi('/referral/my-stats');
 
     // Combine loading state
     const loading = isLoading || statsLoading;
@@ -104,7 +104,7 @@ export default function ReferralPage() {
                         <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-3">
                             <Banknote size={20} />
                         </div>
-                        <span className="text-2xl font-black text-slate-900 tracking-tight">₹{statsData?.total_earned || 0}</span>
+                        <span className="text-2xl font-black text-slate-900 tracking-tight">₹{statsData?.total_earnings || 0}</span>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total Earned</span>
                     </div>
 

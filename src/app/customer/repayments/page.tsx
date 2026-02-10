@@ -34,6 +34,7 @@ import { toast } from '@/components/ui/Toast';
 
 export default function RepaymentsPage() {
     const router = useRouter();
+    const [user, setUser] = useState<any>(null);
     const [loans, setLoans] = useState<any[]>([]);
     const [filteredLoans, setFilteredLoans] = useState<any[]>([]);
     const [selectedLoan, setSelectedLoan] = useState<any>(null);
@@ -43,6 +44,14 @@ export default function RepaymentsPage() {
     const [showModal, setShowModal] = useState(false);
     const [pinModalOpen, setPinModalOpen] = useState(false);
     const [successData, setSuccessData] = useState<any>(null);
+
+    useEffect(() => {
+        const u = localStorage.getItem('user');
+        if (u) setUser(JSON.parse(u));
+    }, []);
+
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
 
     // Filters state
     const [searchQuery, setSearchQuery] = useState('');
@@ -98,7 +107,7 @@ export default function RepaymentsPage() {
     const handleOpenLoan = async (loan: any) => {
         // If it's a disbursed loan, show the deep-dive dashboard instead of a simple modal
         if (loan.status === 'DISBURSED') {
-            router.push(`/customer/loan/status/${loan.id}/repayment`);
+            router.push(`/customer/loan/status/repayment?id=${loan.id}`);
             return;
         }
 
@@ -187,7 +196,7 @@ export default function RepaymentsPage() {
             />
 
             {/* Premium Header Design */}
-            <div className="bg-slate-900 pt-14 pb-24 px-4 relative overflow-hidden">
+            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-950 via-green-900 to-teal-950' : 'from-slate-900 via-indigo-950 to-violet-950'} pt-14 pb-24 px-4 relative overflow-hidden`}>
                 {/* Decorative Circuits */}
                 <div className="absolute inset-0 opacity-10 pointer-events-none">
                     <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
@@ -197,7 +206,7 @@ export default function RepaymentsPage() {
                         <rect width="100%" height="100%" fill="url(#grid)" />
                     </svg>
                 </div>
-                <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/20 rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse"></div>
+                <div className={`absolute top-0 right-0 w-80 h-80 ${isMerchant ? 'bg-emerald-600/20' : 'bg-blue-600/20'} rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse`}></div>
 
                 <div className="relative z-10">
                     <div className="flex justify-between items-center mb-10">
@@ -225,7 +234,7 @@ export default function RepaymentsPage() {
                         </div>
                     </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 mb-6">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${isMerchant ? 'from-emerald-500 to-teal-600' : 'from-blue-500 to-indigo-600'} flex items-center justify-center text-white shadow-lg ${isMerchant ? 'shadow-emerald-500/20' : 'shadow-blue-500/20'} mb-6`}>
                     <ShieldCheck size={24} />
                 </div>
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ToastContainer from "@/components/ui/Toast";
 import MobileNav from "@/components/MobileNav";
+import AuthGuard from "@/components/AuthGuard";
 
 export const metadata: Metadata = {
   title: "OpenScore | Premium Digital Payments",
@@ -31,11 +32,13 @@ export default function RootLayout({
       <body
         className={`antialiased font-sans`}
       >
-        <NotificationHandler />
-        <MobileNavigationHandler />
-        <ToastContainer />
-        {children}
-        <MobileNav />
+        <AuthGuard>
+          <NotificationHandler />
+          <MobileNavigationHandler />
+          <ToastContainer />
+          {children}
+          <MobileNav />
+        </AuthGuard>
       </body>
     </html>
   );

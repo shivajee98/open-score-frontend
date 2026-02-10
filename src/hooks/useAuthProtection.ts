@@ -10,7 +10,7 @@ export function useAuthProtection() {
     useEffect(() => {
         const user = localStorage.getItem('user');
         if (!user) {
-            router.push('/');
+            if (typeof window !== 'undefined') window.location.href = '/frontend/';
         } else {
             setIsAuthenticated(true);
         }

@@ -18,6 +18,7 @@ export default function LoanApplication() {
     const [showExcitement, setShowExcitement] = useState(false);
 
     // Data States
+    const [user, setUser] = useState<any>(null);
     const [loans, setLoans] = useState<any[]>([]);
     const [activeLoan, setActiveLoan] = useState<any>(null);
     const [cooldown, setCooldown] = useState({ active: false, daysRemaining: 0 });
@@ -46,8 +47,9 @@ export default function LoanApplication() {
         const checkStatus = async () => {
             try {
                 // Fetch User Profile
-                const user = await apiFetch('/auth/me');
-                if (user && user.name) {
+                const userData = await apiFetch('/auth/me');
+                setUser(userData);
+                if (userData && userData.name) {
                     setFormData(prev => ({
                         ...prev,
                         fullName: user.name || '',
@@ -308,9 +310,31 @@ export default function LoanApplication() {
         </div>
     );
 
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
+
     return (
-        <div className="min-h-screen bg-slate-50 p-4 pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
-            <div className="max-w-md mx-auto">
+        <div className="min-h-screen bg-slate-50 relative pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
+            {/* Themed Header */}
+            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-950 via-green-900 to-teal-950' : 'from-slate-900 via-indigo-950 to-violet-950'} pt-12 pb-24 px-4 relative overflow-hidden shadow-2xl`}>
+                <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/20' : 'bg-blue-600/20'} rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse`}></div>
+                <div className="relative z-10 max-w-md mx-auto">
+                    <button onClick={() => router.back()} className="mb-6 flex items-center gap-2 text-white/50 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
+                        <ArrowLeft className="w-4 h-4" /> Back
+                    </button>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-black text-white tracking-tight">Credit Request</h1>
+                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Allocation Protocol</p>
+                        </div>
+                        <div className={`w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center text-white`}>
+                            <Zap className="w-5 h-5" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="max-w-md mx-auto px-4 -mt-12 relative z-20">
                 {entryMode ? (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 relative">
                         {/* Persistent Back Button - Mode 1 */}

@@ -14,9 +14,10 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [tempReferralCode, setTempReferralCode] = useState('');
 
-  // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'
-  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'details_entry' | 'processing'>('onboarding');
+  // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'processing'
+  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'processing'>('onboarding');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,6 +48,9 @@ export default function Home() {
     const checkReferral = () => {
       const code = localStorage.getItem('referral_code');
       if (code) setReferralCode(code);
+
+      const temp = localStorage.getItem('temp_referral_code');
+      if (temp) setTempReferralCode(temp);
     };
     checkReferral();
 
@@ -62,12 +66,13 @@ export default function Home() {
   }, [router]);
 
   useEffect(() => {
-    if (flow === 'processing' && role === 'MERCHANT') {
+    if (flow === 'processing' && role) {
       handleRegister();
     }
   }, [flow, role]);
 
   const redirectUser = (user: any) => {
+    console.log('[DEBUG] Redirecting user:', user.id, 'is_onboarded:', user.is_onboarded, 'role:', user.role);
     if ((window as any).ReactNativeWebView) {
       (window as any).ReactNativeWebView.postMessage(JSON.stringify({
         type: 'LOGIN',
@@ -88,9 +93,10 @@ export default function Home() {
   const handleSendOtp = async () => {
     setLoading(true);
     setError('');
-    const tempCode = localStorage.getItem('temp_referral_code');
-    if (tempCode && tempCode.trim()) {
-      localStorage.setItem('referral_code', tempCode.trim().toUpperCase());
+    const normalizedTempCode = tempReferralCode.trim().toUpperCase();
+    if (normalizedTempCode) {
+      localStorage.setItem('referral_code', normalizedTempCode);
+      setReferralCode(normalizedTempCode);
       localStorage.removeItem('temp_referral_code');
     }
 
@@ -113,18 +119,15 @@ export default function Home() {
     const referralCode = localStorage.getItem('referral_code');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const data = await apiFetch('/auth/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mobile_number: mobile,
           otp,
           referral_code: referralCode
         }),
+        skipAuthCheck: true
       });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Verification failed');
 
       if (data.status === 'NEW_USER') {
         setFlow('role_select');
@@ -142,6 +145,7 @@ export default function Home() {
         } else {
           data.user.is_onboarded = true;
           localStorage.setItem('user', JSON.stringify(data.user));
+          window.dispatchEvent(new Event('auth-login'));
           redirectUser(data.user);
         }
       }
@@ -159,40 +163,36 @@ export default function Home() {
     const referralCode = localStorage.getItem('referral_code');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      console.log('[DEBUG] Sending /auth/verify request:', {
+        mobile_number: mobile,
+        otp,
+        role,
+        referral_code: referralCode
+      });
+
+      const authData = await apiFetch('/auth/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mobile_number: mobile,
           otp,
           role,
           referral_code: referralCode
         }),
+        skipAuthCheck: true
       });
 
-      const authData = await response.json();
-      if (!response.ok) throw new Error(authData.error || 'Registration failed');
+      // No response.ok check needed as apiFetch throws on error
+      // if (!response.ok) throw new Error(authData.error || 'Registration failed');
 
+      console.log('[DEBUG] Registration success, user data:', authData.user);
       localStorage.setItem('user', JSON.stringify(authData.user));
       if (authData.access_token) localStorage.setItem('token', authData.access_token);
       localStorage.setItem('hasSeenOnboarding', 'true');
-
-      if (role === 'MERCHANT') {
-        redirectUser(authData.user);
-        return;
-      }
-
-      await apiFetch('/auth/onboarding', {
-        method: 'POST',
-        body: JSON.stringify({ name, email }),
-      });
-
-      const user = { ...authData.user, name, email, is_onboarded: true };
-      localStorage.setItem('user', JSON.stringify(user));
-      redirectUser(user);
+      window.dispatchEvent(new Event('auth-login'));
+      redirectUser(authData.user);
     } catch (err: any) {
       setError(err.message);
-      setFlow('details_entry');
+      setFlow('role_select');
     } finally {
       setLoading(false);
     }
@@ -289,9 +289,10 @@ export default function Home() {
                   </label>
                   <input
                     type="text"
-                    value={localStorage.getItem('temp_referral_code') || ''}
+                    value={tempReferralCode}
                     onChange={(e) => {
                       const code = e.target.value.toUpperCase();
+                      setTempReferralCode(code);
                       localStorage.setItem('temp_referral_code', code);
                     }}
                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-primary text-lg focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand tracking-widest uppercase"
@@ -360,9 +361,8 @@ export default function Home() {
                 <button
                   key={item.id}
                   onClick={() => {
-                    const selectedRole = item.id as any;
-                    setRole(selectedRole);
-                    setFlow(selectedRole === 'MERCHANT' ? 'processing' : 'details_entry');
+                    setRole(item.id as any);
+                    setFlow('processing');
                   }}
                   className="w-full p-5 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:bg-white hover:border-primary/20 text-left transition-brand group active:scale-[0.98]"
                 >
@@ -381,58 +381,12 @@ export default function Home() {
           </div>
         )}
 
-        {flow === 'details_entry' && (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-black mb-2">Create Account</h2>
-              <p className="text-slate-500 text-sm">Final few details to get you started</p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Full Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-primary outline-none focus:border-primary transition-brand"
-                  placeholder="e.g. Rahul Sharma"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Email Address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-primary outline-none focus:border-primary transition-brand"
-                  placeholder="name@company.com"
-                />
-              </div>
-
-              <button
-                onClick={() => {
-                  if (name && email.includes('@')) {
-                    setFlow('processing');
-                    handleRegister();
-                  } else setError('Please fill all details correctly.');
-                }}
-                disabled={loading}
-                className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98]"
-              >
-                {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Set Up Account'}
-              </button>
-            </div>
-          </div>
-        )}
-
         {flow === 'processing' && (
           <div className="py-12 text-center space-y-6 animate-in fade-in duration-500">
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto shadow-xl shadow-primary/10"></div>
             <div>
-              <h3 className="text-xl font-black mb-2">Almost There</h3>
-              <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Pre-configuring your Store...</p>
+              <h3 className="text-xl font-black mb-2">Preparing Your Space</h3>
+              <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Securing your session...</p>
             </div>
           </div>
         )}

@@ -5,9 +5,10 @@ import { cn } from '@/lib/loanUtils';
 interface CreateTicketModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (subject: string, message: string, priority: string) => Promise<void>;
+    onSubmit: (subject: string, message: string, priority: string, issueType: string) => Promise<void>;
     prefillSubject?: string;
     prefillMessage?: string;
+    prefillCategory?: string;
 }
 
 export default function CreateTicketModal({
@@ -15,37 +16,41 @@ export default function CreateTicketModal({
     onClose,
     onSubmit,
     prefillSubject,
-    prefillMessage
+    prefillMessage,
+    prefillCategory
 }: CreateTicketModalProps) {
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
     const [priority, setPriority] = useState('medium');
+    const [issueType, setIssueType] = useState('general');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Update fields when prefill data changes
     useEffect(() => {
         if (prefillSubject) setSubject(prefillSubject);
         if (prefillMessage) setMessage(prefillMessage);
+        if (prefillCategory) setIssueType(prefillCategory);
         // Set priority to high for fund release requests
         if (prefillSubject?.includes('Fund Release')) {
             setPriority('high');
         }
-    }, [prefillSubject, prefillMessage]);
+    }, [prefillSubject, prefillMessage, prefillCategory]);
 
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!subject || !message) return;
+        if (!subject || !message || !issueType) return;
 
         setIsSubmitting(true);
         try {
-            await onSubmit(subject, message, priority);
+            await onSubmit(subject, message, priority, issueType);
             onClose();
             // Reset form
             setSubject('');
             setMessage('');
             setPriority('medium');
+            setIssueType('general');
         } catch (error) {
             console.error(error);
         } finally {
@@ -55,12 +60,18 @@ export default function CreateTicketModal({
 
     const isPrefilled = !!prefillSubject || !!prefillMessage;
 
+    const issueTypes = [
+        { id: 'cashback_not_received', label: 'Cashback not Received' },
+        { id: 'unable_to_transfer', label: 'Unable to Transfer Money' },
+        { id: 'general', label: 'General / Others' },
+    ];
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"></div>
 
             <div
-                className="bg-white rounded-[2rem] w-full max-w-lg p-6 shadow-2xl relative z-10 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 border border-white/20"
+                className="bg-white rounded-[2rem] w-full max-w-lg p-6 shadow-2xl relative z-10 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 border border-white/20 max-h-[90vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between mb-6">
@@ -91,6 +102,32 @@ export default function CreateTicketModal({
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700 ml-1">Issue Category</label>
+                        <div className="grid grid-cols-1 gap-2">
+                            {issueTypes.map((type) => (
+                                <button
+                                    key={type.id}
+                                    type="button"
+                                    onClick={() => setIssueType(type.id)}
+                                    className={cn(
+                                        "p-4 rounded-xl text-left transition-all border flex items-center justify-between",
+                                        issueType === type.id
+                                            ? "bg-blue-50 border-blue-600 text-blue-700 shadow-sm"
+                                            : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300"
+                                    )}
+                                >
+                                    <span className="font-bold">{type.label}</span>
+                                    {issueType === type.id && (
+                                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                                        </div>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 ml-1">Subject</label>
                         <input
@@ -141,8 +178,8 @@ export default function CreateTicketModal({
                         type="submit"
                         disabled={isSubmitting}
                         className={`w-full py-4 mt-4 text-white rounded-2xl font-black text-lg transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 ${isPrefilled
-                                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
-                                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                            ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
                             }`}
                     >
                         {isSubmitting ? <Loader2 size={24} className="animate-spin" /> : <span>{isPrefilled ? 'Send Ticket' : 'Submit Ticket'}</span>}

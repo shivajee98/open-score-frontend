@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ChevronDown, ChevronUp, AlertCircle, Shield } from 'lucide-react';
 import {
     LOAN_PLANS,
@@ -19,8 +18,10 @@ import LoadingOverlay from '@/components/ui/LoadingOverlay';
 
 export default function LoanDetail() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const router = useRouter();
-    const amount = Number(params.amount);
+    // Support both path param (dev) and query param (static export)
+    const amount = Number(params?.amount || searchParams.get('amount'));
 
     const [plan, setPlan] = useState<any>(null);
     const [selectedTenureIndex, setSelectedTenureIndex] = useState<number>(0);
@@ -132,7 +133,7 @@ export default function LoanDetail() {
 
             // Wait 3 seconds before redirecting
             setTimeout(() => {
-                router.push(`/customer/loan/status/${data.id || data.loan_id || 'L-10293'}`);
+                router.push(`/customer/loan/status/view?id=${data.id || data.loan_id || 'L-10293'}`);
             }, 3000);
 
         } catch (e: any) {

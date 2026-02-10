@@ -11,7 +11,32 @@ export default function NotificationHandler() {
         if (Capacitor.isNativePlatform()) {
             registerPush();
         }
+
+        // Listen for login to retry sync
+        const handleLogin = () => {
+            const token = localStorage.getItem('fcm_token_temp');
+            if (token) {
+                console.log('Login detected, syncing pending FCM token...');
+                syncToken(token);
+            }
+        };
+
+        window.addEventListener('auth-login', handleLogin);
+        return () => window.removeEventListener('auth-login', handleLogin);
     }, []);
+
+    const syncToken = async (token: string) => {
+        try {
+            await apiFetch('/auth/fcm-token', {
+                method: 'POST',
+                body: JSON.stringify({ token })
+            });
+            console.log('FCM Token synced with backend');
+            localStorage.removeItem('fcm_token_temp'); // Clear temp storage
+        } catch (err) {
+            console.error('Failed to sync FCM token:', err);
+        }
+    };
 
     const registerPush = async () => {
         try {
@@ -31,17 +56,8 @@ export default function NotificationHandler() {
             // On success, we should be able to receive notifications
             PushNotifications.addListener('registration', async (token) => {
                 console.log('Push registration success, token:', token.value);
-
-                // Save the token to our database
-                try {
-                    await apiFetch('/auth/fcm-token', {
-                        method: 'POST',
-                        body: JSON.stringify({ token: token.value })
-                    });
-                    console.log('FCM Token synced with backend');
-                } catch (err) {
-                    console.error('Failed to sync FCM token:', err);
-                }
+                localStorage.setItem('fcm_token_temp', token.value); // Save for later sync if needed
+                syncToken(token.value);
             });
 
             // Some error occurred

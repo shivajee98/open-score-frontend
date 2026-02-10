@@ -35,17 +35,20 @@ export default function NotificationsPage() {
     const getIcon = (type: string, status: string) => {
         if (status === 'COMPLETED') return <CheckCircle2 className="text-emerald-500" size={20} />;
         if (status === 'FAILED') return <AlertCircle className="text-rose-500" size={20} />;
-        if (type === 'CREDIT') return <Wallet className="text-blue-500" size={20} />;
+        if (type === 'CREDIT') return <Wallet className={isMerchant ? "text-emerald-500" : "text-blue-500"} size={20} />;
         return <Clock className="text-amber-500" size={20} />;
     };
+
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'indigo';
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20 font-sans">
             {/* Header */}
-            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 px-4 pt-14 pb-12 relative overflow-hidden shadow-2xl">
+            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-900 via-teal-950 to-emerald-950' : 'from-slate-900 via-indigo-950 to-violet-950'} px-4 pt-14 pb-12 relative overflow-hidden shadow-2xl`}>
                 <div className="absolute inset-0 opacity-20 z-0">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500 rounded-full blur-[100px] -mr-32 -mt-32"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] -ml-32 -mb-32"></div>
+                    <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-500' : 'bg-violet-500'} rounded-full blur-[100px] -mr-32 -mt-32`}></div>
+                    <div className={`absolute bottom-0 left-0 w-64 h-64 ${isMerchant ? 'bg-teal-500' : 'bg-indigo-500'} rounded-full blur-[100px] -ml-32 -mb-32`}></div>
                 </div>
 
                 <div className="relative z-10 flex items-center justify-between text-white">
@@ -57,7 +60,7 @@ export default function NotificationsPage() {
                             <ArrowLeft size={20} />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-black uppercase tracking-tighter">Notifications</h1>
+                            <h1 className="text-2xl font-black uppercase tracking-tighter">{isMerchant ? 'Sales Updates' : 'Notifications'}</h1>
                             <p className="text-white/60 text-[10px] uppercase font-black tracking-widest leading-none mt-1">Activity & Updates</p>
                         </div>
                     </div>
@@ -69,7 +72,7 @@ export default function NotificationsPage() {
                 <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[60vh]">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
-                            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                            <div className={`w-8 h-8 border-4 ${isMerchant ? 'border-emerald-600' : 'border-indigo-600'} border-t-transparent rounded-full animate-spin`}></div>
                             <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Fetching Updates...</p>
                         </div>
                     ) : notifications.length === 0 ? (
@@ -104,7 +107,7 @@ export default function NotificationsPage() {
                                             <p className="text-slate-500 text-[11px] leading-tight line-clamp-1">
                                                 ID: #{notif.id} • {notif.status}
                                             </p>
-                                            <span className={`text-xs font-black ${notif.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                            <span className={`text-xs font-black ${notif.type === 'CREDIT' ? (isMerchant ? 'text-emerald-600' : 'text-emerald-600') : 'text-slate-900'}`}>
                                                 {notif.type === 'CREDIT' ? '+' : '-'} ₹{notif.amount}
                                             </span>
                                         </div>
@@ -135,7 +138,7 @@ export default function NotificationsPage() {
                                 {selectedNotif.type === 'CREDIT' ? '+' : '-'} ₹{selectedNotif.amount}
                             </h3>
                             <p className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mt-2 ${selectedNotif.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
-                                    selectedNotif.status === 'FAILED' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                                selectedNotif.status === 'FAILED' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
                                 }`}>
                                 {selectedNotif.status}
                             </p>

@@ -167,18 +167,21 @@ export default function PayoutPage() {
         );
     }
 
+    const isMerchant = user?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'indigo';
+
     // Processing UI (Simulated Wait)
     if (isProcessing) {
         return (
-            <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center font-sans relative overflow-hidden">
+            <div className={`min-h-screen ${isMerchant ? 'bg-emerald-950' : 'bg-slate-900'} flex flex-col items-center justify-center p-6 text-center font-sans relative overflow-hidden`}>
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
 
                 <div className="relative z-10 flex flex-col items-center">
                     <div className="w-24 h-24 mb-8 relative">
-                        <div className="absolute inset-0 border-4 border-indigo-500/30 rounded-full"></div>
-                        <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className={`absolute inset-0 border-4 ${isMerchant ? 'border-emerald-500/30' : 'border-indigo-500/30'} rounded-full`}></div>
+                        <div className={`absolute inset-0 border-4 ${isMerchant ? 'border-emerald-400' : 'border-indigo-500'} border-t-transparent rounded-full animate-spin`}></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <Landmark className="w-8 h-8 text-indigo-400 animate-pulse" />
+                            <Landmark className={`w-8 h-8 ${isMerchant ? 'text-emerald-400' : 'text-indigo-400'} animate-pulse`} />
                         </div>
                     </div>
 
@@ -188,7 +191,7 @@ export default function PayoutPage() {
                     </p>
 
                     <div className="mt-8 w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-indigo-500 rounded-full animate-[progress_30s_linear_forwards]" style={{ width: '0%' }}></div>
+                        <div className={`h-full ${isMerchant ? 'bg-emerald-500' : 'bg-indigo-500'} rounded-full animate-[progress_30s_linear_forwards]`} style={{ width: '0%' }}></div>
                     </div>
                 </div>
             </div>
@@ -285,11 +288,11 @@ export default function PayoutPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     {/* Input Side */}
                     <div className="space-y-4">
-                        <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-lg shadow-slate-900/10 relative overflow-hidden group">
+                        <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-900 via-teal-950 to-emerald-900' : 'from-slate-900 via-indigo-950 to-slate-900'} rounded-2xl p-6 text-white shadow-lg shadow-slate-900/10 relative overflow-hidden group`}>
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700"></div>
                             <div className="flex items-center gap-3 mb-6 opacity-60">
                                 <Wallet size={16} />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Withdrawable Balance</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{isMerchant ? 'Sale Settlement' : 'Withdrawable Balance'}</span>
                             </div>
                             <div className="mb-6">
                                 <span className="text-lg opacity-40 font-black mr-2">₹</span>
@@ -384,7 +387,7 @@ export default function PayoutPage() {
                         <button
                             onClick={handlePayout}
                             disabled={isSubmitting || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > balance}
-                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg shadow-slate-200 mt-2"
+                            className={`w-full py-4 ${isMerchant ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-black text-sm disabled:bg-slate-200 disabled:text-slate-400 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg shadow-slate-200 mt-2`}
                         >
                             {isSubmitting ? (
                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

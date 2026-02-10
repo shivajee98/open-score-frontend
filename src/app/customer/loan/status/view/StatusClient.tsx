@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
@@ -10,7 +10,8 @@ import { toast } from '@/components/ui/Toast';
 export default function LoanStatus() {
     const router = useRouter();
     const params = useParams();
-    const loanId = params.id as string;
+    const searchParams = useSearchParams();
+    const loanId = (params?.id || searchParams.get('id')) as string;
     const [isDetailsOpen, setIsDetailsOpen] = useState(true);
     const [loan, setLoan] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -352,7 +353,7 @@ export default function LoanStatus() {
                             <p className="text-blue-100 text-xs font-medium mt-1">We need a few more details to finalize your application.</p>
                         </div>
                         <button
-                            onClick={() => window.open(`${process.env.NEXT_PUBLIC_KYC_URL || 'https://openscorekyc.galobyte.site'}/form/${loan.kyc_token}`, '_blank')}
+                            onClick={() => window.open(`${process.env.NEXT_PUBLIC_KYC_URL || 'https://kyc.msmeloan.sbs'}/form?token=${loan.kyc_token}`, '_blank')}
                             className="w-full py-3 bg-white text-blue-600 rounded-lg font-black text-sm hover:bg-blue-50 transition-all uppercase tracking-widest shadow-lg"
                         >
                             Open Application Form
@@ -400,7 +401,7 @@ export default function LoanStatus() {
                             <p className="text-slate-400 text-xs font-medium mt-1">Manage your loan repayments and EMIs.</p>
                         </div>
                         <button
-                            onClick={() => router.push(`/customer/loan/status/${loanId}/repayment`)}
+                            onClick={() => router.push(`/customer/loan/status/repayment?id=${loanId}`)}
                             className="w-full py-3 bg-white text-slate-900 rounded-lg font-black text-sm hover:bg-slate-50 transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
                         >
                             Repay Now
@@ -419,7 +420,7 @@ export default function LoanStatus() {
                             <p className="text-emerald-600/80 text-xs font-medium mt-1">View the repayment timeline for this loan.</p>
                         </div>
                         <button
-                            onClick={() => router.push(`/customer/loan/status/${loanId}/repayment`)}
+                            onClick={() => router.push(`/customer/loan/status/repayment?id=${loanId}`)}
                             className="w-full py-3 bg-white text-emerald-600 border border-emerald-200 rounded-lg font-black text-sm hover:bg-emerald-50 transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
                         >
                             View History

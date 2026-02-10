@@ -25,7 +25,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Wallet, CreditCard, Smartphone, CheckCircle, AlertTriangle, IndianRupee } from 'lucide-react';
+import { ArrowLeft, Wallet, QrCode as QrIcon, Smartphone, CheckCircle, AlertTriangle, IndianRupee, X } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import { toast } from '@/components/ui/Toast';
 
 // Predefined amount options
@@ -35,9 +36,10 @@ export default function AddMoneyPage() {
     const router = useRouter();
     const [amount, setAmount] = useState('');
     // const [upiId, setUpiId] = useState(''); // Removed as we use intent
-    const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card'>('upi');
+    const [paymentMethod, setPaymentMethod] = useState<'upi' | 'qr'>('upi');
     const [processing, setProcessing] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
+    const [showQR, setShowQR] = useState(false);
 
     /**
      * DUMMY PAYMENT HANDLER
@@ -56,33 +58,44 @@ export default function AddMoneyPage() {
             return;
         }
 
+        if (paymentMethod === 'qr') {
+            setShowQR(true);
+            return;
+        }
+
         setProcessing(true);
         setPaymentStatus('processing');
 
         // UPI Intent Logic
-        const payeeVpa = "9430083275@naviaxis";
+        const payeeVpa = "risexpe@ybl";
         const payeeName = "OpenScore";
         const transactionRef = `TXN${Date.now()}`;
         const transactionNote = "Wallet Topup";
         const currency = "INR";
 
         // Construct the UPI Intent URL
-        // upi://pay?pa=...&pn=...&tr=...&tn=...&am=...&cu=...
         const upiUrl = `upi://pay?pa=${payeeVpa}&pn=${payeeName}&tr=${transactionRef}&tn=${transactionNote}&am=${amount}&cu=${currency}`;
 
-        // Create a hidden link and click it - standard way to trigger intent on mobile
+        // Create a hidden link and click it
         const link = document.createElement('a');
         link.href = upiUrl;
         link.click();
 
         toast.info("Opening UPI App...");
 
-        // We can't verify transaction status on frontend for UPI intents easily.
-        // Resetting state after a delay.
         setTimeout(() => {
             setProcessing(false);
             setPaymentStatus('idle');
         }, 3000);
+    };
+
+    const getUpiUrl = () => {
+        const payeeVpa = "risexpe@ybl";
+        const payeeName = "OpenScore";
+        const transactionRef = `TXN${Date.now()}`;
+        const transactionNote = "Wallet Topup";
+        const currency = "INR";
+        return `upi://pay?pa=${payeeVpa}&pn=${payeeName}&tr=${transactionRef}&tn=${transactionNote}&am=${amount}&cu=${currency}`;
     };
 
     return (
@@ -159,24 +172,23 @@ export default function AddMoneyPage() {
                         </button>
 
                         <button
-                            onClick={() => setPaymentMethod('card')}
+                            onClick={() => setPaymentMethod('qr')}
                             disabled={processing}
-                            className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === 'card'
+                            className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === 'qr'
                                 ? 'border-emerald-500 bg-emerald-50'
                                 : 'border-slate-200 hover:border-slate-300'
                                 }`}
                         >
-                            <CreditCard className={`w-6 h-6 ${paymentMethod === 'card' ? 'text-emerald-600' : 'text-slate-400'}`} />
-                            <span className={`font-bold text-sm ${paymentMethod === 'card' ? 'text-emerald-700' : 'text-slate-600'}`}>Card</span>
+                            <QrIcon className={`w-6 h-6 ${paymentMethod === 'qr' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                            <span className={`font-bold text-sm ${paymentMethod === 'qr' ? 'text-emerald-700' : 'text-slate-600'}`}>QR Code</span>
                         </button>
                     </div>
 
-                    {/* Card Notice */}
-                    {paymentMethod === 'card' && (
-                        <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl">
-                            <p className="text-amber-700 text-xs font-medium">
-                                <AlertTriangle className="w-4 h-4 inline mr-1" />
-                                Card payments coming soon! Please use UPI.
+                    {/* QR Notice */}
+                    {paymentMethod === 'qr' && (
+                        <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                            <p className="text-blue-700 text-xs font-medium text-center">
+                                Scan QR code with any UPI app to pay.
                             </p>
                         </div>
                     )}
@@ -213,7 +225,7 @@ export default function AddMoneyPage() {
                 {paymentStatus !== 'success' && (
                     <button
                         onClick={handlePayment}
-                        disabled={processing || !amount || paymentMethod === 'card'}
+                        disabled={processing || !amount}
                         className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-base hover:bg-emerald-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2"
                     >
                         {processing ? (
@@ -234,6 +246,45 @@ export default function AddMoneyPage() {
                     </p>
                 </div>
             </div>
+
+            {/* QR Modal */}
+            {showQR && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="bg-emerald-600 p-6 text-center relative">
+                            <button
+                                onClick={() => setShowQR(false)}
+                                className="absolute right-6 top-6 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                            <div className="w-16 h-16 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
+                                <QrIcon className="text-emerald-600 w-8 h-8" />
+                            </div>
+                            <h3 className="text-xl font-black text-white uppercase tracking-tight">Scan & Pay Now</h3>
+                            <p className="text-emerald-100 text-xs font-bold uppercase tracking-widest mt-1">Amount: ₹{Number(amount).toLocaleString()}</p>
+                        </div>
+
+                        <div className="p-8 flex flex-col items-center">
+                            <div className="bg-white p-3 rounded-3xl border-4 border-slate-100 shadow-inner mb-6 transition-transform hover:scale-105 duration-500">
+                                <QRCode value={getUpiUrl()} size={200} viewBox={`0 0 256 256`} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
+                            </div>
+
+                            <div className="space-y-4 w-full text-center">
+                                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Payee VPA</p>
+                                    <p className="text-slate-900 font-black text-sm uppercase">risexpe@ybl</p>
+                                </div>
+
+                                <p className="text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em] leading-relaxed">
+                                    Scan this QR using any UPI app like <br />
+                                    <span className="text-slate-600">PhonePe, Google Pay, or Paytm</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -20,7 +20,7 @@ export default function CustomerHome() {
     // Data Fetching with Cache
     const { data: user, isLoading: userLoading, mutate: mutateUser, isValidating: userValidating } = useApi('/auth/me');
     const { data: walletData, isLoading: walletLoading, mutate: mutateWallet, isValidating: walletValidating } = useApi('/wallet/balance');
-    const { data: loans, isLoading: loansLoading, mutate: mutateLoans, isValidating: loansValidating } = useApi(user?.role === 'CUSTOMER' ? '/loans' : null);
+    const { data: loans, isLoading: loansLoading, mutate: mutateLoans, isValidating: loansValidating } = useApi((user?.role === 'CUSTOMER' || user?.role === 'MERCHANT') ? '/loans' : null);
 
     // Sync SWR data to Zustand Store for persistent caching
     useEffect(() => { if (user) setUser(user); }, [user, setUser]);
@@ -207,10 +207,15 @@ export default function CustomerHome() {
                             {/* Add Money Button */}
                             <Link href="/customer/add-money" prefetch={false}>
                                 <button
-                                    className="w-6 h-6 rounded-lg bg-emerald-500 border border-emerald-400 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-emerald-600 font-black text-sm"
+                                    className="w-7 h-7 rounded-lg bg-emerald-500 border border-emerald-400 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-emerald-600 font-black"
                                     title="Add Money"
                                 >
-                                    +
+                                    <div className="relative">
+                                        <Wallet size={12} strokeWidth={2.5} />
+                                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full w-3 h-3 flex items-center justify-center border border-emerald-500">
+                                            <span className="text-emerald-500 text-[8px] font-black leading-none">+</span>
+                                        </div>
+                                    </div>
                                 </button>
                             </Link>
                             <Link href="/customer/referral" prefetch={false}>
@@ -233,7 +238,7 @@ export default function CustomerHome() {
                     </div>
                 </div>
 
-                {/* Balance Card - Navy/Violet Theme */}
+                {/* Balance Card - Elite Credit Value */}
                 <div className="relative group z-10 mx-auto max-w-sm">
                     {/* Outer Neon Glow */}
                     <div className={`absolute -inset-[2px] rounded-[1.4rem] ${isMerchant ? 'bg-emerald-400/50' : 'bg-indigo-500/30'} blur-md animate-pulse`}></div>
@@ -264,7 +269,7 @@ export default function CustomerHome() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <p className="text-[18px] font-black text-white tracking-tighter drop-shadow-sm">
-                                        ₹ {showBalance ? balance : '••••••'}
+                                        ₹ {showBalance ? Number(balance).toLocaleString() : '••••••'}
                                     </p>
                                     {Number(lockedBalance) > 0 && showBalance && (
                                         <div
@@ -272,7 +277,7 @@ export default function CustomerHome() {
                                             className="flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10 cursor-pointer hover:bg-black/30 transition-colors active:scale-95"
                                         >
                                             <Lock size={10} className="text-yellow-400" />
-                                            <span className="text-[10px] font-black text-white tracking-tight">₹{lockedBalance}</span>
+                                            <span className="text-[10px] font-black text-white tracking-tight">₹{Number(lockedBalance).toLocaleString()}</span>
                                         </div>
                                     )}
                                 </div>
@@ -337,7 +342,7 @@ export default function CustomerHome() {
             {
                 !isMerchant && kycLoan && (
                     <div className="px-4 mb-8">
-                        <Link href={`/customer/loan/status/${kycLoan.id}`} prefetch={false}>
+                        <Link href={`/customer/loan/status/view?id=${kycLoan.id}`} prefetch={false}>
                             <div className="bg-yellow-400 p-4 rounded-3xl shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
                                 <div className="flex items-center gap-3 relative z-10">
                                     <div className="w-12 h-12 rounded-xl bg-slate-900 text-yellow-400 flex items-center justify-center shadow-lg">

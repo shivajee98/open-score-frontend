@@ -40,7 +40,7 @@ export default function Onboarding() {
                     }
                 }
             } else {
-                router.push('/');
+                if (typeof window !== 'undefined') window.location.href = '/frontend/';
             }
         }
     }, [router]);
@@ -159,15 +159,15 @@ export default function Onboarding() {
                                                 setStep(2);
                                             }
                                         }}
-                                        className={`w-full p-4 rounded-2xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-200'}`}
+                                        className={`w-full p-6 rounded-3xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? (item.id === 'MERCHANT' ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-600/20' : 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20') : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-slate-200'}`}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${role === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-100 text-slate-400 group-hover:text-blue-600'}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${role === item.id ? (item.id === 'MERCHANT' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/20') : 'bg-white border border-slate-100 text-slate-400 group-hover:scale-110'}`}>
                                                 {item.icon}
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-slate-900 text-base">{item.label}</h4>
-                                                <p className="text-sm text-slate-500 font-medium">{item.sub}</p>
+                                                <h4 className="font-black text-slate-900 text-lg tracking-tight">{item.label}</h4>
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{item.sub}</p>
                                             </div>
                                         </div>
                                     </button>

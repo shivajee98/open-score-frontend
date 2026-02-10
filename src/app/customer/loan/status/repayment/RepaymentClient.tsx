@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
@@ -36,7 +36,8 @@ import {
 export default function RepaymentDashboard() {
     const router = useRouter();
     const params = useParams();
-    const loanId = params.id as string;
+    const searchParams = useSearchParams();
+    const loanId = (params?.id || searchParams.get('id')) as string;
 
     const [loan, setLoan] = useState<any>(null);
     const [repayments, setRepayments] = useState<any[]>([]);
@@ -236,7 +237,7 @@ export default function RepaymentDashboard() {
                 <div className="relative z-10">
                     <div className="flex justify-between items-start mb-6">
                         <button
-                            onClick={() => router.push(`/customer/loan/status/${loanId}`)}
+                            onClick={() => router.push(`/customer/loan/status/view?id=${loanId}`)}
                             className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-xl text-slate-400 font-black text-[9px] uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all border border-white/5"
                         >
                             <ArrowLeft className="w-4 h-4" /> Application Root

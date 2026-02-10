@@ -93,7 +93,7 @@ export default function DashboardLayout({
                 const currentStored = localStorage.getItem('user');
                 // If error is session related or no user found currently, redirect
                 if (!currentStored || err.message.includes('Session expired')) {
-                    router.push('/');
+                    if (typeof window !== 'undefined') window.location.href = '/frontend/';
                 }
             });
 
@@ -238,7 +238,7 @@ export default function DashboardLayout({
     const handleLogout = async () => {
         await clearAuthState();
         setUser(null);
-        router.push('/');
+        if (typeof window !== 'undefined') window.location.href = '/frontend/';
     };
 
     return (
