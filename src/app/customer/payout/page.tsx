@@ -221,17 +221,12 @@ export default function PayoutPage() {
     if (showRestricted) {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center font-sans">
-                <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mb-10 relative">
-                    <Lock className="w-10 h-10 text-indigo-600" />
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center text-white">
-                        <AlertCircle size={14} strokeWidth={3} />
-                    </div>
-                </div>
 
                 <div className="space-y-4 mb-12">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight">Cred-out Locked</h2>
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight">0% Free Credit Value Unable to Transfer</h2>
                     <p className="text-slate-400 font-bold text-sm leading-relaxed uppercase tracking-wider">
-                        Withdrawals are currently restricted for applications under ₹50,000.
+                        Loans above ₹50,000 allow Transfer
+Amounts below ₹50,000 can be easily used for shopping and merchant payments.
                     </p>
                 </div>
 
@@ -239,7 +234,7 @@ export default function PayoutPage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-3xl"></div>
                     <h4 className="font-black text-slate-900 text-sm mb-6 flex items-center gap-2">
                         <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
-                        How to Unlock?
+                        How to Transfer?
                     </h4>
                     <ul className="space-y-6">
                         <li className="flex items-start gap-4">
