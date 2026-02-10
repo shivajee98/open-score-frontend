@@ -21,7 +21,7 @@ export default function CreateTicketModal({
 }: CreateTicketModalProps) {
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
-    const [priority, setPriority] = useState('medium');
+
     const [issueType, setIssueType] = useState('general');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,10 +30,7 @@ export default function CreateTicketModal({
         if (prefillSubject) setSubject(prefillSubject);
         if (prefillMessage) setMessage(prefillMessage);
         if (prefillCategory) setIssueType(prefillCategory);
-        // Set priority to high for fund release requests
-        if (prefillSubject?.includes('Fund Release')) {
-            setPriority('high');
-        }
+
     }, [prefillSubject, prefillMessage, prefillCategory]);
 
     if (!isOpen) return null;
@@ -44,12 +41,13 @@ export default function CreateTicketModal({
 
         setIsSubmitting(true);
         try {
-            await onSubmit(subject, message, priority, issueType);
+            await onSubmit(subject, message, 'medium', issueType);
             onClose();
             // Reset form
             setSubject('');
             setMessage('');
-            setPriority('medium');
+            setIssueType('general');
+
             setIssueType('general');
         } catch (error) {
             console.error(error);
@@ -61,9 +59,9 @@ export default function CreateTicketModal({
     const isPrefilled = !!prefillSubject || !!prefillMessage;
 
     const issueTypes = [
-        { id: 'cashback_not_received', label: 'Cashback not Received' },
-        { id: 'unable_to_transfer', label: 'Unable to Transfer Money' },
-        { id: 'general', label: 'General / Others' },
+        { id: 'loan', label: 'Loan Related' },
+        { id: 'cashback_not_received', label: 'Cashback Issue' },
+        { id: 'general', label: 'General / Other' },
     ];
 
     return (
@@ -81,7 +79,7 @@ export default function CreateTicketModal({
                         </div>
                         <div>
                             <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                                {isPrefilled ? 'Raise Support Ticket' : 'New Ticket'}
+                                {isPrefilled ? 'Raise Support Ticket' : 'Raise Request / Complaint'}
                             </h3>
                             <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">
                                 {isPrefilled ? 'Review and send your request' : 'Describe your issue'}
@@ -140,28 +138,7 @@ export default function CreateTicketModal({
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-1">Priority</label>
-                        <div className="grid grid-cols-3 gap-3">
-                            {['low', 'medium', 'high'].map((p) => (
-                                <button
-                                    key={p}
-                                    type="button"
-                                    onClick={() => setPriority(p)}
-                                    className={cn(
-                                        "py-3 rounded-xl text-sm font-bold border transition-all capitalize",
-                                        priority === p
-                                            ? p === 'high'
-                                                ? "bg-rose-600 text-white border-rose-600 shadow-lg shadow-rose-600/20 transform scale-[1.02]"
-                                                : "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 transform scale-[1.02]"
-                                            : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
-                                    )}
-                                >
-                                    {p}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+
 
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 ml-1">Message</label>
