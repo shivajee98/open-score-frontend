@@ -272,7 +272,9 @@ export default function DashboardLayout({
                 <aside className="w-72 border-r border-slate-200 bg-white hidden md:flex flex-col shadow-xl z-20">
                     <div className="p-6">
                         <div className="flex items-center gap-2 mb-1">
-                            <div className={`w-8 h-8 rounded-lg bg-${themeColor}-600 flex items-center justify-center text-white font-black text-lg`}>O</div>
+                            <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm">
+                                <img src="/frontend/logo.svg" alt="OpenScore" className="w-full h-full" />
+                            </div>
                             <h1 className="text-xl font-black tracking-tight text-slate-900">OpenScore</h1>
                         </div>
                         <p className="text-xs font-bold text-slate-700 uppercase tracking-widest pl-11">Powered by MSME Shakti</p>

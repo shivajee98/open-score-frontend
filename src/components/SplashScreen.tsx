@@ -4,8 +4,8 @@ export default function SplashScreen() {
     return (
         <div className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center animate-out fade-out duration-1000 fill-mode-forwards">
             <div className="relative mb-8">
-                <div className="w-24 h-24 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/30 animate-bounce">
-                    <span className="text-4xl font-black text-white">O</span>
+                <div className="w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/30 animate-bounce overflow-hidden">
+                    <img src="/frontend/logo.svg" alt="OpenScore" className="w-full h-full" />
                 </div>
                 <div className="absolute -inset-4 bg-blue-600/20 rounded-full blur-xl animate-pulse"></div>
             </div>
