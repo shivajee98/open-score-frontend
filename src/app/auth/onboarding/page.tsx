@@ -40,7 +40,7 @@ export default function Onboarding() {
                     }
                 }
             } else {
-                if (typeof window !== 'undefined') window.location.href = '/frontend/';
+                if (typeof window !== 'undefined') window.location.href = '/';
             }
         }
     }, [router]);

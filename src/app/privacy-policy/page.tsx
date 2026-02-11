@@ -180,7 +180,7 @@ export default function PrivacyPolicyPage() {
                         </div>
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg">
                             <Globe size={16} className="text-slate-400" />
-                            <span>www.openscore.in</span>
+                            <span>www.msmeloan.sbs</span>
                         </div>
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg">
                             <Building2 size={16} className="text-slate-400" />

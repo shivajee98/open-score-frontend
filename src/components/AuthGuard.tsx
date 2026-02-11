@@ -15,25 +15,26 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        const isAuthRoute = pathname === "/" || pathname?.startsWith("/auth") || pathname === "/login";
-        const isPublicRoute = pathname?.startsWith("/public"); // Example public route
+
+        // Normalize path to handle trailing slashes reliably
+        const path = (pathname || "").replace(/\/$/, "");
+
+        const isAuthRoute = path === "" || path === "/" || path === "/login" || path.startsWith("/auth");
+        const isPublicRoute = path.startsWith("/public") || path.startsWith("/privacy-policy");
 
         if (token) {
             // User is logged in
             if (isAuthRoute) {
-                // Redirect logged-in users away from login pages
-                // Determine role from local storage or decode token if needed
-                // For now, default to customer, or check user object
                 const userStr = localStorage.getItem("user");
                 let user: any = {};
                 try {
                     user = userStr ? JSON.parse(userStr) : {};
                 } catch (e) {
                     console.error("Failed to parse user data", e);
-                    localStorage.removeItem("user"); // Clear corrupted data
+                    localStorage.removeItem("user");
                 }
-                let target = user.role === 'ADMIN' ? '/admin' : '/customer';
 
+                let target = user.role === 'ADMIN' ? '/admin' : '/customer';
                 if (user.is_onboarded === false || user.is_onboarded === 0 || user.is_onboarded === "0") {
                     target = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
                 }
@@ -45,8 +46,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         } else {
             // User is NOT logged in
             if (!isAuthRoute && !isPublicRoute) {
-                // Redirect protected routes to login
-                if (typeof window !== 'undefined') window.location.href = '/frontend/';
+                // Redirect protected routes to login (Root)
+                if (typeof window !== 'undefined') window.location.href = '/';
             } else {
                 setAuthorized(true);
             }

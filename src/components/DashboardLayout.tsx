@@ -93,7 +93,7 @@ export default function DashboardLayout({
                 const currentStored = localStorage.getItem('user');
                 // If error is session related or no user found currently, redirect
                 if (!currentStored || err.message.includes('Session expired')) {
-                    if (typeof window !== 'undefined') window.location.href = '/frontend/';
+                    if (typeof window !== 'undefined') window.location.href = '/';
                 }
             });
 
@@ -238,7 +238,7 @@ export default function DashboardLayout({
     const handleLogout = async () => {
         await clearAuthState();
         setUser(null);
-        if (typeof window !== 'undefined') window.location.href = '/frontend/';
+        if (typeof window !== 'undefined') window.location.href = '/';
     };
 
     return (
@@ -273,7 +273,7 @@ export default function DashboardLayout({
                     <div className="p-6">
                         <div className="flex items-center gap-2 mb-1">
                             <div className="w-8 h-8 rounded-lg overflow-hidden shadow-sm">
-                                <img src="/frontend/logo.svg" alt="OpenScore" className="w-full h-full" />
+                                <img src="/logo.svg" alt="OpenScore" className="w-full h-full" />
                             </div>
                             <h1 className="text-xl font-black tracking-tight text-slate-900">OpenScore</h1>
                         </div>

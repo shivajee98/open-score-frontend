@@ -28,7 +28,9 @@ export const clearAuthState = async () => {
 
 export const handleUnauthorized = () => {
     if (typeof window !== 'undefined') {
-        const isHomePage = window.location.pathname === '/' || window.location.pathname.startsWith('/auth');
+        const isHomePage = window.location.pathname === '/' ||
+            window.location.pathname.startsWith('/auth') ||
+            window.location.pathname.startsWith('/privacy-policy');
 
         // Prevent infinite loops if multiple APIs fail simultaneously
         if (isRedirecting) return;
@@ -45,7 +47,7 @@ export const handleUnauthorized = () => {
 
         if (!isHomePage) {
             isRedirecting = true;
-            window.location.replace('/frontend/');
+            window.location.replace('/');
 
             // Reset redirect lock after 5 seconds to allow recovery if user navigates back
             setTimeout(() => {
