@@ -54,6 +54,16 @@ function SupportPageContent() {
                         category: data.category || ''
                     });
                     setIsCreateModalOpen(true);
+                } else if (data.id) {
+                    // Direct navigation to created ticket
+                    setSelectedTicket(data);
+                    // Ensure it's in the list if not already
+                    setTickets(prev => {
+                        if (!prev.find(t => t.id === data.id)) {
+                            return [data, ...prev];
+                        }
+                        return prev;
+                    });
                 }
             } catch (e) {
                 console.error('Failed to parse ticket data:', e);

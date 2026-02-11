@@ -68,26 +68,16 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const [showLabelPicker, setShowLabelPicker] = useState(false);
-    const [selectedLabel, setSelectedLabel] = useState<string>('');
-
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if ((!newMessage.trim() && !attachment) || isSending) return;
 
-        // If there's an attachment and no label selected yet, and we need a label
-        if (attachment && !selectedLabel) {
-            setShowLabelPicker(true);
-            return;
-        }
-
         setIsSending(true);
         try {
-            await (onSendMessage as any)(newMessage, attachment, selectedLabel);
+            await onSendMessage(newMessage, attachment);
             setNewMessage('');
             setAttachment(null);
-            setSelectedLabel('');
-            setShowLabelPicker(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         } catch (error) {
             console.error("Failed to send", error);
         } finally {
@@ -107,26 +97,6 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                     </div>
                 ) : (
                     messages.map((msg, index) => {
-                        // Determine alignment based on 'is_admin_reply'.
-                        // BUT: If I am the Customer, my messages are `is_admin_reply: false`.
-                        // If I am the Admin, my messages are `is_admin_reply: true`.
-                        // We need context on WHO is viewing this.
-                        // Actually simpler: `msg.user_id === currentUserId` checks ownership.
-                        // But for now, let's rely on standard alignment:
-                        // User (me) -> Right
-                        // Support (them) -> Left
-                        // Wait, `currentUserId` is passed in.
-                        // The message object has a `user_id`. Let's assume we fetch `user_id` in the message.
-                        // If `msg.user_id` matches `currentUserId`, prompt Right.
-
-                        // Fallback logic if user_id missing on simple objects: 
-                        // If we are Customer View: AdminReply -> Left, My Msg -> Right.
-                        // If we are Admin View: AdminReply (Me) -> Right, Customer Msg -> Left.
-                        // We'll rely on `msg.user_id === currentUserId` if available, or fallback.
-
-                        // Let's assume backend `TicketMessage` has `user_id`.
-                        // We need to pass `user_id` of the signed-in user to props.
-
                         const isMe = currentUserId ? msg.user?.id === currentUserId || (msg as any).user_id === currentUserId : false;
 
                         return (
@@ -152,13 +122,6 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
 
                                     {msg.attachment_url && (
                                         <div className="mt-3 rounded-xl overflow-hidden border border-white/20 shadow-inner group relative">
-                                            {(msg as any).attachment_label && (
-                                                <div className="absolute top-2 left-2 z-10">
-                                                    <span className="bg-slate-900/80 backdrop-blur-md text-white text-[8px] font-black px-2 py-1 rounded-lg uppercase tracking-widest shadow-lg">
-                                                        {(msg as any).attachment_label}
-                                                    </span>
-                                                </div>
-                                            )}
                                             <img
                                                 src={getStorageUrl(msg.attachment_url!)}
                                                 alt="Attachment"
@@ -184,48 +147,6 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Label Picker Modal */}
-            {showLabelPicker && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 className="text-xl font-black text-slate-900">Purpose of Image</h3>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">What is this for?</p>
-                            </div>
-                            <button onClick={() => setShowLabelPicker(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-all">
-                                <X size={20} className="text-slate-400" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-3">
-                            {[
-                                { id: 'platform_fee', label: 'Platform Fee', icon: <Briefcase className="text-blue-600" /> },
-                                { id: 'emi_payment', label: 'EMI Payment', icon: <CheckCircle2 className="text-emerald-600" /> },
-                                { id: 'wallet_recharge', label: 'Wallet Recharge', icon: <Loader2 className="text-amber-600" /> }
-                            ].map((opt) => (
-                                <button
-                                    key={opt.id}
-                                    onClick={() => {
-                                        setSelectedLabel(opt.label);
-                                        // We'll let handleSend take care of it or call it here? 
-                                        // Let's call it manually for better UX
-                                        const syntheticEvent = { preventDefault: () => { } } as any;
-                                        setTimeout(() => handleSend(syntheticEvent), 100);
-                                    }}
-                                    className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-white hover:shadow-xl hover:shadow-blue-600/5 border border-slate-100 rounded-2xl transition-all group active:scale-[0.98]"
-                                >
-                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                        {opt.icon}
-                                    </div>
-                                    <span className="font-black text-slate-900 uppercase tracking-widest text-xs">{opt.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Input Area */}
             <div className="p-4 bg-white border-t border-slate-200">
                 {isClosed ? (
@@ -235,21 +156,25 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                 ) : (
                     <form onSubmit={handleSend} className="flex flex-col gap-2">
                         {attachment && (
-                            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg w-fit border border-slate-200">
-                                <ImageIcon size={16} className="text-blue-600" />
-                                <span className="text-xs font-bold text-slate-600 truncate max-w-[200px]">{attachment.name}</span>
-                                <button type="button" onClick={() => setAttachment(null)} className="p-1 hover:bg-slate-200 rounded-full text-slate-400 hover:text-rose-500 transition-colors">
+                            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg w-fit border border-slate-200 animate-in fade-in slide-in-from-bottom-2">
+                                <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 border border-slate-300">
+                                    <img src={URL.createObjectURL(attachment)} alt="Preview" className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Attached</span>
+                                    <span className="text-xs font-bold text-slate-700 truncate max-w-[150px]">{attachment.name}</span>
+                                </div>
+                                <button type="button" onClick={() => { setAttachment(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="p-1.5 hover:bg-rose-50 rounded-full text-slate-400 hover:text-rose-600 transition-colors ml-2">
                                     <X size={14} />
                                 </button>
                             </div>
                         )}
                         <div className="flex items-end gap-2">
-
                             <div className="flex-1 bg-slate-50 border border-slate-200 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all rounded-2xl overflow-hidden relative flex items-center">
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="p-3 text-slate-400 hover:text-blue-600 transition-colors"
+                                    className="p-3.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors border-r border-slate-100"
                                 >
                                     <Paperclip size={20} />
                                 </button>
@@ -257,7 +182,7 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                                     type="file"
                                     ref={fileInputRef}
                                     className="hidden"
-                                    accept="image/*"
+                                    accept="image/*,.pdf"
                                     onChange={(e) => {
                                         if (e.target.files?.[0]) {
                                             setAttachment(e.target.files[0]);
@@ -268,7 +193,7 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder={attachment ? "Add a caption..." : "Type your message..."}
-                                    className="flex-1 bg-transparent border-none p-3.5 focus:outline-none text-slate-900 placeholder:text-slate-400 text-sm font-medium"
+                                    className="flex-1 bg-transparent border-none p-3.5 focus:outline-none text-slate-900 placeholder:text-slate-400 text-sm font-medium w-full"
                                     disabled={isSending}
                                 />
                             </div>

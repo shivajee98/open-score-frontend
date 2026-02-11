@@ -166,11 +166,12 @@ export default function RepaymentDashboard() {
 
             const ticketData = await ticketRes.json();
 
-            if (ticketRes.ok && ticketData.id) {
+            // Check for nested ticket object or direct object
+            const createdTicket = ticketData.ticket || ticketData;
+
+            if (ticketRes.ok && createdTicket?.id) {
                 toast.success("Proof submitted! Redirecting to support...");
-                setTimeout(() => {
-                    router.push(`/customer/support/chat/${ticketData.id}`);
-                }, 1500);
+                router.push(`/customer/support?ticket=${encodeURIComponent(JSON.stringify(createdTicket))}`);
             } else {
                 toast.success("Payment proof submitted! Verification pending.");
                 setShowManualPay(false);
