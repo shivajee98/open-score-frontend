@@ -100,7 +100,7 @@ export default function CustomerHome() {
     // Handle both array (legacy) and paginated object (new) responses
     const loansList = activeLoans;
     const kycLoan = loansList?.find((l: any) => l.status === 'KYC_SENT') || null;
-    const activeLoan = loansList?.find((l: any) => l.status === 'DISBURSED');
+    const activeLoan = loansList?.find((l: any) => l.status === 'DISBURSED' || l.status === 'OVERDUE');
     const hasActiveLoan = !!activeLoan;
     const loading = !activeUser && (userLoading || walletLoading);
 

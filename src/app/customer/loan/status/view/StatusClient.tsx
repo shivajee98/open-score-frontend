@@ -273,7 +273,7 @@ export default function LoanStatus() {
                                             subject: `Fast Disbursal Request - Loan #${loan.id}`,
                                             message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
                                             priority: 'high',
-                                            issue_type: 'Loan / kyc/ other'
+                                            issue_type: 'loan_kyc_other'
                                         })
                                     });
                                     toast.success('Fast disbursal request sent successfully!');
@@ -405,7 +405,7 @@ export default function LoanStatus() {
                                 prefill: true,
                                 subject: `Fund Release Request - Loan #${loan.id}`,
                                 message: `Hello,\n\nMy loan application #${loan.id} for ₹${Number(loan.amount).toLocaleString()} has been approved, but the funds have not been released to my account yet.\n\nPlease release the approved amount to my wallet at the earliest.\n\nThank you.`,
-                                category: 'LOAN',
+                                category: 'loan_kyc_other',
                                 loanId: loan.id
                             }));
                             router.push(`/customer/support?ticket=${ticketData}`);

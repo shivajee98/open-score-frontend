@@ -103,16 +103,7 @@ export default function MobileNav() {
                 <span className="text-[8px] font-black uppercase tracking-widest">Cred-Out</span>
             </Link>
 
-            {hasActiveLoan && (
-                <Link
-                    href={activeLoanId ? `/customer/loan/status/repayment?id=${activeLoanId}` : "/customer/repayments"}
-                    prefetch={false}
-                    className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isRepay ? activeClass : 'text-slate-400'}`}
-                >
-                    <CreditCard size={20} className={isRepay ? 'scale-110' : ''} strokeWidth={isRepay ? 3 : 2} />
-                    <span className="text-[8px] font-black uppercase tracking-widest">Repay</span>
-                </Link>
-            )}
+
 
             <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isProfile ? activeClass : 'text-slate-400'}`}>
                 <User size={20} className={isProfile ? 'scale-110' : ''} strokeWidth={isProfile ? 3 : 2} />
