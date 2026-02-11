@@ -395,13 +395,6 @@ export default function RepaymentDashboard() {
                             {!showManualPay ? (
                                 <>
                                     <button
-                                        onClick={handleRepay}
-                                        disabled={paying}
-                                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-                                    >
-                                        {paying ? <div className="w-5 h-5 border-2 border-white rounded-full animate-spin border-t-transparent" /> : <>Pay via Wallet <ArrowRightCircle size={18} /></>}
-                                    </button>
-                                    <button
                                         onClick={handleUpiClick}
                                         disabled={paying}
                                         className="w-full py-4 bg-white text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 border border-slate-200"

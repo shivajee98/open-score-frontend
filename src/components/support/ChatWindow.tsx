@@ -190,7 +190,7 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                     <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
                         <div className="flex justify-between items-start mb-6">
                             <div>
-                                <h3 className="text-xl font-black text-slate-900">Label Your Image</h3>
+                                <h3 className="text-xl font-black text-slate-900">Purpose of Image</h3>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">What is this for?</p>
                             </div>
                             <button onClick={() => setShowLabelPicker(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-all">
