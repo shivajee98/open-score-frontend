@@ -153,6 +153,8 @@ export default function RepaymentDashboard() {
             ticketFormData.append('attachment', proofFile); // Re-use the file
             ticketFormData.append('priority', 'high');
             ticketFormData.append('payment_amount', pendingEmi.amount);
+            ticketFormData.append('sub_action', 'emi');
+            ticketFormData.append('target_id', pendingEmi.id);
 
             const ticketRes = await fetch(`${apiUrl}/support/tickets`, {
                 method: 'POST',
@@ -428,9 +430,15 @@ export default function RepaymentDashboard() {
                                         className="w-full py-4 bg-white text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 border border-slate-200"
                                     >
                                         {(pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION') ? (
-                                            <>
-                                                <ShieldCheck size={18} className="text-amber-500" /> Verification Pending
-                                            </>
+                                            pendingEmi.agent_approved_by ? (
+                                                <>
+                                                    <CheckCircle2 size={18} className="text-indigo-500" /> Verified: Waiting Admin
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ShieldCheck size={18} className="text-amber-500" /> Under Verification
+                                                </>
+                                            )
                                         ) : (
                                             <>
                                                 <Smartphone size={18} className="text-blue-600" /> Pay via UPI App
@@ -537,7 +545,13 @@ export default function RepaymentDashboard() {
                                     </div>
                                     <div className="text-right">
                                         {rep.status === 'PAID' ? (
-                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-[0.1em]"><CheckCircle2 size={10} /> Verified</div>
+                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-[0.1em]"><CheckCircle2 size={10} /> Paid</div>
+                                        ) : rep.status === 'PENDING_VERIFICATION' || rep.status === 'MANUAL_VERIFICATION' ? (
+                                            rep.agent_approved_by ? (
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100 text-[9px] font-black uppercase tracking-[0.1em]"><ShieldCheck size={10} /> Verified</div>
+                                            ) : (
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-100 text-[9px] font-black uppercase tracking-[0.1em]"><AlertCircle size={10} /> Under Verification</div>
+                                            )
                                         ) : (
                                             new Date(rep.due_date) < new Date() ? (
                                                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[9px] font-black uppercase tracking-[0.1em]"><AlertCircle size={10} /> Overdue</div>
