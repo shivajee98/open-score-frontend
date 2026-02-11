@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, Paperclip, X, Image as ImageIcon, Loader2, ExternalLink } from 'lucide-react';
+import { Send, Paperclip, X, Image as ImageIcon, Loader2, ExternalLink, Briefcase, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 import { format } from 'date-fns';
 import { API_BASE_URL } from '@/lib/api';
@@ -68,15 +68,26 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
+    const [showLabelPicker, setShowLabelPicker] = useState(false);
+    const [selectedLabel, setSelectedLabel] = useState<string>('');
+
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if ((!newMessage.trim() && !attachment) || isSending) return;
 
+        // If there's an attachment and no label selected yet, and we need a label
+        if (attachment && !selectedLabel) {
+            setShowLabelPicker(true);
+            return;
+        }
+
         setIsSending(true);
         try {
-            await onSendMessage(newMessage, attachment);
+            await (onSendMessage as any)(newMessage, attachment, selectedLabel);
             setNewMessage('');
             setAttachment(null);
+            setSelectedLabel('');
+            setShowLabelPicker(false);
         } catch (error) {
             console.error("Failed to send", error);
         } finally {
@@ -141,6 +152,13 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
 
                                     {msg.attachment_url && (
                                         <div className="mt-3 rounded-xl overflow-hidden border border-white/20 shadow-inner group relative">
+                                            {(msg as any).attachment_label && (
+                                                <div className="absolute top-2 left-2 z-10">
+                                                    <span className="bg-slate-900/80 backdrop-blur-md text-white text-[8px] font-black px-2 py-1 rounded-lg uppercase tracking-widest shadow-lg">
+                                                        {(msg as any).attachment_label}
+                                                    </span>
+                                                </div>
+                                            )}
                                             <img
                                                 src={getStorageUrl(msg.attachment_url!)}
                                                 alt="Attachment"
@@ -165,6 +183,48 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                 )}
                 <div ref={messagesEndRef} />
             </div>
+
+            {/* Label Picker Modal */}
+            {showLabelPicker && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900">Label Your Image</h3>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">What is this for?</p>
+                            </div>
+                            <button onClick={() => setShowLabelPicker(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-all">
+                                <X size={20} className="text-slate-400" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {[
+                                { id: 'platform_fee', label: 'Platform Fee', icon: <Briefcase className="text-blue-600" /> },
+                                { id: 'emi_payment', label: 'EMI Payment', icon: <CheckCircle2 className="text-emerald-600" /> },
+                                { id: 'wallet_recharge', label: 'Wallet Recharge', icon: <Loader2 className="text-amber-600" /> }
+                            ].map((opt) => (
+                                <button
+                                    key={opt.id}
+                                    onClick={() => {
+                                        setSelectedLabel(opt.label);
+                                        // We'll let handleSend take care of it or call it here? 
+                                        // Let's call it manually for better UX
+                                        const syntheticEvent = { preventDefault: () => { } } as any;
+                                        setTimeout(() => handleSend(syntheticEvent), 100);
+                                    }}
+                                    className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-white hover:shadow-xl hover:shadow-blue-600/5 border border-slate-100 rounded-2xl transition-all group active:scale-[0.98]"
+                                >
+                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                                        {opt.icon}
+                                    </div>
+                                    <span className="font-black text-slate-900 uppercase tracking-widest text-xs">{opt.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Input Area */}
             <div className="p-4 bg-white border-t border-slate-200">

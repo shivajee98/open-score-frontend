@@ -134,7 +134,7 @@ function SupportPageContent() {
         }
     };
 
-    const handleSendMessage = async (message: string, attachment?: File | null) => {
+    const handleSendMessage = async (message: string, attachment?: File | null, attachmentLabel?: string) => {
         if (!selectedTicket) return;
         try {
             let body: any;
@@ -142,8 +142,11 @@ function SupportPageContent() {
 
             if (attachment) {
                 const formData = new FormData();
-                formData.append('message', message || 'Shared an image');
+                formData.append('message', message || `Shared an image${attachmentLabel ? ` (${attachmentLabel})` : ''}`);
                 formData.append('attachment', attachment);
+                if (attachmentLabel) {
+                    formData.append('attachment_label', attachmentLabel);
+                }
                 body = formData;
             } else {
                 body = JSON.stringify({ message });
