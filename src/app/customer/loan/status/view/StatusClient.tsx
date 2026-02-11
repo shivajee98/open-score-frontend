@@ -261,21 +261,36 @@ export default function LoanStatus() {
                     </button>
 
                     {/* Fast Disbursal CTA */}
-                    {!['DISBURSED', 'CLOSED', 'REJECTED', 'CANCELLED'].includes(loan.status) && (
+                    {/* Fast Disbursal CTA */}
+                    {!['DISBURSED', 'CLOSED', 'REJECTED', 'CANCELLED', 'PREVIEW'].includes(loan.status) && (
                         <button
-                            onClick={() => {
-                                const ticketData = encodeURIComponent(JSON.stringify({
-                                    prefill: true,
-                                    subject: `Fast Disbursal Request - Loan #${loan.id}`,
-                                    message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
-                                    category: 'LOAN',
-                                    loanId: loan.id
-                                }));
-                                router.push(`/customer/support?ticket=${ticketData}`);
+                            onClick={async () => {
+                                try {
+                                    setSubmitting(true);
+                                    await apiFetch('/support/tickets', {
+                                        method: 'POST',
+                                        body: JSON.stringify({
+                                            subject: `Fast Disbursal Request - Loan #${loan.id}`,
+                                            message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
+                                            priority: 'high',
+                                            issue_type: 'Loan / kyc/ other'
+                                        })
+                                    });
+                                    toast.success('Fast disbursal request sent successfully!');
+                                } catch (e: any) {
+                                    toast.error(e.message || 'Failed to send request');
+                                } finally {
+                                    setSubmitting(false);
+                                }
                             }}
-                            className="w-full py-2.5 flex items-center justify-center gap-2 text-emerald-600 text-xs font-bold hover:bg-emerald-50 transition-colors rounded-b-lg"
+                            disabled={submitting}
+                            className="w-full py-3 bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 transition-all rounded-b-lg shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
                         >
-                            <MessageSquare className="w-3.5 h-3.5" />
+                            {submitting ? (
+                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <MessageSquare className="w-3.5 h-3.5" />
+                            )}
                             Click here for fast disbursal
                         </button>
                     )}
