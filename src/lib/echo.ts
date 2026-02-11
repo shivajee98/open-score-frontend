@@ -1,30 +1,31 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
-declare global {
-    interface Window {
-        Pusher: any;
-        Echo: any;
-    }
+// Fix for Next.js SSR
+if (typeof window !== 'undefined') {
+    (window as any).Pusher = Pusher;
 }
 
-window.Pusher = Pusher;
-
 export const createEcho = (token?: string) => {
-    return new Echo({
+    const options: any = {
         broadcaster: 'reverb',
         key: process.env.NEXT_PUBLIC_REVERB_APP_KEY,
         wsHost: process.env.NEXT_PUBLIC_REVERB_HOST,
-        wsPort: parseInt(process.env.NEXT_PUBLIC_REVERB_PORT ?? '8081'),
-        wssPort: parseInt(process.env.NEXT_PUBLIC_REVERB_PORT ?? '443'),
-        forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME ?? 'http') === 'https',
+        wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT ?? 80),
+        wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT ?? 443),
+        forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME ?? 'https') === 'https',
         enabledTransports: ['ws', 'wss'],
-        authEndpoint: `${process.env.NEXT_PUBLIC_API_URL}/broadcasting/auth`,
-        auth: {
+    };
+
+    if (token) {
+        options.authEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/broadcasting/auth`;
+        options.auth = {
             headers: {
                 Authorization: `Bearer ${token}`,
                 Accept: 'application/json',
             },
-        },
-    });
+        };
+    }
+
+    return new Echo(options);
 };
