@@ -31,6 +31,30 @@ interface ChatWindowProps {
     ticketStatus: string;
 }
 
+// Utility to auto-link URLs in text
+const renderMessageWithLinks = (text: string) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    return parts.map((part, i) => {
+        if (part.match(urlRegex)) {
+            return (
+                <a
+                    key={i}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline font-bold break-all hover:opacity-80 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {part}
+                </a>
+            );
+        }
+        return part;
+    });
+};
+
 export default function ChatWindow({ messages, currentUserId, onSendMessage, isLoading, ticketStatus }: ChatWindowProps) {
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
@@ -118,7 +142,9 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                                             {msg.is_admin_reply ? 'Customer Support' : msg.user?.name || 'User'}
                                         </p>
                                     )}
-                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                        {renderMessageWithLinks(msg.message)}
+                                    </p>
 
                                     {msg.attachment_url && (
                                         <div className="mt-3 rounded-xl overflow-hidden border border-white/20 shadow-inner group relative">
