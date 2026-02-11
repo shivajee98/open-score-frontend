@@ -133,6 +133,7 @@ export default function RepaymentDashboard() {
             const token = localStorage.getItem('token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.msmeloan.sbs/api';
 
+            // 1. Submit Manual Repayment Proof
             const res = await fetch(`${apiUrl}/loans/${loanId}/manual-repay`, {
                 method: 'POST',
                 headers: {
@@ -144,12 +145,39 @@ export default function RepaymentDashboard() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || data.message || "Upload failed");
 
-            toast.success("Payment proof submitted! Verification pending.");
-            setShowManualPay(false);
-            setProofFile(null);
-            setPreviewUrl(null);
-            setTransactionId('');
-            fetchData();
+            // 2. Auto-Create Support Ticket
+            const ticketFormData = new FormData();
+            ticketFormData.append('issue_type', '2'); // "Unable To Transfer & Approval EMI"
+            ticketFormData.append('subject', `EMI Payment Verification - Loan #${loanId}`);
+            ticketFormData.append('message', `I have paid my EMI of ₹${pendingEmi.amount}. Transaction ID: ${transactionId || 'N/A'}. Kindly update my EMI in the panel.`);
+            ticketFormData.append('attachment', proofFile); // Re-use the file
+            ticketFormData.append('priority', 'high');
+            ticketFormData.append('payment_amount', pendingEmi.amount);
+
+            const ticketRes = await fetch(`${apiUrl}/support/tickets`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: ticketFormData
+            });
+
+            const ticketData = await ticketRes.json();
+
+            if (ticketRes.ok && ticketData.id) {
+                toast.success("Proof submitted! Redirecting to support...");
+                setTimeout(() => {
+                    router.push(`/customer/support/chat/${ticketData.id}`);
+                }, 1500);
+            } else {
+                toast.success("Payment proof submitted! Verification pending.");
+                setShowManualPay(false);
+                setProofFile(null);
+                setPreviewUrl(null);
+                setTransactionId('');
+                fetchData();
+            }
+
         } catch (e: any) {
             toast.error(e.message || "Failed to submit proof");
         } finally {
@@ -396,10 +424,18 @@ export default function RepaymentDashboard() {
                                 <>
                                     <button
                                         onClick={handleUpiClick}
-                                        disabled={paying}
+                                        disabled={paying || pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION'}
                                         className="w-full py-4 bg-white text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 border border-slate-200"
                                     >
-                                        <Smartphone size={18} className="text-blue-600" /> Pay via UPI App
+                                        {(pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION') ? (
+                                            <>
+                                                <ShieldCheck size={18} className="text-amber-500" /> Verification Pending
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Smartphone size={18} className="text-blue-600" /> Pay via UPI App
+                                            </>
+                                        )}
                                     </button>
                                 </>
                             ) : (
