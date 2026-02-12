@@ -39,12 +39,12 @@ const kycSchema = z.object({
     loan_usage: z.string().min(5, 'Please provide more detail about loan usage'),
 
     aadhar_number: z.string().regex(/^\d{12}$/, 'Aadhaar must be exactly 12 digits'),
-    pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN Card format (e.g. ABCDE1234F)'),
+    pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i, 'Invalid PAN Card format (e.g. ABCDE1234F)'),
 
     street_address: z.string().min(5, 'Address is too short'),
     city: z.string().min(2, 'City is required'),
     state: z.string().min(2, 'State is required'),
-    postal_code: z.string().length(6, 'PIN code must be exactly 6 digits'),
+    postal_code: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits'),
 
     employer: z.string().min(2, 'Employer name is required'),
     occupation: z.string().min(2, 'Occupation is required'),
@@ -148,7 +148,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div className="relative">
                                 <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
                                 <input
-                                    type="number"
+                                    type="text"
+                                    inputMode="numeric"
                                     placeholder="Total yearly income"
                                     {...register('annual_income')}
                                     className={`${inputClasses} pl-11`}
@@ -230,11 +231,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div>
                                 <label className={labelClasses}>Aadhaar Card (12 Digits)</label>
                                 <input
-                                    type="number"
+                                    type="text"
+                                    inputMode="numeric"
                                     placeholder="0000 0000 0000"
                                     onInput={(e) => {
                                         const target = e.target as HTMLInputElement;
-                                        if (target.value.length > 12) target.value = target.value.slice(0, 12);
+                                        target.value = target.value.replace(/\D/g, '').slice(0, 12);
                                     }}
                                     {...register('aadhar_number')}
                                     className={inputClasses}
@@ -246,7 +248,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <input
                                     placeholder="ABCDE1234F"
                                     maxLength={10}
-                                    {...register('pan_number')}
+                                    {...register('pan_number', {
+                                        onChange: (e) => {
+                                            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                        }
+                                    })}
                                     className={`${inputClasses} uppercase tracking-widest`}
                                 />
                                 {errors.pan_number && <p className={errorClasses}>{errors.pan_number.message}</p>}
@@ -276,11 +282,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div>
                                 <label className={labelClasses}>PIN Code</label>
                                 <input
-                                    type="number"
+                                    type="text"
+                                    inputMode="numeric"
                                     placeholder="6 digits"
                                     onInput={(e) => {
                                         const target = e.target as HTMLInputElement;
-                                        if (target.value.length > 6) target.value = target.value.slice(0, 6);
+                                        target.value = target.value.replace(/\D/g, '').slice(0, 6);
                                     }}
                                     {...register('postal_code')}
                                     className={inputClasses}
