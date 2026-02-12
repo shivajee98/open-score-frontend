@@ -32,6 +32,7 @@ interface KycFormData {
     comments: string;
     bank_references: string;
     consent: boolean;
+    referral_code: string; // Added optional field
 }
 
 interface KycFormProps {
@@ -72,7 +73,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         down_payment: '',
         comments: '',
         bank_references: '',
-        consent: false
+        consent: false,
+        referral_code: ''
     });
 
     // Pre-populate with initial data when available
@@ -161,6 +163,17 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         className={inputClasses}
                         rows={2}
                         placeholder="Purpose of your loan..."
+                    />
+                </div>
+
+                <div>
+                    <label className={labelClasses}>Referral Code (Optional)</label>
+                    <input
+                        name="referral_code"
+                        value={formData.referral_code}
+                        onChange={handleChange}
+                        className={inputClasses}
+                        placeholder="Enter agent code if applicable"
                     />
                 </div>
             </div>
@@ -262,10 +275,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         />
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Employment */}
-            <div className="space-y-4">
+            < div className="space-y-4" >
                 <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">EMPLOYMENT INFORMATION</h3>
 
                 <div>
@@ -294,10 +307,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <input type="number" required name="rent_mortgage" value={formData.rent_mortgage} onChange={handleChange} placeholder="₹" className={inputClasses} />
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* References & Consent */}
-            <div className="space-y-4">
+            < div className="space-y-4" >
                 <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">REFERENCES & CONSENT</h3>
 
                 <div>
@@ -320,7 +333,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <span className="text-xs font-bold text-slate-700">I agree that the information given is true, accurate and complete.</span>
                     </label>
                 </div>
-            </div>
+            </div >
 
             <div className="flex gap-3">
                 {isModal && onCancel && (
@@ -341,7 +354,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     {!loading && <ChevronRight className="w-5 h-5" />}
                 </button>
             </div>
-        </form>
+        </form >
     );
 
     if (isModal) {
