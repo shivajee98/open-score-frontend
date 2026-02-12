@@ -292,7 +292,8 @@ export default function LoanApplication() {
                     tenure: selectedTenureConfig.tenure_days,
                     payout_frequency: selectedFrequency,
                     payout_option_id: 'standard',
-                    loan_plan_id: selectedOffer.id
+                    loan_plan_id: selectedOffer.id,
+                    referral_code: localStorage.getItem('referral_code') || localStorage.getItem('loan_referral_code')
                 })
             });
             toast.success("Application Submitted!");
