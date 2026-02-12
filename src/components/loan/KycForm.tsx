@@ -20,7 +20,6 @@ import {
     IndianRupee,
     FileText
 } from 'lucide-react';
-
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -66,11 +65,11 @@ interface KycFormProps {
 }
 
 const STEPS = [
-    { id: 'purpose', title: 'Purpose', icon: IndianRupee },
-    { id: 'personal', title: 'Personal', icon: User },
-    { id: 'identity', title: 'Identity', icon: Shield },
-    { id: 'employment', title: 'Employment', icon: Briefcase },
-    { id: 'consent', title: 'Review', icon: FileText },
+    { id: 'purpose', title: 'Purpose', desc: 'Loan requirements', icon: IndianRupee },
+    { id: 'personal', title: 'Personal', desc: 'Basic information', icon: User },
+    { id: 'identity', title: 'Identity', desc: 'Verified documents', icon: Shield },
+    { id: 'employment', title: 'Work', desc: 'Income & profession', icon: Briefcase },
+    { id: 'consent', title: 'Review', desc: 'Final application', icon: FileText },
 ];
 
 export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false }: KycFormProps) {
@@ -135,7 +134,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         switch (currentStep) {
             case 0:
                 return (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-center justify-between shadow-inner">
                             <div>
                                 <p className={labelClasses}>Loan Amount</p>
@@ -181,7 +180,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
             case 1:
                 return (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={labelClasses}>First Name</label>
@@ -226,7 +225,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
             case 2:
                 return (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="grid grid-cols-1 gap-4">
                             <div>
                                 <label className={labelClasses}>Aadhaar Card (12 Digits)</label>
@@ -294,7 +293,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
             case 3:
                 return (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div>
                             <label className={labelClasses}>Current Employer / Shop Name</label>
                             <input placeholder="Company or Business Name" {...register('employer')} className={inputClasses} />
@@ -330,13 +329,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <FileText size={120} className="absolute -right-10 -bottom-10 text-white/10 rotate-12" />
                         </div>
 
-                        <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 scrollbar-hide py-2">
+                        <div className="space-y-4 max-h-[35vh] overflow-y-auto pr-2 scrollbar-hide py-2">
                             <ReviewItem label="Name" value={`${watch('first_name')} ${watch('last_name')}`} icon={User} />
                             <ReviewItem label="Phone" value={watch('phone')} icon={Phone} />
                             <ReviewItem label="Income" value={`₹${watch('annual_income')}`} icon={IndianRupee} />
                             <ReviewItem label="Address" value={`${watch('street_address')}, ${watch('city')} - ${watch('postal_code')}`} icon={MapPin} />
-                            <ReviewItem label="Aadhaar" value={watch('aadhar_number')} icon={Shield} />
-                            <ReviewItem label="PAN" value={watch('pan_number')} icon={CreditCard} />
+                            {/* Simplified review to avoid too much height */}
                         </div>
 
                         <label className="flex items-start gap-4 p-6 bg-slate-50 rounded-3xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
@@ -364,68 +362,85 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const formContent = (
-        <div className="space-y-8">
-            {/* Steps Progress */}
-            <div className="flex justify-between items-center px-2">
+        <div className="flex flex-col md:flex-row gap-8">
+            {/* Vertical Steps Progress */}
+            <div className="hidden md:flex flex-col gap-6 w-48 pt-4">
                 {STEPS.map((step, idx) => {
                     const Icon = step.icon;
                     const isActive = idx === currentStep;
                     const isCompleted = idx < currentStep;
 
                     return (
-                        <div key={idx} className="flex flex-col items-center gap-2 group">
+                        <div key={idx} className="flex items-center gap-4 group">
                             <div className={cn(
-                                "w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                isActive ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-110" :
-                                    isCompleted ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                "w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 flex-shrink-0",
+                                isActive ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30" :
+                                    isCompleted ? "bg-emerald-500 text-white" : "bg-slate-50 text-slate-400 border border-slate-100"
                             )}>
                                 {isCompleted ? <Check size={18} /> : <Icon size={18} />}
                             </div>
-                            <span className={cn(
-                                "text-[9px] font-black uppercase tracking-widest transition-colors",
-                                isActive ? "text-blue-600" : "text-slate-400"
-                            )}>
-                                {step.title}
-                            </span>
+                            <div className="flex flex-col">
+                                <span className={cn(
+                                    "text-[10px] font-black uppercase tracking-widest",
+                                    isActive ? "text-blue-600" : "text-slate-400"
+                                )}>
+                                    {step.title}
+                                </span>
+                                <span className="text-[9px] text-slate-300 font-bold uppercase truncate">{step.desc}</span>
+                            </div>
                         </div>
                     );
                 })}
             </div>
 
-            <div className="py-2">
-                {renderStep()}
+            {/* Mobile Horizontal Progress (Minimal) */}
+            <div className="flex md:hidden items-center gap-1.5 px-2 mb-4">
+                {STEPS.map((_, idx) => (
+                    <div
+                        key={idx}
+                        className={cn(
+                            "h-1.5 rounded-full transition-all duration-500",
+                            idx === currentStep ? "flex-1 bg-blue-600" :
+                                idx < currentStep ? "w-8 bg-emerald-500" : "w-4 bg-slate-100"
+                        )}
+                    />
+                ))}
             </div>
 
-            {/* Navigation */}
-            <div className="flex gap-3 pt-4 border-t border-slate-100">
-                {currentStep > 0 && (
-                    <button
-                        type="button"
-                        onClick={prevStep}
-                        className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
-                    >
-                        <ChevronLeft size={18} /> Back
-                    </button>
-                )}
+            <div className="flex-1">
+                {renderStep()}
 
-                {currentStep < STEPS.length - 1 ? (
-                    <button
-                        type="button"
-                        onClick={nextStep}
-                        className="flex-[2] py-4 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10"
-                    >
-                        Continue <ChevronRight size={18} />
-                    </button>
-                ) : (
-                    <button
-                        onClick={handleSubmit(onSubmit)}
-                        disabled={loading || !isValid}
-                        className="flex-[2] py-4 bg-blue-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50"
-                    >
-                        {loading ? 'Processing...' : 'Submit Application'}
-                        {!loading && <Check size={18} />}
-                    </button>
-                )}
+                {/* Navigation */}
+                <div className="flex gap-3 pt-8 mt-4 border-t border-slate-50">
+                    {currentStep > 0 && (
+                        <button
+                            type="button"
+                            onClick={prevStep}
+                            className="flex-1 py-4 bg-slate-50 text-slate-600 rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
+                        >
+                            <ChevronLeft size={18} /> Back
+                        </button>
+                    )}
+
+                    {currentStep < STEPS.length - 1 ? (
+                        <button
+                            type="button"
+                            onClick={nextStep}
+                            className="flex-[2] py-4 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10"
+                        >
+                            Continue <ChevronRight size={18} />
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSubmit(onSubmit)}
+                            disabled={loading || !isValid}
+                            className="flex-[2] py-4 bg-blue-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50"
+                        >
+                            {loading ? 'Processing...' : 'Submit Application'}
+                            {!loading && <Check size={18} />}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -433,11 +448,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     if (isModal) {
         return (
             <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 backdrop-blur-xl p-4 overflow-y-auto animate-in fade-in duration-300">
-                <div className="w-full max-w-lg bg-white rounded-[3rem] p-8 sm:p-10 shadow-2xl my-8 animate-in slide-in-from-bottom-10 duration-500 relative">
+                <div className="w-full max-w-2xl bg-white rounded-[3rem] p-8 sm:p-12 shadow-2xl my-8 animate-in slide-in-from-bottom-10 duration-500 relative">
                     <div className="flex justify-between items-center mb-10">
                         <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Kyc Verification</h2>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Step {currentStep + 1} of {STEPS.length}</p>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Kyc Verification</h2>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
+                                {STEPS[currentStep].title} — {STEPS[currentStep].desc}
+                            </p>
                         </div>
                         {onCancel && (
                             <button
@@ -456,10 +473,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     }
 
     return (
-        <div className="bg-white rounded-[3rem] p-8 sm:p-10 shadow-2xl border border-slate-100">
+        <div className="bg-white rounded-[3rem] p-8 sm:p-12 shadow-2xl border border-slate-100 max-w-4xl mx-auto">
             <div className="mb-10">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Loan Application</h2>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Step {currentStep + 1} of {STEPS.length}</p>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Loan Application</h2>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
+                    {STEPS[currentStep].title} — {STEPS[currentStep].desc}
+                </p>
             </div>
             {formContent}
         </div>
