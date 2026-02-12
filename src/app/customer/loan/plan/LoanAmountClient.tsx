@@ -121,7 +121,8 @@ export default function LoanDetail() {
                     tenure: tenureDays > 6 ? tenureDays : Math.round(tenureDays / 30), // Backend heuristic: > 6 is days, <= 6 is months
                     payout_frequency: payout.frequency,
                     payout_option_id: payout.id,
-                    loan_plan_id: plan.id
+                    loan_plan_id: plan.id,
+                    referral_code: localStorage.getItem('referral_code') || localStorage.getItem('loan_referral_code') || localStorage.getItem('referral code')
                 })
             });
 

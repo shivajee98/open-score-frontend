@@ -120,7 +120,10 @@ export default function LoanStatus() {
             // First, save the KYC data to the loan
             await apiFetch(`/loans/${loan.id}/kyc-data`, {
                 method: 'POST',
-                body: JSON.stringify(kycData)
+                body: JSON.stringify({
+                    ...kycData,
+                    referral_code: kycData.referral_code || localStorage.getItem('referral_code') || localStorage.getItem('loan_referral_code')
+                })
             });
 
             // Then confirm the application
