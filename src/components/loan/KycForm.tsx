@@ -1,371 +1,481 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, ChevronRight, Check, X } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+    Shield,
+    ChevronRight,
+    ChevronLeft,
+    Check,
+    X,
+    User,
+    Phone,
+    Mail,
+    MapPin,
+    Briefcase,
+    CreditCard,
+    Calendar,
+    IndianRupee,
+    FileText
+} from 'lucide-react';
 
-interface KycFormData {
-    desired_amount: number;
-    annual_income: string;
-    loan_usage: string;
-    first_name: string;
-    last_name: string;
-    birth_month: string;
-    birth_day: string;
-    birth_year: string;
-    marital_status: string;
-    email: string;
-    phone: string;
-    street_address: string;
-    street_address_2: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    address_duration: string;
-    employer: string;
-    occupation: string;
-    aadhar_number: string;
-    pan_number: string;
-    experience_years: string;
-    gross_monthly_income: string;
-    rent_mortgage: string;
-    down_payment: string;
-    comments: string;
-    bank_references: string;
-    consent: boolean;
-    referral_code: string; // Added optional field
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
 }
 
+// Zod Schema for Validation
+const kycSchema = z.object({
+    first_name: z.string().min(2, 'First name is too short'),
+    last_name: z.string().min(1, 'Last name is required'),
+    email: z.string().email('Invalid email address'),
+    phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid 10-digit mobile number'),
+    birth_date: z.string().min(1, 'Birth date is required'),
+
+    annual_income: z.string().min(1, 'Income is required'),
+    loan_usage: z.string().min(5, 'Please provide more detail about loan usage'),
+
+    aadhar_number: z.string().regex(/^\d{12}$/, 'Aadhaar must be exactly 12 digits'),
+    pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN Card format (e.g. ABCDE1234F)'),
+
+    street_address: z.string().min(5, 'Address is too short'),
+    city: z.string().min(2, 'City is required'),
+    state: z.string().min(2, 'State is required'),
+    postal_code: z.string().length(6, 'PIN code must be exactly 6 digits'),
+
+    employer: z.string().min(2, 'Employer name is required'),
+    occupation: z.string().min(2, 'Occupation is required'),
+
+    referral_code: z.string().optional(),
+    consent: z.boolean().refine(val => val === true, 'You must agree to the terms'),
+});
+
+type KycFormData = z.infer<typeof kycSchema>;
+
 interface KycFormProps {
-    onSubmit: (data: KycFormData) => void;
+    onSubmit: (data: any) => void;
     onCancel?: () => void;
     loanAmount: number;
     loading?: boolean;
-    initialData?: Partial<KycFormData>;
+    initialData?: Partial<any>;
     isModal?: boolean;
 }
 
+const STEPS = [
+    { id: 'purpose', title: 'Purpose', icon: IndianRupee },
+    { id: 'personal', title: 'Personal', icon: User },
+    { id: 'identity', title: 'Identity', icon: Shield },
+    { id: 'employment', title: 'Employment', icon: Briefcase },
+    { id: 'consent', title: 'Review', icon: FileText },
+];
+
 export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false }: KycFormProps) {
-    const [formData, setFormData] = useState<KycFormData>({
-        desired_amount: loanAmount,
-        annual_income: '',
-        loan_usage: '',
-        first_name: '',
-        last_name: '',
-        birth_month: '',
-        birth_day: '',
-        birth_year: '',
-        marital_status: '',
-        email: '',
-        phone: '',
-        street_address: '',
-        street_address_2: '',
-        city: '',
-        state: '',
-        postal_code: '',
-        address_duration: '',
-        employer: '',
-        occupation: '',
-        aadhar_number: '',
-        pan_number: '',
-        experience_years: '',
-        gross_monthly_income: '',
-        rent_mortgage: '',
-        down_payment: '',
-        comments: '',
-        bank_references: '',
-        consent: false,
-        referral_code: ''
+    const [currentStep, setCurrentStep] = useState(0);
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        watch,
+        trigger,
+        formState: { errors, isValid }
+    } = useForm<KycFormData>({
+        resolver: zodResolver(kycSchema),
+        mode: 'onChange',
+        defaultValues: {
+            consent: false,
+            referral_code: '',
+            ...initialData
+        }
     });
 
-    // Pre-populate with initial data when available
     useEffect(() => {
         if (initialData) {
-            setFormData(prev => ({
-                ...prev,
-                ...initialData,
-                desired_amount: loanAmount
-            }));
+            Object.keys(initialData).forEach((key) => {
+                const value = (initialData as any)[key];
+                if (value !== undefined) {
+                    setValue(key as any, value);
+                }
+            });
         }
-    }, [initialData, loanAmount]);
+    }, [initialData, setValue]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-        }));
+    const nextStep = async () => {
+        const fieldsToValidate = getFieldsForStep(currentStep);
+        const isStepValid = await trigger(fieldsToValidate as any);
+        if (isStepValid) {
+            setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1));
+        }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSubmit(formData);
+    const prevStep = () => {
+        setCurrentStep(prev => Math.max(prev - 1, 0));
     };
 
-    const inputClasses = "w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all";
-    const labelClasses = "block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1";
+    const getFieldsForStep = (step: number) => {
+        switch (step) {
+            case 0: return ['annual_income', 'loan_usage', 'referral_code'];
+            case 1: return ['first_name', 'last_name', 'email', 'phone', 'birth_date'];
+            case 2: return ['aadhar_number', 'pan_number', 'street_address', 'city', 'state', 'postal_code'];
+            case 3: return ['employer', 'occupation'];
+            case 4: return ['consent'];
+            default: return [];
+        }
+    };
+
+    const inputClasses = "w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all placeholder:text-slate-300 shadow-sm";
+    const labelClasses = "block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 ml-1";
+    const errorClasses = "text-[10px] font-bold text-rose-500 mt-1 ml-2 uppercase tracking-tight";
+
+    const renderStep = () => {
+        switch (currentStep) {
+            case 0:
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                        <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-center justify-between shadow-inner">
+                            <div>
+                                <p className={labelClasses}>Loan Amount</p>
+                                <p className="text-3xl font-black text-blue-600 tracking-tighter">₹{loanAmount.toLocaleString()}</p>
+                            </div>
+                            <IndianRupee size={32} className="text-blue-200" />
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Annual Income</label>
+                            <div className="relative">
+                                <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
+                                <input
+                                    type="number"
+                                    placeholder="Total yearly income"
+                                    {...register('annual_income')}
+                                    className={`${inputClasses} pl-11`}
+                                />
+                            </div>
+                            {errors.annual_income && <p className={errorClasses}>{errors.annual_income.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Purpose of Loan</label>
+                            <textarea
+                                placeholder="Why do you need this loan?"
+                                {...register('loan_usage')}
+                                className={`${inputClasses} min-h-[100px] resize-none`}
+                            />
+                            {errors.loan_usage && <p className={errorClasses}>{errors.loan_usage.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Referral Code (Optional)</label>
+                            <input
+                                placeholder="Agent ID if any"
+                                {...register('referral_code')}
+                                className={inputClasses}
+                            />
+                        </div>
+                    </div>
+                );
+
+            case 1:
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className={labelClasses}>First Name</label>
+                                <input placeholder="John" {...register('first_name')} className={inputClasses} />
+                                {errors.first_name && <p className={errorClasses}>{errors.first_name.message}</p>}
+                            </div>
+                            <div>
+                                <label className={labelClasses}>Last Name</label>
+                                <input placeholder="Doe" {...register('last_name')} className={inputClasses} />
+                                {errors.last_name && <p className={errorClasses}>{errors.last_name.message}</p>}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Birth Date</label>
+                            <div className="relative">
+                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
+                                <input type="date" {...register('birth_date')} className={`${inputClasses} pl-11`} />
+                            </div>
+                            {errors.birth_date && <p className={errorClasses}>{errors.birth_date.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Email Address</label>
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
+                                <input type="email" placeholder="name@email.com" {...register('email')} className={`${inputClasses} pl-11`} />
+                            </div>
+                            {errors.email && <p className={errorClasses}>{errors.email.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Mobile Number</label>
+                            <div className="relative">
+                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
+                                <input type="tel" maxLength={10} placeholder="9876543210" {...register('phone')} className={`${inputClasses} pl-11`} />
+                            </div>
+                            {errors.phone && <p className={errorClasses}>{errors.phone.message}</p>}
+                        </div>
+                    </div>
+                );
+
+            case 2:
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                        <div className="grid grid-cols-1 gap-4">
+                            <div>
+                                <label className={labelClasses}>Aadhaar Card (12 Digits)</label>
+                                <input
+                                    type="number"
+                                    placeholder="0000 0000 0000"
+                                    onInput={(e) => {
+                                        const target = e.target as HTMLInputElement;
+                                        if (target.value.length > 12) target.value = target.value.slice(0, 12);
+                                    }}
+                                    {...register('aadhar_number')}
+                                    className={inputClasses}
+                                />
+                                {errors.aadhar_number && <p className={errorClasses}>{errors.aadhar_number.message}</p>}
+                            </div>
+                            <div>
+                                <label className={labelClasses}>PAN Card Number</label>
+                                <input
+                                    placeholder="ABCDE1234F"
+                                    maxLength={10}
+                                    {...register('pan_number')}
+                                    className={`${inputClasses} uppercase tracking-widest`}
+                                />
+                                {errors.pan_number && <p className={errorClasses}>{errors.pan_number.message}</p>}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Street Address</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-4 top-4 text-slate-300 w-5 h-5" />
+                                <textarea placeholder="House No, Area, Landmark" {...register('street_address')} className={`${inputClasses} pl-11 min-h-[80px]`} />
+                            </div>
+                            {errors.street_address && <p className={errorClasses}>{errors.street_address.message}</p>}
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2">
+                            <div>
+                                <label className={labelClasses}>City</label>
+                                <input placeholder="City" {...register('city')} className={inputClasses} />
+                                {errors.city && <p className={errorClasses}>{errors.city.message}</p>}
+                            </div>
+                            <div>
+                                <label className={labelClasses}>State</label>
+                                <input placeholder="State" {...register('state')} className={inputClasses} />
+                                {errors.state && <p className={errorClasses}>{errors.state.message}</p>}
+                            </div>
+                            <div>
+                                <label className={labelClasses}>PIN Code</label>
+                                <input
+                                    type="number"
+                                    placeholder="6 digits"
+                                    onInput={(e) => {
+                                        const target = e.target as HTMLInputElement;
+                                        if (target.value.length > 6) target.value = target.value.slice(0, 6);
+                                    }}
+                                    {...register('postal_code')}
+                                    className={inputClasses}
+                                />
+                                {errors.postal_code && <p className={errorClasses}>{errors.postal_code.message}</p>}
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 3:
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                        <div>
+                            <label className={labelClasses}>Current Employer / Shop Name</label>
+                            <input placeholder="Company or Business Name" {...register('employer')} className={inputClasses} />
+                            {errors.employer && <p className={errorClasses}>{errors.employer.message}</p>}
+                        </div>
+
+                        <div>
+                            <label className={labelClasses}>Occupation / Role</label>
+                            <input placeholder="e.g. Sales Manager, Shop Owner" {...register('occupation')} className={inputClasses} />
+                            {errors.occupation && <p className={errorClasses}>{errors.occupation.message}</p>}
+                        </div>
+
+                        <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 mt-12">
+                            <h4 className="flex items-center gap-2 text-sm font-black text-slate-900 mb-3">
+                                <Shield className="w-4 h-4 text-blue-500" />
+                                Safe & Secure
+                            </h4>
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                Your information is encrypted and only used for credit assessment. We never share your sensitive data with third parties without permission.
+                            </p>
+                        </div>
+                    </div>
+                );
+
+            case 4:
+                return (
+                    <div className="space-y-6 animate-in zoom-in-95 duration-300">
+                        <div className="p-8 bg-blue-600 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20 relative overflow-hidden">
+                            <div className="relative z-10">
+                                <h3 className="text-2xl font-black mb-2">Final Review</h3>
+                                <p className="text-blue-100 text-sm font-medium">Please confirm all details are correct before submitting.</p>
+                            </div>
+                            <FileText size={120} className="absolute -right-10 -bottom-10 text-white/10 rotate-12" />
+                        </div>
+
+                        <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 scrollbar-hide py-2">
+                            <ReviewItem label="Name" value={`${watch('first_name')} ${watch('last_name')}`} icon={User} />
+                            <ReviewItem label="Phone" value={watch('phone')} icon={Phone} />
+                            <ReviewItem label="Income" value={`₹${watch('annual_income')}`} icon={IndianRupee} />
+                            <ReviewItem label="Address" value={`${watch('street_address')}, ${watch('city')} - ${watch('postal_code')}`} icon={MapPin} />
+                            <ReviewItem label="Aadhaar" value={watch('aadhar_number')} icon={Shield} />
+                            <ReviewItem label="PAN" value={watch('pan_number')} icon={CreditCard} />
+                        </div>
+
+                        <label className="flex items-start gap-4 p-6 bg-slate-50 rounded-3xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <div className="mt-1">
+                                <input
+                                    type="checkbox"
+                                    {...register('consent')}
+                                    className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <p className="text-xs font-black text-slate-900 uppercase tracking-wide mb-1">Declaration</p>
+                                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                                    I certify that the information provided is true and accurate. I authorize Open Score to verify my identity and assess my creditworthiness.
+                                </p>
+                                {errors.consent && <p className={errorClasses}>{errors.consent.message}</p>}
+                            </div>
+                        </label>
+                    </div>
+                );
+
+            default:
+                return null;
+        }
+    };
 
     const formContent = (
-        <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Header */}
-            <div className="flex items-start justify-between">
-                <div>
-                    <h2 className="text-xl font-black text-slate-900 mb-2">Loan Application Form</h2>
-                    <p className="text-slate-500 text-sm">Please provide accurate information for quick verification.</p>
-                </div>
-                {isModal && onCancel && (
+        <div className="space-y-8">
+            {/* Steps Progress */}
+            <div className="flex justify-between items-center px-2">
+                {STEPS.map((step, idx) => {
+                    const Icon = step.icon;
+                    const isActive = idx === currentStep;
+                    const isCompleted = idx < currentStep;
+
+                    return (
+                        <div key={idx} className="flex flex-col items-center gap-2 group">
+                            <div className={cn(
+                                "w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500",
+                                isActive ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-110" :
+                                    isCompleted ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                            )}>
+                                {isCompleted ? <Check size={18} /> : <Icon size={18} />}
+                            </div>
+                            <span className={cn(
+                                "text-[9px] font-black uppercase tracking-widest transition-colors",
+                                isActive ? "text-blue-600" : "text-slate-400"
+                            )}>
+                                {step.title}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="py-2">
+                {renderStep()}
+            </div>
+
+            {/* Navigation */}
+            <div className="flex gap-3 pt-4 border-t border-slate-100">
+                {currentStep > 0 && (
                     <button
                         type="button"
-                        onClick={onCancel}
-                        className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"
+                        onClick={prevStep}
+                        className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
                     >
-                        <X className="w-4 h-4" />
+                        <ChevronLeft size={18} /> Back
+                    </button>
+                )}
+
+                {currentStep < STEPS.length - 1 ? (
+                    <button
+                        type="button"
+                        onClick={nextStep}
+                        className="flex-[2] py-4 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10"
+                    >
+                        Continue <ChevronRight size={18} />
+                    </button>
+                ) : (
+                    <button
+                        onClick={handleSubmit(onSubmit)}
+                        disabled={loading || !isValid}
+                        className="flex-[2] py-4 bg-blue-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50"
+                    >
+                        {loading ? 'Processing...' : 'Submit Application'}
+                        {!loading && <Check size={18} />}
                     </button>
                 )}
             </div>
-
-            {/* Basic Info */}
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className={labelClasses}>Desired Loan Amount</label>
-                        <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                            <input
-                                readOnly
-                                value={loanAmount.toLocaleString()}
-                                className={`${inputClasses} pl-8 bg-slate-100 font-bold`}
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className={labelClasses}>Annual Income</label>
-                        <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                            <input
-                                required
-                                name="annual_income"
-                                value={formData.annual_income}
-                                onChange={handleChange}
-                                placeholder="0"
-                                className={`${inputClasses} pl-8`}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label className={labelClasses}>Loan will be used for</label>
-                    <textarea
-                        required
-                        name="loan_usage"
-                        value={formData.loan_usage}
-                        onChange={handleChange}
-                        className={inputClasses}
-                        rows={2}
-                        placeholder="Purpose of your loan..."
-                    />
-                </div>
-
-                <div>
-                    <label className={labelClasses}>Referral Code (Optional)</label>
-                    <input
-                        name="referral_code"
-                        value={formData.referral_code}
-                        onChange={handleChange}
-                        className={inputClasses}
-                        placeholder="Enter agent code if applicable"
-                    />
-                </div>
-            </div>
-
-            {/* Contact Info */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">CONTACT INFORMATION</h3>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className={labelClasses}>First Name</label>
-                        <input required name="first_name" value={formData.first_name} onChange={handleChange} className={inputClasses} />
-                    </div>
-                    <div>
-                        <label className={labelClasses}>Last Name</label>
-                        <input required name="last_name" value={formData.last_name} onChange={handleChange} className={inputClasses} />
-                    </div>
-                </div>
-
-                <div>
-                    <label className={labelClasses}>Birth Date</label>
-                    <div className="grid grid-cols-3 gap-2">
-                        <select name="birth_month" value={formData.birth_month} onChange={handleChange} className={inputClasses} required>
-                            <option value="">Month</option>
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i} value={i + 1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
-                            ))}
-                        </select>
-                        <select name="birth_day" value={formData.birth_day} onChange={handleChange} className={inputClasses} required>
-                            <option value="">Day</option>
-                            {Array.from({ length: 31 }, (_, i) => (
-                                <option key={i} value={i + 1}>{i + 1}</option>
-                            ))}
-                        </select>
-                        <select name="birth_year" value={formData.birth_year} onChange={handleChange} className={inputClasses} required>
-                            <option value="">Year</option>
-                            {Array.from({ length: 80 }, (_, i) => (
-                                <option key={i} value={2026 - i}>{2026 - i}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className={labelClasses}>Email</label>
-                        <input type="email" required name="email" value={formData.email} onChange={handleChange} placeholder="example@example.com" className={inputClasses} />
-                    </div>
-                    <div>
-                        <label className={labelClasses}>Phone</label>
-                        <input type="tel" required name="phone" value={formData.phone} onChange={handleChange} placeholder="9999999999" className={inputClasses} />
-                    </div>
-                </div>
-
-                <div>
-                    <label className={labelClasses}>Street Address</label>
-                    <input required name="street_address" value={formData.street_address} onChange={handleChange} className={inputClasses} />
-                </div>
-                <div>
-                    <label className={labelClasses}>Street Address Line 2 (Optional)</label>
-                    <input name="street_address_2" value={formData.street_address_2} onChange={handleChange} className={inputClasses} />
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                    <input required name="city" value={formData.city} onChange={handleChange} placeholder="City" className={inputClasses} />
-                    <input required name="state" value={formData.state} onChange={handleChange} placeholder="State" className={inputClasses} />
-                    <input required name="postal_code" value={formData.postal_code} onChange={handleChange} placeholder="PIN Code" className={inputClasses} />
-                </div>
-
-                <div>
-                    <label className={labelClasses}>How long have you lived at this address?</label>
-                    <input required name="address_duration" value={formData.address_duration} onChange={handleChange} placeholder="e.g. 2 years" className={inputClasses} />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className={labelClasses}>Aadhar Card Number</label>
-                        <input
-                            required
-                            name="aadhar_number"
-                            value={formData.aadhar_number}
-                            onChange={handleChange}
-                            placeholder="12-digit number"
-                            maxLength={12}
-                            pattern="\d{12}"
-                            className={inputClasses}
-                        />
-                    </div>
-                    <div>
-                        <label className={labelClasses}>PAN Card Number</label>
-                        <input
-                            required
-                            name="pan_number"
-                            value={formData.pan_number}
-                            onChange={handleChange}
-                            placeholder="ABCDE1234F"
-                            maxLength={10}
-                            className={`${inputClasses} uppercase`}
-                        />
-                    </div>
-                </div>
-            </div >
-
-            {/* Employment */}
-            < div className="space-y-4" >
-                <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">EMPLOYMENT INFORMATION</h3>
-
-                <div>
-                    <label className={labelClasses}>Present Employer / Business Name</label>
-                    <input required name="employer" value={formData.employer} onChange={handleChange} className={inputClasses} />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className={labelClasses}>Occupation</label>
-                        <input required name="occupation" value={formData.occupation} onChange={handleChange} className={inputClasses} />
-                    </div>
-                    <div>
-                        <label className={labelClasses}>Years of Experience</label>
-                        <input type="number" required name="experience_years" value={formData.experience_years} onChange={handleChange} className={inputClasses} />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className={labelClasses}>Gross Monthly Income</label>
-                        <input type="number" required name="gross_monthly_income" value={formData.gross_monthly_income} onChange={handleChange} placeholder="₹" className={inputClasses} />
-                    </div>
-                    <div>
-                        <label className={labelClasses}>Monthly Rent/Mortgage</label>
-                        <input type="number" required name="rent_mortgage" value={formData.rent_mortgage} onChange={handleChange} placeholder="₹" className={inputClasses} />
-                    </div>
-                </div>
-            </div >
-
-            {/* References & Consent */}
-            < div className="space-y-4" >
-                <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2">REFERENCES & CONSENT</h3>
-
-                <div>
-                    <label className={labelClasses}>Bank References (Optional)</label>
-                    <textarea name="bank_references" value={formData.bank_references} onChange={handleChange} className={inputClasses} rows={2} placeholder="Bank name, account type, years with bank..." />
-                </div>
-
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <p className="text-[10px] text-slate-500 leading-relaxed mb-4">
-                        I authorize Open Score and its partners to obtain personal and credit information about me from my employer, bank, and credit bureaus for the purpose of evaluating this loan application. I certify that all information provided is accurate and complete.
-                    </p>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            name="consent"
-                            checked={formData.consent}
-                            onChange={handleChange}
-                            className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-xs font-bold text-slate-700">I agree that the information given is true, accurate and complete.</span>
-                    </label>
-                </div>
-            </div >
-
-            <div className="flex gap-3">
-                {isModal && onCancel && (
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-black text-base hover:bg-slate-200 transition-all"
-                    >
-                        Cancel
-                    </button>
-                )}
-                <button
-                    type="submit"
-                    disabled={!formData.consent || loading}
-                    className={`${isModal && onCancel ? 'flex-1' : 'w-full'} py-3 bg-slate-900 text-white rounded-xl font-black text-base hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2`}
-                >
-                    {loading ? 'Submitting...' : 'Confirm & Submit'}
-                    {!loading && <ChevronRight className="w-5 h-5" />}
-                </button>
-            </div>
-        </form >
+        </div>
     );
 
     if (isModal) {
         return (
-            <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/80 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
-                <div className="w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl my-8 animate-in slide-in-from-bottom-10 duration-300">
+            <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 backdrop-blur-xl p-4 overflow-y-auto animate-in fade-in duration-300">
+                <div className="w-full max-w-lg bg-white rounded-[3rem] p-8 sm:p-10 shadow-2xl my-8 animate-in slide-in-from-bottom-10 duration-500 relative">
+                    <div className="flex justify-between items-center mb-10">
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Kyc Verification</h2>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Step {currentStep + 1} of {STEPS.length}</p>
+                        </div>
+                        {onCancel && (
+                            <button
+                                type="button"
+                                onClick={onCancel}
+                                className="w-12 h-12 bg-slate-50 hover:bg-rose-50 hover:text-rose-500 text-slate-400 rounded-2xl flex items-center justify-center transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                        )}
+                    </div>
                     {formContent}
                 </div>
             </div>
         );
     }
 
-    return formContent;
+    return (
+        <div className="bg-white rounded-[3rem] p-8 sm:p-10 shadow-2xl border border-slate-100">
+            <div className="mb-10">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Loan Application</h2>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Step {currentStep + 1} of {STEPS.length}</p>
+            </div>
+            {formContent}
+        </div>
+    );
+}
+
+function ReviewItem({ label, value, icon: Icon }: { label: string, value: any, icon: any }) {
+    return (
+        <div className="flex items-center gap-4 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+            <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                <Icon size={18} />
+            </div>
+            <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+                <p className="text-sm font-bold text-slate-900 break-all">{value || 'Not provided'}</p>
+            </div>
+        </div>
+    );
 }
