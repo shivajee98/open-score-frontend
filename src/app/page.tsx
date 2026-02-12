@@ -46,7 +46,7 @@ export default function Home() {
     }, 6000);
 
     const checkReferral = () => {
-      const code = localStorage.getItem('referral_code');
+      const code = localStorage.getItem('referral_code') || localStorage.getItem('referral code');
       if (code) setReferralCode(code);
 
       const temp = localStorage.getItem('temp_referral_code');
@@ -116,7 +116,7 @@ export default function Home() {
   const handleVerifyOtp = async () => {
     setLoading(true);
     setError('');
-    const referralCode = localStorage.getItem('referral_code');
+    const referralCode = localStorage.getItem('referral_code') || localStorage.getItem('referral code');
 
     try {
       const data = await apiFetch('/auth/verify', {
@@ -135,7 +135,10 @@ export default function Home() {
         localStorage.setItem('user', JSON.stringify(data.user));
         if (data.access_token) localStorage.setItem('token', data.access_token);
         localStorage.setItem('hasSeenOnboarding', 'true');
-        if (referralCode) localStorage.removeItem('referral_code');
+        if (referralCode) {
+          localStorage.removeItem('referral_code');
+          localStorage.removeItem('referral code');
+        }
 
         if (data.onboarding_status === 'REQUIRED') {
           data.user.is_onboarded = false;
@@ -160,7 +163,7 @@ export default function Home() {
     if (!role) return;
     setLoading(true);
     setError('');
-    const referralCode = localStorage.getItem('referral_code');
+    const referralCode = localStorage.getItem('referral_code') || localStorage.getItem('referral code');
 
     try {
       console.log('[DEBUG] Sending /auth/verify request:', {

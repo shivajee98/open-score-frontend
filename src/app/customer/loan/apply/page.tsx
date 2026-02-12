@@ -293,7 +293,7 @@ export default function LoanApplication() {
                     payout_frequency: selectedFrequency,
                     payout_option_id: 'standard',
                     loan_plan_id: selectedOffer.id,
-                    referral_code: localStorage.getItem('referral_code') || localStorage.getItem('loan_referral_code')
+                    referral_code: localStorage.getItem('referral_code') || localStorage.getItem('loan_referral_code') || localStorage.getItem('referral code')
                 })
             });
             toast.success("Application Submitted!");
