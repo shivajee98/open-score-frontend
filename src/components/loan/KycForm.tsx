@@ -171,10 +171,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div>
                             <label className={labelClasses}>Referral Code (Optional)</label>
                             <input
-                                placeholder="Agent ID if any"
+                                placeholder="Agent ID or Friend's Code"
                                 {...register('referral_code')}
                                 className={inputClasses}
                             />
+                            <p className="text-[9px] text-blue-500 font-bold mt-1 ml-2">
+                                Use a friend's code to earn rewards!
+                            </p>
                         </div>
                     </div>
                 );
