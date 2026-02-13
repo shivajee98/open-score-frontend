@@ -34,8 +34,11 @@ export default function Onboarding() {
                     // If they have a role already, check if they should be in the merchant flow
                     if (user.role === 'MERCHANT') {
                         router.push('/auth/merchant-onboarding');
+                    } else if (user.role === 'CUSTOMER') {
+                        setRole('CUSTOMER');
+                        setStep(2);
+                        setCheckingAuth(false);
                     } else {
-                        setRole(user.role || 'CUSTOMER');
                         setCheckingAuth(false);
                     }
                 }
