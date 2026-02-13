@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Receipt, Loader2 } from 'lucide-react';
+import { ArrowLeft, Receipt, Loader2, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { apiFetch } from '@/lib/api';
 
@@ -116,13 +116,18 @@ export default function LoanHistory() {
                                                         loan.status === 'CANCELLED' ? 'bg-slate-100 text-slate-500' :
                                                             'bg-slate-100 text-slate-500'
                                             }`}>
-                                            {(loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= Number(loan.amount)) ? 'COMPLETED' : loan.status.replace(/_/g, ' ')}
+                                            {(loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= Number(loan.amount)) ? 'COMPLETED' :
+                                                loan.status === 'APPROVED' ? 'DISBURSAL UNDER PROCESS' :
+                                                    loan.status.replace(/_/g, ' ')}
                                         </span>
                                         <span className="text-[10px] font-bold text-slate-400">
                                             {new Date(loan.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                                         </span>
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900 tracking-tight">₹ {parseFloat(loan.amount).toLocaleString('en-IN')}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="text-xl font-black text-slate-900 tracking-tight">₹ {parseFloat(loan.amount).toLocaleString('en-IN')}</h3>
+                                        {loan.status === 'APPROVED' && <RefreshCw size={16} className="text-blue-500 animate-spin" />}
+                                    </div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
                                         {loan.tenure} Months • {loan.payout_frequency} Payout
                                     </p>

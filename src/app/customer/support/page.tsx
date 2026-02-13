@@ -53,7 +53,17 @@ function SupportPageContent() {
                         message: data.message || '',
                         category: data.category || ''
                     });
-                    setIsCreateModalOpen(true);
+
+                    if (data.autoSubmit) {
+                        handleCreateTicket(
+                            data.subject || 'Support Request',
+                            data.message || 'Auto-generated request',
+                            'normal', // priority
+                            data.category || 'General' // issueType
+                        );
+                    } else {
+                        setIsCreateModalOpen(true);
+                    }
                 } else if (data.id) {
                     // Direct navigation to created ticket
                     setSelectedTicket(data);
@@ -210,9 +220,9 @@ function SupportPageContent() {
                         </div>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 ml-2"
+                            className="px-3 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 ml-2 flex items-center gap-1 active:scale-95"
                         >
-                            <Plus size={18} />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Need help (Click here)</span>
                         </button>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
@@ -237,7 +247,7 @@ function SupportPageContent() {
                                 </button>
                                 <div>
                                     <h3 className="font-bold text-slate-900">{selectedTicket.subject}</h3>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">#{selectedTicket.id}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ref-No: {selectedTicket.id}</p>
                                 </div>
                             </div>
                             <div className="flex-1 overflow-hidden">

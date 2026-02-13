@@ -197,7 +197,7 @@ export default function CreateTicketModal({
                             : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
                             }`}
                     >
-                        {isSubmitting ? <Loader2 size={24} className="animate-spin" /> : <span>{isPrefilled ? 'Send Ticket' : 'Submit Ticket'}</span>}
+                        {isSubmitting ? <Loader2 size={24} className="animate-spin" /> : <span>Submit</span>}
                     </button>
                 </form>
             </div>

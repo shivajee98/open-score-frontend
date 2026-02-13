@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -108,12 +108,23 @@ export default function Profile() {
         }
     };
 
+    const [showNameMismatch, setShowNameMismatch] = useState(false);
+
     const handleBack = () => {
         if (user?.role === 'ADMIN') router.push('/admin');
         else router.push('/customer'); // Unified dashboard
     };
 
     const handleUpdateProfile = async () => {
+        // Issue 7: Name matching validation
+        const profileName = formData.name.trim().toLowerCase();
+        const bankName = formData.account_holder_name.trim().toLowerCase();
+
+        if (bankName && profileName !== bankName) {
+            setShowNameMismatch(true);
+            return;
+        }
+
         try {
             const res = await apiFetch('/auth/update-profile', {
                 method: 'POST',
@@ -237,12 +248,19 @@ export default function Profile() {
                             {user.name?.[0]}
                         </div>
                         {isEditing ? (
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className={`text-xl font-medium text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                            />
+                            <>
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className={`text-xl font-medium text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                />
+                                {formData.name.trim().toLowerCase() !== formData.account_holder_name.trim().toLowerCase() && formData.account_holder_name && (
+                                    <p className="text-rose-500 text-[10px] font-bold mt-1 uppercase tracking-tighter animate-pulse">
+                                        ⚠️ Must match account holder name
+                                    </p>
+                                )}
+                            </>
                         ) : (
                             <h2 className="text-xl font-medium text-slate-900 tracking-tight mb-2">{user.name}</h2>
                         )}
@@ -503,13 +521,20 @@ export default function Profile() {
                                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">A/C Holder Name</p>
                                         {isEditing && !user.account_number ? (
-                                            <input
-                                                type="text"
-                                                value={formData.account_holder_name}
-                                                onChange={(e) => setFormData({ ...formData, account_holder_name: e.target.value })}
-                                                className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                placeholder="As per bank records"
-                                            />
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={formData.account_holder_name}
+                                                    onChange={(e) => setFormData({ ...formData, account_holder_name: e.target.value })}
+                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="As per bank records"
+                                                />
+                                                {formData.name.trim().toLowerCase() !== formData.account_holder_name.trim().toLowerCase() && (
+                                                    <p className="text-rose-500 text-[8px] font-bold mt-1 uppercase animate-pulse">
+                                                        ⚠️ Mismatch with profile name
+                                                    </p>
+                                                )}
+                                            </>
                                         ) : (
                                             <p className="text-sm font-medium text-slate-900 truncate">{user.account_holder_name || 'Not Set'}</p>
                                         )}
@@ -638,6 +663,35 @@ export default function Profile() {
                 isOpen={isTutorialOpen}
                 onClose={() => setIsTutorialOpen(false)}
             />
+
+            {/* Name Mismatch Modal */}
+            {showNameMismatch && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowNameMismatch(false)}></div>
+                    <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full relative z-10 shadow-2xl border-2 border-rose-500 animate-in zoom-in-95 duration-200">
+                        <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-600">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 text-center mb-2">Name Mismatch</h3>
+                        <p className="text-rose-600 text-center font-bold text-sm leading-relaxed mb-8">
+                            Customer Profile Name and Bank Account Holder Name must be exactly the same.
+                        </p>
+                        <div className="space-y-4">
+                            <div className="p-4 bg-rose-50 rounded-xl border border-rose-100">
+                                <p className="text-[10px] uppercase font-bold text-rose-400 tracking-widest mb-1">Mismatch detected</p>
+                                <p className="text-xs font-bold text-rose-700">Profile: <span className="underline">{formData.name}</span></p>
+                                <p className="text-xs font-bold text-rose-700">Bank Record: <span className="underline">{formData.account_holder_name}</span></p>
+                            </div>
+                            <button
+                                onClick={() => setShowNameMismatch(false)}
+                                className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+                            >
+                                Close & Fix
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <PinModal
                 isOpen={isPinModalOpen}

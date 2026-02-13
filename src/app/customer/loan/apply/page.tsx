@@ -274,7 +274,8 @@ export default function LoanApplication() {
     // Effect to handle entry mode bypass if planId is provided
     useEffect(() => {
         const planId = searchParams.get('planId');
-        if (planId && entryMode) {
+        const applyFlag = searchParams.get('apply');
+        if ((planId || applyFlag === 'true') && entryMode) {
             setEntryMode(false);
         }
     }, [searchParams, entryMode]);
@@ -302,6 +303,7 @@ export default function LoanApplication() {
             if (response.auto_approved) {
                 const ticketData = {
                     prefill: true,
+                    autoSubmit: true,
                     subject: "Instant Disbursal: ₹10,000 Loan",
                     message: "I have just applied for a ₹10,000 instant loan and it is pre-approved. Please release the funds to my account.",
                     category: "Loan Disbursal"
