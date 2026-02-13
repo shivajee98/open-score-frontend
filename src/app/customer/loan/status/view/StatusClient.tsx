@@ -195,7 +195,7 @@ export default function LoanStatus() {
                         <div className={`space-y-3 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
                             {/* Additional Charges Group */}
                             <div className="space-y-3 pt-2 border-t border-slate-50">
-                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1">Sanction summary</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Sanction summary</p>
                                 <div className="flex justify-between text-xs text-slate-500">
                                     <span>Loan Amount</span>
                                     <span className="text-slate-900 font-bold">₹ {principal.toLocaleString()}</span>

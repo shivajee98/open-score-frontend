@@ -284,7 +284,7 @@ export default function LoanApplication() {
 
         setLoading(true);
         try {
-            await apiFetch('/loans/apply', {
+            const response = await apiFetch('/loans/apply', {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: selectedOffer.rawAmount,
@@ -296,8 +296,20 @@ export default function LoanApplication() {
                     referral_code: localStorage.getItem('referral_code') || localStorage.getItem('loan_referral_code') || localStorage.getItem('referral code')
                 })
             });
-            toast.success("Application Submitted!");
-            router.push('/customer/loan');
+
+            toast.success(response.message || "Application Submitted!");
+
+            if (response.auto_approved) {
+                const ticketData = {
+                    prefill: true,
+                    subject: "Instant Disbursal: ₹10,000 Loan",
+                    message: "I have just applied for a ₹10,000 instant loan and it is pre-approved. Please release the funds to my account.",
+                    category: "Loan Disbursal"
+                };
+                router.push(`/customer/support?ticket=${encodeURIComponent(JSON.stringify(ticketData))}`);
+            } else {
+                router.push('/customer/loan');
+            }
         } catch (e: any) {
             toast.error(e.message || "Application Failed");
         } finally {
