@@ -128,7 +128,13 @@ function SupportPageContent() {
     };
 
     useEffect(() => {
-        if (!selectedTicket) return;
+        if (!selectedTicket) {
+            setMessages([]);
+            return;
+        }
+        // Clear old messages first to avoid stale data
+        setMessages([]);
+
         fetchMessages(selectedTicket.id);
         const intervalId = setInterval(() => {
             const currentMsgs = messagesRef.current;
@@ -171,12 +177,17 @@ function SupportPageContent() {
                 body = JSON.stringify({ message });
             }
 
-            await apiFetch(`/support/tickets/${selectedTicket.id}/message`, {
+            const res = await apiFetch(`/support/tickets/${selectedTicket.id}/message`, {
                 method: 'POST',
                 body: body
             });
 
-            fetchMessages(selectedTicket.id);
+            if (res && res.id) {
+                setMessages(prev => [...prev, res]);
+            }
+
+            // Still fetch in background just in case
+            fetchMessages(selectedTicket.id, messagesRef.current.length > 0 ? messagesRef.current[messagesRef.current.length - 1].id : 0);
         } catch (error) {
             console.error(error);
             toast.error('Failed to send message');

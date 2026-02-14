@@ -167,7 +167,7 @@ export default function CustomerTransactions() {
                                                     <div>
                                                         <p className="font-bold text-slate-900 text-[11px] tracking-tight">
                                                             {(t.counterparty_vpa === 'System' || t.counterparty_vpa === 'Open Score')
-                                                                ? (t.type === 'CREDIT' ? t.counterparty_name || 'Open Score' : t.counterparty_name || 'System Debit')
+                                                                ? (t.description?.toLowerCase().includes('welcome bonus') ? 'Welcome Bonus' : (t.type === 'CREDIT' ? t.counterparty_name || 'Open Score' : t.counterparty_name || 'System Debit'))
                                                                 : (t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`)
                                                             }
                                                         </p>

@@ -13,6 +13,8 @@ import SupportModal from '@/components/SupportModal';
 import MerchantLocator from '@/components/MerchantLocator';
 import HomeBannerCarousel from '@/components/HomeBannerCarousel';
 
+import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
+
 export default function CustomerHome() {
     const { user: cachedUser, wallet: cachedWallet, loans: cachedLoans, setUser, setWallet, setLoans } = useStore();
     const router = useRouter();
@@ -134,6 +136,40 @@ export default function CustomerHome() {
         return () => clearTimeout(timer);
     }, [loading, user]);
 
+    // Check for Welcome Bonus
+    const [showWelcomeBonus, setShowWelcomeBonus] = useState(false);
+    const [welcomeBonusAmount, setWelcomeBonusAmount] = useState(0);
+
+    useEffect(() => {
+        const checkBonus = async () => {
+            const hasSeen = localStorage.getItem('seen_welcome_bonus');
+            if (hasSeen || !user) return;
+
+            // Only check for reasonably new users (created within last 24 hours) or just check transactions
+            try {
+                const res = await apiFetch('/wallet/transactions?limit=5');
+                if (res && res.data) {
+                    const bonusTx = res.data.find((tx: any) =>
+                        tx.type === 'CREDIT' &&
+                        (tx.description?.toLowerCase().includes('welcome bonus') || tx.description?.toLowerCase().includes('signup bonus'))
+                    );
+
+                    if (bonusTx) {
+                        setWelcomeBonusAmount(parseFloat(bonusTx.amount));
+                        setShowWelcomeBonus(true);
+                        localStorage.setItem('seen_welcome_bonus', 'true');
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to check welcome bonus", e);
+            }
+        };
+
+        if (user && !loading) {
+            checkBonus();
+        }
+    }, [user, loading]);
+
     if (!user || loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="flex flex-col items-center gap-3">
@@ -167,6 +203,7 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
+            <WelcomeBonusPopup isOpen={showWelcomeBonus} onClose={() => setShowWelcomeBonus(false)} amount={welcomeBonusAmount} />
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} />
 
