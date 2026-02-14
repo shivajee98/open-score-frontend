@@ -39,7 +39,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                     target = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
                 }
 
-                router.replace(target);
+                if (path === target) {
+                    setAuthorized(true);
+                } else {
+                    router.replace(target);
+                }
             } else {
                 setAuthorized(true);
             }

@@ -52,16 +52,16 @@ export default function LoanApplication() {
                 if (userData && userData.name) {
                     setFormData(prev => ({
                         ...prev,
-                        fullName: user.name || '',
-                        address: user.business_address || '',
-                        pinCode: user.pincode || '',
+                        fullName: userData.name || '',
+                        address: userData.business_address || '',
+                        pinCode: userData.pincode || '',
                         // city not explicitly in user model? but let's see
                     }));
                     // If name and address exist, we can potentially skip step 1
                     // But maybe we just want to pre-fill.
                     // The user said: "if a user have already filled that form, then also why are we again opening that form"
                     // So let's skip to Step 2 if user has name and address.
-                    if (user.name && (user.business_address || user.pincode)) {
+                    if (userData.name && (userData.business_address || userData.pincode)) {
                         setStep(2);
                     }
                 }

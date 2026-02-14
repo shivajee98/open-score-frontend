@@ -314,7 +314,7 @@ export default function DashboardLayout({
 
                 {/* Main Content */}
                 < main className="flex-1 flex flex-col overflow-hidden relative pb-[5.5rem] md:pb-0 bg-slate-50" >
-                    <header className="px-4 py-2.5 md:py-4 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
+                    <header className="px-4 pt-12 pb-2.5 md:py-4 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
                         <div className="flex items-center gap-3">
                             <h2 className="text-lg md:text-2xl font-black tracking-tight text-slate-900">{title}</h2>
                             <button

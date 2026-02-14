@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, clearAuthState } from '@/lib/api';
 import { toast } from '@/components/ui/Toast';
 import {
     Store,
@@ -142,43 +142,25 @@ function MerchantOnboardingForm() {
         setStep(2);
     };
 
-    const uploadToCloudinary = async (file: File) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
-        formData.append('cloud_name', process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
 
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!res.ok) {
-            throw new Error('Image upload to Cloudinary failed');
-        }
-
-        const data = await res.json();
-        return data.secure_url;
-    };
 
     const handleSubmit = async () => {
         setLoading(true);
         setError('');
         try {
-            let shopImageUrl = '';
+            const formDataObj = new FormData();
+            formDataObj.append('name', formData.name);
+            formDataObj.append('email', formData.email);
+            formDataObj.append('business_name', formData.business_name);
+
             if (imageFile) {
-                shopImageUrl = await uploadToCloudinary(imageFile);
+                formDataObj.append('profile_image', imageFile);
             }
 
             // Complete Onboarding (Basic Info)
             await apiFetch('/auth/onboarding', {
                 method: 'POST',
-                body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    business_name: formData.business_name,
-                    profile_image: shopImageUrl
-                })
+                body: formDataObj
             });
 
             // Sync user in local storage
@@ -211,8 +193,8 @@ function MerchantOnboardingForm() {
                 <div className="text-center mb-10 relative">
                     {/* Back Button - Persistent */}
                     <button
-                        onClick={() => router.push('/')}
-                        className="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95"
+                        onClick={async () => { await clearAuthState(); router.replace('/'); }}
+                        className="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-10"
                     >
                         <ArrowLeft size={16} />
                     </button>
