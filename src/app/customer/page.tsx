@@ -142,8 +142,17 @@ export default function CustomerHome() {
 
     useEffect(() => {
         const checkBonus = async () => {
-            const hasSeen = localStorage.getItem('seen_welcome_bonus');
-            if (hasSeen || !user) return;
+            if (!user) return;
+
+            // 1. Check LocalStorage/Cookie first to save API calls
+            const hasSeenLocal = localStorage.getItem('seen_welcome_bonus');
+            if (hasSeenLocal === 'true') return;
+
+            // 2. Check Database Flag
+            if (user.has_seen_welcome_bonus) {
+                localStorage.setItem('seen_welcome_bonus', 'true');
+                return;
+            }
 
             // Only check for reasonably new users (created within last 24 hours) or just check transactions
             try {
@@ -157,7 +166,6 @@ export default function CustomerHome() {
                     if (bonusTx) {
                         setWelcomeBonusAmount(parseFloat(bonusTx.amount));
                         setShowWelcomeBonus(true);
-                        localStorage.setItem('seen_welcome_bonus', 'true');
                     }
                 }
             } catch (e) {
@@ -169,6 +177,20 @@ export default function CustomerHome() {
             checkBonus();
         }
     }, [user, loading]);
+
+    const handleCloseWelcomeBonus = async () => {
+        setShowWelcomeBonus(false);
+        localStorage.setItem('seen_welcome_bonus', 'true');
+        try {
+            await apiFetch('/auth/welcome-bonus-seen', { method: 'POST' });
+            // Update local user state to reflect change without re-fetch
+            if (user) {
+                setUser({ ...user, has_seen_welcome_bonus: true });
+            }
+        } catch (e) {
+            console.error("Failed to sync seen status", e);
+        }
+    };
 
     if (!user || loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -203,7 +225,7 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
-            <WelcomeBonusPopup isOpen={showWelcomeBonus} onClose={() => setShowWelcomeBonus(false)} amount={welcomeBonusAmount} />
+            <WelcomeBonusPopup isOpen={showWelcomeBonus} onClose={handleCloseWelcomeBonus} amount={welcomeBonusAmount} />
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} />
 

@@ -1,4 +1,4 @@
-    'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { X, Trophy, Sparkles } from 'lucide-react';
@@ -9,7 +9,7 @@ interface WelcomeBonusPopupProps {
     amount?: number;
 }
 
-export default function WelcomeBonusPopup({ isOpen, onClose, amount = 100 }: WelcomeBonusPopupProps) {
+export default function WelcomeBonusPopup({ isOpen, onClose, amount = 0 }: WelcomeBonusPopupProps) {
     const [show, setShow] = useState(false);
 
     useEffect(() => {
