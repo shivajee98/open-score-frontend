@@ -29,33 +29,43 @@ function MerchantOnboardingForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
-
-    useEffect(() => {
-        const s = searchParams.get('step');
-        if (s) setStep(parseInt(s));
-    }, [searchParams]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
 
     useEffect(() => {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            if (user.is_onboarded) {
-                router.replace(user.role === 'ADMIN' ? '/admin' : '/customer');
-                return;
+        const checkAuth = () => {
+            try {
+                const userStr = localStorage.getItem('user');
+                if (!userStr) {
+                    router.replace('/');
+                    return;
+                }
+
+                const user = JSON.parse(userStr);
+                if (user.is_onboarded) {
+                    router.replace(user.role === 'ADMIN' ? '/admin' : '/customer');
+                    return;
+                }
+
+                // Pre-fill form if data exists
+                if (user.name) setFormData(prev => ({ ...prev, name: user.name }));
+                if (user.email) setFormData(prev => ({ ...prev, email: user.email }));
+
+                // Handle step from URL directly here to avoid separate effect race conditions
+                const s = searchParams.get('step');
+                if (s) setStep(parseInt(s));
+
+                setCheckingAuth(false);
+            } catch (err) {
+                console.error('Auth check failed:', err);
+                router.replace('/');
             }
-            // Pre-fill form if data exists
-            if (user.name) setFormData(prev => ({ ...prev, name: user.name }));
-            if (user.email) setFormData(prev => ({ ...prev, email: user.email }));
-        } else {
-            router.replace('/');
-            return;
-        }
-        setCheckingAuth(false);
-    }, [router]);
+        };
+
+        checkAuth();
+    }, [router, searchParams]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -144,8 +154,14 @@ function MerchantOnboardingForm() {
         u.email = formData.email;
         localStorage.setItem('user', JSON.stringify(u));
 
-        // Proceed to next step
+        // Proceed to next step with URL update for browser history
         setStep(2);
+        router.push('/auth/merchant-onboarding?step=2');
+    };
+
+    const handleBackToStep1 = () => {
+        setStep(1);
+        router.replace('/auth/merchant-onboarding');
     };
 
 
@@ -201,8 +217,10 @@ function MerchantOnboardingForm() {
                 {/* Header Section */}
                 <div className="text-center mb-10 relative">
                     <BackButton
-                        className="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-10"
+                        className="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-50"
                         fallback="/"
+                        clearAuth={step === 1}
+                        onClick={step > 1 ? handleBackToStep1 : undefined}
                     />
 
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-600 text-white font-black text-xl mb-4 shadow-xl shadow-emerald-600/20">

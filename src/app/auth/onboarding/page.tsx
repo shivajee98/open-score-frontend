@@ -25,30 +25,39 @@ export default function Onboarding() {
     const router = useRouter();
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const userStr = localStorage.getItem('user');
-            if (userStr) {
-                const user = JSON.parse(userStr);
-
-                if (user.is_onboarded) {
-                    if (user.role === 'ADMIN') router.push('/admin');
-                    else router.push('/customer');
-                } else {
-                    // If they have a role already, check if they should be in the merchant flow
-                    if (user.role === 'MERCHANT') {
-                        router.push('/auth/merchant-onboarding');
-                    } else if (user.role === 'CUSTOMER') {
-                        setRole('CUSTOMER');
-                        setStep(2);
-                        setCheckingAuth(false);
-                    } else {
-                        setCheckingAuth(false);
-                    }
+        const checkAuth = () => {
+            try {
+                const userStr = localStorage.getItem('user');
+                if (!userStr) {
+                    window.location.href = '/';
+                    return;
                 }
-            } else {
-                if (typeof window !== 'undefined') window.location.href = '/';
+
+                const user = JSON.parse(userStr);
+                if (user.is_onboarded) {
+                    router.push(user.role === 'ADMIN' ? '/admin' : '/customer');
+                    return;
+                }
+
+                if (user.role === 'MERCHANT') {
+                    router.push('/auth/merchant-onboarding');
+                    // We don't setCheckingAuth(false) because we are navigating away
+                    return;
+                }
+
+                if (user.role === 'CUSTOMER') {
+                    setRole('CUSTOMER');
+                    setStep(2);
+                }
+
+                setCheckingAuth(false);
+            } catch (err) {
+                console.error('Onboarding auth check failed:', err);
+                window.location.href = '/';
             }
-        }
+        };
+
+        checkAuth();
     }, [router]);
 
     const handleMerchantSelection = async () => {
@@ -152,13 +161,15 @@ export default function Onboarding() {
                 <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl shadow-blue-900/5 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-purple-600"></div>
 
+                    <BackButton
+                        clearAuth={step === 1}
+                        fallback="/"
+                        onClick={step > 1 ? () => setStep(step - 1) : undefined}
+                        className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95 z-50"
+                    />
+
                     {step === 1 && (
                         <div className="animate-in slide-in-from-right-8 duration-300">
-                            <BackButton
-                                clearAuth
-                                fallback="/"
-                                className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95"
-                            />
                             <div className="mb-10 text-center relative">
                                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl mx-auto flex items-center justify-center mb-6 text-xl font-black">
                                     O
@@ -167,10 +178,10 @@ export default function Onboarding() {
                                 <p className="text-slate-500 font-medium">How will you use OpenScore?</p>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 mb-8">
+                            <div className="grid grid-cols-1 gap-4">
                                 {[
-                                    { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon className="w-6 h-6" /> },
-                                    { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store className="w-6 h-6" /> },
+                                    { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon /> },
+                                    { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store /> },
                                 ].map((item) => (
                                     <button
                                         key={item.id}
@@ -182,10 +193,10 @@ export default function Onboarding() {
                                                 setStep(2);
                                             }
                                         }}
-                                        className={`w-full p-6 rounded-3xl border transition-all group relative text-left active:scale-[0.98] ${role === item.id ? (item.id === 'MERCHANT' ? 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-600/20' : 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/20') : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-slate-200'}`}
+                                        className="w-full p-5 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:bg-white hover:border-blue-600/20 text-left transition-all group active:scale-[0.98]"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${role === item.id ? (item.id === 'MERCHANT' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/20') : 'bg-white border border-slate-100 text-slate-400 group-hover:scale-110'}`}>
+                                            <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                                                 {item.icon}
                                             </div>
                                             <div>
@@ -202,12 +213,6 @@ export default function Onboarding() {
                     {step === 2 && (
                         <div className="animate-in slide-in-from-right-8 duration-300">
                             <div className="mb-10 text-center">
-                                <button
-                                    onClick={() => setStep(1)}
-                                    className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 hover:underline"
-                                >
-                                    ← Back to Account Type
-                                </button>
                                 <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-2">Profile Details</h2>
                                 <p className="text-slate-500 font-medium">Almost there. Let's get to know you.</p>
                             </div>
@@ -266,12 +271,6 @@ export default function Onboarding() {
                     {step === 3 && (
                         <div className="animate-in slide-in-from-right-8 duration-300">
                             <div className="mb-10 text-center">
-                                <button
-                                    onClick={() => setStep(2)}
-                                    className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 hover:underline"
-                                >
-                                    ← Back to Profile
-                                </button>
                                 <h2 className="text-2xl font-black tracking-tighter text-slate-900 mb-2">Set Wallet PIN</h2>
                                 <p className="text-slate-500 font-medium">Create a secure 6-digit PIN for transactions.</p>
                             </div>

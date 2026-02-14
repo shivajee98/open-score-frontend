@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store } from 'lucide-react';
@@ -23,10 +23,21 @@ export default function Home() {
   const [error, setError] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
   const [showLogoutHint, setShowLogoutHint] = useState(false);
+  const isRegistering = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
     const checkSession = async () => {
+      // Step 0: Fast path redirect if possible
+      const localUserStr = localStorage.getItem('user');
+      const localToken = localStorage.getItem('token');
+      if (localUserStr && localToken) {
+        try {
+          const user = JSON.parse(localUserStr);
+          redirectUser(user);
+        } catch (e) { }
+      }
+
       try {
         const userData = await apiFetch('/auth/me', { skipAuthCheck: true });
         localStorage.setItem('user', JSON.stringify(userData));
@@ -160,7 +171,8 @@ export default function Home() {
   };
 
   const handleRegister = async () => {
-    if (!role) return;
+    if (!role || isRegistering.current) return;
+    isRegistering.current = true;
     setLoading(true);
     setError('');
     const referralCode = localStorage.getItem('referral_code') || localStorage.getItem('referral code');
@@ -196,6 +208,7 @@ export default function Home() {
     } catch (err: any) {
       setError(err.message);
       setFlow('role_select');
+      isRegistering.current = false;
     } finally {
       setLoading(false);
     }

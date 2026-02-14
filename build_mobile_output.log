@@ -1,0 +1,63 @@
+
+> frontend@0.1.1 build:mobile
+> mv src/app/api src/app/_api && NEXT_PUBLIC_CAPACITOR_BUILD=true next build; mv src/app/_api src/app/api && cp -r out/* ../capacitor_js/www/
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /home/shivajee/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /home/shivajee/Desktop/open_score/frontend/package-lock.json
+
+▲ Next.js 16.1.4 (Turbopack)
+- Environments: .env.production.local, .env.local, .env.production
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.7s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/31) ...
+(node:804250) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:804244) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+  Generating static pages using 7 workers (7/31) 
+  Generating static pages using 7 workers (15/31) 
+  Generating static pages using 7 workers (23/31) 
+✓ Generating static pages using 7 workers (31/31) in 618.8ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ○ /admin/qr-generator
+├ ○ /admin/support
+├ ○ /auth/merchant-onboarding
+├ ○ /auth/onboarding
+├ ○ /customer
+├ ○ /customer/add-money
+├ ○ /customer/loan
+├ ○ /customer/loan/apply
+├ ○ /customer/loan/business
+├ ○ /customer/loan/history
+├ ○ /customer/loan/plan
+├ ○ /customer/loan/status/repayment
+├ ○ /customer/loan/status/view
+├ ○ /customer/notifications
+├ ○ /customer/pay
+├ ○ /customer/payout
+├ ○ /customer/profile
+├ ○ /customer/qr
+├ ○ /customer/referral
+├ ○ /customer/referrals
+├ ○ /customer/repayments
+├ ○ /customer/rewards
+├ ○ /customer/support
+├ ○ /customer/transactions
+├ ○ /icon.svg
+└ ○ /privacy-policy
+
+
+○  (Static)  prerendered as static content
+
