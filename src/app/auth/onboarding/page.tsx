@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { User as UserIcon, Store, Mail, ArrowRight, User, Lock, ArrowLeft } from 'lucide-react';
+import { User as UserIcon, Store, Mail, ArrowRight, User, Lock, ArrowLeft, GraduationCap } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 
 export default function Onboarding() {
@@ -161,7 +161,55 @@ export default function Onboarding() {
                         className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95 z-50"
                     />
 
-                    {/* Step 1 Removed - Role is now set at login/signup */}
+                    {step === 1 && (
+                        <div className="animate-in slide-in-from-left-8 duration-300">
+                            <div className="space-y-6">
+                                <div className="text-center mb-8">
+                                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl mx-auto flex items-center justify-center mb-6 text-xl font-black shadow-inner shadow-blue-200/50">
+                                        O
+                                    </div>
+                                    <h2 className="text-2xl font-black mb-2 tracking-tighter">Account Type</h2>
+                                    <p className="text-slate-500 text-sm font-medium italic">How will you use Open Score?</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-4">
+                                    {[
+                                        { id: 'CUSTOMER', label: 'Personal Account', sub: 'Pay, save, and borrow.', icon: <UserIcon /> },
+                                        { id: 'MERCHANT', label: 'Merchant Account', sub: 'Accept payments & grow.', icon: <Store /> },
+                                        { id: 'STUDENT', label: 'Student Account', sub: 'Learn, achieve, and borrow.', icon: <GraduationCap /> },
+                                    ].map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => {
+                                                setRole(item.id as any);
+                                                // Update local storage so persistence works
+                                                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                                                u.role = item.id;
+                                                localStorage.setItem('user', JSON.stringify(u));
+
+                                                if (item.id === 'MERCHANT') {
+                                                    router.push('/auth/merchant-onboarding');
+                                                } else {
+                                                    setStep(2);
+                                                }
+                                            }}
+                                            className="w-full p-5 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:bg-white hover:border-blue-600/20 text-left transition-all group active:scale-[0.98] shadow-sm hover:shadow-md"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                                    {item.icon}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-slate-900 text-lg leading-tight">{item.label}</h4>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{item.sub}</p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {step === 2 && (
                         <div className="animate-in slide-in-from-right-8 duration-300">
