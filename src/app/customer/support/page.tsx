@@ -113,8 +113,8 @@ function SupportPageContent() {
             if (afterId) url += `?after_id=${afterId}`;
             const res = await apiFetch(url);
 
-            // Handle both direct array and wrapped { data: [...] } responses
-            const msgData = Array.isArray(res) ? res : (res?.data || []);
+            // Handle direct array, { data: [...] }, or { messages: [...] } responses
+            const msgData = Array.isArray(res) ? res : (res?.data || res?.messages || []);
 
             if (Array.isArray(msgData)) {
                 if (msgData.length === 0) return;
@@ -145,7 +145,7 @@ function SupportPageContent() {
             const lastMsg = currentMsgs.length > 0 ? currentMsgs[currentMsgs.length - 1] : null;
             const afterId = lastMsg ? lastMsg.id : 0;
             fetchMessages(selectedTicket.id, afterId);
-        }, 3000);
+        }, 1000);
         return () => clearInterval(intervalId);
     }, [selectedTicket]);
 
