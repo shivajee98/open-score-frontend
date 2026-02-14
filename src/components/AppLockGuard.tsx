@@ -33,8 +33,10 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
             }
 
             if (!user.has_app_pin) {
-                setNeedsSetup(true);
-                setIsLocked(true);
+                // If no PIN is set, do NOT force setup. Just unlock.
+                // User can set it up later from profile/settings.
+                setNeedsSetup(false);
+                setIsLocked(false);
             } else if (!isUnlocked) {
                 setIsLocked(true);
             }

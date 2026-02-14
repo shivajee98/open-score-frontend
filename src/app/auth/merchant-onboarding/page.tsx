@@ -182,6 +182,12 @@ function MerchantOnboardingForm() {
             formDataObj.append('app_pin', formData.app_pin);
             formDataObj.append('app_pin_confirmation', formData.app_pin_confirmation);
 
+            // Add Wallet PIN
+            if (formData.pin) {
+                formDataObj.append('pin', formData.pin);
+                formDataObj.append('pin_confirmation', formData.confirm_pin);
+            }
+
             // Complete Onboarding (Basic Info)
             await apiFetch('/auth/onboarding', {
                 method: 'POST',

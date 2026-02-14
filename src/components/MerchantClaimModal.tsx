@@ -20,11 +20,7 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
         customer_segment: '',
         daily_turnover: '',
         business_address: '',
-        pincode: '',
-        app_pin: '',
-        confirm_app_pin: '',
-        pin: '',
-        confirm_pin: ''
+        pincode: ''
     });
 
     if (!isOpen) return null;
@@ -48,10 +44,7 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
                     customer_segment: formData.customer_segment,
                     daily_turnover: formData.daily_turnover,
                     business_address: formData.business_address,
-                    pincode: formData.pincode,
-                    app_pin: formData.app_pin,
-                    pin: formData.pin,
-                    pin_confirmation: formData.confirm_pin
+                    pincode: formData.pincode
                 })
             });
             onSuccess(res.user);
@@ -175,90 +168,10 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
                                 />
                             </div>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 mt-4">
                             <button onClick={() => setStep(1)} className="flex-1 py-3 bg-slate-50 text-slate-500 rounded-xl font-bold text-sm">Back</button>
                             <button
-                                disabled={!formData.daily_turnover || !formData.business_address || formData.pincode.length !== 6}
-                                onClick={() => setStep(3)}
-                                className="flex-[2] py-3 bg-slate-900 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/10 hover:bg-slate-800 transition-all disabled:opacity-50"
-                            >
-                                Next Step
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 3: Transaction PIN */}
-                {step === 3 && (
-                    <div className="space-y-4">
-                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-2">
-                            <p className="text-blue-700 text-xs font-bold leading-relaxed">
-                                Set a secure 6-digit PIN for your wallet transactions.
-                            </p>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="password"
-                                    inputMode="numeric"
-                                    maxLength={4}
-                                    placeholder="Set 4-Digit App Lock PIN"
-                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
-                                    value={formData.app_pin}
-                                    onChange={e => setFormData({ ...formData, app_pin: e.target.value.replace(/\D/g, '') })}
-                                />
-                            </div>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="password"
-                                    inputMode="numeric"
-                                    maxLength={4}
-                                    placeholder="Confirm App Lock PIN"
-                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
-                                    value={formData.confirm_app_pin}
-                                    onChange={e => setFormData({ ...formData, confirm_app_pin: e.target.value.replace(/\D/g, '') })}
-                                />
-                            </div>
-                            {formData.app_pin && formData.confirm_app_pin && formData.app_pin !== formData.confirm_app_pin && (
-                                <p className="text-[10px] text-rose-500 font-bold text-center uppercase tracking-widest">App PINs do not match</p>
-                            )}
-
-                            <div className="h-4"></div> {/* Spacer */}
-
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="password"
-                                    inputMode="numeric"
-                                    maxLength={6}
-                                    placeholder="Set 6-Digit Wallet PIN"
-                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
-                                    value={formData.pin}
-                                    onChange={e => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
-                                />
-                            </div>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="password"
-                                    inputMode="numeric"
-                                    maxLength={6}
-                                    placeholder="Confirm Wallet PIN"
-                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
-                                    value={formData.confirm_pin}
-                                    onChange={e => setFormData({ ...formData, confirm_pin: e.target.value.replace(/\D/g, '') })}
-                                />
-                            </div>
-                        </div>
-                        {formData.pin && formData.confirm_pin && formData.pin !== formData.confirm_pin && (
-                            <p className="text-[10px] text-rose-500 font-bold text-center uppercase tracking-widest">Wallet PINs do not match</p>
-                        )}
-                        <div className="flex gap-3 mt-4">
-                            <button onClick={() => setStep(2)} className="flex-1 py-3 bg-slate-50 text-slate-500 rounded-xl font-bold text-sm">Back</button>
-                            <button
-                                disabled={loading || formData.pin.length !== 6 || formData.pin !== formData.confirm_pin || formData.app_pin.length !== 4 || formData.app_pin !== formData.confirm_app_pin}
+                                disabled={loading || !formData.daily_turnover || !formData.business_address || formData.pincode.length !== 6}
                                 onClick={handleSubmit}
                                 className="flex-[2] py-3 bg-emerald-500 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
                             >

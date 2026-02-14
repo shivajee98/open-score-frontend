@@ -104,6 +104,10 @@ export default function CustomerHome() {
     const hasActiveLoan = !!activeLoan;
     const loading = !activeUser && (userLoading || walletLoading);
 
+    // Fetch Cashback Settings
+    const { data: cashbackSettings } = useApi('/admin/cashback-settings');
+    const merchantBonus = cashbackSettings?.find((s: any) => s.role === 'MERCHANT' && s.is_active)?.cashback_amount || 250;
+
     const handleClaimSuccess = async (updatedUser: any) => {
         setShowClaimModal(false);
         // Refresh all data
@@ -152,9 +156,6 @@ export default function CustomerHome() {
     const isMerchant = user.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'blue';
 
-    // Fetch Cashback Settings
-    const { data: cashbackSettings } = useApi('/admin/cashback-settings');
-    const merchantBonus = cashbackSettings?.find((s: any) => s.role === 'MERCHANT' && s.is_active)?.cashback_amount || 250;
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">

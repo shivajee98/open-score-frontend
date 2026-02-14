@@ -115,23 +115,16 @@ export default function Onboarding() {
                 body: JSON.stringify({ mobile_number: mobile, otp: 'BYPASS', role })
             });
 
-            // 2. Set PIN
-            await apiFetch('/wallet/set-pin', {
-                method: 'POST',
-                body: JSON.stringify({
-                    pin: pin,
-                    pin_confirmation: confirmPin
-                })
-            });
-
-            // 3. Complete Onboarding
+            // 2. Complete Onboarding with everything in one call
             const onboardRes = await apiFetch('/auth/onboarding', {
                 method: 'POST',
                 body: JSON.stringify({
                     name,
                     email,
                     app_pin: appPin,
-                    app_pin_confirmation: appConfirmPin
+                    app_pin_confirmation: appConfirmPin,
+                    pin: pin,
+                    pin_confirmation: confirmPin
                 })
             });
 
