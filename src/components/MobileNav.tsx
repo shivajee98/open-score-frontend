@@ -20,7 +20,7 @@ export default function MobileNav() {
     }, [rawPathname]);
 
     useEffect(() => {
-        if (user?.role === 'CUSTOMER') {
+        if (user?.role === 'CUSTOMER' || user?.role === 'STUDENT') {
             // Check cache first
             const cacheKey = `loanStatus_${user.id}`;
             const cached = localStorage.getItem(cacheKey);

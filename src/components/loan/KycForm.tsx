@@ -22,38 +22,11 @@ import {
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useStore } from '@/store/useStore';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
-
-// Zod Schema for Validation
-const kycSchema = z.object({
-    first_name: z.string().min(2, 'First name is too short'),
-    last_name: z.string().min(1, 'Last name is required'),
-    email: z.string().email('Invalid email address'),
-    phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid 10-digit mobile number'),
-    birth_date: z.string().min(1, 'Birth date is required'),
-
-    annual_income: z.string().min(1, 'Income is required'),
-    loan_usage: z.string().min(5, 'Please provide more detail about loan usage'),
-
-    aadhar_number: z.string().regex(/^\d{12}$/, 'Aadhaar must be exactly 12 digits'),
-    pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i, 'Invalid PAN Card format (e.g. ABCDE1234F)'),
-
-    street_address: z.string().min(5, 'Address is too short'),
-    city: z.string().min(2, 'City is required'),
-    state: z.string().min(2, 'State is required'),
-    postal_code: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits'),
-
-    employer: z.string().min(2, 'Employer name is required'),
-    occupation: z.string().min(2, 'Occupation is required'),
-
-    referral_code: z.string().optional(),
-    consent: z.boolean().refine(val => val === true, 'You must agree to the terms'),
-});
-
-type KycFormData = z.infer<typeof kycSchema>;
 
 interface KycFormProps {
     onSubmit: (data: any) => void;
@@ -73,7 +46,57 @@ const STEPS = [
 ];
 
 export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false }: KycFormProps) {
+    const { user } = useStore();
     const [currentStep, setCurrentStep] = useState(0);
+
+    // Dynamic schema based on role
+    const kycSchema = z.object({
+        first_name: z.string().min(2, 'First name is too short'),
+        last_name: z.string().min(1, 'Last name is required'),
+        email: z.string().email('Invalid email address'),
+        phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid 10-digit mobile number'),
+        birth_date: z.string().min(1, 'Birth date is required').refine((val) => {
+            const birthDate = new Date(val);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age >= 15;
+        }, { message: 'Minimum age is 15' }).refine((val) => {
+            const birthDate = new Date(val);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            // If below 18, must be a student
+            if (age < 18 && user?.role !== 'STUDENT') {
+                return false;
+            }
+            return true;
+        }, { message: 'Only students can apply if under 18' }),
+
+        annual_income: z.string().min(1, 'Income is required'),
+        loan_usage: z.string().min(5, 'Please provide more detail about loan usage'),
+
+        aadhar_number: z.string().regex(/^\d{12}$/, 'Aadhaar must be exactly 12 digits'),
+        pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i, 'Invalid PAN Card format (e.g. ABCDE1234F)'),
+
+        street_address: z.string().min(5, 'Address is too short'),
+        city: z.string().min(2, 'City is required'),
+        state: z.string().min(2, 'State is required'),
+        postal_code: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits'),
+
+        employer: z.string().min(2, 'Employer name is required'),
+        occupation: z.string().min(2, 'Occupation is required'),
+
+        referral_code: z.string().optional(),
+        consent: z.boolean().refine(val => val === true, 'You must agree to the terms'),
+    });
 
     const {
         register,
@@ -82,7 +105,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         watch,
         trigger,
         formState: { errors, isValid }
-    } = useForm<KycFormData>({
+    } = useForm({
         resolver: zodResolver(kycSchema),
         mode: 'onChange',
         defaultValues: {

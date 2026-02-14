@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Check, Zap, CreditCard, Calendar, FileText, Clock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Zap, CreditCard, Calendar, FileText, Clock, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
+import { cn } from '@/lib/loanUtils';
 
 export default function LoanApplication() {
     const router = useRouter();
@@ -23,9 +24,6 @@ export default function LoanApplication() {
     const [activeLoan, setActiveLoan] = useState<any>(null);
     const [cooldown, setCooldown] = useState({ active: false, daysRemaining: 0 });
 
-    // Form Data
-    const [isWhatsappSame, setIsWhatsappSame] = useState(true);
-
     // Selection States for V2
     const [selectedOffer, setSelectedOffer] = useState<any>(null);
     const [selectedTenureConfig, setSelectedTenureConfig] = useState<any>(null);
@@ -33,45 +31,22 @@ export default function LoanApplication() {
     const [emiPreviews, setEmiPreviews] = useState<Record<string, any>>({});  // Store EMI calculations from backend
     const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
-    const [formData, setFormData] = useState({
-        fullName: '',
-        dob: '',
-        address: '',
-        city: '',
-        pinCode: '',
-        altMobile: '',
-        whatsappTicket: ''
-    });
-
     useEffect(() => {
         const checkStatus = async () => {
             try {
                 // Fetch User Profile
-                const userData = await apiFetch('/auth/me');
-                setUser(userData);
-                if (userData && userData.name) {
-                    setFormData(prev => ({
-                        ...prev,
-                        fullName: userData.name || '',
-                        address: userData.business_address || '',
-                        pinCode: userData.pincode || '',
-                        // city not explicitly in user model? but let's see
-                    }));
-                    // If name and address exist, we can potentially skip step 1
-                    // But maybe we just want to pre-fill.
-                    // The user said: "if a user have already filled that form, then also why are we again opening that form"
-                    // So let's skip to Step 2 if user has name and address.
-                    if (userData.name && (userData.business_address || userData.pincode)) {
-                        setStep(2);
-                    }
+                const profileData = await apiFetch('/auth/me');
+                if (profileData) {
+                    setUser(profileData);
+                    setStep(2);
                 }
 
-                const response = await apiFetch('/loans');
-                const data = Array.isArray(response) ? response : (response?.data || []);
-                setLoans(data);
+                const loansResponse = await apiFetch('/loans');
+                const loansData = Array.isArray(loansResponse) ? loansResponse : (loansResponse?.data || []);
+                setLoans(loansData);
 
                 // Identify Active Loan (Not closed/rejected/cancelled)
-                const active = data.find((l: any) => {
+                const active = loansData.find((l: any) => {
                     const statusMatch = ['PENDING', 'PROCEEDED', 'KYC_SENT', 'FORM_SUBMITTED', 'APPROVED', 'PREVIEW'].includes(l.status);
                     const isUnpaidDisbursed = l.status === 'DISBURSED' && Number(l.paid_amount || 0) < Number(l.amount);
                     return statusMatch || isUnpaidDisbursed;
@@ -79,7 +54,7 @@ export default function LoanApplication() {
                 setActiveLoan(active);
 
                 // Check Cooldown
-                const sorted = data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                const sorted = [...loansData].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 const lastDisbursed = sorted.find((l: any) => {
                     if (!l.disbursed_at) return false;
                     if (l.status === 'CLOSED') return false;
@@ -167,58 +142,7 @@ export default function LoanApplication() {
         setEntryMode(false);
     };
 
-    const handleInputChange = (e: any) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleFormSubmit = async (e: any) => {
-        e.preventDefault();
-
-        // Age Validation
-        const today = new Date();
-        const birthDate = new Date(formData.dob);
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-
-        if (age < 18) {
-            toast.error('You must be at least 18 years old to apply for a loan.');
-            return;
-        }
-
-        // Handle loan referral code - transfer to main storage if not already set
-        const loanReferralCode = localStorage.getItem('loan_referral_code');
-        const existingReferralCode = localStorage.getItem('referral_code');
-        if (loanReferralCode && loanReferralCode.trim() && !existingReferralCode) {
-            localStorage.setItem('referral_code', loanReferralCode.trim().toUpperCase());
-            localStorage.removeItem('loan_referral_code');
-        }
-
-        setLoading(true);
-        try {
-            // Save user KYC data to profile so it's only filled once
-            await apiFetch('/auth/me/update', {
-                method: 'PUT',
-                body: JSON.stringify({
-                    name: formData.fullName,
-                    business_address: formData.address,
-                    city: formData.city,
-                    pincode: formData.pinCode,
-                    // We can store DOB and alt mobile in additional fields if needed
-                    // For now, these are saved for this loan application
-                })
-            });
-
-            setStep(2);
-            setShowExcitement(true);
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to save information');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Data fetching for EMI previews ...
 
     // States for Plans
     const [plans, setPlans] = useState<any[]>([]);
@@ -413,14 +337,19 @@ export default function LoanApplication() {
 
                     </div>
                 ) : (
-                    <div className="bg-white rounded-3xl p-6 shadow-xl shadow-blue-900/5 border border-slate-100 relative overflow-hidden animate-in slide-in-from-right-8 duration-300">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                    <div className={cn(
+                        "bg-white rounded-3xl p-6 shadow-xl relative overflow-hidden animate-in slide-in-from-right-8 duration-300",
+                        user?.role === 'MERCHANT' ? "shadow-emerald-900/5 border border-emerald-100" : "shadow-blue-900/5 border border-slate-100"
+                    )}>
+                        <div className={cn(
+                            "absolute top-0 left-0 w-full h-2 transition-all",
+                            user?.role === 'MERCHANT' ? "bg-gradient-to-r from-emerald-500 to-teal-600" : "bg-gradient-to-r from-blue-600 to-indigo-600"
+                        )}></div>
 
                         {/* Persistent Back Button - Mode 2 */}
                         <button
                             onClick={() => {
-                                if (step === 1) setEntryMode(true);
-                                else setStep(step - 1);
+                                setEntryMode(true);
                             }}
                             className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-20"
                         >
@@ -432,141 +361,7 @@ export default function LoanApplication() {
                             <p className="text-slate-500 text-sm font-medium">Get instant approval in minutes.</p>
                         </div>
 
-                        {step === 1 && (
-                            <form onSubmit={handleFormSubmit} className="space-y-3">
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Full Name (As per Aadhaar)</label>
-                                    <input
-                                        type="text"
-                                        name="fullName"
-                                        value={formData.fullName}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                        placeholder="e.g. Rahul Kumar"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Date of Birth</label>
-                                        <input
-                                            type="date"
-                                            name="dob"
-                                            value={formData.dob}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Pin Code</label>
-                                        <input
-                                            type="text"
-                                            name="pinCode"
-                                            value={formData.pinCode}
-                                            onChange={handleInputChange}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                            placeholder="000000"
-                                            required
-                                            maxLength={6}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Address</label>
-                                    <textarea
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm resize-none"
-                                        placeholder="Enter your current address"
-                                        rows={2}
-                                        required
-                                    ></textarea>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">City</label>
-                                    <input
-                                        type="text"
-                                        name="city"
-                                        value={formData.city}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                        placeholder="e.g. Mumbai"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-xs font-bold text-slate-500">Is this your WhatsApp Number?</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsWhatsappSame(!isWhatsappSame)}
-                                            className={`w-10 h-6 rounded-full p-1 transition-colors ${isWhatsappSame ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                                        >
-                                            <div className={`w-4 h-4 bg-white rounded-full transition-transform ${isWhatsappSame ? 'translate-x-4' : ''}`}></div>
-                                        </button>
-                                    </div>
-                                    {!isWhatsappSame && (
-                                        <div className="mt-2 animate-in fade-in slide-in-from-top-2">
-                                            <input
-                                                type="tel"
-                                                name="whatsappTicket"
-                                                value={formData.whatsappTicket}
-                                                onChange={handleInputChange}
-                                                className="w-full bg-white border border-slate-200 rounded-lg p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                                placeholder="Enter WhatsApp Number"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 ml-4">Alternate Mobile No</label>
-                                    <input
-                                        type="tel"
-                                        name="altMobile"
-                                        value={formData.altMobile}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm"
-                                        placeholder="+91"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-2">
-                                        Have a Referral Code? (Optional)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={localStorage.getItem('loan_referral_code') || ''}
-                                        onChange={(e) => {
-                                            const code = e.target.value.toUpperCase();
-                                            localStorage.setItem('loan_referral_code', code);
-                                        }}
-                                        className="w-full bg-white border border-blue-200 rounded-xl p-3 font-bold text-slate-900 outline-none focus:border-blue-600 transition-all text-sm uppercase tracking-wider"
-                                        placeholder="ENTER REFERRAL CODE"
-                                        maxLength={20}
-                                    />
-                                    <p className="text-xs text-blue-600 mt-2">
-                                        Enter a referral code to help both you and your referrer earn rewards!
-                                    </p>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-base shadow-xl hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
-                                >
-                                    {loading ? 'Checking Eligibility...' : 'Submit For Loan Approval'} <Zap className="w-4 h-4 text-yellow-400" />
-                                </button>
-                            </form>
-                        )}
+                        {/* Step 1 Removed - Users go straight to Step 2 (Offers) */}
 
                         {step === 2 && (
                             <div className="space-y-3 animate-in slide-in-from-right-4 duration-300">
@@ -589,7 +384,10 @@ export default function LoanApplication() {
                                                 <h3 className="text-xl font-black text-slate-900">{offer.amount}</h3>
                                             </div>
                                             <div className="text-right">
-                                                <span className={`block text-xs font-bold px-2 py-1 rounded text-white mb-1 ${offer.color}`}>
+                                                <span className={cn(
+                                                    "block text-xs font-bold px-2 py-1 rounded text-white mb-1 shadow-sm",
+                                                    user?.role === 'MERCHANT' ? "bg-emerald-600" : offer.color
+                                                )}>
                                                     {offer.bestFor}
                                                 </span>
                                                 <span className="text-[10px] font-bold text-slate-400 block">{offer.tenureSummary}</span>
@@ -601,8 +399,11 @@ export default function LoanApplication() {
                                             <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold text-xs hover:bg-slate-300 transition-colors">
                                                 View Options
                                             </button>
-                                            <button className={`py-2.5 text-white rounded-lg font-bold text-xs shadow-lg transition-colors ${offer.color}`}>
-                                                Apply Now
+                                            <button className={cn(
+                                                "py-2.5 text-white rounded-lg font-bold text-xs shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1",
+                                                user?.role === 'MERCHANT' ? "bg-emerald-600 shadow-emerald-600/20" : `${offer.color} shadow-blue-600/20`
+                                            )}>
+                                                Apply Now <ArrowRight className="w-3 h-3" />
                                             </button>
                                         </div>
                                     </div>
@@ -663,8 +464,13 @@ export default function LoanApplication() {
                             ✕
                         </button>
 
-                        <div className={`w-12 h-12 rounded-xl ${selectedOffer.color} flex items-center justify-center text-white mb-6 shadow-xl`}>
-                            <CreditCard className="w-8 h-8" />
+                        <div className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center text-white mb-4 shadow-xl",
+                            user?.role === 'MERCHANT' ? "bg-emerald-600 shadow-emerald-600/20" : `${selectedOffer.color} shadow-blue-600/20`
+                        )}>
+                            <div className="bg-white/20 p-1.5 rounded-lg">
+                                <CreditCard className="w-6 h-6" />
+                            </div>
                         </div>
 
                         <h3 className="text-2xl font-black text-slate-900 mb-1">{selectedOffer.amount}</h3>
@@ -682,10 +488,12 @@ export default function LoanApplication() {
                                                 setSelectedTenureConfig(conf);
                                                 setSelectedFrequency(''); // Reset frequency
                                             }}
-                                            className={`py-2 px-2 rounded-lg text-xs font-bold border transition-all ${selectedTenureConfig === conf
-                                                ? 'bg-slate-900 text-white border-slate-900'
-                                                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                                                }`}
+                                            className={cn(
+                                                "py-2.5 px-2 rounded-xl text-xs font-bold border-2 transition-all active:scale-95 shadow-sm",
+                                                selectedTenureConfig === conf
+                                                    ? (user?.role === 'MERCHANT' ? 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/20' : 'bg-slate-900 text-white border-slate-900')
+                                                    : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'
+                                            )}
                                         >
                                             {conf.tenure_days >= 30 ? `${Math.round(conf.tenure_days / 30)} Months` : `${conf.tenure_days} Days`}
                                         </button>
@@ -708,10 +516,12 @@ export default function LoanApplication() {
                                                 <button
                                                     key={freq}
                                                     onClick={() => setSelectedFrequency(freq)}
-                                                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition-all relative overflow-hidden flex flex-col items-center justify-center gap-1 ${selectedFrequency === freq
-                                                        ? 'bg-slate-900 text-white border-slate-900'
-                                                        : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                                                        }`}
+                                                    className={cn(
+                                                        "py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all relative overflow-hidden flex flex-col items-center justify-center gap-1 shadow-sm active:scale-95",
+                                                        selectedFrequency === freq
+                                                            ? (user?.role === 'MERCHANT' ? 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/20' : 'bg-slate-900 text-white border-slate-900')
+                                                            : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'
+                                                    )}
                                                 >
                                                     <span className="uppercase tracking-wider">{freq.replace('_', ' ')}</span>
                                                     <span className={`text-[10px] ${selectedFrequency === freq ? 'text-slate-300' : 'text-slate-800'}`}>
@@ -780,7 +590,12 @@ export default function LoanApplication() {
                                 }
                                 handleApply();
                             }}
-                            className={`w-full py-2.5 text-white rounded-xl font-black text-base shadow-xl hover:opacity-90 transition-opacity ${selectedOffer.color}`}
+                            className={cn(
+                                "w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-[0.98] shadow-xl flex items-center justify-center gap-2",
+                                !selectedFrequency
+                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                    : (user?.role === 'MERCHANT' ? "bg-emerald-600 text-white shadow-emerald-500/30 hover:bg-emerald-700 font-bold" : "bg-slate-900 text-white shadow-slate-900/30 hover:bg-slate-800")
+                            )}
                         >
                             Confirm & Apply
                         </button>

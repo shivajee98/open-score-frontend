@@ -20,7 +20,7 @@ export default function CustomerHome() {
     // Data Fetching with Cache
     const { data: user, isLoading: userLoading, mutate: mutateUser, isValidating: userValidating } = useApi('/auth/me');
     const { data: walletData, isLoading: walletLoading, mutate: mutateWallet, isValidating: walletValidating } = useApi('/wallet/balance');
-    const { data: loans, isLoading: loansLoading, mutate: mutateLoans, isValidating: loansValidating } = useApi((user?.role === 'CUSTOMER' || user?.role === 'MERCHANT') ? '/loans' : null);
+    const { data: loans, isLoading: loansLoading, mutate: mutateLoans, isValidating: loansValidating } = useApi((user?.role === 'CUSTOMER' || user?.role === 'MERCHANT' || user?.role === 'STUDENT') ? '/loans' : null);
 
     // Sync SWR data to Zustand Store for persistent caching
     useEffect(() => { if (user) setUser(user); }, [user, setUser]);
