@@ -108,7 +108,9 @@ function MerchantOnboardingForm() {
 
                     canvas.toBlob((blob) => {
                         if (blob) {
-                            const newFile = new File([blob], file.name, {
+                            // Ensure the filename has a .jpg extension for the server
+                            const fileName = file.name.split('.')[0] + '.jpg';
+                            const newFile = new File([blob], fileName, {
                                 type: 'image/jpeg',
                                 lastModified: Date.now(),
                             });
