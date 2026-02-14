@@ -14,6 +14,8 @@ export default function Onboarding() {
     const [businessName, setBusinessName] = useState('');
     const [pin, setPin] = useState('');
     const [confirmPin, setConfirmPin] = useState('');
+    const [appPin, setAppPin] = useState('');
+    const [appConfirmPin, setAppConfirmPin] = useState('');
     const [showPin, setShowPin] = useState(false);
     const [errors, setErrors] = useState<any>({});
     const [loading, setLoading] = useState(false);
@@ -80,6 +82,16 @@ export default function Onboarding() {
             return;
         }
 
+        if (appPin.length !== 4) {
+            setErrors({ app_pin: 'App Lock PIN must be 4 digits.' });
+            return;
+        }
+
+        if (appPin !== appConfirmPin) {
+            setErrors({ app_pin: 'App Lock PINs do not match.' });
+            return;
+        }
+
         setLoading(true);
         setErrors({});
 
@@ -102,17 +114,19 @@ export default function Onboarding() {
                 })
             });
 
-            // 3. Complete onboarding
-            const res = await apiFetch('/auth/onboarding', {
+            // 3. Complete Onboarding
+            const onboardRes = await apiFetch('/auth/onboarding', {
                 method: 'POST',
                 body: JSON.stringify({
                     name,
-                    email
+                    email,
+                    app_pin: appPin,
+                    app_pin_confirmation: appConfirmPin
                 })
             });
 
             // On success, update stored user and redirect
-            const updatedUser = { ...res.user, is_onboarded: true };
+            const updatedUser = { ...onboardRes.user, is_onboarded: true };
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
             if (role === 'CUSTOMER') router.push('/customer');
@@ -264,55 +278,64 @@ export default function Onboarding() {
                                 )}
 
                                 <div className="space-y-4">
-                                    <div className="flex justify-center gap-2">
-                                        {[...Array(6)].map((_, i) => (
-                                            <div key={i} className="w-10 h-12 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center font-black text-xl text-blue-600 shadow-inner">
-                                                {pin[i] ? '•' : ''}
+                                    {/* App Lock Section */}
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                                        <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-1">App Lock PIN (4 Digits)</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <input
+                                                type="password"
+                                                inputMode="numeric"
+                                                maxLength={4}
+                                                value={appPin}
+                                                onChange={(e) => setAppPin(e.target.value.replace(/\D/g, ''))}
+                                                className="w-full bg-white border border-slate-200 rounded-xl p-3 font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 text-center text-lg"
+                                                placeholder="Set"
+                                                required
+                                            />
+                                            <input
+                                                type="password"
+                                                inputMode="numeric"
+                                                maxLength={4}
+                                                value={appConfirmPin}
+                                                onChange={(e) => setAppConfirmPin(e.target.value.replace(/\D/g, ''))}
+                                                className="w-full bg-white border border-slate-200 rounded-xl p-3 font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 text-center text-lg"
+                                                placeholder="Confirm"
+                                                required
+                                            />
+                                        </div>
+                                        {errors.app_pin && <p className="text-red-500 text-[10px] font-bold mt-1 uppercase text-center">{errors.app_pin}</p>}
+                                    </div>
+
+                                    {/* Wallet PIN Section */}
+                                    <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50 space-y-3">
+                                        <label className="block text-xs font-black uppercase tracking-widest text-blue-600/60 mb-1">Payment PIN (6 Digits)</label>
+                                        <div className="space-y-3">
+                                            <div className="relative">
+                                                <input
+                                                    type="password"
+                                                    inputMode="numeric"
+                                                    maxLength={6}
+                                                    value={pin}
+                                                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                                                    className="w-full bg-white border border-slate-200 rounded-xl p-3 font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 tracking-[0.5em] text-center text-lg"
+                                                    placeholder="Set PIN"
+                                                    required
+                                                />
                                             </div>
-                                        ))}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Wallet PIN (6 Digits)</label>
-                                        <div className="relative">
-                                            <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                            <input
-                                                type="password"
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
-                                                maxLength={6}
-                                                value={pin}
-                                                onChange={(e) => {
-                                                    const val = e.target.value.replace(/\D/g, '');
-                                                    if (val.length <= 6) setPin(val);
-                                                }}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 tracking-[0.5em] text-center"
-                                                placeholder="..."
-                                                required
-                                            />
+                                            <div className="relative">
+                                                <input
+                                                    type="password"
+                                                    inputMode="numeric"
+                                                    maxLength={6}
+                                                    value={confirmPin}
+                                                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+                                                    className="w-full bg-white border border-slate-200 rounded-xl p-3 font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 tracking-[0.5em] text-center text-lg"
+                                                    placeholder="Confirm PIN"
+                                                    required
+                                                />
+                                            </div>
+                                            {errors.pin && <p className="text-red-500 text-[10px] font-bold mt-1 uppercase text-center">{errors.pin}</p>}
                                         </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Confirm PIN</label>
-                                        <div className="relative">
-                                            <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                            <input
-                                                type="password"
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
-                                                maxLength={6}
-                                                value={confirmPin}
-                                                onChange={(e) => {
-                                                    const val = e.target.value.replace(/\D/g, '');
-                                                    if (val.length <= 6) setConfirmPin(val);
-                                                }}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 tracking-[0.5em] text-center"
-                                                placeholder="..."
-                                                required
-                                            />
-                                        </div>
-                                        {errors.pin && <p className="text-red-500 text-[10px] font-bold mt-1 ml-4 uppercase">{errors.pin}</p>}
                                     </div>
                                 </div>
 

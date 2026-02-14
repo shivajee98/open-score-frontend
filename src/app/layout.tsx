@@ -22,6 +22,7 @@ export const viewport = {
 import MobileNavigationHandler from "@/components/MobileNavigationHandler";
 import NotificationHandler from "@/components/NotificationHandler";
 import IncomingCallModal from "@/components/IncomingCallModal";
+import AppLockGuard from "@/components/AppLockGuard";
 
 export default function RootLayout({
   children,
@@ -38,7 +39,9 @@ export default function RootLayout({
           <IncomingCallModal />
           <MobileNavigationHandler />
           <ToastContainer />
-          {children}
+          <AppLockGuard>
+            {children}
+          </AppLockGuard>
           <MobileNav />
         </AuthGuard>
       </body>

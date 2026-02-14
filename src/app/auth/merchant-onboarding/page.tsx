@@ -64,7 +64,9 @@ function MerchantOnboardingForm() {
         daily_turnover: '',
         business_address: '',
         pin: '',
-        confirm_pin: ''
+        confirm_pin: '',
+        app_pin: '',
+        app_pin_confirmation: ''
     });
 
     // Image Upload State
@@ -156,8 +158,11 @@ function MerchantOnboardingForm() {
             formDataObj.append('business_name', formData.business_name);
 
             if (imageFile) {
-                formDataObj.append('profile_image', imageFile);
+                formDataObj.append('profile_image', imageFile, imageFile.name);
             }
+
+            formDataObj.append('app_pin', formData.app_pin);
+            formDataObj.append('app_pin_confirmation', formData.app_pin_confirmation);
 
             // Complete Onboarding (Basic Info)
             await apiFetch('/auth/onboarding', {
@@ -270,9 +275,60 @@ function MerchantOnboardingForm() {
                                 <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
                             </label>
                         </div>
+
+                        {/* Security Sections */}
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div className="space-y-2 col-span-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">App Lock (4-Digits)</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <input
+                                        type="password"
+                                        maxLength={4}
+                                        inputMode="numeric"
+                                        placeholder="Set PIN"
+                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
+                                        value={formData.app_pin}
+                                        onChange={e => setFormData({ ...formData, app_pin: e.target.value.replace(/\D/g, '') })}
+                                    />
+                                    <input
+                                        type="password"
+                                        maxLength={4}
+                                        inputMode="numeric"
+                                        placeholder="Confirm"
+                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
+                                        value={formData.app_pin_confirmation}
+                                        onChange={e => setFormData({ ...formData, app_pin_confirmation: e.target.value.replace(/\D/g, '') })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 col-span-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 text-emerald-600">Payment PIN (6-Digits)</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <input
+                                        type="password"
+                                        maxLength={6}
+                                        inputMode="numeric"
+                                        placeholder="Set PIN"
+                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
+                                        value={formData.pin}
+                                        onChange={e => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
+                                    />
+                                    <input
+                                        type="password"
+                                        maxLength={6}
+                                        inputMode="numeric"
+                                        placeholder="Confirm"
+                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
+                                        value={formData.confirm_pin}
+                                        onChange={e => setFormData({ ...formData, confirm_pin: e.target.value.replace(/\D/g, '') })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button
-                        disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || loading}
+                        disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || formData.app_pin.length !== 4 || formData.pin.length !== 6 || loading}
                         onClick={handleSubmit}
                         className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 group disabled:opacity-50"
                     >
