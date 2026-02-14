@@ -158,7 +158,6 @@ function SupportPageContent() {
         if (!selectedTicket) return;
         try {
             let body: any;
-            let headers: any = {};
 
             if (attachment) {
                 const formData = new FormData();
@@ -170,20 +169,12 @@ function SupportPageContent() {
                 body = formData;
             } else {
                 body = JSON.stringify({ message });
-                headers['Content-Type'] = 'application/json';
             }
 
-            const token = localStorage.getItem('token');
-            const res = await fetch(`https://api.msmeloan.sbs/api/support/tickets/${selectedTicket.id}/message`, {
+            await apiFetch(`/support/tickets/${selectedTicket.id}/message`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    ...headers
-                },
                 body: body
             });
-
-            if (!res.ok) throw new Error('Failed to send message');
 
             fetchMessages(selectedTicket.id);
         } catch (error) {

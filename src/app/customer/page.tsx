@@ -27,6 +27,14 @@ export default function CustomerHome() {
     useEffect(() => { if (walletData) setWallet(walletData); }, [walletData, setWallet]);
     useEffect(() => { if (loans) setLoans(Array.isArray(loans) ? loans : (loans.data || [])); }, [loans, setLoans]);
 
+    // Refresh wallet balance every second
+    useEffect(() => {
+        const interval = setInterval(() => {
+            mutateWallet();
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [mutateWallet]);
+
     const activeUser = user || cachedUser;
     const activeWallet = walletData || cachedWallet;
     const activeLoans = (loans ? (Array.isArray(loans) ? loans : (loans.data || [])) : cachedLoans) || [];

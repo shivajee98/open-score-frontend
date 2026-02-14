@@ -270,7 +270,7 @@ export default function LoanStatus() {
                             onClick={async () => {
                                 try {
                                     setSubmitting(true);
-                                    await apiFetch('/support/tickets', {
+                                    const res: any = await apiFetch('/support/tickets', {
                                         method: 'POST',
                                         body: JSON.stringify({
                                             subject: `Fast Disbursal Request - Loan #${loan.id}`,
@@ -280,6 +280,14 @@ export default function LoanStatus() {
                                         })
                                     });
                                     toast.success('Fast disbursal request sent successfully!');
+
+                                    // Navigate to the created ticket
+                                    if (res && res.id) {
+                                        const ticketData = encodeURIComponent(JSON.stringify({
+                                            id: res.id
+                                        }));
+                                        router.push(`/customer/support?ticket=${ticketData}`);
+                                    }
                                 } catch (e: any) {
                                     toast.error(e.message || 'Failed to send request');
                                 } finally {
