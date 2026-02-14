@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 
+import BackButton from '@/components/BackButton';
+
 function MerchantOnboardingForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -198,143 +200,170 @@ function MerchantOnboardingForm() {
 
                 {/* Header Section */}
                 <div className="text-center mb-10 relative">
-                    {/* Back Button - Persistent */}
-                    <button
-                        onClick={async () => { await clearAuthState(); router.replace('/'); }}
+                    <BackButton
                         className="absolute left-0 top-0 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-10"
-                    >
-                        <ArrowLeft size={16} />
-                    </button>
+                        fallback="/"
+                    />
 
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-600 text-white font-black text-xl mb-4 shadow-xl shadow-emerald-600/20">
                         <Store size={24} />
                     </div>
                     <h2 className="text-2xl font-black tracking-tight text-slate-900">Merchant Connect</h2>
-                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">Onboarding Protocol</p>
+                    <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">
+                        Step {step} of 2 • Protocol
+                    </p>
                 </div>
 
                 {error && <div className="p-3 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-rose-100 mb-8 text-center">{error}</div>}
 
-                {/* Step 1: Personal Info Only */}
-                <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
-                    <div className="text-center mb-8">
-                        <h3 className="text-lg font-black text-slate-900">Store Identification</h3>
-                        <p className="text-slate-400 text-xs font-medium">Verify your business presence</p>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="relative group">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Full Name"
-                                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
-                                value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            />
+                {/* Step 1: Identification */}
+                {step === 1 && (
+                    <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+                        <div className="text-center mb-8">
+                            <h3 className="text-lg font-black text-slate-900">Store Identification</h3>
+                            <p className="text-slate-400 text-xs font-medium">Verify your business presence</p>
                         </div>
-                        <div className="relative group">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
-                            <input
-                                type="email"
-                                placeholder="Email Address"
-                                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
-                                value={formData.email}
-                                onChange={e => setFormData({ ...formData, email: e.target.value })}
-                            />
-                        </div>
-                        <div className="relative group">
-                            <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Shop / Business Name"
-                                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
-                                value={formData.business_name}
-                                onChange={e => setFormData({ ...formData, business_name: e.target.value })}
-                            />
-                        </div>
-
-                        {/* Image Upload */}
-                        <div className="relative">
-                            <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${imagePreview ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
-                                {imagePreview ? (
-                                    <div className="relative w-full h-full p-2">
-                                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-xl">
-                                            <p className="text-white text-[10px] font-black uppercase">Change Photo</p>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                        <div className="w-10 h-10 mb-3 rounded-xl bg-emerald-100/50 flex items-center justify-center text-emerald-600">
-                                            <Upload size={20} />
-                                        </div>
-                                        <p className="mb-1 text-xs font-black text-slate-700 uppercase tracking-tight">Upload Shop Image</p>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">PNG, JPG up to 5MB</p>
-                                    </div>
-                                )}
-                                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                            </label>
-                        </div>
-
-                        {/* Security Sections */}
-                        <div className="grid grid-cols-2 gap-3 pt-2">
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">App Lock (4-Digits)</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <input
-                                        type="password"
-                                        maxLength={4}
-                                        inputMode="numeric"
-                                        placeholder="Set PIN"
-                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
-                                        value={formData.app_pin}
-                                        onChange={e => setFormData({ ...formData, app_pin: e.target.value.replace(/\D/g, '') })}
-                                    />
-                                    <input
-                                        type="password"
-                                        maxLength={4}
-                                        inputMode="numeric"
-                                        placeholder="Confirm"
-                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
-                                        value={formData.app_pin_confirmation}
-                                        onChange={e => setFormData({ ...formData, app_pin_confirmation: e.target.value.replace(/\D/g, '') })}
-                                    />
-                                </div>
+                        <div className="space-y-4">
+                            <div className="relative group">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Full Name"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                />
+                            </div>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
+                                <input
+                                    type="email"
+                                    placeholder="Email Address"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
+                                    value={formData.email}
+                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                />
+                            </div>
+                            <div className="relative group">
+                                <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Shop / Business Name"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
+                                    value={formData.business_name}
+                                    onChange={e => setFormData({ ...formData, business_name: e.target.value })}
+                                />
                             </div>
 
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 text-emerald-600">Payment PIN (6-Digits)</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <input
-                                        type="password"
-                                        maxLength={6}
-                                        inputMode="numeric"
-                                        placeholder="Set PIN"
-                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
-                                        value={formData.pin}
-                                        onChange={e => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
-                                    />
-                                    <input
-                                        type="password"
-                                        maxLength={6}
-                                        inputMode="numeric"
-                                        placeholder="Confirm"
-                                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none"
-                                        value={formData.confirm_pin}
-                                        onChange={e => setFormData({ ...formData, confirm_pin: e.target.value.replace(/\D/g, '') })}
-                                    />
+                            {/* Image Upload */}
+                            <div className="relative">
+                                <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${imagePreview ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}`}>
+                                    {imagePreview ? (
+                                        <div className="relative w-full h-full p-2">
+                                            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-xl">
+                                                <p className="text-white text-[10px] font-black uppercase">Change Photo</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <div className="w-10 h-10 mb-3 rounded-xl bg-emerald-100/50 flex items-center justify-center text-emerald-600">
+                                                <Upload size={20} />
+                                            </div>
+                                            <p className="mb-1 text-xs font-black text-slate-700 uppercase tracking-tight">Upload Shop Image</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">PNG, JPG up to 5MB</p>
+                                        </div>
+                                    )}
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                                </label>
+                            </div>
+                        </div>
+                        <button
+                            disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || loading}
+                            onClick={() => setStep(2)}
+                            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                        >
+                            Continue Setup <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                    </div>
+                )}
+
+                {/* Step 2: Security */}
+                {step === 2 && (
+                    <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
+                        <div className="text-center mb-8">
+                            <h3 className="text-lg font-black text-slate-900">Security Vault</h3>
+                            <p className="text-slate-400 text-xs font-medium">Protect your store assets</p>
+                        </div>
+                        <div className="space-y-6">
+                            {/* Security Sections */}
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">App Lock (4-Digits)</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <input
+                                            type="password"
+                                            maxLength={4}
+                                            inputMode="numeric"
+                                            placeholder="Set"
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-black text-center text-sm focus:border-emerald-600 outline-none"
+                                            value={formData.app_pin}
+                                            onChange={e => setFormData({ ...formData, app_pin: e.target.value.replace(/\D/g, '') })}
+                                        />
+                                        <input
+                                            type="password"
+                                            maxLength={4}
+                                            inputMode="numeric"
+                                            placeholder="Confirm"
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-black text-center text-sm focus:border-emerald-600 outline-none"
+                                            value={formData.app_pin_confirmation}
+                                            onChange={e => setFormData({ ...formData, app_pin_confirmation: e.target.value.replace(/\D/g, '') })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-emerald-600 ml-1">Payment PIN (6-Digits)</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <input
+                                            type="password"
+                                            maxLength={6}
+                                            inputMode="numeric"
+                                            placeholder="Set"
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-black text-center text-sm focus:border-emerald-600 outline-none"
+                                            value={formData.pin}
+                                            onChange={e => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
+                                        />
+                                        <input
+                                            type="password"
+                                            maxLength={6}
+                                            inputMode="numeric"
+                                            placeholder="Confirm"
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-black text-center text-sm focus:border-emerald-600 outline-none"
+                                            value={formData.confirm_pin}
+                                            onChange={e => setFormData({ ...formData, confirm_pin: e.target.value.replace(/\D/g, '') })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                disabled={formData.app_pin.length !== 4 || formData.pin.length !== 6 || loading}
+                                onClick={handleSubmit}
+                                className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 group disabled:opacity-50"
+                            >
+                                {loading ? 'Initializing Store...' : <>Complete Merchant Setup <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>}
+                            </button>
+                            <button
+                                onClick={() => setStep(1)}
+                                className="w-full py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                            >
+                                ← Back to Shop Info
+                            </button>
+                        </div>
                     </div>
-                    <button
-                        disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || formData.app_pin.length !== 4 || formData.pin.length !== 6 || loading}
-                        onClick={handleSubmit}
-                        className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 group disabled:opacity-50"
-                    >
-                        {loading ? 'Initializing Store...' : <>Complete Merchant Setup <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></>}
-                    </button>
-                </div>
+                )}
 
             </div>
             <p className="mt-6 text-slate-400 text-xs font-bold uppercase tracking-widest text-center">Merchant Protocol Verified</p>

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { User as UserIcon, Store, Mail, ArrowRight, User, Lock } from 'lucide-react';
+import { User as UserIcon, Store, Mail, ArrowRight, User, Lock, ArrowLeft } from 'lucide-react';
+import BackButton from '@/components/BackButton';
 
 export default function Onboarding() {
     // Steps: 1 = Role selection, 2 = Detail entry
@@ -153,7 +154,12 @@ export default function Onboarding() {
 
                     {step === 1 && (
                         <div className="animate-in slide-in-from-right-8 duration-300">
-                            <div className="mb-10 text-center">
+                            <BackButton
+                                clearAuth
+                                fallback="/"
+                                className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95"
+                            />
+                            <div className="mb-10 text-center relative">
                                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl mx-auto flex items-center justify-center mb-6 text-xl font-black">
                                     O
                                 </div>

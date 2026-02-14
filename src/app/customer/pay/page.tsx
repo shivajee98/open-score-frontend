@@ -9,6 +9,7 @@ import { Scan, X, ArrowRight, ArrowLeft, Smartphone, Search, Home, QrCode, Recei
 import { toast } from '@/components/ui/Toast';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import BackButton from '@/components/BackButton';
 
 function CustomerPayPage() {
     const router = useRouter();
@@ -288,18 +289,33 @@ function CustomerPayPage() {
 
                 {error && <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-100">{error}</div>}
 
-                {step === 1 ? (
+                {(!user?.account_number || !user?.ifsc_code) ? (
+                    <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-slate-200 border border-slate-100 text-center space-y-6">
+                        <div className="w-20 h-20 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto shadow-inner">
+                            <Landmark size={40} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 uppercase">Bank Setup Required</h3>
+                            <p className="text-slate-500 font-medium text-sm leading-relaxed px-4">
+                                You must set up your bank details before you can send money securely via Open Score.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => router.push('/customer/profile')}
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                        >
+                            Setup Bank Details <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                    </div>
+                ) : step === 1 ? (
                     <div className="space-y-4">
                         <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-200 border border-slate-100 relative overflow-hidden">
                             <div className={`absolute top-0 w-full left-0 h-1 bg-gradient-to-r from-${themeColor}-500 to-${isMerchant ? 'teal' : 'purple'}-500`}></div>
 
-                            {/* Persistent Back Button */}
-                            <button
-                                onClick={() => router.push('/customer')}
+                            <BackButton
                                 className="absolute left-6 top-6 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95 z-20"
-                            >
-                                <ArrowLeft size={16} />
-                            </button>
+                                fallback="/customer"
+                            />
 
                             <div className="mb-8 text-center mt-2">
                                 <div className={`w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-${themeColor}-600 to-${isMerchant ? 'teal' : 'purple'}-600 rounded-2xl flex items-center justify-center shadow-lg shadow-${themeColor}-600/30`}>
@@ -406,7 +422,6 @@ function CustomerPayPage() {
                     </div>
                 ) : (
                     <div className="bg-white rounded-2xl p-5 shadow-xl shadow-slate-200 border border-slate-100 animate-in slide-in-from-bottom-8 duration-500 relative max-w-sm mx-auto">
-                        {/* Persistent Back Button - Smaller & subtler */}
                         <button
                             onClick={() => setStep(1)}
                             className="absolute left-4 top-4 w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95 z-20"

@@ -9,6 +9,7 @@ import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 import { useApi } from '@/hooks/useApi';
 import TutorialPlayer from '@/components/TutorialPlayer';
+import BackButton from '@/components/BackButton';
 
 export default function Profile() {
     const { data: user, error: userError, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
@@ -223,10 +224,12 @@ export default function Profile() {
             {/* Themed Header */}
             <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-950 via-green-900 to-teal-950' : 'from-slate-900 via-indigo-950 to-violet-950'} pt-12 pb-24 px-4 relative overflow-hidden shadow-2xl`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/20' : 'bg-blue-600/20'} rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse`}></div>
-                <div className="relative z-10 max-w-2xl mx-auto">
-                    <button onClick={handleBack} className="mb-6 flex items-center gap-2 text-white/50 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors">
-                        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-                    </button>
+                <div className="relative z-10 max-w-2xl mx-auto pt-4">
+                    <BackButton
+                        className="mb-8 flex items-center gap-2 text-white/60 font-black text-[10px] uppercase tracking-[0.2em] hover:text-white transition-all group"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
+                    </BackButton>
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight">Security & Profile</h1>

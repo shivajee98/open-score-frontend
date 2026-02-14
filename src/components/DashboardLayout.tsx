@@ -9,6 +9,8 @@ import { toast } from '@/components/ui/Toast';
 import { Volume2, VolumeX, Bell, BellOff, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight, Headphones, Ban } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 import SupportModal from './SupportModal';
+import BackButton from './BackButton';
+import { usePathname } from 'next/navigation';
 
 interface NavItem {
     label: string;
@@ -29,6 +31,7 @@ export default function DashboardLayout({
     const [isAudioEnabled, setIsAudioEnabled] = useState(false);
     const [supportOpen, setSupportOpen] = useState(false);
     const [showLogoutHint, setShowLogoutHint] = useState(false);
+    const pathname = usePathname();
     const isMerchant = user?.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'blue';
 
@@ -316,6 +319,12 @@ export default function DashboardLayout({
                 < main className="flex-1 flex flex-col overflow-hidden relative pb-[5.5rem] md:pb-0 bg-slate-50" >
                     <header className="px-4 pt-12 pb-2.5 md:py-4 flex justify-between items-center bg-white/80 backdrop-blur-xl md:bg-transparent sticky top-0 z-30 border-b md:border-none border-slate-200">
                         <div className="flex items-center gap-3">
+                            {!['/customer', '/admin', '/'].includes(pathname) && (
+                                <BackButton
+                                    className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95"
+                                    fallback="/customer"
+                                />
+                            )}
                             <h2 className="text-lg md:text-2xl font-black tracking-tight text-slate-900">{title}</h2>
                             <button
                                 onClick={toggleAudio}
