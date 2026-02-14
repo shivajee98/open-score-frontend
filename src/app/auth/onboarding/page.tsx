@@ -9,7 +9,7 @@ import BackButton from '@/components/BackButton';
 export default function Onboarding() {
     // Steps: 1 = Role selection, 2 = Detail entry
     const [step, setStep] = useState(1);
-    const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | null>(null);
+    const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | 'STUDENT' | null>(null);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [businessName, setBusinessName] = useState('');
@@ -45,8 +45,8 @@ export default function Onboarding() {
                     return;
                 }
 
-                if (user.role === 'CUSTOMER') {
-                    setRole('CUSTOMER');
+                if (user.role === 'CUSTOMER' || user.role === 'STUDENT') {
+                    setRole(user.role);
                     setStep(2);
                 }
 
