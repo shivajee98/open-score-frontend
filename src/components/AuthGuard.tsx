@@ -34,7 +34,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                     localStorage.removeItem("user");
                 }
 
-                let target = user.role === 'ADMIN' ? '/admin' : '/customer';
+                let target = user.role === 'ADMIN' ? '/customer' : '/customer';
                 if (user.is_onboarded === false || user.is_onboarded === 0 || user.is_onboarded === "0") {
                     target = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
                 }
