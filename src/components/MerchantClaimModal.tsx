@@ -8,9 +8,10 @@ interface MerchantClaimModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: (user: any) => void;
+    bonusAmount?: number;
 }
 
-export default function MerchantClaimModal({ isOpen, onClose, onSuccess }: MerchantClaimModalProps) {
+export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAmount = 250 }: MerchantClaimModalProps) {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -20,6 +21,8 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess }: Merch
         daily_turnover: '',
         business_address: '',
         pincode: '',
+        app_pin: '',
+        confirm_app_pin: '',
         pin: '',
         confirm_pin: ''
     });
@@ -46,6 +49,7 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess }: Merch
                     daily_turnover: formData.daily_turnover,
                     business_address: formData.business_address,
                     pincode: formData.pincode,
+                    app_pin: formData.app_pin,
                     pin: formData.pin,
                     pin_confirmation: formData.confirm_pin
                 })
@@ -75,7 +79,7 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess }: Merch
                         <TrendingUp size={24} />
                     </div>
                     <h2 className="text-xl font-black text-slate-900">Claim Your Bonus</h2>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Complete Profile to Unlock ₹250</p>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Complete Profile to Unlock ₹{bonusAmount}</p>
                 </div>
 
                 {/* Step 1: Business Info */}
@@ -198,8 +202,38 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess }: Merch
                                 <input
                                     type="password"
                                     inputMode="numeric"
+                                    maxLength={4}
+                                    placeholder="Set 4-Digit App Lock PIN"
+                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
+                                    value={formData.app_pin}
+                                    onChange={e => setFormData({ ...formData, app_pin: e.target.value.replace(/\D/g, '') })}
+                                />
+                            </div>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    type="password"
+                                    inputMode="numeric"
+                                    maxLength={4}
+                                    placeholder="Confirm App Lock PIN"
+                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
+                                    value={formData.confirm_app_pin}
+                                    onChange={e => setFormData({ ...formData, confirm_app_pin: e.target.value.replace(/\D/g, '') })}
+                                />
+                            </div>
+                            {formData.app_pin && formData.confirm_app_pin && formData.app_pin !== formData.confirm_app_pin && (
+                                <p className="text-[10px] text-rose-500 font-bold text-center uppercase tracking-widest">App PINs do not match</p>
+                            )}
+
+                            <div className="h-4"></div> {/* Spacer */}
+
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    type="password"
+                                    inputMode="numeric"
                                     maxLength={6}
-                                    placeholder="Set 6-Digit PIN"
+                                    placeholder="Set 6-Digit Wallet PIN"
                                     className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
                                     value={formData.pin}
                                     onChange={e => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
@@ -211,7 +245,7 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess }: Merch
                                     type="password"
                                     inputMode="numeric"
                                     maxLength={6}
-                                    placeholder="Confirm PIN"
+                                    placeholder="Confirm Wallet PIN"
                                     className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none text-center tracking-[0.5em]"
                                     value={formData.confirm_pin}
                                     onChange={e => setFormData({ ...formData, confirm_pin: e.target.value.replace(/\D/g, '') })}
@@ -219,16 +253,16 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess }: Merch
                             </div>
                         </div>
                         {formData.pin && formData.confirm_pin && formData.pin !== formData.confirm_pin && (
-                            <p className="text-[10px] text-rose-500 font-bold text-center uppercase tracking-widest">PINs do not match</p>
+                            <p className="text-[10px] text-rose-500 font-bold text-center uppercase tracking-widest">Wallet PINs do not match</p>
                         )}
                         <div className="flex gap-3 mt-4">
                             <button onClick={() => setStep(2)} className="flex-1 py-3 bg-slate-50 text-slate-500 rounded-xl font-bold text-sm">Back</button>
                             <button
-                                disabled={loading || formData.pin.length !== 6 || formData.pin !== formData.confirm_pin}
+                                disabled={loading || formData.pin.length !== 6 || formData.pin !== formData.confirm_pin || formData.app_pin.length !== 4 || formData.app_pin !== formData.confirm_app_pin}
                                 onClick={handleSubmit}
                                 className="flex-[2] py-3 bg-emerald-500 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
                             >
-                                {loading ? 'Processing...' : 'Claim ₹250'}
+                                {loading ? 'Processing...' : `Claim ₹${bonusAmount}`}
                             </button>
                         </div>
                     </div>

@@ -152,10 +152,14 @@ export default function CustomerHome() {
     const isMerchant = user.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'blue';
 
+    // Fetch Cashback Settings
+    const { data: cashbackSettings } = useApi('/admin/cashback-settings');
+    const merchantBonus = cashbackSettings?.find((s: any) => s.role === 'MERCHANT' && s.is_active)?.cashback_amount || 250;
+
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
-            <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} />
+            <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} />
 
             <MerchantLocator />
 
@@ -289,9 +293,6 @@ export default function CustomerHome() {
                 </div>
             </div>
 
-
-
-
             {/* Quick Actions - Floating Card */}
             <div className="px-6 -mt-8 relative z-20 mb-3">
                 <div className="bg-white py-1 px-1 rounded-xl shadow-xl shadow-slate-200/50 border border-slate-50">
@@ -304,7 +305,7 @@ export default function CustomerHome() {
                         ].filter(item => item.show).map((item, i) => (
                             <div key={i} className="flex flex-col items-center gap-1 transition-all active:scale-95 cursor-pointer">
                                 <Link href={item.href} prefetch={false} className="contents">
-                                    <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1`}>
+                                    <div className="w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1">
                                         {item.icon}
                                     </div>
                                     <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.1em] text-center">{item.label}</span>
@@ -314,8 +315,6 @@ export default function CustomerHome() {
                     </div>
                 </div>
             </div>
-
-
 
             {/* Marketing Banner - Get Needs Done */}
             <div className="px-4 mb-3">
@@ -372,7 +371,7 @@ export default function CustomerHome() {
                                         <Zap size={24} className="fill-white" />
                                     </div>
                                     <div>
-                                        <h3 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim ₹250 Cashback</h3>
+                                        <h3 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim ₹{merchantBonus} Cashback</h3>
                                         <p className="text-white/80 text-[9px] font-black leading-tight mt-0.5 opacity-80 uppercase tracking-widest">Complete Setup Now</p>
                                     </div>
                                 </div>

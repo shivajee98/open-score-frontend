@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -26,7 +26,8 @@ export default function Profile() {
         business_segment: '',
         business_type: '',
         map_location_url: '',
-        shop_images: '[]'
+        shop_images: '[]',
+        business_name: ''
     });
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
@@ -55,7 +56,8 @@ export default function Profile() {
                 business_segment: user.business_segment || '',
                 business_type: user.business_type || '',
                 map_location_url: user.map_location_url || '',
-                shop_images: user.shop_images || '[]'
+                shop_images: user.shop_images || '[]',
+                business_name: user.business_name || ''
             });
         }
     }, [user]);
@@ -127,9 +129,19 @@ export default function Profile() {
         }
 
         try {
+            // Parse shop_images to array if string
+            const payload: any = { ...formData };
+            try {
+                if (typeof formData.shop_images === 'string') {
+                    payload.shop_images = JSON.parse(formData.shop_images);
+                }
+            } catch (e) {
+                payload.shop_images = [];
+            }
+
             const res = await apiFetch('/auth/update-profile', {
                 method: 'POST',
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             });
             if (res.error) throw new Error(res.error);
             await mutateUser(); // Refresh user data
@@ -186,6 +198,41 @@ export default function Profile() {
                 toast.error(e.message || 'Failed to update PIN');
             }
         }
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const uploadToCloudinary = async () => {
+            try {
+                toast.info("Uploading image...");
+                const uploadData = new FormData();
+                uploadData.append('file', file);
+                uploadData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+                uploadData.append('cloud_name', process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
+
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: uploadData
+                });
+                const data = await res.json();
+                if (data.secure_url) {
+                    let currentImages: string[] = [];
+                    try {
+                        currentImages = formData.shop_images ? JSON.parse(formData.shop_images) : [];
+                    } catch (e) { currentImages = []; }
+
+                    const newImages = [...currentImages, data.secure_url];
+                    setFormData(prev => ({ ...prev, shop_images: JSON.stringify(newImages) }));
+                    toast.success("Image uploaded!");
+                }
+            } catch (err) {
+                console.error(err);
+                toast.error("Upload failed");
+            }
+        };
+        uploadToCloudinary();
     };
 
     const isMerchant = user?.role === 'MERCHANT';
@@ -304,7 +351,17 @@ export default function Profile() {
                                     <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><Briefcase className="w-5 h-5" /></div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Business Name</p>
-                                        <p className="text-base font-semibold text-slate-900">{user.business_name}</p>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={formData.business_name}
+                                                onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                placeholder="Enter Business Name"
+                                            />
+                                        ) : (
+                                            <p className="text-base font-semibold text-slate-900">{user.business_name || 'Not Set'}</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -383,48 +440,30 @@ export default function Profile() {
                                     <div className="flex justify-between items-center mb-2">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Shop Images</p>
                                         {isEditing && (
-                                            <label className={`cursor-pointer bg-${themeColor}-100 text-${themeColor}-700 px-2 py-1 rounded text-[10px] font-bold uppercase`}>
-                                                + Add Image
-                                                <input
-                                                    type="file"
-                                                    className="hidden"
-                                                    accept="image/*"
-                                                    onChange={async (e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (!file) return;
+                                            <div className="flex gap-2">
+                                                <label className={`cursor-pointer bg-${themeColor}-100 text-${themeColor}-700 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1.5 hover:bg-${themeColor}-200 transition-colors`}>
+                                                    <ImageIcon size={14} />
+                                                    Gallery
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        onChange={handleImageUpload}
+                                                    />
+                                                </label>
 
-                                                        const uploadToCloudinary = async () => {
-                                                            try {
-                                                                toast.info("Uploading image...");
-                                                                const uploadData = new FormData();
-                                                                uploadData.append('file', file);
-                                                                uploadData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
-                                                                uploadData.append('cloud_name', process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
-
-                                                                const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                                                                    method: 'POST',
-                                                                    body: uploadData
-                                                                });
-                                                                const data = await res.json();
-                                                                if (data.secure_url) {
-                                                                    let currentImages: string[] = [];
-                                                                    try {
-                                                                        currentImages = formData.shop_images ? JSON.parse(formData.shop_images) : [];
-                                                                    } catch (e) { currentImages = []; }
-
-                                                                    const newImages = [...currentImages, data.secure_url];
-                                                                    setFormData(prev => ({ ...prev, shop_images: JSON.stringify(newImages) }));
-                                                                    toast.success("Image uploaded!");
-                                                                }
-                                                            } catch (err) {
-                                                                console.error(err);
-                                                                toast.error("Upload failed");
-                                                            }
-                                                        };
-                                                        uploadToCloudinary();
-                                                    }}
-                                                />
-                                            </label>
+                                                <label className={`cursor-pointer bg-${themeColor}-100 text-${themeColor}-700 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1.5 hover:bg-${themeColor}-200 transition-colors`}>
+                                                    <Camera size={14} />
+                                                    Camera
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        accept="image/*"
+                                                        capture="environment"
+                                                        onChange={handleImageUpload}
+                                                    />
+                                                </label>
+                                            </div>
                                         )}
                                     </div>
 

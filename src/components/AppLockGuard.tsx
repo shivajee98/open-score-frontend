@@ -25,6 +25,13 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
             const user = JSON.parse(userStr);
             const isUnlocked = sessionStorage.getItem("app_unlocked") === "true";
 
+            // logical fix: if not onboarded, don't force app lock (handled in onboarding)
+            if (!user.is_onboarded) {
+                setIsLocked(false);
+                setInitialized(true);
+                return;
+            }
+
             if (!user.has_app_pin) {
                 setNeedsSetup(true);
                 setIsLocked(true);
