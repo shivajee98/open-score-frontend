@@ -112,14 +112,18 @@ function SupportPageContent() {
             let url = `/support/tickets/${ticketId}/messages`;
             if (afterId) url += `?after_id=${afterId}`;
             const res = await apiFetch(url);
-            if (res && Array.isArray(res)) {
-                if (res.length === 0) return;
+
+            // Handle both direct array and wrapped { data: [...] } responses
+            const msgData = Array.isArray(res) ? res : (res?.data || []);
+
+            if (Array.isArray(msgData)) {
+                if (msgData.length === 0) return;
                 setMessages(prev => {
                     if (afterId) {
-                        const newMsgs = res.filter(m => !prev.find(p => p.id === m.id));
+                        const newMsgs = msgData.filter((m: any) => !prev.find(p => p.id === m.id));
                         return [...prev, ...newMsgs];
                     }
-                    return res;
+                    return msgData; // Initial load or full refresh
                 });
             }
         } catch (error) {

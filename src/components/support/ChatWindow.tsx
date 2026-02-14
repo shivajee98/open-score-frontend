@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, Paperclip, X, Image as ImageIcon, Loader2, ExternalLink, Briefcase, CheckCircle2 } from 'lucide-react';
+import { Send, Paperclip, X, Image as ImageIcon, Loader2, ExternalLink, Briefcase, CheckCircle2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
 import { format } from 'date-fns';
 import { API_BASE_URL } from '@/lib/api';
@@ -25,7 +25,7 @@ interface Message {
 interface ChatWindowProps {
     messages: Message[];
     currentUserId: number;
-    onSendMessage: (message: string, attachment?: File | null) => Promise<void>;
+    onSendMessage: (message: string, attachment?: File | null, attachmentLabel?: string) => Promise<void>;
     isLoading?: boolean;
     ticketStatus: string;
 }
@@ -62,44 +62,41 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
     const [attachment, setAttachment] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Purpose Selection State
+    const [showPurposeModal, setShowPurposeModal] = useState(false);
+    const [selectedPurpose, setSelectedPurpose] = useState<string>('');
+
     useEffect(() => {
         setLocalMessages(messages);
     }, [messages]);
 
     useEffect(() => {
-        // Initialize Echo
-        import('@/lib/echo').then(({ createEcho }) => {
-            const echo = createEcho();
-            // Assuming we have ticketId attached to a message or passed via props. 
-            // Wait, we don't have ticketId in props locally here? 
-            // We need to look at parent usage or infer.
-            // Actually, we need ticketId. Let's inspect ONE message to get ticket_id or pass it in props.
-            // Passed in props is safer. But we only have `messages`.
-            // Let's rely on the parent component passing `messages` which updates via polling for now? 
-            // No, we want to REMOVE polling.
-            // We need to add `ticketId` to props.
-        });
-    }, []);
-    // Wait, I need to update the interface first.
-
-    // ... logic placeholder ...
-
-    // Actually, let's update the Parent Page to handle the listening and pass updated messages down.
-    // That is cleaner. The ChatWindow should just be a dumb UI component.
+        scrollToBottom();
+    }, [localMessages]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const handleSend = async (e: React.FormEvent) => {
+    const handleSendClick = (e: React.FormEvent) => {
         e.preventDefault();
         if ((!newMessage.trim() && !attachment) || isSending) return;
 
+        if (attachment) {
+            setShowPurposeModal(true);
+        } else {
+            submitMessage();
+        }
+    };
+
+    const submitMessage = async (purpose?: string) => {
         setIsSending(true);
         try {
-            await onSendMessage(newMessage, attachment);
+            await onSendMessage(newMessage, attachment, purpose);
             setNewMessage('');
             setAttachment(null);
+            setSelectedPurpose('');
+            setShowPurposeModal(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
         } catch (error) {
             console.error("Failed to send", error);
@@ -108,10 +105,56 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
         }
     };
 
+    const handlePurposeSelect = (purpose: string) => {
+        setSelectedPurpose(purpose);
+        submitMessage(purpose);
+    };
+
     const isClosed = ticketStatus === 'closed';
 
     return (
-        <div className="flex flex-col h-full bg-slate-50/50">
+        <div className="flex flex-col h-full bg-slate-50/50 relative">
+            {/* Purpose Selection Modal */}
+            {showPurposeModal && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-black text-slate-900">What is this image for?</h3>
+                            <button
+                                onClick={() => setShowPurposeModal(false)}
+                                className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <p className="text-sm text-slate-500 mb-6 font-medium">Please select a category to help us process your request faster.</p>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            {[
+                                { label: 'Payment Proof', icon: <CheckCircle2 size={16} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300' },
+                                { label: 'KYC Document', icon: <Briefcase size={16} />, color: 'bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300' },
+                                { label: 'Error Screenshot', icon: <AlertCircle size={16} />, color: 'bg-rose-50 text-rose-600 border-rose-100 hover:border-rose-300' },
+                                { label: 'Other', icon: <ImageIcon size={16} />, color: 'bg-slate-50 text-slate-600 border-slate-100 hover:border-slate-300' }
+                            ].map((option) => (
+                                <button
+                                    key={option.label}
+                                    onClick={() => handlePurposeSelect(option.label)}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all active:scale-95",
+                                        option.color
+                                    )}
+                                >
+                                    <div className="p-2 bg-white rounded-full shadow-sm">
+                                        {option.icon}
+                                    </div>
+                                    <span className="text-xs font-bold uppercase tracking-wide text-center">{option.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {messages.length === 0 ? (
@@ -179,7 +222,7 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                         <p className="text-sm font-bold text-slate-500">This ticket is closed. You can't send new messages.</p>
                     </div>
                 ) : (
-                    <form onSubmit={handleSend} className="flex flex-col gap-2">
+                    <form onSubmit={handleSendClick} className="flex flex-col gap-2">
                         {attachment && (
                             <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg w-fit border border-slate-200 animate-in fade-in slide-in-from-bottom-2">
                                 <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 border border-slate-300">
