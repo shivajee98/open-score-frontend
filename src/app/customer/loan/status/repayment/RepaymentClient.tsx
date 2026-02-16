@@ -24,7 +24,7 @@ import {
     Search,
     Filter,
     ArrowRightCircle,
-    ReceiptIcon,
+    FileText,
     HistoryIcon,
     Bell,
     Headphones,
@@ -405,7 +405,7 @@ export default function RepaymentDashboard() {
                             </div>
                             <div className="flex flex-col items-end gap-2">
                                 <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                                    <ReceiptIcon size={24} className="text-white opacity-80" />
+                                    <FileText size={24} className="text-white opacity-80" />
                                 </div>
                                 <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">ID: {pendingEmi.display_id || pendingEmi.id}</p>
                             </div>
