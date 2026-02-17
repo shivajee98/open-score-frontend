@@ -131,9 +131,9 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
 
                         <div className="grid grid-cols-2 gap-3">
                             {[
-                                { label: 'Agent Wallet', icon: <Briefcase size={16} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300' },
                                 { label: 'EMI', icon: <CheckCircle2 size={16} />, color: 'bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300' },
-                                { label: 'Platform Fee', icon: <AlertCircle size={16} />, color: 'bg-rose-50 text-rose-600 border-rose-100 hover:border-rose-300' },
+                                { label: 'Wallet', icon: <Briefcase size={16} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300' },
+                                { label: 'Platform Fee and Charges', icon: <AlertCircle size={16} />, color: 'bg-rose-50 text-rose-600 border-rose-100 hover:border-rose-300' },
                                 { label: 'Other', icon: <ImageIcon size={16} />, color: 'bg-slate-50 text-slate-600 border-slate-100 hover:border-slate-300' }
                             ].map((option) => (
                                 <button
