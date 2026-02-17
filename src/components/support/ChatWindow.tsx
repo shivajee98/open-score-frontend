@@ -107,6 +107,7 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
 
     const handlePurposeSelect = (purpose: string) => {
         setSelectedPurpose(purpose);
+        setShowPurposeModal(false); // Close immediately for better UX
         submitMessage(purpose);
     };
 
