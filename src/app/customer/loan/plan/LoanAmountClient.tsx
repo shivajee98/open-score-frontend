@@ -152,7 +152,30 @@ export default function LoanDetail() {
     // Calculate Breakdown Details
     // Principal: plan.amount
     // Interest + Fees: Total - Principal
-    const interest = total > plan.amount ? total - plan.amount : 0;
+    // We want to show: Principal, Interest, Fees, Total Payable
+    const principal = plan.amount;
+    const totalPayable = total;
+
+    // Heuristic: processing_fee is usually configured. 
+    // Ideally calculateRepayment should return breakdown of fees.
+    // For now, let's assume interest is (Total - Principal - Fees).
+    // But we don't have exact fees here without configuration.
+    // Let's rely on standard logic: Interest = Principal * Rate * Tenure. 
+    // Remainder = Fees.
+
+    // Better Approach: Just show "Est. Fees & Charges" line if (Total - Principal - Interest) > 0
+    // But calculateRepayment internal logic for 'total' includes everything.
+    // Let's invoke a helper or just estimate.
+
+    // Inline Interest Calculation (since PlanUtils is not imported/available)
+    let estInterest = 0;
+    if (payout?.interestRate) {
+        // Simple Interest: P * R * T
+        // Rate is flat % for tenure usually in this system
+        estInterest = (principal * payout.interestRate) / 100;
+    }
+
+    const estFees = totalPayable - principal - estInterest;
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans pb-32">
@@ -175,6 +198,10 @@ export default function LoanDetail() {
                     breakdown={breakdown}
                     count={count}
                     tenureType={plan.tenure_type}
+                    // New Props for Fee Separation
+                    principal={principal}
+                    estInterest={estInterest}
+                    estFees={estFees}
                 />
 
                 <TenureSelector

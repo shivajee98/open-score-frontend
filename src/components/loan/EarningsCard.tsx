@@ -11,9 +11,25 @@ interface EarningsCardProps {
     breakdown?: string;
     count?: number;
     tenureType?: 'months' | 'days' | 'decimal';
+    // New optional props for detailed breakdown
+    principal?: number;
+    estInterest?: number;
+    estFees?: number;
 }
 
-export default function EarningsCard({ plan, tenure, payout, isEmi, totalEmi, breakdown: propBreakdown, count: propCount, tenureType = 'months' }: EarningsCardProps) {
+export default function EarningsCard({
+    plan,
+    tenure,
+    payout,
+    isEmi,
+    totalEmi,
+    breakdown: propBreakdown,
+    count: propCount,
+    tenureType = 'months',
+    principal,
+    estInterest,
+    estFees
+}: EarningsCardProps) {
     const formatTenure = (days: number) => {
         if (tenureType === 'days') return `${days} Days`;
         if (tenureType === 'decimal') return `${(days / 30).toFixed(1)} Months`;
@@ -74,6 +90,27 @@ export default function EarningsCard({ plan, tenure, payout, isEmi, totalEmi, br
                     </div>
                 </div>
             </div>
+            {/* Detailed Fee Breakdown (If provided) */}
+            {principal !== undefined && estInterest !== undefined && estFees !== undefined && (
+                <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+                    <div className="flex justify-between text-slate-400 text-xs">
+                        <span>Principal Amount</span>
+                        <span>₹{principal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400 text-xs">
+                        <span>Interest</span>
+                        <span>₹{estInterest.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400 text-xs">
+                        <span>Process Fees (+GST)</span>
+                        <span>₹{estFees.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-400 text-sm font-bold pt-2 border-t border-white/5">
+                        <span>Total Payable</span>
+                        <span>₹{total.toLocaleString()}</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

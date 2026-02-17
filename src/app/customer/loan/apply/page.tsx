@@ -12,7 +12,9 @@ export default function LoanApplication() {
     const searchParams = useSearchParams();
 
     // UI States
-    const [entryMode, setEntryMode] = useState(true);
+    const [loadingParams, setLoadingParams] = useState(true);
+    const [entryMode, setEntryMode] = useState(false); // Default to FALSE to show offers directly
+    const [loanPlans, setLoanPlans] = useState([]);
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [checkingEligibility, setCheckingEligibility] = useState(true);
