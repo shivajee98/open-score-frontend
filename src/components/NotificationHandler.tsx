@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function NotificationHandler() {
     useEffect(() => {
@@ -48,6 +49,10 @@ export default function NotificationHandler() {
 
             if (permStatus.receive !== 'granted') {
                 console.warn('Push notification permissions not granted');
+                if (permStatus.receive === 'denied') {
+                    // Optionally alert the user once that notifications are helpful
+                    // toast.error('Notification access is required for real-time updates.');
+                }
                 return;
             }
 
@@ -79,6 +84,7 @@ export default function NotificationHandler() {
 
         } catch (e) {
             console.error('Notification logic error:', e);
+            toast.error('Failed to initialize push notifications');
         }
     };
 
