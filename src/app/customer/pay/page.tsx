@@ -301,7 +301,7 @@ function CustomerPayPage() {
                             </p>
                         </div>
                         <button
-                            onClick={() => router.push('/customer/profile')}
+                            onClick={() => router.push('/customer/profile?editBank=true')}
                             className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 group"
                         >
                             Setup Bank Details <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

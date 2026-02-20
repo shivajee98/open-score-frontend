@@ -453,7 +453,7 @@ export default function CustomerHome() {
             {
                 (!user.account_number || !user.ifsc_code) && (
                     <div className="px-4 mb-8">
-                        <Link href="/customer/profile" prefetch={false}>
+                        <Link href="/customer/profile?editBank=true" prefetch={false}>
                             <div className="bg-rose-500 p-4 rounded-3xl shadow-2xl shadow-rose-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                                 <div className="flex items-center gap-3 relative z-10">
@@ -461,7 +461,7 @@ export default function CustomerHome() {
                                         <Landmark size={28} />
                                     </div>
                                     <div>
-                                        <h3 className="text-white font-black text-sm leading-tight uppercase tracking-tight">Setup Bank Account</h3>
+                                        <h3 className="text-white font-black text-sm leading-tight uppercase tracking-tight">SET UP BANK ACCOUNT (NEW)</h3>
                                         <p className="text-rose-100 text-[10px] font-black leading-tight mt-1 opacity-80 uppercase tracking-widest">Required to send & receive money</p>
                                     </div>
                                 </div>

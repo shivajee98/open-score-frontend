@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon } from 'lucide-react';
@@ -16,6 +16,7 @@ export default function Profile() {
     const { data: pinData, mutate: mutatePin } = useApi('/wallet/check-pin');
 
     const [isEditing, setIsEditing] = useState(false);
+    const initialDataLoaded = useRef(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -59,20 +60,24 @@ export default function Profile() {
 
     // Synchronize form data with user data when it arrives
     useEffect(() => {
-        if (user && !isEditing) {
-            setFormData({
-                name: user.name || '',
-                email: user.email || '',
-                bank_name: user.bank_name || '',
-                account_number: user.account_number || '',
-                ifsc_code: user.ifsc_code || '',
-                account_holder_name: user.account_holder_name || '',
-                business_segment: user.business_segment || '',
-                business_type: user.business_type || '',
-                map_location_url: user.map_location_url || '',
-                shop_images: user.shop_images || '[]',
-                business_name: user.business_name || ''
-            });
+        if (user) {
+            // Populate if not editing, or if editing but we haven't loaded initial data yet
+            if (!isEditing || !initialDataLoaded.current) {
+                setFormData({
+                    name: user.name || '',
+                    email: user.email || '',
+                    bank_name: user.bank_name || '',
+                    account_number: user.account_number || '',
+                    ifsc_code: user.ifsc_code || '',
+                    account_holder_name: user.account_holder_name || '',
+                    business_segment: user.business_segment || '',
+                    business_type: user.business_type || '',
+                    map_location_url: user.map_location_url || '',
+                    shop_images: Array.isArray(user.shop_images) ? JSON.stringify(user.shop_images) : (user.shop_images || '[]'),
+                    business_name: user.business_name || ''
+                });
+                initialDataLoaded.current = true;
+            }
         }
     }, [user, isEditing]);
 

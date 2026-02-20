@@ -14,9 +14,10 @@ interface Merchant {
     pincode: string;
     city: string;
     mobile_number: string;
-    description?: string;
     name?: string;
     email?: string;
+    shop_images?: string;
+    map_location_url?: string;
 }
 
 // Simple debounce hook
@@ -40,6 +41,12 @@ export default function MerchantLocator() {
     const [pincode, setPincode] = useState("");
     const [city, setCity] = useState("");
     const [merchants, setMerchants] = useState<Merchant[]>([]);
+    const [showAll, setShowAll] = useState(false);
+
+    // Reset when search terms change
+    useEffect(() => {
+        setShowAll(false);
+    }, [pincode, city]);
 
     // Details Modal State
     const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null);
@@ -73,10 +80,9 @@ export default function MerchantLocator() {
         }
     }, []);
 
-    // Details Modal State
     const handleMerchantClick = (merchant: Merchant) => {
-        // router.push(`/merchants/${merchant.id}`);
-        toast.info("Merchant profile details coming soon!");
+        setSelectedMerchant(merchant);
+        setDetailsOpen(true);
     };
 
     // Initial load from profile
@@ -115,11 +121,17 @@ export default function MerchantLocator() {
             {open && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setOpen(false)}></div>
-                    <div className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-300 max-h-[85vh] flex flex-col">
+                    <div className={`relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col transition-all ${showAll ? 'h-[92vh]' : 'max-h-[85vh]'}`}>
 
                         <button
-                            onClick={() => setOpen(false)}
-                            className="absolute right-4 top-4 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                            onClick={() => {
+                                if (showAll) {
+                                    setShowAll(false);
+                                } else {
+                                    setOpen(false);
+                                }
+                            }}
+                            className="absolute right-4 top-4 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors z-10"
                         >
                             <X size={18} />
                         </button>
@@ -128,26 +140,28 @@ export default function MerchantLocator() {
                             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 text-blue-600 mb-3 ring-4 ring-blue-50">
                                 <Store size={24} />
                             </div>
-                            <h2 className="text-xl font-black text-slate-900">Find Merchants</h2>
+                            <h2 className="text-xl font-black text-slate-900">{showAll ? "All Found Merchants" : "Find Merchants"}</h2>
                             <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Locate stores near you</p>
                         </div>
 
-                        <div className="space-y-3 mb-6">
-                            <div className="flex gap-2">
-                                <input
-                                    placeholder="Pincode"
-                                    value={pincode}
-                                    onChange={(e) => setPincode(e.target.value)}
-                                    className="w-1/3 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
-                                />
-                                <input
-                                    placeholder="City (Search...)"
-                                    value={city}
-                                    onChange={(e) => setCity(e.target.value)}
-                                    className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
-                                />
+                        {!showAll && (
+                            <div className="space-y-3 mb-6 shrink-0">
+                                <div className="flex gap-2">
+                                    <input
+                                        placeholder="Pincode"
+                                        value={pincode}
+                                        onChange={(e) => setPincode(e.target.value)}
+                                        className="w-1/3 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
+                                    />
+                                    <input
+                                        placeholder="City / Name (Search...)"
+                                        value={city}
+                                        onChange={(e) => setCity(e.target.value)}
+                                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <div className="flex-1 overflow-y-auto -mx-2 px-2 space-y-3">
                             {loading ? (
@@ -155,27 +169,52 @@ export default function MerchantLocator() {
                                     <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                 </div>
                             ) : merchants.length > 0 ? (
-                                merchants.map((merchant) => (
-                                    <div
-                                        key={merchant.id}
-                                        onClick={() => handleMerchantClick(merchant)}
-                                        className="p-4 border border-slate-100 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition-all cursor-pointer group"
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{merchant.business_name}</h3>
-                                                <div className="flex items-start gap-2 mt-2 text-slate-500 text-xs font-medium">
-                                                    <MapPin size={14} className="mt-0.5 shrink-0" />
-                                                    <p>{merchant.business_address}, {merchant.city}, {merchant.pincode}</p>
+                                <>
+                                    {(showAll ? merchants : merchants.slice(0, 3)).map((merchant) => (
+                                        <div
+                                            key={merchant.id}
+                                            onClick={() => handleMerchantClick(merchant)}
+                                            className="p-4 border border-slate-100 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-md transition-all cursor-pointer group"
+                                        >
+                                            <div className="flex justify-between items-center gap-4">
+                                                {showAll && (
+                                                    <div className="w-16 h-16 rounded-xl bg-slate-200 overflow-hidden shrink-0 border border-slate-100">
+                                                        {(() => {
+                                                            let imgs: string[] = [];
+                                                            try { imgs = merchant.shop_images ? JSON.parse(merchant.shop_images) : []; } catch (e) { }
+                                                            if (imgs.length > 0) return <img src={imgs[0]} className="w-full h-full object-cover" alt="Shop" />;
+                                                            return <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-100"><Store size={20} className="mb-0.5 opacity-40" /></div>;
+                                                        })()}
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{merchant.business_name || merchant.name}</h3>
+                                                    <div className="flex items-start gap-2 mt-2 text-slate-500 text-xs font-medium">
+                                                        <MapPin size={14} className="mt-0.5 shrink-0" />
+                                                        <p className="truncate">{(merchant.business_address && merchant.business_address !== 'null') ? merchant.business_address + ', ' : ''}{merchant.city || ''} {merchant.pincode}</p>
+                                                    </div>
+                                                    {showAll && merchant.mobile_number && (
+                                                        <div className="mt-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded-md">
+                                                            +91 {merchant.mobile_number}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {/* Details Arrow */}
+                                                <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors shrink-0">
+                                                    <Navigation size={14} className="rotate-90" />
                                                 </div>
                                             </div>
-                                            {/* Details Arrow */}
-                                            <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                                <Navigation size={14} className="rotate-90" />
-                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    ))}
+                                    {!showAll && merchants.length > 3 && (
+                                        <button
+                                            onClick={() => setShowAll(true)}
+                                            className="w-full py-4 mt-2 mb-2 bg-slate-50 border-2 border-dashed border-slate-200 text-blue-600 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-50 hover:border-blue-200 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            View {merchants.length - 3} More stores
+                                        </button>
+                                    )}
+                                </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-40 text-slate-400">
                                     <Navigation size={32} className="mb-2 opacity-20" />

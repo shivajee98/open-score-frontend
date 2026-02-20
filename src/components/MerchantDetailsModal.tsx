@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, MapPin, Phone, Building2, User as UserIcon, Store } from "lucide-react";
+import { X, MapPin, Phone, Building2, User as UserIcon, Store, ExternalLink } from "lucide-react";
 
 interface MerchantDetailsModalProps {
     isOpen: boolean;
@@ -62,14 +62,23 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                            <div
+                                onClick={() => {
+                                    const mapUrl = merchant.map_location_url || `https://maps.google.com/?q=${encodeURIComponent(`${merchant.business_address || ''} ${merchant.city || ''} ${merchant.pincode || ''}`)}`;
+                                    window.open(mapUrl, '_blank');
+                                }}
+                                className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-blue-50 transition-colors group"
+                            >
+                                <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                                     <MapPin size={20} />
                                 </div>
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Address</p>
-                                    <p className="font-bold text-slate-900 leading-snug">{merchant.business_address}</p>
-                                    <p className="text-sm font-medium text-slate-500 mt-0.5">{merchant.city}, {merchant.pincode}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Address (Tap to Navigator)</p>
+                                    <p className="font-bold text-slate-900 leading-snug break-words">{(merchant.business_address && merchant.business_address !== 'null') ? merchant.business_address : (merchant.city || 'No specific address')}</p>
+                                    <p className="text-sm font-medium text-slate-500 mt-0.5">{merchant.city ? merchant.city + ',' : ''} {merchant.pincode}</p>
+                                </div>
+                                <div className="text-slate-300 group-hover:text-blue-600 mt-2 shrink-0">
+                                    <ExternalLink size={20} />
                                 </div>
                             </div>
 
