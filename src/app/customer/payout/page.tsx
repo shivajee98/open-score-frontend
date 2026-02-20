@@ -370,7 +370,7 @@ Amounts below ₹50,000 can be easily used for shopping and merchant payments.
                                     </p>
                                 </div>
                                 <button
-                                    onClick={() => router.push('/customer/profile')}
+                                    onClick={() => router.push('/customer/profile?editBank=true')}
                                     className="w-full py-3 bg-rose-600 text-white rounded-xl font-black text-sm hover:bg-rose-700 transition-all active:scale-95 shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
                                 >
                                     Go to Profile & Add Details

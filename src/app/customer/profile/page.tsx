@@ -43,9 +43,23 @@ export default function Profile() {
         if (saved === 'true') setNotificationsEnabled(true);
     }, []);
 
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.search.includes('editBank=true')) {
+            setIsEditing(true);
+            setTimeout(() => {
+                const element = document.getElementById('bank-details-section');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    element.classList.add('ring-4', 'ring-indigo-500', 'ring-offset-4', 'transition-all');
+                    setTimeout(() => element.classList.remove('ring-4', 'ring-indigo-500', 'ring-offset-4', 'transition-all'), 3000);
+                }
+            }, 500);
+        }
+    }, []);
+
     // Synchronize form data with user data when it arrives
     useEffect(() => {
-        if (user) {
+        if (user && !isEditing) {
             setFormData({
                 name: user.name || '',
                 email: user.email || '',
@@ -60,7 +74,7 @@ export default function Profile() {
                 business_name: user.business_name || ''
             });
         }
-    }, [user]);
+    }, [user, isEditing]);
 
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
@@ -500,7 +514,7 @@ export default function Profile() {
                             </>
                         )}
 
-                        <div className="mt-8 mb-4">
+                        <div id="bank-details-section" className="mt-8 mb-4 rounded-3xl p-2 transition-all duration-500">
                             <h3 className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Bank Details (For Payouts)</h3>
                             {user.account_number && (
                                 <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl mb-4 flex items-center gap-2">
