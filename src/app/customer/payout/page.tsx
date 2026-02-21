@@ -226,7 +226,7 @@ export default function PayoutPage() {
                     <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight">0% Free Credit Value Unable to Transfer</h2>
                     <p className="text-slate-400 font-bold text-sm leading-relaxed uppercase tracking-wider">
                         Loans above ₹50,000 allow Transfer
-Amounts below ₹50,000 can be easily used for shopping and merchant payments.
+                        Amounts below ₹50,000 can be easily used for shopping and merchant payments.
                     </p>
                 </div>
 
@@ -354,7 +354,7 @@ Amounts below ₹50,000 can be easily used for shopping and merchant payments.
 
                                     <p className="mt-3 flex items-start gap-2 text-[10px] font-bold text-indigo-700/80 leading-relaxed italic">
                                         <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-70" />
-                                        Contact support to update bank details
+                                        Bank details will update 24 to 48 hours
                                     </p>
                                 </div>
                             </>
@@ -434,7 +434,7 @@ Amounts below ₹50,000 can be easily used for shopping and merchant payments.
                                         {w.status}
                                     </span>
                                     {w.admin_note && (
-                                        <p className="text-[8px] font-bold text-slate-500 mt-1 italic max-w-[100px] truncate">{w.admin_note}</p>
+                                        <p className="text-[8px] font-bold text-slate-500 mt-1 italic max-w-[150px]">{w.admin_note}</p>
                                     )}
                                 </div>
                             </div>

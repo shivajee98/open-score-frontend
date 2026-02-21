@@ -135,18 +135,20 @@ export default function ReferralPage() {
 
                 {/* Referral History */}
                 <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 ml-1 flex items-center justify-between">
-                    <span>Referral History</span>
-                    <span className="text-[8px] bg-slate-200 px-2 py-0.5 rounded-full">{statsData?.referrals?.length || 0} Users</span>
+                    <span>Earning History</span>
+                    <span className="text-[8px] bg-slate-200 px-2 py-0.5 rounded-full">
+                        {statsData?.referrals?.filter((f: any) => Number(f.signup_bonus) > 0 || Number(f.loan_bonus) > 0).length || 0} Users
+                    </span>
                 </h3>
 
                 <div className="space-y-3 mb-8">
                     {(!statsData?.referrals || statsData.referrals.length === 0) ? (
                         <div className="bg-white p-10 rounded-3xl border border-slate-100 text-center">
                             <Users size={32} className="mx-auto text-slate-200 mb-3" />
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No referrals yet</p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No earning history</p>
                         </div>
                     ) : (
-                        statsData.referrals.map((friend: any) => (
+                        statsData.referrals.filter((f: any) => f.is_onboarded || f.has_received_cashback).map((friend: any) => (
                             <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
@@ -154,7 +156,7 @@ export default function ReferralPage() {
                                         <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{friend.mobile}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Earned</p>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Earning</p>
                                         <p className="text-xs font-black text-blue-600">₹{(Number(friend.signup_bonus) + Number(friend.loan_bonus)).toFixed(0)}</p>
                                     </div>
                                 </div>
@@ -183,7 +185,7 @@ export default function ReferralPage() {
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_received_cashback ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
                                             <Gift size={12} />
                                         </div>
-                                        <span className="text-[7px] font-black uppercase text-slate-400">Cashback</span>
+                                        <span className="text-[7px] font-black uppercase text-slate-400">Earning</span>
                                     </div>
 
                                     {/* Connecting Line Backdrop */}

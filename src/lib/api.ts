@@ -8,11 +8,14 @@ const MAX_AUTH_FAILURES = 3;
 
 export const clearAuthState = async () => {
     if (typeof window !== 'undefined') {
-        // Clear all local storage auth-related items
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth_token'); // Legacy
-        localStorage.removeItem('token');      // Standard
-        localStorage.removeItem('access_token'); // Legacy
+        // Clear all storage
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Clear all cookies
+        document.cookie.split(";").forEach((c) => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
 
         // Reset failure count
         authFailureCount = 0;

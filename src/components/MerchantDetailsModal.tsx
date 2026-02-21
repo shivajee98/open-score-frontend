@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, MapPin, Phone, Building2, User as UserIcon, Store, ExternalLink } from "lucide-react";
+import { X, MapPin, Phone, Building2, User as UserIcon, Store, ExternalLink, Mail, LayoutGrid, Building, Map, Image as ImageIcon } from "lucide-react";
 
 interface MerchantDetailsModalProps {
     isOpen: boolean;
@@ -37,11 +37,28 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                     </button>
 
                     <div className="flex flex-col items-center text-center">
-                        <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 text-blue-600">
-                            <Store size={40} />
+                        <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 text-blue-600 overflow-hidden">
+                            {(() => {
+                                let imgs: string[] = [];
+                                try {
+                                    if (Array.isArray(merchant.shop_images)) {
+                                        imgs = merchant.shop_images;
+                                    } else {
+                                        imgs = merchant.shop_images ? JSON.parse(merchant.shop_images) : [];
+                                    }
+                                } catch (e) { }
+                                if (imgs && imgs.length > 0 && typeof imgs[0] === 'string') return <img src={imgs[0]} className="w-full h-full object-cover" alt="Shop" />;
+                                return <Store size={40} />;
+                            })()}
                         </div>
                         <h2 className="text-2xl font-black text-white">{merchant.business_name}</h2>
-                        <p className="text-blue-100 font-medium mt-1">{merchant.description || "Verified Merchant"}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                            {merchant.business_segment && (
+                                <span className="bg-white/20 text-white border border-white/30 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                    {merchant.business_segment}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -82,26 +99,74 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                                 </div>
                             </div>
 
-                            <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                                    <Phone size={20} />
+                            {merchant.map_location_url && (
+                                <div
+                                    onClick={() => window.open(merchant.map_location_url, '_blank')}
+                                    className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-emerald-50 transition-colors group"
+                                >
+                                    <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-200 transition-colors">
+                                        <Map size={20} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Google Maps Link</p>
+                                        <p className="font-bold text-emerald-600 leading-snug break-words underline text-sm truncate">{merchant.map_location_url}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact</p>
-                                    <p className="font-bold text-slate-900">{merchant.mobile_number}</p>
+                            )}
+
+                            {merchant.email && (
+                                <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                                        <Mail size={20} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Address</p>
+                                        <p className="font-bold text-slate-900 truncate">{merchant.email}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {merchant.business_type && (
+                                <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                                        <Building size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Business Type</p>
+                                        <p className="font-bold text-slate-900">{merchant.business_type}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {(() => {
+                                let imgs: string[] = [];
+                                try {
+                                    if (Array.isArray(merchant.shop_images)) {
+                                        imgs = merchant.shop_images;
+                                    } else {
+                                        imgs = merchant.shop_images ? JSON.parse(merchant.shop_images) : [];
+                                    }
+                                } catch (e) { }
+                                if (imgs.length > 0) {
+                                    return (
+                                        <div className="flex flex-col gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                            <div className="flex items-center gap-2">
+                                                <ImageIcon size={16} className="text-slate-400" />
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Shop Images</p>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                                {imgs.map((img, idx) => (
+                                                    <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm">
+                                                        <img src={img} alt={`Shop image ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
                         </div>
-
-                        {/* Call Action */}
-                        <a
-                            href={`tel:${merchant.mobile_number}`}
-                            className="flex items-center justify-center w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
-                        >
-                            <Phone className="mr-2 w-5 h-5 fill-current" />
-                            Call Now
-                        </a>
-
                     </div>
                 </div>
             </div>

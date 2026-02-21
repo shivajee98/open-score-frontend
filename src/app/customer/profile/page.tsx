@@ -554,7 +554,10 @@ export default function Profile() {
                                             <input
                                                 type="text"
                                                 value={formData.account_number}
-                                                onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                                    setFormData({ ...formData, account_number: val });
+                                                }}
                                                 className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
                                                 placeholder="Enter account number"
                                             />

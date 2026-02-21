@@ -165,10 +165,11 @@ export default function LoanApplication() {
                     // Visual summaries
                     tenureSummary: p.configurations?.map((c: any) => c.tenure_days < 30 ? `${c.tenure_days}d` : `${Math.round(c.tenure_days / 30)}m`).join(' / ') || 'N/A',
                     bestFor: p.tag_text || 'Standard',
-                    // Robustly extract color for solid background
-                    color: (() => {
-                        const colorMatch = p.plan_color?.match(/(?:from|bg)-([a-z]+-[0-9]+)/);
-                        return colorMatch ? `bg-${colorMatch[1]}` : 'bg-indigo-600';
+                    // Extract base color name
+                    colorName: (() => {
+                        const sourceColor = p.plan_color || '';
+                        const match = sourceColor.match(/(?:bg|from|text)-([a-z]+)-/);
+                        return match ? match[1] : 'blue';
                     })()
                 }));
 
@@ -368,48 +369,78 @@ export default function LoanApplication() {
                         {step === 2 && (
                             <div className="space-y-3 animate-in slide-in-from-right-4 duration-300">
                                 {/* Offers List */}
-                                {plans.map((offer, index) => (
-                                    <div onClick={() => {
-                                        setSelectedOffer(offer);
-                                        // Auto-select first tenure config if available
-                                        if (offer.configurations && offer.configurations.length > 0) {
-                                            setSelectedTenureConfig(offer.configurations[0]);
-                                            setSelectedFrequency('');
-                                        } else {
-                                            setSelectedTenureConfig(null);
-                                        }
-                                    }} key={index} className={`cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]`}>
-                                        <div className={`absolute top-0 left-0 w-1 h-full ${offer.color}`}></div>
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{offer.type}</p>
-                                                <h3 className="text-xl font-black text-slate-900">{offer.amount}</h3>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className={cn(
-                                                    "block text-xs font-bold px-2 py-1 rounded text-white mb-1 shadow-sm",
-                                                    user?.role === 'MERCHANT' ? "bg-emerald-600" : offer.color
-                                                )}>
-                                                    {offer.bestFor}
-                                                </span>
-                                                <span className="text-[10px] font-bold text-slate-400 block">{offer.tenureSummary}</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-slate-600 font-medium text-xs mb-4">{offer.configurations.length} Tenure Options</p>
+                                {plans.map((offer, index) => {
+                                    let solidColorClass = 'bg-blue-600';
+                                    let badgeClasses = 'bg-blue-600 text-white';
 
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold text-xs hover:bg-slate-300 transition-colors">
-                                                View Options
-                                            </button>
-                                            <button className={cn(
-                                                "py-2.5 text-white rounded-lg font-bold text-xs shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1",
-                                                user?.role === 'MERCHANT' ? "bg-emerald-600 shadow-emerald-600/20" : `${offer.color} shadow-blue-600/20`
-                                            )}>
-                                                Apply Now <ArrowRight className="w-3 h-3" />
-                                            </button>
+                                    switch (offer.colorName) {
+                                        case 'slate': solidColorClass = 'bg-slate-600'; badgeClasses = 'bg-slate-600 text-white'; break;
+                                        case 'gray': solidColorClass = 'bg-gray-600'; badgeClasses = 'bg-gray-600 text-white'; break;
+                                        case 'zinc': solidColorClass = 'bg-zinc-600'; badgeClasses = 'bg-zinc-600 text-white'; break;
+                                        case 'neutral': solidColorClass = 'bg-neutral-600'; badgeClasses = 'bg-neutral-600 text-white'; break;
+                                        case 'stone': solidColorClass = 'bg-stone-600'; badgeClasses = 'bg-stone-600 text-white'; break;
+                                        case 'red': solidColorClass = 'bg-red-600'; badgeClasses = 'bg-red-600 text-white'; break;
+                                        case 'orange': solidColorClass = 'bg-orange-600'; badgeClasses = 'bg-orange-600 text-white'; break;
+                                        case 'amber': solidColorClass = 'bg-amber-600'; badgeClasses = 'bg-amber-600 text-white'; break;
+                                        case 'yellow': solidColorClass = 'bg-yellow-600'; badgeClasses = 'bg-yellow-600 text-white'; break;
+                                        case 'lime': solidColorClass = 'bg-lime-600'; badgeClasses = 'bg-lime-600 text-white'; break;
+                                        case 'green': solidColorClass = 'bg-green-600'; badgeClasses = 'bg-green-600 text-white'; break;
+                                        case 'emerald': solidColorClass = 'bg-emerald-600'; badgeClasses = 'bg-emerald-600 text-white'; break;
+                                        case 'teal': solidColorClass = 'bg-teal-600'; badgeClasses = 'bg-teal-600 text-white'; break;
+                                        case 'cyan': solidColorClass = 'bg-cyan-600'; badgeClasses = 'bg-cyan-600 text-white'; break;
+                                        case 'sky': solidColorClass = 'bg-sky-600'; badgeClasses = 'bg-sky-600 text-white'; break;
+                                        case 'blue': solidColorClass = 'bg-blue-600'; badgeClasses = 'bg-blue-600 text-white'; break;
+                                        case 'indigo': solidColorClass = 'bg-indigo-600'; badgeClasses = 'bg-indigo-600 text-white'; break;
+                                        case 'violet': solidColorClass = 'bg-violet-600'; badgeClasses = 'bg-violet-600 text-white'; break;
+                                        case 'purple': solidColorClass = 'bg-purple-600'; badgeClasses = 'bg-purple-600 text-white'; break;
+                                        case 'fuchsia': solidColorClass = 'bg-fuchsia-600'; badgeClasses = 'bg-fuchsia-600 text-white'; break;
+                                        case 'pink': solidColorClass = 'bg-pink-600'; badgeClasses = 'bg-pink-600 text-white'; break;
+                                        case 'rose': solidColorClass = 'bg-rose-600'; badgeClasses = 'bg-rose-600 text-white'; break;
+                                    }
+
+                                    return (
+                                        <div onClick={() => {
+                                            setSelectedOffer(offer);
+                                            // Auto-select first tenure config if available
+                                            if (offer.configurations && offer.configurations.length > 0) {
+                                                setSelectedTenureConfig(offer.configurations[0]);
+                                                setSelectedFrequency('');
+                                            } else {
+                                                setSelectedTenureConfig(null);
+                                            }
+                                        }} key={index} className={`cursor-pointer bg-slate-50 border border-slate-200 rounded-xl p-3 relative group overflow-hidden transition-all hover:border-slate-300 active:scale-[0.98]`}>
+                                            <div className={`absolute top-0 left-0 w-1 h-full ${solidColorClass}`}></div>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{offer.type}</p>
+                                                    <h3 className="text-xl font-black text-slate-900">{offer.amount}</h3>
+                                                </div>
+                                                <div className="text-right flex flex-col items-end">
+                                                    <span className={cn(
+                                                        "block text-xs font-bold px-2 py-1 rounded shadow-sm mb-1",
+                                                        badgeClasses
+                                                    )}>
+                                                        {offer.bestFor}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-slate-400 block">{offer.tenureSummary}</span>
+                                                </div>
+                                            </div>
+                                            <p className="text-slate-600 font-medium text-xs mb-4">{offer.configurations.length} Tenure Options</p>
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button onClick={(e) => { e.stopPropagation(); setSelectedOffer(offer); }} className="py-2.5 bg-slate-200 text-slate-700 rounded-lg font-bold text-xs hover:bg-slate-300 transition-colors">
+                                                    View Options
+                                                </button>
+                                                <button className={cn(
+                                                    "py-2.5 rounded-lg font-bold text-xs shadow-lg shadow-[var(--tw-shadow-color)] transition-all active:scale-95 flex items-center justify-center gap-1",
+                                                    badgeClasses
+                                                )} style={{ '--tw-shadow-color': 'rgba(0,0,0,0.1)' } as any}>
+                                                    Apply Now <ArrowRight className="w-3 h-3" />
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

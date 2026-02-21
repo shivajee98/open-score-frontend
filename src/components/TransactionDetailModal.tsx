@@ -41,7 +41,7 @@ export default function TransactionDetailModal({ isOpen, transaction, onClose }:
                         </span>
                         <div className="text-right">
                             <p className="font-bold text-slate-900 text-base">{transaction.counterparty_name}</p>
-                            <p className="text-slate-500 text-xs font-bold">{(transaction.counterparty_vpa === 'System' || transaction.counterparty_vpa === 'Open Score') ? 'OpenScore Platform' : transaction.counterparty_vpa}</p>
+                            <p className="text-slate-500 text-xs font-bold">{(transaction.counterparty_vpa === 'System' || transaction.counterparty_vpa === 'Open Score') ? (transaction.type === 'DEBIT' ? 'Withdrawal' : 'OpenScore Platform') : transaction.counterparty_vpa}</p>
                             <p className="text-slate-400 text-[10px] mt-1 break-all">Ref: {String(transaction.description).split('Ref: ')[1] || '-'}</p>
                         </div>
                     </div>

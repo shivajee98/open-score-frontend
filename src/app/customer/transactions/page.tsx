@@ -167,12 +167,12 @@ export default function CustomerTransactions() {
                                                     <div>
                                                         <p className="font-bold text-slate-900 text-[11px] tracking-tight">
                                                             {(t.counterparty_vpa === 'System' || t.counterparty_vpa === 'Open Score')
-                                                                ? (t.description?.toLowerCase().includes('welcome bonus') ? 'Welcome Bonus' : (t.type === 'CREDIT' ? t.counterparty_name || 'Open Score' : t.counterparty_name || 'System Debit'))
+                                                                ? (t.description?.toLowerCase().includes('welcome bonus') ? 'Welcome Bonus' : (t.type === 'CREDIT' ? t.counterparty_name || 'Open Score' : 'Withdrawal'))
                                                                 : (t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`)
                                                             }
                                                         </p>
                                                         <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                                                            {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {t.counterparty_vpa || 'Wallet Transfer'}
+                                                            {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {(t.counterparty_vpa === 'Open Score' && t.type === 'DEBIT') ? 'Withdrawal' : (t.counterparty_vpa || 'Wallet Transfer')}
                                                         </p>
                                                     </div>
                                                 </div>
