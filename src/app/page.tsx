@@ -23,6 +23,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
   const [showLogoutHint, setShowLogoutHint] = useState(false);
+  const [userExists, setUserExists] = useState<boolean | null>(null);
   const isRegistering = useRef(false);
   const router = useRouter();
 
@@ -81,6 +82,24 @@ export default function Home() {
       handleRegister();
     }
   }, [flow, role]);
+
+  // Debounced User Existence Check
+  useEffect(() => {
+    if (mobile.length === 10) {
+      const handler = setTimeout(async () => {
+        try {
+          const data = await apiFetch(`/auth/check-user/${mobile}`, { skipAuthCheck: true });
+          setUserExists(data.exists);
+        } catch (e) {
+          setUserExists(null);
+        }
+      }, 500); // 500ms debounce
+
+      return () => clearTimeout(handler);
+    } else {
+      setUserExists(null);
+    }
+  }, [mobile]);
 
   const redirectUser = (user: any) => {
     console.log('[DEBUG] Redirecting user:', user.id, 'is_onboarded:', user.is_onboarded, 'role:', user.role);
@@ -297,8 +316,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Add Referral Code Input */}
-              {!referralCode && (
+              {/* Add Referral Code Input - Only show if user does NOT exist */}
+              {(!referralCode && userExists === false) && (
                 <div className="animate-in fade-in slide-in-from-bottom-2">
                   <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">
                     Referral Code (Optional)
