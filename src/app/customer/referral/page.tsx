@@ -29,7 +29,7 @@ export default function ReferralPage() {
                 await navigator.share({
                     title: 'Join OpenScore',
                     text: `Use my referral code ${referralData.referral_code} to join OpenScore and get a welcome bonus!`,
-                    url: `${window.location.origin}?ref=${referralData.referral_code}`
+                    url: `https://openscore.msmeloan.sbs?ref=${referralData.referral_code}`
                 });
             } catch (err) {
                 console.log('Share failed', err);

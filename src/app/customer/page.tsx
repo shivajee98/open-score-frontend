@@ -366,14 +366,14 @@ export default function CustomerHome() {
                 <div className="bg-white py-1 px-1 rounded-xl shadow-xl shadow-slate-200/50 border border-slate-50">
                     <div className={`grid ${hasActiveLoan ? 'grid-cols-4' : 'grid-cols-3'} gap-1`}>
                         {[
-                            { label: 'Scan QR', icon: <ScanBarcode size={20} strokeWidth={2.5} />, href: '/customer/pay?scan=true', color: 'text-indigo-600 bg-indigo-50/50', show: true },
-                            { label: 'Pay ID', icon: <Send size={20} strokeWidth={2.5} />, href: '/customer/pay', color: 'text-violet-600 bg-violet-50/50', show: true },
-                            { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'text-emerald-600 bg-emerald-50/50', show: true },
-                            { label: 'Repay', icon: <CreditCard size={20} strokeWidth={2.5} />, href: `/customer/loan/status/repayment?id=${activeLoan?.id}`, color: 'text-blue-600 bg-blue-50/50', show: hasActiveLoan },
+                            { label: 'Scan QR', icon: <ScanBarcode size={20} strokeWidth={2.5} />, href: '/customer/pay?scan=true', color: 'bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-rose-200', show: true },
+                            { label: 'Pay ID', icon: <Send size={20} strokeWidth={2.5} />, href: '/customer/pay', color: 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-indigo-200', show: true },
+                            { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-amber-200', show: true },
+                            { label: 'Repay', icon: <CreditCard size={20} strokeWidth={2.5} />, href: `/customer/loan/status/repayment?id=${activeLoan?.id}`, color: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-200', show: hasActiveLoan },
                         ].filter(item => item.show).map((item, i) => (
                             <div key={i} className="flex flex-col items-center gap-1 transition-all active:scale-95 cursor-pointer">
                                 <Link href={item.href} prefetch={false} className="contents">
-                                    <div className="w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1">
+                                    <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1`}>
                                         {item.icon}
                                     </div>
                                     <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.1em] text-center">{item.label}</span>

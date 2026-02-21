@@ -140,11 +140,13 @@ function MerchantOnboardingForm() {
     };
 
     const turnoverOptions = [
-        { label: "₹1,00,000 - ₹5,00,000", sub: "Cashback: ₹500 - ₹2,000", value: "1l-5l" },
-        { label: "₹5,00,000 - ₹10,00,000", sub: "Cashback: ₹2,000 - ₹5,000", value: "5l-10l" },
-        { label: "₹10,00,000 - ₹20,00,000", sub: "Cashback: ₹5,000 - ₹10,000", value: "10l-20l" },
-        { label: "₹20,00,000 - ₹50,00,000", sub: "Cashback: ₹10,000 - ₹25,000", value: "20l-50l" },
-        { label: "₹50,00,000+", sub: "Cashback: ₹25,000+", value: "50l+" },
+        { label: "₹1,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "1k-5k" },
+        { label: "₹5,000 - ₹10,000", sub: "Cashback: ₹50 - ₹200", value: "5k-10k" },
+        { label: "₹10,000 - ₹20,000", sub: "Cashback: ₹200 - ₹400", value: "10k-20k" },
+        { label: "₹20,000 - ₹50,000", sub: "Cashback: ₹500 - ₹1,000", value: "20k-50k" },
+        { label: "₹50,000 - ₹1,00,000", sub: "Cashback: ₹1,000 - ₹2,000", value: "50k-1l" },
+        { label: "₹1,00,000 - ₹2,00,000", sub: "Cashback: ₹2,000 - ₹4,000", value: "1l-2l" },
+        { label: "₹2,00,000 - ₹5,00,000", sub: "Cashback: ₹3,000 - ₹5,000", value: "2l-5l" },
     ];
 
     const handleStep1Submit = () => {
@@ -174,6 +176,7 @@ function MerchantOnboardingForm() {
             formDataObj.append('name', formData.name);
             formDataObj.append('email', formData.email);
             formDataObj.append('business_name', formData.business_name);
+            formDataObj.append('daily_turnover', formData.daily_turnover);
 
             if (imageFile) {
                 formDataObj.append('profile_image', imageFile, imageFile.name);
@@ -277,6 +280,21 @@ function MerchantOnboardingForm() {
                                     value={formData.business_name}
                                     onChange={e => setFormData({ ...formData, business_name: e.target.value })}
                                 />
+                            </div>
+
+                            <div className="relative group">
+                                <TrendingUp className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
+                                <select
+                                    className="w-full pl-12 pr-10 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none appearance-none"
+                                    value={formData.daily_turnover}
+                                    onChange={e => setFormData({ ...formData, daily_turnover: e.target.value })}
+                                >
+                                    <option value="" disabled>Select Daily Turnover</option>
+                                    {turnoverOptions.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
                             </div>
 
                             {/* Image Upload */}
