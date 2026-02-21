@@ -24,18 +24,25 @@ export default function ReferralPage() {
     };
 
     const shareCode = async () => {
+        const shareText = `Use my referral code ${referralData?.referral_code} to join OpenScore and get a welcome bonus!`;
+        const shareUrl = `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`;
+
         if (navigator.share && referralData?.referral_code) {
             try {
                 await navigator.share({
                     title: 'Join OpenScore',
-                    text: `Use my referral code ${referralData.referral_code} to join OpenScore and get a welcome bonus!`,
-                    url: `https://openscore.msmeloan.sbs?ref=${referralData.referral_code}`
+                    text: shareText,
+                    url: shareUrl
                 });
             } catch (err) {
                 console.log('Share failed', err);
+                // Fallback to clipboard if share was cancelled or failed
+                navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+                toast.success("Link copied to clipboard!");
             }
-        } else {
-            copyToClipboard();
+        } else if (referralData?.referral_code) {
+            navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+            toast.success("Link copied to clipboard!");
         }
     };
 
