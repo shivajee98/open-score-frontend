@@ -410,7 +410,7 @@ export default function CustomerHome() {
 
             {/* KYC Alert (If any) */}
             {
-                !isMerchant && kycLoan && (
+                kycLoan && (
                     <div className="px-4 mb-8">
                         <Link href={`/customer/loan/status/view?id=${kycLoan.id}`} prefetch={false}>
                             <div className="bg-yellow-400 p-4 rounded-3xl shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
