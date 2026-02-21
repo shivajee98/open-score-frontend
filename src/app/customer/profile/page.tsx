@@ -313,8 +313,17 @@ export default function Profile() {
                     <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-500/10' : 'bg-blue-500/10'} rounded-full blur-3xl -mr-16 -mt-16`}></div>
 
                     <div className="relative text-center mb-12">
-                        <div className="w-32 h-32 mx-auto bg-slate-900 text-white rounded-2xl flex items-center justify-center text-4xl font-bold shadow-xl mb-6">
-                            {user.name?.[0]}
+                        <div className="w-32 h-32 mx-auto bg-slate-900 border-4 border-white text-white rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-2xl mb-6 overflow-hidden relative group">
+                            {user.profile_image ? (
+                                <img src={user.profile_image} className="w-full h-full object-cover" alt={user.name} />
+                            ) : (
+                                <span>{user.name?.[0]}</span>
+                            )}
+                            {isEditing && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Camera size={24} className="text-white" />
+                                </div>
+                            )}
                         </div>
                         {isEditing ? (
                             <>
@@ -494,7 +503,11 @@ export default function Profile() {
                                             } catch (e) { images = []; }
 
                                             if (images.length === 0) {
-                                                return <p className="text-xs text-slate-400 italic">No images added</p>;
+                                                if (user?.profile_image) {
+                                                    images = [user.profile_image];
+                                                } else {
+                                                    return <p className="text-xs text-slate-400 italic">No images added</p>;
+                                                }
                                             }
 
                                             return images.map((img: string, idx: number) => (
