@@ -58,7 +58,7 @@ function SupportPageContent() {
                         handleCreateTicket(
                             data.subject || 'Support Request',
                             data.message || 'Auto-generated request',
-                            'normal', // priority
+                            'medium', // priority
                             data.category || 'General' // issueType
                         );
                     } else {

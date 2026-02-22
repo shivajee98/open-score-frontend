@@ -170,8 +170,8 @@ export default function CustomerTransactions() {
                                                                 const desc = t.description?.toLowerCase() || '';
                                                                 if (desc.includes('welcome bonus')) return 'Welcome Bonus';
                                                                 if (desc.includes('referral') || desc.includes('earning')) return 'Earning';
+                                                                if (t.source_type === 'PLATFORM_FEE' || desc.includes('platform fee') || desc.includes('service fee') || desc.includes('emi #0')) return 'Service Fee';
                                                                 if (desc.includes('emi') || t.source_type === 'LOAN_REPAYMENT') return 'EMI Payment';
-                                                                if (desc.includes('platform fee') || desc.includes('service fee') || t.source_type === 'PLATFORM_FEE') return 'Platform Fee';
                                                                 if (desc.includes('recharge') || t.source_type === 'WALLET_TOPUP' || t.source_type === 'WALLET_RECHARGE') return 'Wallet Recharge';
 
                                                                 if (t.counterparty_vpa === 'System' || t.counterparty_vpa === 'Open Score') {

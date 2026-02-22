@@ -10,6 +10,7 @@ import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import { toast } from '@/components/ui/Toast';
 import {
     ArrowLeft,
+    ChevronLeft,
     CheckCircle2,
     AlertCircle,
     Calendar,
@@ -30,7 +31,8 @@ import {
     Headphones,
     Smartphone,
     Upload,
-    X
+    X,
+    Menu
 } from 'lucide-react';
 
 export default function RepaymentDashboard() {
@@ -148,8 +150,9 @@ export default function RepaymentDashboard() {
             // 2. Auto-Create Support Ticket
             const ticketFormData = new FormData();
             ticketFormData.append('issue_type', '2'); // "Unable To Transfer & Approval EMI"
-            ticketFormData.append('subject', `EMI Payment Verification - Loan #${loanId}`);
-            ticketFormData.append('message', `I have paid my EMI of ₹${pendingEmi.amount}. Transaction ID: ${transactionId || 'N/A'}. Kindly update my EMI in the panel.`);
+            const isFee = Number(pendingEmi.emi_number) === 0;
+            ticketFormData.append('subject', isFee ? `Service Fee Verification - Loan #${loanId}` : `EMI Payment Verification - Loan #${loanId}`);
+            ticketFormData.append('message', `I have paid my ${isFee ? 'service fee' : 'EMI'} of ₹${pendingEmi.amount}. Transaction ID: ${transactionId || 'N/A'}. Kindly update it in the panel.`);
             ticketFormData.append('attachment', proofFile); // Re-use the file
             ticketFormData.append('priority', 'high');
             ticketFormData.append('payment_amount', pendingEmi.amount);
@@ -228,6 +231,9 @@ export default function RepaymentDashboard() {
     const pendingEmi = repayments.find(r => r.status === 'PENDING');
     const totalPaid = Number(loan.paid_amount || 0);
 
+    const serviceFeeEmi = repayments.find(r => Number(r.emi_number) === 0);
+    const regularEmis = repayments.filter(r => Number(r.emi_number) > 0);
+
     // Use Backend Calculations
     const calculations = loan.calculations || {};
     const totalPayable = Number(calculations.net_payable_amount || loan.amount);
@@ -267,193 +273,94 @@ export default function RepaymentDashboard() {
                 onClose={() => setSuccessData(null)}
             />
 
-            {/* Premium Multi-Layer Header */}
-            <div className="bg-slate-900 pt-8 pb-16 px-4 rounded-b-3xl shadow-2xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/50 via-slate-900 to-indigo-900/30"></div>
+            {/* Header */}
+            <div className="bg-[#AEEBD0] pt-12 pb-16 px-6 rounded-b-[2rem] relative">
                 <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-6">
+                    <div className="flex justify-between items-center mb-8">
                         <button
                             onClick={() => router.push(`/customer/loan/status/view?id=${loanId}`)}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 backdrop-blur-md rounded-xl text-slate-400 font-black text-[9px] uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white transition-all border border-white/5"
+                            className="p-2 -ml-2 text-slate-800 hover:bg-black/5 rounded-full transition-all"
                         >
-                            <ArrowLeft className="w-4 h-4" /> Application Root
+                            <ChevronLeft className="w-6 h-6" />
                         </button>
-                        <div className="flex items-center gap-2">
-                            <button className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 relative">
-                                <Bell size={16} />
-                                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
-                            </button>
-                            <Link href="/customer/support">
-                                <button
-                                    className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95"
-                                >
-                                    <Headphones size={16} />
-                                </button>
-                            </Link>
-                        </div>
+                        <h1 className="text-[17px] font-black text-slate-800 tracking-tight">Payment Schedule</h1>
+                        <button className="p-2 -mr-2 text-slate-800 hover:bg-black/5 rounded-full transition-all">
+                            <Menu className="w-6 h-6" />
+                        </button>
                     </div>
 
-                    <div className="flex justify-between items-end mb-8">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                                <h1 className="text-xl font-black text-white tracking-tighter uppercase">Repayment</h1>
-                            </div>
-                            <p className="text-slate-400 text-[8px] font-black uppercase tracking-[0.25em] opacity-70 pl-0.5">#{loan.display_id || loan.id}</p>
-                        </div>
-                        <div className="text-right">
-                            <span className="block text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1 opacity-70">To Pay</span>
-                            <span className="text-xl font-black text-white leading-none tracking-tight">₹{totalPayable.toLocaleString()}</span>
-                        </div>
+                    <div className="mb-2">
+                        <span className="block text-[11px] font-black text-slate-600/90 uppercase tracking-[0.05em] mb-1">Total Amount Due</span>
+                        <span className="text-[40px] leading-none font-black text-slate-800 tracking-tighter">₹{totalPayable.toLocaleString()}</span>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3 px-0.5">
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
-                            <Coins size={16} className="text-emerald-400 mb-2" />
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Cashback</p>
-                            <p className="text-lg font-black text-emerald-400 leading-none">₹{totalCashbackEarned.toLocaleString()}</p>
-                        </div>
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
-                            <Zap size={16} className="text-amber-400 mb-2" />
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tenure</p>
-                            <p className="text-lg font-black text-white leading-none capitalize">{loan.payout_frequency}</p>
-                        </div>
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
-                            <Calendar size={16} className="text-blue-400 mb-2" />
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total EMIs</p>
-                            <p className="text-lg font-black text-white leading-none">{repayments.length} Units</p>
-                        </div>
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col items-start justify-center">
-                            <ShieldCheck size={16} className="text-indigo-400 mb-2" />
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Tier</p>
-                            <p className="text-lg font-black text-white uppercase leading-none">Gold</p>
-                        </div>
-                    </div>
-
-                    {isLoanCleared && (
-                        <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-700">
-                            <div>
-                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-0.5 flex items-center gap-1.5"><CheckCircle2 size={12} /> Status: Cleared</p>
-                                <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Ready for Upgrade</p>
-                            </div>
-                            <button
-                                onClick={() => router.push('/customer/loan')}
-                                className="bg-white text-blue-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-black/10"
-                            >
-                                Apply New Loan <ArrowRightCircle size={14} />
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
 
-            <div className="px-4 -mt-12 relative z-20 space-y-6">
-                {/* Main Progress & Health Card */}
-                <div className="bg-white rounded-2xl p-6 shadow-xl border border-slate-50 overflow-hidden relative group">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 group-hover:scale-110 transition-transform flex-shrink-0">
-                                <PieChart size={28} />
+            <div className="px-5 -mt-8 relative z-20 space-y-6 pb-12">
+                {/* Service Fee Card */}
+                {serviceFeeEmi && (
+                    <div className="bg-white rounded-[1.25rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-50 flex items-center justify-between border-l-[4px] border-l-emerald-400">
+                        <div>
+                            <div className={cn(
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest mb-2.5",
+                                serviceFeeEmi.status === 'PAID' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                            )}>
+                                {serviceFeeEmi.status}
                             </div>
-                            <div className="min-w-0">
-                                <h3 className="text-lg font-black text-slate-900 tracking-tight truncate">Repayment Health</h3>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest">Excellent</span>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-l pl-2 border-slate-200 hidden xs:block">100% Consistency</p>
-                                </div>
-                            </div>
+                            <h3 className="text-[15px] font-black text-slate-800 mb-0.5">Service Fee</h3>
+                            <p className="text-[10px] text-slate-400 font-medium">Processed on {new Date(serviceFeeEmi.due_date).toLocaleDateString('en-GB')}</p>
                         </div>
-                        <div className="text-left sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">Total Outstanding</span>
-                            <span className="text-2xl font-black text-slate-900 tracking-tighter">₹{(totalPayable - totalPaid).toLocaleString()}</span>
+                        <div className="text-right flex flex-col items-end">
+                            <p className="text-xl font-black text-slate-800 tracking-tight mb-2">₹{Number(serviceFeeEmi.amount).toLocaleString()}</p>
+                            <span className="inline-flex items-center px-1.5 py-0.5 bg-[#E6F8EF] text-emerald-600 rounded text-[9px] font-bold">+₹{(Number(serviceFeeEmi.amount) * cashbackRate).toFixed(0)} cashback</span>
                         </div>
                     </div>
-
-                    <div className="relative pt-2">
-                        <div className="h-6 bg-slate-100 rounded-full overflow-hidden p-1 border border-slate-100">
-                            <div
-                                className="h-full bg-gradient-to-r from-blue-600 to-blue-500 rounded-full transition-all duration-1000 shadow-[0_0_20px_rgba(37,99,235,0.3)] relative"
-                                style={{ width: `${progress}%` }}
-                            >
-                                {progress > 15 && (
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-white uppercase tracking-widest">
-                                        {progress}%
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                            <span className="flex items-center gap-1"><ArrowRightCircle size={10} className="text-blue-500" /> Paid: ₹{totalPaid.toLocaleString()}</span>
-                            <span>{repayments.length - paidEmis.length} EMIs to Goal</span>
-                        </div>
-                    </div>
-                </div>
+                )}
 
                 {/* Next Payment CTA */}
-                {pendingEmi ? (
-                    <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-2xl shadow-blue-900/40 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-                        <div className="flex justify-between items-start mb-8">
-                            <div className="space-y-4">
-                                <span className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest border border-white/5">
-                                    <Calendar size={12} className="text-blue-400" /> Due in {Math.ceil((new Date(pendingEmi.due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} Days
+                {pendingEmi && (
+                    <div className="bg-white rounded-[1.25rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-blue-100 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                        <div className="relative z-10 flex justify-between items-start mb-6">
+                            <div>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-widest mb-3">
+                                    <Calendar size={10} /> Due in {Math.ceil((new Date(pendingEmi.due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} Days
                                 </span>
-                                <div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">
-                                        {Number(pendingEmi.emi_number) === 0 ? "Fee Amount" : "Installment Amount"}
-                                    </h4>
-                                    <p className="text-4xl font-black tracking-tighter">₹{Number(pendingEmi.amount).toLocaleString()}</p>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                                <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                                    <FileText size={24} className="text-white opacity-80" />
-                                </div>
-                                <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">ID: {pendingEmi.display_id || pendingEmi.id}</p>
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">
+                                    {Number(pendingEmi.emi_number) === 0 ? "Fee Amount" : "Installment Amount"}
+                                </h4>
+                                <p className="text-3xl font-black text-slate-800 tracking-tighter">₹{Number(pendingEmi.amount).toLocaleString()}</p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 mb-8">
-                            <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Due Date</p>
-                                <p className="text-sm font-black">{new Date(pendingEmi.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
-                            </div>
-                            <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                                <p className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Estimated Cashback</p>
-                                <p className="text-sm font-black text-emerald-400">+ ₹{(Number(pendingEmi.amount) * cashbackRate).toFixed(0)}</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
+                        <div className="space-y-3 relative z-10">
                             {!showManualPay ? (
-                                <>
-                                    <button
-                                        onClick={handleUpiClick}
-                                        disabled={paying || pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION'}
-                                        className="w-full py-4 bg-white text-slate-900 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50 border border-slate-200"
-                                    >
-                                        {(pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION') ? (
-                                            pendingEmi.agent_approved_by ? (
-                                                <>
-                                                    <CheckCircle2 size={18} className="text-indigo-500" /> Verified: Waiting Admin
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <ShieldCheck size={18} className="text-amber-500" /> Under Verification
-                                                </>
-                                            )
+                                <button
+                                    onClick={handleUpiClick}
+                                    disabled={paying || pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION'}
+                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.15em] shadow-xl shadow-slate-900/10 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {(pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION') ? (
+                                        pendingEmi.agent_approved_by ? (
+                                            <>
+                                                <CheckCircle2 size={16} className="text-emerald-400" /> Verified: Waiting Admin
+                                            </>
                                         ) : (
                                             <>
-                                                <Smartphone size={18} className="text-blue-600" /> Pay via UPI App
+                                                <ShieldCheck size={16} className="text-amber-400" /> Under Verification
                                             </>
-                                        )}
-                                    </button>
-                                </>
+                                        )
+                                    ) : (
+                                        <>
+                                            <Smartphone size={16} /> Pay via UPI App
+                                        </>
+                                    )}
+                                </button>
                             ) : (
                                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                                     <div
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="border-2 border-dashed border-slate-600 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors"
+                                        className="border-2 border-dashed border-slate-300 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-50 transition-colors"
                                     >
                                         {previewUrl ? (
                                             <div className="relative w-full h-40">
@@ -467,127 +374,62 @@ export default function RepaymentDashboard() {
                                             </div>
                                         ) : (
                                             <>
-                                                <Upload size={24} className="text-blue-400 mb-2" />
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tap to Upload Screenshot</p>
-                                                <p className="text-[9px] text-slate-500 mt-1">Upload transaction screenshot to verify your payment</p>
+                                                <Upload size={24} className="text-blue-500 mb-2" />
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tap to Upload Screenshot</p>
+                                                <p className="text-[9px] text-slate-400 mt-1">Upload transaction screenshot to verify your payment</p>
                                             </>
                                         )}
                                         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                                     </div>
 
-                                    {/* Transaction ID Input */}
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Transaction ID (Optional)</p>
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Transaction ID (Optional)</p>
                                         <input
                                             type="text"
                                             value={transactionId}
                                             onChange={(e) => setTransactionId(e.target.value)}
                                             placeholder="Enter UPI Ref No / TXN ID"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500 outline-none transition-all placeholder:text-slate-600"
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm text-slate-900 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400"
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <button onClick={() => setShowManualPay(false)} className="w-full py-3 bg-white/10 text-white rounded-xl font-bold text-xs uppercase tracking-widest">Cancel</button>
-                                        <button onClick={submitManualPayment} disabled={!proofFile || paying} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest disabled:opacity-50">{paying ? 'Uploading...' : 'Submit Proof'}</button>
+                                        <button onClick={() => setShowManualPay(false)} className="w-full py-3 bg-slate-100 text-slate-600 rounded-xl font-black text-xs uppercase tracking-widest">Cancel</button>
+                                        <button onClick={submitManualPayment} disabled={!proofFile || paying} className="w-full py-3 bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-50 shadow-md">{paying ? 'Uploading...' : 'Submit Proof'}</button>
                                     </div>
                                 </div>
                             )}
                         </div>
                     </div>
-                ) : isLoanCleared ? (
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-2xl shadow-blue-900/40 text-center space-y-6 relative overflow-hidden">
-                        <Sparkles size={40} className="text-white animate-bounce mx-auto" />
-                        <h2 className="text-3xl font-black tracking-tight mb-2">Loan Cleared!</h2>
-                        <button onClick={() => router.push('/customer/loan')} className="bg-white text-blue-600 px-8 py-3 rounded-xl font-black text-sm uppercase tracking-widest flex items-center gap-2 mx-auto">Apply New Loan <ArrowRightCircle size={16} /></button>
-                    </div>
-                ) : null}
+                )}
 
-                {/* Analytical Ledger Section */}
-                <div className="bg-white rounded-2xl shadow-xl border border-slate-50 overflow-hidden">
-                    <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-xl font-black text-slate-900 tracking-tight">Analytical Ledger</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Deep-dive categorization</p>
-                        </div>
-                        <HistoryIcon size={24} className="text-slate-300" />
-                    </div>
+                <div className="pt-2">
+                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em] mb-4 pl-1">Installment Breakdown</h4>
 
-                    <div className="px-8 py-4 bg-slate-50 flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-100">
-                        {['ALL', 'PAID', 'PENDING', 'OVERDUE'].map(f => (
-                            <button
-                                key={f}
-                                onClick={() => setEmiFilter(f)}
-                                className={cn(
-                                    "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                                    emiFilter === f ? "bg-slate-900 text-white" : "bg-white text-slate-400 border border-slate-100"
-                                )}
-                            >
-                                {f}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="p-4 space-y-2">
-                        {filteredRepayments.length > 0 ? (
-                            filteredRepayments.map((rep, idx) => (
-                                <div key={rep.id} className={cn("p-5 rounded-[2rem] border transition-all flex items-center justify-between group", rep.status === 'PAID' ? "bg-white border-slate-100" : "bg-slate-50 border-transparent")}>
-                                    <div className="flex items-center gap-4">
-                                        <div className={cn("rounded-2xl flex items-center justify-center font-black text-xs border transition-all", rep.status === 'PAID' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-white text-slate-300 border-slate-100", Number(rep.emi_number) === 0 ? "px-3 h-12" : "w-12 h-12")}>
-                                            {Number(rep.emi_number) === 0 ? "Service Fee" : rep.emi_number}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-3">
-                                                <p className="font-black text-lg text-slate-900 tracking-tight">₹{parseFloat(rep.amount).toLocaleString()}</p>
-                                                {rep.status === 'PAID' && <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[7px] font-black uppercase">+₹{(Number(rep.amount) * cashbackRate).toFixed(0)} Cashback</span>}
-                                            </div>
-                                            <div className="grid grid-cols-[60px_1fr] gap-y-1.5 items-center">
-                                                <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.1em] border-r border-slate-100 pr-2">Due Date</span>
-                                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest pl-2">{new Date(rep.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-                                            </div>
-                                        </div>
+                    <div className="space-y-3">
+                        {regularEmis.map((emi, index) => (
+                            <div key={emi.id} className="bg-white rounded-[1.25rem] p-4 shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-50 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F0F6FF] flex items-center justify-center text-blue-500 font-black text-sm border border-blue-50">
+                                        {emi.emi_number}
                                     </div>
-                                    <div className="text-right">
-                                        {rep.status === 'PAID' ? (
-                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 text-[9px] font-black uppercase tracking-[0.1em]"><CheckCircle2 size={10} /> Paid</div>
-                                        ) : rep.status === 'PENDING_VERIFICATION' || rep.status === 'MANUAL_VERIFICATION' ? (
-                                            rep.agent_approved_by ? (
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100 text-[9px] font-black uppercase tracking-[0.1em]"><ShieldCheck size={10} /> Verified</div>
-                                            ) : (
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-100 text-[9px] font-black uppercase tracking-[0.1em]"><AlertCircle size={10} /> Under Verification</div>
-                                            )
-                                        ) : (
-                                            new Date(rep.due_date) < new Date() ? (
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[9px] font-black uppercase tracking-[0.1em]"><AlertCircle size={10} /> Overdue</div>
-                                            ) : (
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100 text-[9px] font-black uppercase tracking-[0.1em]">Upcoming</div>
-                                            )
-                                        )}
+                                    <div>
+                                        <div className={cn(
+                                            "inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest mb-1.5",
+                                            emi.status === 'PAID' ? "bg-emerald-50 text-emerald-600" :
+                                                new Date(emi.due_date) < new Date() && emi.status !== 'PAID' ? "bg-rose-50 text-rose-600" :
+                                                    "bg-[#EEF2FF] text-blue-600"
+                                        )}>
+                                            {emi.status === 'PAID' ? 'PAID' : new Date(emi.due_date) < new Date() ? 'OVERDUE' : 'UPCOMING'}
+                                        </div>
+                                        <p className="text-[11px] font-black text-slate-700">Due: {new Date(emi.due_date).toLocaleDateString('en-GB')}</p>
                                     </div>
                                 </div>
-                            ))
-                        ) : (
-                            <div className="py-20 text-center space-y-3">
-                                <Search size={32} className="mx-auto text-slate-200" />
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No matching EMIs found</p>
+                                <div className="text-right flex flex-col items-end">
+                                    <p className="text-[15px] font-black text-slate-800 tracking-tight mb-0.5">₹{Number(emi.amount).toLocaleString()}</p>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.05em]">Installment {index + 1} of {regularEmis.length}</p>
+                                </div>
                             </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Impact Analysis */}
-                <div className="p-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl text-white overflow-hidden relative group">
-                    <div className="relative z-10 space-y-6">
-                        <div className="flex items-center gap-3">
-                            <TrendingUp size={20} />
-                            <h3 className="text-lg font-black tracking-tight">Loan Impact Analysis</h3>
-                        </div>
-                        <p className="text-sm font-medium text-blue-100 leading-relaxed">By clearing this loan on time, you are unlocking a <span className="text-white font-black text-base italic underline">₹25,000 credit upgrade</span> in your next cycle.</p>
-                        <div className="flex items-center gap-4 pt-2">
-                            <div className="flex -space-x-2">
-                                {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 rounded-full border-2 border-indigo-700 bg-blue-400 flex items-center justify-center text-[8px] font-black uppercase">Lv{i}</div>)}
-                            </div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-200">You are in Top 5% Payers</p>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>

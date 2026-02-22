@@ -488,8 +488,8 @@ export default function LoanApplication() {
 
             {/* Offer Details Modal */}
             {selectedOffer && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 animate-in fade-in duration-200">
-                    <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative animate-in slide-in-from-bottom-10 duration-300">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 animate-in fade-in duration-200">
+                    <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative animate-in slide-in-from-bottom-10 duration-300 max-h-[85vh] overflow-y-auto custom-scrollbar">
                         <button
                             onClick={() => setSelectedOffer(null)}
                             className="absolute top-6 right-6 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200"
@@ -567,7 +567,7 @@ export default function LoanApplication() {
                                                     )}
 
                                                     {selectedTenureConfig.cashback && selectedTenureConfig.cashback[freq] > 0 && (
-                                                        <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] px-1 rounded-bl">
+                                                        <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-bl-lg rounded-tr-xl font-bold tracking-wider">
                                                             ₹{selectedTenureConfig.cashback[freq]} CB
                                                         </span>
                                                     )}
@@ -624,7 +624,7 @@ export default function LoanApplication() {
                                 handleApply();
                             }}
                             className={cn(
-                                "w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-[0.98] shadow-xl flex items-center justify-center gap-2",
+                                "w-full py-4 mt-6 mb-2 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-[0.98] shadow-xl flex items-center justify-center gap-2",
                                 !selectedFrequency
                                     ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                                     : (user?.role === 'MERCHANT' ? "bg-emerald-600 text-white shadow-emerald-500/30 hover:bg-emerald-700 font-bold" : "bg-slate-900 text-white shadow-slate-900/30 hover:bg-slate-800")
