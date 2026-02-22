@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import TransactionDetailModal from '@/components/TransactionDetailModal';
+import { useStore } from '@/store/useStore';
 import { Home, Smartphone, QrCode, Receipt, ArrowDownLeft, ArrowUpRight, Search, Landmark, Loader2, FileText } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 
@@ -14,6 +15,34 @@ export default function CustomerTransactions() {
     const [fetchingMore, setFetchingMore] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const { transactions: globalTransactions } = useStore();
+
+    // Sync global transactions (from real-time polling) with local state if we are on page 1
+    useEffect(() => {
+        if (page === 1 && globalTransactions.length > 0) {
+            // Merge or replace - Replacement is safer for the first page to ensure sync
+            // Only update if we have new data or different data
+            setTransactions(prev => {
+                const globalIds = globalTransactions.map(t => t.id);
+                const localIds = prev.slice(0, globalTransactions.length).map(t => t.id);
+
+                if (JSON.stringify(globalIds) !== JSON.stringify(localIds)) {
+                    // Prepend new transactions that aren't in the current list, 
+                    // or just refresh the first page completely if it's a small set
+                    const merged = [...globalTransactions];
+                    // Add items from prev that are NOT in globalTransactions (i.e. older pages)
+                    prev.forEach(p => {
+                        if (!merged.find(m => m.id === p.id)) {
+                            merged.push(p);
+                        }
+                    });
+                    // Sort by ID descending
+                    return merged.sort((a, b) => b.id - a.id);
+                }
+                return prev;
+            });
+        }
+    }, [globalTransactions, page]);
 
     const observer = useRef<IntersectionObserver | null>(null);
     const lastElementRef = useCallback((node: any) => {

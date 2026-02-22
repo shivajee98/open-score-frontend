@@ -8,6 +8,7 @@ import AuthGuard from './AuthGuard';
 import { toast } from '@/components/ui/Toast';
 import { Volume2, VolumeX, Bell, BellOff, Home, Smartphone, QrCode, Receipt, LogOut, ChevronRight, Headphones, Ban } from 'lucide-react';
 import { cn } from '@/lib/loanUtils';
+import { useStore } from '@/store/useStore';
 import SupportModal from './SupportModal';
 import BackButton from './BackButton';
 import { usePathname } from 'next/navigation';
@@ -42,17 +43,19 @@ export default function DashboardLayout({
         return () => clearTimeout(timer);
     }, []);
 
-    // Load audio preference with Merchant default logic
+    // Load audio preference with Default ON logic
     useEffect(() => {
         const saved = localStorage.getItem('audio_enabled');
         if (saved === 'true') {
             setIsAudioEnabled(true);
-        } else if (saved === null && user?.role === 'MERCHANT') {
-            // Default ON for Merchants on first load
+        } else if (saved === 'false') {
+            setIsAudioEnabled(false);
+        } else {
+            // Default ON for everyone on first load
             setIsAudioEnabled(true);
             localStorage.setItem('audio_enabled', 'true');
         }
-    }, [user?.role]);
+    }, []);
 
     // Save audio preference
     useEffect(() => {
@@ -135,12 +138,17 @@ export default function DashboardLayout({
         };
     }, []);
 
+    const { setTransactions } = useStore();
+
     const checkNewTransactions = async () => {
         try {
-            const res = await apiFetch('/wallet/transactions?limit=5');
+            const res = await apiFetch('/wallet/transactions?limit=10');
             if (res && res.data && res.data.length > 0) {
                 const transactions = res.data;
                 const latestTx = transactions[0];
+
+                // Sync with global store for real-time history updates
+                setTransactions(transactions);
 
                 if (lastTxRef.current && latestTx.id > lastTxRef.current) {
                     const lastId = lastTxRef.current;
@@ -159,7 +167,7 @@ export default function DashboardLayout({
                         console.log(`New payment detected: ₹${totalAmount}`);
 
                         if (isAudioEnabled) {
-                            playNotificationSound(`Received ${formattedAmount} limits`);
+                            playNotificationSound(`Rupees ${formattedAmount} received on Open Score`);
                         }
 
                         toast.success(`Received ₹${totalAmount} from ${sender}`);

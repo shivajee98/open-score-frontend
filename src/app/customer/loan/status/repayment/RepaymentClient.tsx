@@ -284,9 +284,7 @@ export default function RepaymentDashboard() {
                             <ChevronLeft className="w-6 h-6" />
                         </button>
                         <h1 className="text-[17px] font-black text-slate-800 tracking-tight">Payment Schedule</h1>
-                        <button className="p-2 -mr-2 text-slate-800 hover:bg-black/5 rounded-full transition-all">
-                            <Menu className="w-6 h-6" />
-                        </button>
+                        <div className="w-10"></div> {/* Spacer to keep title centered if needed, or just remove */}
                     </div>
 
                     <div className="mb-2">
