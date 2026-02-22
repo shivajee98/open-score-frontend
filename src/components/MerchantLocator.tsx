@@ -176,10 +176,10 @@ export default function MerchantLocator() {
                                         <div
                                             key={merchant.id}
                                             onClick={() => handleMerchantClick(merchant)}
-                                            className="p-3 border border-slate-100 rounded-2xl bg-white hover:border-blue-100 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-3 relative shadow-sm"
+                                            className="p-2.5 border border-slate-100 rounded-2xl bg-white hover:border-blue-100 hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 relative shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] max-w-[98%] mx-auto w-full group"
                                         >
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                <div className="w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 overflow-hidden shadow-sm">
                                                     {(() => {
                                                         let imgs: string[] = [];
                                                         try {
@@ -190,53 +190,63 @@ export default function MerchantLocator() {
                                                             }
                                                         } catch (e) { }
                                                         if (imgs && imgs.length > 0 && typeof imgs[0] === 'string') return <img src={imgs[0]} className="w-full h-full object-cover" alt="Shop" />;
-                                                        return <Store size={18} className="text-slate-400 group-hover:text-blue-500 transition-colors" />;
+                                                        return <Store size={16} className="text-slate-400 group-hover:text-blue-500 transition-colors" />;
                                                     })()}
                                                 </div>
-                                                <div className="flex-1 min-w-0 pr-8">
-                                                    <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
-                                                        <h3 className="font-black text-slate-900 text-sm leading-tight group-hover:text-blue-600 transition-colors truncate max-w-full">
+                                                <div className="flex-1 min-w-0 pr-1 flex flex-col justify-center">
+                                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                                        <h3 className="font-extrabold text-slate-900 text-[13px] leading-tight group-hover:text-blue-600 transition-colors truncate">
                                                             {merchant.business_name || merchant.name}
                                                         </h3>
                                                         {merchant.business_segment && (
-                                                            <span className="shrink-0 bg-blue-50 text-blue-600 border border-blue-100 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded">
+                                                            <span className="shrink-0 bg-blue-50/80 text-blue-600 border border-blue-100/50 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-sm">
                                                                 {merchant.business_segment}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-start gap-1.5 text-slate-500 text-[10px] font-medium leading-snug">
-                                                        <MapPin size={10} className="shrink-0 mt-0.5" />
-                                                        <p className="line-clamp-2">{(merchant.business_address && merchant.business_address !== 'null') ? merchant.business_address + ', ' : ''}{merchant.city || ''} {merchant.pincode}</p>
+                                                    <div className="flex items-center gap-1 text-slate-500 text-[10px] font-medium leading-none">
+                                                        <MapPin size={10} className="shrink-0 text-slate-400" />
+                                                        <p className="truncate">{(merchant.business_address && merchant.business_address !== 'null') ? merchant.business_address + ', ' : ''}{merchant.city || ''} {merchant.pincode}</p>
                                                     </div>
-                                                </div>
-
-                                                <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-900 border border-slate-900 flex items-center justify-center text-white group-hover:bg-blue-600 group-hover:border-blue-600 transition-all shadow-md shrink-0">
-                                                    <Navigation size={12} className="rotate-90" />
                                                 </div>
                                             </div>
 
-                                            {merchant.mobile_number && (
-                                                <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            window.location.href = `tel:+91${merchant.mobile_number}`;
-                                                        }}
-                                                        className="flex-1 bg-slate-50 border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                                                    >
-                                                        <Phone size={12} /> <span className="text-[10px] font-black uppercase tracking-wider">Call</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            window.open(`https://wa.me/91${merchant.mobile_number}`, '_blank');
-                                                        }}
-                                                        className="flex-1 bg-slate-50 border border-slate-200 text-emerald-600 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50 py-2 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                                                    >
-                                                        <MessageCircle size={12} /> <span className="text-[10px] font-black uppercase tracking-wider">Msg</span>
-                                                    </button>
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-1.5 shrink-0 pl-1 border-l border-slate-50">
+                                                {merchant.mobile_number && (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                window.location.href = `tel:+91${merchant.mobile_number}`;
+                                                            }}
+                                                            title="Call"
+                                                            className="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 flex items-center justify-center transition-colors active:scale-95"
+                                                        >
+                                                            <Phone size={12} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                window.open(`https://wa.me/91${merchant.mobile_number}`, '_blank');
+                                                            }}
+                                                            title="Message on WhatsApp"
+                                                            className="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-100 flex items-center justify-center transition-colors active:scale-95"
+                                                        >
+                                                            <MessageCircle size={12} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleMerchantClick(merchant);
+                                                    }}
+                                                    title="Get Directions"
+                                                    className="w-7 h-7 rounded-full bg-blue-600 border border-blue-600 text-white hover:bg-blue-700 hover:border-blue-700 flex items-center justify-center transition-all shadow shadow-blue-600/20 active:scale-95"
+                                                >
+                                                    <Navigation size={12} className="rotate-90 ml-[-1px] mt-[1px]" />
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

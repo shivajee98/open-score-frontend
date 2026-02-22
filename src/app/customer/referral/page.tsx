@@ -186,7 +186,7 @@ export default function ReferralPage() {
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_applied_loan ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white border-slate-200 text-slate-300'} ${friend.has_applied_loan && !friend.has_received_cashback ? 'animate-pulse' : ''}`}>
                                             <Banknote size={12} />
                                         </div>
-                                        <span className="text-[7px] font-black uppercase text-slate-400">Applied</span>
+                                        <span className="text-[7px] font-black uppercase text-slate-400">Loan Applied</span>
                                     </div>
                                     <div className="flex flex-col items-center gap-1.5 z-10">
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_received_cashback ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>

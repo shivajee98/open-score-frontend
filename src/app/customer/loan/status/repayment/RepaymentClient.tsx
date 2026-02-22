@@ -399,7 +399,9 @@ export default function RepaymentDashboard() {
                                     <Calendar size={12} className="text-blue-400" /> Due in {Math.ceil((new Date(pendingEmi.due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} Days
                                 </span>
                                 <div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">Installment Amount</h4>
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mb-1">
+                                        {Number(pendingEmi.emi_number) === 0 ? "Fee Amount" : "Installment Amount"}
+                                    </h4>
                                     <p className="text-4xl font-black tracking-tighter">₹{Number(pendingEmi.amount).toLocaleString()}</p>
                                 </div>
                             </div>
@@ -530,8 +532,8 @@ export default function RepaymentDashboard() {
                             filteredRepayments.map((rep, idx) => (
                                 <div key={rep.id} className={cn("p-5 rounded-[2rem] border transition-all flex items-center justify-between group", rep.status === 'PAID' ? "bg-white border-slate-100" : "bg-slate-50 border-transparent")}>
                                     <div className="flex items-center gap-4">
-                                        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs border transition-all", rep.status === 'PAID' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-white text-slate-300 border-slate-100")}>
-                                            {idx + 1}
+                                        <div className={cn("rounded-2xl flex items-center justify-center font-black text-xs border transition-all", rep.status === 'PAID' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-white text-slate-300 border-slate-100", Number(rep.emi_number) === 0 ? "px-3 h-12" : "w-12 h-12")}>
+                                            {Number(rep.emi_number) === 0 ? "Service Fee" : rep.emi_number}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3 mb-3">
