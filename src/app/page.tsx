@@ -35,6 +35,7 @@ export default function Home() {
       if (localUserStr && localToken) {
         try {
           const user = JSON.parse(localUserStr);
+          window.dispatchEvent(new Event('auth-login'));
           redirectUser(user);
         } catch (e) { }
       }

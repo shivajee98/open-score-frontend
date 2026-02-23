@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Capacitor } from '@capacitor/core';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
@@ -84,20 +85,23 @@ export default function Profile() {
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
 
-        // Check for WebView
-        const isWebView = !!(window as any).ReactNativeWebView;
-
-        if (isWebView) {
-            // Forward request to native side
-            (window as any).ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'REQUEST_NOTIFICATION_PERMISSION'
-            }));
-
-            // Optimistic toggle for local experience
-            const newState = !notificationsEnabled;
-            setNotificationsEnabled(newState);
-            localStorage.setItem('audio_enabled', newState.toString());
-            toast.success(newState ? "Notifications Enabled" : "Notifications Disabled");
+        if (Capacitor.isNativePlatform()) {
+            try {
+                const { PushNotifications } = await import('@capacitor/push-notifications');
+                let perm = await PushNotifications.checkPermissions();
+                if (perm.receive === 'prompt') perm = await PushNotifications.requestPermissions();
+                const newState = perm.receive === 'granted';
+                setNotificationsEnabled(newState);
+                localStorage.setItem('audio_enabled', newState.toString());
+                if (newState) {
+                    toast.success("Notifications Enabled");
+                    await PushNotifications.register();
+                } else {
+                    toast.error("Notification permission denied");
+                }
+            } catch (e) {
+                toast.error("Push setup failed");
+            }
             return;
         }
 

@@ -19,6 +19,7 @@ firebase.initializeApp({
     projectId: 'open-score-3f0da',
     storageBucket: 'open-score-3f0da.firebasestorage.app',
     messagingSenderId: '190101745853',
+    appId: '1:190101745853:web:34f25bb5643f2a2f2c87d4',
 });
 
 const messaging = firebase.messaging();
