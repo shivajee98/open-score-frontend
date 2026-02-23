@@ -1,127 +1,173 @@
 'use client';
 
-import { useEffect } from 'react';
-import { PushNotifications } from '@capacitor/push-notifications';
+import { useEffect, useRef, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function NotificationHandler() {
-    useEffect(() => {
-        // Only run on native platforms (Android/iOS)
-        if (Capacitor.isNativePlatform()) {
-            registerPush();
-        }
+    const hasRegistered = useRef(false);
 
-        // Listen for login to retry sync
-        const handleLogin = () => {
-            const token = localStorage.getItem('fcm_token_temp');
-            if (token) {
-                console.log('Login detected, syncing pending FCM token...');
-                syncToken(token);
-            }
-        };
-
-        window.addEventListener('auth-login', handleLogin);
-        return () => window.removeEventListener('auth-login', handleLogin);
-    }, []);
-
-    const syncToken = async (token: string) => {
+    const syncToken = useCallback(async (token: string, platform: string) => {
         try {
             await apiFetch('/auth/fcm-token', {
                 method: 'POST',
-                body: JSON.stringify({ token })
+                body: JSON.stringify({ token, platform })
             });
-            console.log('FCM Token synced with backend');
-            localStorage.removeItem('fcm_token_temp'); // Clear temp storage
+            console.log(`[Notifications] ${platform} FCM Token synced with backend`);
+            localStorage.removeItem('fcm_token_temp');
+            localStorage.setItem('fcm_token_synced', 'true');
         } catch (err) {
-            console.error('Failed to sync FCM token:', err);
+            console.error('[Notifications] Failed to sync FCM token:', err);
+            // Save for retry on next auth event
+            localStorage.setItem('fcm_token_temp', token);
+            localStorage.setItem('fcm_token_platform', platform);
         }
-    };
+    }, []);
 
-    const registerPush = async () => {
+    const registerNativePush = useCallback(async () => {
         try {
-            console.log('Initializing push notification registration...');
+            // Dynamic import to avoid SSR issues
+            const { PushNotifications } = await import('@capacitor/push-notifications');
 
-            // Check platform for better logging
             const platform = Capacitor.getPlatform();
-            console.log(`Current platform: ${platform}`);
+            console.log(`[Notifications] Registering native push on ${platform}...`);
 
             let permStatus = await PushNotifications.checkPermissions();
-            console.log('Initial permission status:', JSON.stringify(permStatus));
+            console.log('[Notifications] Permission status:', JSON.stringify(permStatus));
 
             if (permStatus.receive === 'prompt') {
-                console.log('Requesting push permissions...');
                 permStatus = await PushNotifications.requestPermissions();
             }
 
             if (permStatus.receive !== 'granted') {
-                console.warn('Push notification permissions not granted:', permStatus.receive);
-                toast.error('Notification access is required for real-time payment alerts.');
+                console.warn('[Notifications] Push permissions not granted:', permStatus.receive);
+                toast.error('Notification access is required for real-time alerts.');
                 return;
             }
 
-            console.log('Permissions granted, creating notification channels...');
-
-            // On Android, we must create a channel for notifications to show and have sound
+            // Create notification channel on Android
             if (platform === 'android') {
                 await PushNotifications.createChannel({
                     id: 'payment_alerts',
                     name: 'Payment Alerts',
                     description: 'Alerts for incoming payments and transactions',
-                    importance: 5, // High importance
-                    visibility: 1, // Public
-                    sound: 'beep.wav', // Optional: if we have a custom beep in assets
+                    importance: 5,
+                    visibility: 1,
+                    sound: 'beep.wav',
                     vibration: true,
                 });
-                console.log('Android notification channel "payment_alerts" created');
+                console.log('[Notifications] Android channel "payment_alerts" created');
             }
 
-            console.log('Registering with Apple/Google...');
+            // Register with FCM
             await PushNotifications.register();
 
-            // On success, we should be able to receive notifications
+            // Token received
             PushNotifications.addListener('registration', async (token) => {
-                console.log('Push registration success! Token:', token.value);
-                localStorage.setItem('fcm_token_temp', token.value); // Save for later sync if needed
-                syncToken(token.value);
+                console.log('[Notifications] Native FCM token:', token.value);
+                localStorage.setItem('fcm_token_temp', token.value);
+                localStorage.setItem('fcm_token_platform', 'android');
+                syncToken(token.value, 'android');
             });
 
-            // Some error occurred
+            // Registration error
             PushNotifications.addListener('registrationError', (error: any) => {
-                const errorStr = JSON.stringify(error);
-                console.error('Push registration error details:', errorStr);
-
-                if (errorStr.includes('MISSING_INSTANCEID_SERVICE')) {
-                    console.error('Troubleshooting: This usually means Google Play Services are missing or outdated on the emulator/device.');
+                console.error('[Notifications] Native registration error:', JSON.stringify(error));
+                if (JSON.stringify(error).includes('MISSING_INSTANCEID_SERVICE')) {
+                    console.error('[Notifications] Google Play Services missing or outdated');
                 }
                 toast.error(`Push setup failed: ${error.error || 'Check Google Play Services'}`);
             });
 
-            // Show us the notification payload if the app is open
+            // Foreground notification
             PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                console.log('Push received while app in foreground:', JSON.stringify(notification));
+                console.log('[Notifications] Foreground push:', JSON.stringify(notification));
                 toast.success(notification.title || 'New Notification', {
                     description: notification.body
                 });
             });
 
-            // Method called when tapping on a notification
+            // Notification tapped
             PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-                console.log('Push action performed:', JSON.stringify(action));
-                // Handle navigation based on notification data
+                console.log('[Notifications] Push action:', JSON.stringify(action));
                 if (action.notification.data?.path) {
                     window.location.href = action.notification.data.path;
                 }
             });
 
-            console.log('Push notification listeners attached successfully');
-
+            console.log('[Notifications] Native push listeners attached');
         } catch (e) {
-            console.error('Critical notification initialization error:', e);
-            toast.error('System error during notification setup');
+            console.error('[Notifications] Native push init error:', e);
         }
-    };
+    }, [syncToken]);
 
-    return null; // This component doesn't render anything
+    const registerWebPush = useCallback(async () => {
+        try {
+            // Check if browser supports notifications
+            if (!('Notification' in window)) {
+                console.warn('[Notifications] This browser does not support notifications');
+                return;
+            }
+
+            if (!('serviceWorker' in navigator)) {
+                console.warn('[Notifications] Service workers not supported');
+                return;
+            }
+
+            console.log('[Notifications] Registering web push...');
+
+            // Dynamic import to avoid SSR issues
+            const { requestWebPushToken, onForegroundMessage } = await import('@/lib/firebase');
+
+            const token = await requestWebPushToken();
+            if (token) {
+                localStorage.setItem('fcm_token_temp', token);
+                localStorage.setItem('fcm_token_platform', 'web');
+                syncToken(token, 'web');
+
+                // Listen for foreground messages
+                onForegroundMessage((payload) => {
+                    console.log('[Notifications] Web foreground message:', payload);
+                    const title = payload.notification?.title || 'OpenScore';
+                    const body = payload.notification?.body || 'You have a new notification';
+                    toast.success(title, { description: body });
+                });
+
+                console.log('[Notifications] Web push registered successfully');
+            } else {
+                console.warn('[Notifications] Failed to get web push token (VAPID key may be missing)');
+            }
+        } catch (e) {
+            console.error('[Notifications] Web push init error:', e);
+        }
+    }, [syncToken]);
+
+    useEffect(() => {
+        if (hasRegistered.current) return;
+        hasRegistered.current = true;
+
+        // Determine platform and register accordingly
+        if (Capacitor.isNativePlatform()) {
+            registerNativePush();
+        } else {
+            // Browser - use Firebase Web Push
+            registerWebPush();
+        }
+
+        // Re-sync token on login event
+        const handleLogin = () => {
+            const token = localStorage.getItem('fcm_token_temp');
+            const platform = localStorage.getItem('fcm_token_platform') || 'unknown';
+            if (token) {
+                console.log('[Notifications] Login detected, syncing pending FCM token...');
+                syncToken(token, platform);
+            }
+        };
+
+        window.addEventListener('auth-login', handleLogin);
+        return () => window.removeEventListener('auth-login', handleLogin);
+    }, [registerNativePush, registerWebPush, syncToken]);
+
+    return null;
 }
