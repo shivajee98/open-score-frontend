@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap } from 'lucide-react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import ReferralHandler from '@/components/ReferralHandler';
@@ -102,6 +104,25 @@ export default function Home() {
     }
   }, [mobile]);
 
+  const registerPush = async () => {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      console.log('[Push] Requesting permissions and registering...');
+      let perm = await PushNotifications.checkPermissions();
+      if (perm.receive === 'prompt') {
+        perm = await PushNotifications.requestPermissions();
+      }
+      if (perm.receive === 'granted') {
+        await PushNotifications.register();
+        console.log('[Push] Native register() called successfully');
+      } else {
+        console.warn('[Push] Permission denied');
+      }
+    } catch (e) {
+      console.error('[Push] Registration error:', e);
+    }
+  };
+
   const redirectUser = (user: any) => {
     console.log('[DEBUG] Redirecting user:', user.id, 'is_onboarded:', user.is_onboarded, 'role:', user.role);
     if ((window as any).ReactNativeWebView) {
@@ -180,6 +201,8 @@ export default function Home() {
           data.user.is_onboarded = true;
           localStorage.setItem('user', JSON.stringify(data.user));
           window.dispatchEvent(new Event('auth-login'));
+          // Trigger Push Registration Breakthrough
+          registerPush();
           redirectUser(data.user);
         }
       }
@@ -224,6 +247,8 @@ export default function Home() {
       if (authData.access_token) localStorage.setItem('token', authData.access_token);
       localStorage.setItem('hasSeenOnboarding', 'true');
       window.dispatchEvent(new Event('auth-login'));
+      // Trigger Push Registration Breakthrough
+      registerPush();
       redirectUser(authData.user);
     } catch (err: any) {
       setError(err.message);
