@@ -310,7 +310,11 @@ export default function RepaymentDashboard() {
                         </div>
                         <div className="text-right flex flex-col items-end">
                             <p className="text-xl font-black text-slate-800 tracking-tight mb-2">₹{Number(serviceFeeEmi.amount).toLocaleString()}</p>
-                            <span className="inline-flex items-center px-1.5 py-0.5 bg-[#E6F8EF] text-emerald-600 rounded text-[9px] font-bold">+₹{(Number(serviceFeeEmi.amount) * cashbackRate).toFixed(0)} cashback</span>
+                            {Number(serviceFeeEmi.emi_number) !== 0 && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 bg-[#E6F8EF] text-emerald-600 rounded text-[9px] font-bold">
+                                    +₹{(Number(serviceFeeEmi.amount) * cashbackRate).toFixed(0)} cashback
+                                </span>
+                            )}
                         </div>
                     </div>
                 )}
