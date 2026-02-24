@@ -130,25 +130,25 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                         </div>
                         <p className="text-sm text-slate-500 mb-6 font-medium">Please select a category to help us process your request faster.</p>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2">
                             {[
-                                { label: 'EMI', icon: <CheckCircle2 size={16} />, color: 'bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300' },
-                                { label: 'Wallet', icon: <Briefcase size={16} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300' },
-                                { label: 'Platform Fee and Charges', icon: <AlertCircle size={16} />, color: 'bg-rose-50 text-rose-600 border-rose-100 hover:border-rose-300' },
-                                { label: 'Other', icon: <ImageIcon size={16} />, color: 'bg-slate-50 text-slate-600 border-slate-100 hover:border-slate-300' }
+                                { label: 'EMI', icon: <CheckCircle2 size={14} />, color: 'bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300' },
+                                { label: 'Wallet', icon: <Briefcase size={14} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300' },
+                                { label: 'Platform Fee', icon: <AlertCircle size={14} />, color: 'bg-rose-50 text-rose-600 border-rose-100 hover:border-rose-300' },
+                                { label: 'Other', icon: <ImageIcon size={14} />, color: 'bg-slate-50 text-slate-600 border-slate-100 hover:border-slate-300' }
                             ].map((option) => (
                                 <button
                                     key={option.label}
                                     onClick={() => handlePurposeSelect(option.label)}
                                     className={cn(
-                                        "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-all active:scale-95",
+                                        "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all active:scale-95 min-h-[90px]",
                                         option.color
                                     )}
                                 >
-                                    <div className="p-2 bg-white rounded-full shadow-sm">
+                                    <div className="p-1.5 bg-white rounded-full shadow-sm">
                                         {option.icon}
                                     </div>
-                                    <span className="text-xs font-bold uppercase tracking-wide text-center">{option.label}</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-tight text-center leading-tight">{option.label}</span>
                                 </button>
                             ))}
                         </div>
