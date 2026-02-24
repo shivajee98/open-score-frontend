@@ -285,7 +285,7 @@ export default function RepaymentDashboard() {
                             )}>
                                 {serviceFeeEmi.status}
                             </div>
-                            <h3 className="text-[15px] font-black text-slate-800 mb-0.5">Service Fee</h3>
+                            <h3 className="text-[15px] font-black text-slate-800 mb-0.5">Pay Fees & Charges to Unlock Your Loan</h3>
                             <p className="text-[10px] text-slate-400 font-medium">Processed on {new Date(serviceFeeEmi.due_date).toLocaleDateString('en-GB')}</p>
                         </div>
                         <div className="text-right flex flex-col items-end">

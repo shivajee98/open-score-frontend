@@ -112,7 +112,7 @@ export default function MobileNav() {
 
             <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isHistory ? activeClass : 'text-slate-400'}`}>
                 <History size={20} className={isHistory ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">{isMerchant ? 'Sales' : 'History'}</span>
+                <span className="text-[8px] font-black uppercase tracking-widest">{isMerchant ? 'History' : 'History'}</span>
             </Link>
         </div>
     );

@@ -429,16 +429,16 @@ export default function LoanStatus() {
                             <IndianRupee className="w-6 h-6 text-emerald-400" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black uppercase tracking-tight">Pay Platform Fee</h3>
+                            <h2 className="text-lg font-bold text-yellow-400 uppercase tracking-tight">Congratulations!</h2>
                             <p className="text-slate-400 text-[11px] font-medium mt-1 px-4 leading-relaxed">
-                                Your loan is approved! Pay the platform fee of <span className="text-emerald-400 font-bold">₹{Number(repayments.find(r => Number(r.emi_number) === 0)?.amount).toLocaleString()}</span> to enable fast disbursal.
+                            <h3 className="text-lg font-black uppercase tracking-tight">Your loan is approved!</h3>    
                             </p>
                         </div>
                         <button
                             onClick={() => router.push(`/customer/loan/status/repayment?id=${loanId}`)}
                             className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-sm hover:bg-emerald-600 transition-all uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95"
                         >
-                            Pay & Disburse Now
+                            Track My Loan
                         </button>
                     </div>
                 )}
