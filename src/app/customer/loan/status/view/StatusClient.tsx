@@ -14,6 +14,7 @@ export default function LoanStatus() {
     const loanId = (params?.id || searchParams.get('id')) as string;
     const [isDetailsOpen, setIsDetailsOpen] = useState(true);
     const [loan, setLoan] = useState<any>(null);
+    const [repayments, setRepayments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
@@ -33,6 +34,16 @@ export default function LoanStatus() {
                 // If loan has form_data, use it as existing KYC data
                 if (found.form_data) {
                     setExistingKycData(found.form_data);
+                }
+
+                // Fetch repayments for this specific loan
+                try {
+                    const repayData = await apiFetch(`/loans/${found.id || found.loan_id}/repayments`);
+                    if (repayData && repayData.repayments) {
+                        setRepayments(repayData.repayments);
+                    }
+                } catch (repayErr) {
+                    console.error("Failed to fetch repayments for loan", repayErr);
                 }
             } else {
                 if (loanId === 'L-10293') {
@@ -170,7 +181,7 @@ export default function LoanStatus() {
                     <ArrowLeft className="w-4 h-4" /> Back to Loans
                 </button>
                 <h1 className="text-xl font-black text-white mb-2">Application Status</h1>
-                <p className="text-slate-400 font-medium text-sm">Track your loan application #{loanId}</p>
+                <p className="text-slate-400 font-medium text-sm">Track your loan application #{loan.display_id || loanId}</p>
             </div>
 
             <div className="px-4 -mt-10 relative z-20 space-y-4">
@@ -184,12 +195,13 @@ export default function LoanStatus() {
                                 <span className={`text-[10px] font-black px-2 py-0.5 border rounded-full uppercase tracking-widest ${(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'bg-slate-50 border-slate-200 text-slate-700' :
                                     (loan.status === 'DISBURSED' || loan.status === 'APPROVED') ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
                                         loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-                                            loan.status === 'KYC_SENT' ? 'bg-amber-50 border-amber-100 text-amber-600' :
-                                                loan.status === 'FORM_SUBMITTED' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
-                                                    'bg-slate-50 border-slate-100 text-slate-600'
+                                            (loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED' || loan.status === 'VETTING') ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                                                (loan.status === 'FORM_SUBMITTED' || loan.status === 'KYC_SUBMITTED') ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
+                                                    (loan.status === 'APPLIED' || loan.status === 'PENDING') ? 'bg-blue-50 border-blue-100 text-blue-600' :
+                                                        'bg-slate-50 border-slate-100 text-slate-600'
                                     }`}>{(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'COMPLETED' : loan.status.replace('_', ' ')}</span>
                             </div>
-                            <h2 className="text-xl font-normal text-slate-900 tracking-tight">#{loanId}</h2>
+                            <h2 className="text-xl font-normal text-slate-900 tracking-tight">#{loan.display_id || loanId}</h2>
                         </div>
 
                         <div className={`space-y-3 overflow-hidden transition-all duration-300 ${isDetailsOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -275,8 +287,8 @@ export default function LoanStatus() {
                                     const res: any = await apiFetch('/support/tickets', {
                                         method: 'POST',
                                         body: JSON.stringify({
-                                            subject: `Fast Disbursal Request - Loan #${loan.id}`,
-                                            message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
+                                            subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
+                                            message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
                                             priority: 'high',
                                             issue_type: 'loan_kyc_other'
                                         })
@@ -316,11 +328,12 @@ export default function LoanStatus() {
                         <div className="absolute left-6 right-6 top-[20px] h-[2px] bg-slate-50 z-0 text-center">
                             <div className={`h-full bg-emerald-500 transition-all duration-1000 ${loan.status === 'CLOSED' || loan.status === 'DISBURSED' ? 'w-full' :
                                 loan.status === 'APPROVED' ? 'w-[75%]' :
-                                    loan.status === 'FORM_SUBMITTED' ? 'w-[50%]' :
-                                        loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED' ? 'w-[25%]' :
+                                    (['FORM_SUBMITTED', 'KYC_SUBMITTED'].includes(loan.status)) ? 'w-[50%]' :
+                                        (['KYC_SENT', 'PROCEEDED', 'VETTING'].includes(loan.status)) ? 'w-[25%]' :
                                             'w-0'
                                 }`} />
                         </div>
+
 
                         {/* Steps */}
                         {[
@@ -331,15 +344,15 @@ export default function LoanStatus() {
                             },
                             {
                                 label: 'Verification',
-                                date: (loan.status === 'FORM_SUBMITTED' || loan.status === 'APPROVED' || loan.status === 'DISBURSED' || loan.status === 'CLOSED') ? 'Verified' : 'In Progress',
-                                status: (loan.status === 'FORM_SUBMITTED' || loan.status === 'APPROVED' || loan.status === 'DISBURSED' || loan.status === 'CLOSED') ? 'done' :
-                                    (loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED') ? 'current' : 'pending'
+                                date: (['FORM_SUBMITTED', 'KYC_SUBMITTED', 'APPROVED', 'DISBURSED', 'CLOSED'].includes(loan.status)) ? 'Verified' : 'In Progress',
+                                status: (['FORM_SUBMITTED', 'KYC_SUBMITTED', 'APPROVED', 'DISBURSED', 'CLOSED'].includes(loan.status)) ? 'done' :
+                                    (['KYC_SENT', 'PROCEEDED', 'VETTING'].includes(loan.status)) ? 'current' : 'pending'
                             },
                             {
                                 label: 'Approval',
                                 date: loan.approved_at ? new Date(loan.approved_at).toLocaleDateString() : 'Awaiting',
-                                status: (loan.status === 'APPROVED' || loan.status === 'DISBURSED' || loan.status === 'CLOSED') ? 'done' :
-                                    (loan.status === 'FORM_SUBMITTED') ? 'current' : 'pending'
+                                status: (['APPROVED', 'DISBURSED', 'CLOSED'].includes(loan.status)) ? 'done' :
+                                    (['FORM_SUBMITTED', 'KYC_SUBMITTED'].includes(loan.status)) ? 'current' : 'pending'
                             },
                             {
                                 label: loan.status === 'CLOSED' ? 'Closed' : 'Disbursal',
@@ -409,15 +422,36 @@ export default function LoanStatus() {
                     </div>
                 )}
 
-                {/* Special Info: Contact Supervisor - Clickable to raise support ticket */}
-                {loan.status === 'APPROVED' && (
+                {/* Special Action: Pay Platform Fee - ONLY if APPROVED and EMI #0 is pending */}
+                {loan.status === 'APPROVED' && repayments.some(r => Number(r.emi_number) === 0 && r.status === 'PENDING') && (
+                    <div className="bg-slate-900 rounded-lg p-5 text-white shadow-xl shadow-slate-900/20 flex flex-col items-center text-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center border border-white/10 shadow-inner">
+                            <IndianRupee className="w-6 h-6 text-emerald-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black uppercase tracking-tight">Pay Platform Fee</h3>
+                            <p className="text-slate-400 text-[11px] font-medium mt-1 px-4 leading-relaxed">
+                                Your loan is approved! Pay the platform fee of <span className="text-emerald-400 font-bold">₹{Number(repayments.find(r => Number(r.emi_number) === 0)?.amount).toLocaleString()}</span> to enable fast disbursal.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => router.push(`/customer/loan/status/repayment?id=${loanId}`)}
+                            className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-sm hover:bg-emerald-600 transition-all uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95"
+                        >
+                            Pay & Disburse Now
+                        </button>
+                    </div>
+                )}
+
+                {/* Special Info: Contact Supervisor - Only if APPROVED and NO pending platform fee (or already paid) */}
+                {loan.status === 'APPROVED' && !repayments.some(r => Number(r.emi_number) === 0 && r.status === 'PENDING') && (
                     <div
                         onClick={() => {
                             // Navigate to support page with pre-filled ticket data
                             const ticketData = encodeURIComponent(JSON.stringify({
                                 prefill: true,
-                                subject: `Fund Release Request - Loan #${loan.id}`,
-                                message: `Hello,\n\nMy loan application #${loan.id} for ₹${Number(loan.amount).toLocaleString()} has been approved, but the funds have not been released to my account yet.\n\nPlease release the approved amount to my wallet at the earliest.\n\nThank you.`,
+                                subject: `Fund Release Request - Loan #${loan.display_id || loan.id}`,
+                                message: `Hello,\n\nMy loan application #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()} has been approved, but the funds have not been released to my account yet.\n\nPlease release the approved amount to my wallet at the earliest.\n\nThank you.`,
                                 category: 'loan_kyc_other',
                                 loanId: loan.id
                             }));

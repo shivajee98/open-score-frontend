@@ -218,7 +218,7 @@ export default function CustomerTransactions() {
                                                     <p className={`font-black text-xs ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
                                                         {t.type === 'CREDIT' ? '+' : '-'}₹ {parseFloat(t.amount).toLocaleString('en-IN')}
                                                     </p>
-                                                    <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">{t.reference_id || `TRN-ID-${String(t.id).padStart(8, '0')}`}</p>
+                                                    <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">{t.reference_id || `REF-ID-${t.id}`}</p>
                                                 </div>
                                             </div>
                                         );

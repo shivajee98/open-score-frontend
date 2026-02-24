@@ -151,8 +151,10 @@ export default function RepaymentDashboard() {
             const ticketFormData = new FormData();
             ticketFormData.append('issue_type', '2'); // "Unable To Transfer & Approval EMI"
             const isFee = Number(pendingEmi.emi_number) === 0;
-            ticketFormData.append('subject', isFee ? `Service Fee Verification - Loan #${loanId}` : `EMI Payment Verification - Loan #${loanId}`);
-            ticketFormData.append('message', `I have paid my ${isFee ? 'service fee' : 'EMI'} of ₹${pendingEmi.amount}. Transaction ID: ${transactionId || 'N/A'}. Kindly update it in the panel.`);
+            ticketFormData.append('subject', isFee ? `Platform Fee Paid - Loan #${loanId}` : `EMI Payment Verification - Loan #${loanId}`);
+            ticketFormData.append('message', isFee
+                ? `paid platform fee, disburse my loan amount. Transaction ID: ${transactionId || 'N/A'}.`
+                : `I have paid my EMI of ₹${pendingEmi.amount}. Transaction ID: ${transactionId || 'N/A'}. Kindly update it in the panel.`);
             ticketFormData.append('attachment', proofFile); // Re-use the file
             ticketFormData.append('priority', 'high');
             ticketFormData.append('payment_amount', pendingEmi.amount);
