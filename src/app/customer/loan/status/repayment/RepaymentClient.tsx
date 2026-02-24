@@ -147,34 +147,12 @@ export default function RepaymentDashboard() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || data.message || "Upload failed");
 
-            // 2. Auto-Create Support Ticket
-            const ticketFormData = new FormData();
-            ticketFormData.append('issue_type', '2'); // "Unable To Transfer & Approval EMI"
-            const isFee = Number(pendingEmi.emi_number) === 0;
-            ticketFormData.append('subject', isFee ? `Platform Fee Paid - Loan #${loanId}` : `EMI Payment Verification - Loan #${loanId}`);
-            ticketFormData.append('message', isFee
-                ? `paid platform fee, disburse my loan amount. Transaction ID: ${transactionId || 'N/A'}.`
-                : `I have paid my EMI of ₹${pendingEmi.amount}. Transaction ID: ${transactionId || 'N/A'}. Kindly update it in the panel.`);
-            ticketFormData.append('attachment', proofFile); // Re-use the file
-            ticketFormData.append('priority', 'high');
-            ticketFormData.append('payment_amount', pendingEmi.amount);
-            ticketFormData.append('sub_action', 'emi');
-            ticketFormData.append('target_id', pendingEmi.id);
+            // The backend now creates the ticket automatically in submitManualRepayment
+            // We just need to redirect to the support page.
+            // If the backend returns the created ticket, we can use it.
+            const createdTicket = data.ticket;
 
-            const ticketRes = await fetch(`${apiUrl}/support/tickets`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: ticketFormData
-            });
-
-            const ticketData = await ticketRes.json();
-
-            // Check for nested ticket object or direct object
-            const createdTicket = ticketData.ticket || ticketData;
-
-            if (ticketRes.ok && createdTicket?.id) {
+            if (createdTicket?.id) {
                 toast.success("Proof submitted! Redirecting to support...");
                 router.push(`/customer/support?ticket=${encodeURIComponent(JSON.stringify(createdTicket))}`);
             } else {
