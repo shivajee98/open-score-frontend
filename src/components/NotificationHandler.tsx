@@ -174,53 +174,53 @@ export default function NotificationHandler() {
         if (hasRegistered.current) return;
         hasRegistered.current = true;
 
-        // Attach push notification listeners BEFORE registration
-        import('@capacitor/push-notifications').then(({ PushNotifications }) => {
-            PushNotifications.addListener('registration', async (tokenResult) => {
-                console.log('[Notifications] registration event:', tokenResult);
-                if (!tokenResult.value) {
-                    console.warn('[Notifications] FCM token is null! Full event:', tokenResult);
-                    toast.error('Push registration failed: FCM token is null');
-                    return;
-                }
-                console.log('[Notifications] Native FCM token received:', tokenResult.value.substring(0, 20) + '...');
-                localStorage.setItem('fcm_token_temp', tokenResult.value);
-                localStorage.setItem('fcm_token_platform', 'android');
-                syncToken(tokenResult.value, 'android');
-            });
+        const isNative = Capacitor.isNativePlatform();
 
-            PushNotifications.addListener('registrationError', (error) => {
-                console.error('[Notifications] Native registration error:', JSON.stringify(error));
-                toast.error(`Push setup failed: ${error.error || 'Check Google Play Services'}`);
-            });
-
-            PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                console.log('[Notifications] Foreground push:', JSON.stringify(notification));
-                toast.success(notification.title || 'New Notification', {
-                    description: notification.body
+        // ONLY attach native listeners if on a native platform
+        if (isNative) {
+            import('@capacitor/push-notifications').then(({ PushNotifications }) => {
+                PushNotifications.addListener('registration', async (tokenResult) => {
+                    console.log('[Notifications] registration event:', tokenResult);
+                    if (!tokenResult.value) {
+                        console.warn('[Notifications] FCM token is null! Full event:', tokenResult);
+                        toast.error('Push registration failed: FCM token is null');
+                        return;
+                    }
+                    console.log('[Notifications] Native FCM token received:', tokenResult.value.substring(0, 20) + '...');
+                    localStorage.setItem('fcm_token_temp', tokenResult.value);
+                    localStorage.setItem('fcm_token_platform', 'android');
+                    syncToken(tokenResult.value, 'android');
                 });
-            });
 
-            PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-                console.log('[Notifications] Push action:', JSON.stringify(action));
-                if (action.notification.data?.path) {
-                    window.location.href = action.notification.data.path;
-                }
-            });
-        });
+                PushNotifications.addListener('registrationError', (error) => {
+                    console.error('[Notifications] Native registration error:', JSON.stringify(error));
+                    toast.error(`Push setup failed: ${error.error || 'Check Google Play Services'}`);
+                });
 
-        // Determine platform and register accordingly
-        if (Capacitor.isNativePlatform()) {
-            registerNativePush();
+                PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                    console.log('[Notifications] Foreground push:', JSON.stringify(notification));
+                    toast.success(notification.title || 'New Notification', {
+                        description: notification.body
+                    });
+                });
+
+                PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+                    console.log('[Notifications] Push action:', JSON.stringify(action));
+                    if (action.notification.data?.path) {
+                        window.location.href = action.notification.data.path;
+                    }
+                });
+
+                // Also call the native registration function
+                registerNativePush();
+            });
         } else {
+            // Register Web Push if on web
             registerWebPush();
         }
 
         /**
          * CRITICAL: Re-sync token on login event.
-         * This handles the case where:
-         * 1. FCM token was obtained BEFORE the user logged in
-         * 2. User was already logged in (fast path) - the token was saved but never synced
          */
         const handleLogin = () => {
             const token = localStorage.getItem('fcm_token_temp');

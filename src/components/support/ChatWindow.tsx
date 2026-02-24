@@ -115,42 +115,52 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
 
     return (
         <div className="flex flex-col h-full bg-slate-50/50 relative">
-            {/* Purpose Selection Modal */}
             {showPurposeModal && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-black text-slate-900">What is this image for?</h3>
+                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-t-3xl sm:rounded-2xl p-6 w-full max-w-sm shadow-2xl scale-100 animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 mb-safe">
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden" />
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900 tracking-tight">Select Category</h3>
+                                <p className="text-sm text-slate-500 font-medium">Why are you uploading this?</p>
+                            </div>
                             <button
                                 onClick={() => setShowPurposeModal(false)}
-                                className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                                className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
                             >
                                 <X size={20} />
                             </button>
                         </div>
-                        <p className="text-sm text-slate-500 mb-6 font-medium">Please select a category to help us process your request faster.</p>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-3 mt-6">
                             {[
-                                { label: 'EMI', icon: <CheckCircle2 size={14} />, color: 'bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300' },
-                                { label: 'Wallet', icon: <Briefcase size={14} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300' },
-                                { label: 'Platform Fee', icon: <AlertCircle size={14} />, color: 'bg-rose-50 text-rose-600 border-rose-100 hover:border-rose-300' },
-                                { label: 'Other', icon: <ImageIcon size={14} />, color: 'bg-slate-50 text-slate-600 border-slate-100 hover:border-slate-300' }
+                                { label: 'EMI', icon: <CheckCircle2 size={16} />, color: 'bg-blue-50 text-blue-600 border-blue-100' },
+                                { label: 'Wallet', icon: <Briefcase size={16} />, color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+                                { label: 'Platform Fee', icon: <AlertCircle size={16} />, color: 'bg-rose-50 text-rose-600 border-rose-100' },
+                                { label: 'Other', icon: <ImageIcon size={16} />, color: 'bg-slate-50 text-slate-600 border-slate-100' }
                             ].map((option) => (
                                 <button
                                     key={option.label}
                                     onClick={() => handlePurposeSelect(option.label)}
                                     className={cn(
-                                        "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-all active:scale-95 min-h-[90px]",
+                                        "flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border-2 transition-all active:scale-95 min-h-[110px]",
                                         option.color
                                     )}
                                 >
-                                    <div className="p-1.5 bg-white rounded-full shadow-sm">
+                                    <div className="p-2.5 bg-white rounded-xl shadow-sm border border-inherit/20">
                                         {option.icon}
                                     </div>
-                                    <span className="text-[10px] font-bold uppercase tracking-tight text-center leading-tight">{option.label}</span>
+                                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-center leading-tight">{option.label}</span>
                                 </button>
                             ))}
+                        </div>
+                        <div className="mt-6 sm:hidden">
+                            <button
+                                onClick={() => setShowPurposeModal(false)}
+                                className="w-full py-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>

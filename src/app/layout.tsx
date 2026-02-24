@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ToastContainer from "@/components/ui/Toast";
-import MobileNav from "@/components/MobileNav";
-import AuthGuard from "@/components/AuthGuard";
+import ClientLayout from "@/components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "OpenScore | Premium Digital Payments",
@@ -19,11 +17,6 @@ export const viewport = {
   userScalable: false,
 };
 
-import MobileNavigationHandler from "@/components/MobileNavigationHandler";
-import NotificationHandler from "@/components/NotificationHandler";
-import IncomingCallModal from "@/components/IncomingCallModal";
-import AppLockGuard from "@/components/AppLockGuard";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,19 +24,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`antialiased font-sans`}
-      >
-        <AuthGuard>
-          <NotificationHandler />
-          <IncomingCallModal />
-          <MobileNavigationHandler />
-          <ToastContainer />
-          <AppLockGuard>
-            {children}
-          </AppLockGuard>
-          <MobileNav />
-        </AuthGuard>
+      <body className="antialiased font-sans">
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

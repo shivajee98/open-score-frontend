@@ -10,7 +10,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Version Check Logging
-        console.log("%c OpenScore App Version: 0.1.1 ", "background: #0f172a; color: #10b981; font-weight: bold; padding: 4px; border-radius: 4px;");
+        console.log("%c OpenScore App Version: 0.1.3 ", "background: #0f172a; color: #10b981; font-weight: bold; padding: 4px; border-radius: 4px;");
     }, []);
 
     useEffect(() => {

@@ -85,29 +85,61 @@ export default function Profile() {
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
 
-        if (Capacitor.isNativePlatform()) {
+        const platform = Capacitor.getPlatform();
+        const isNative = platform !== 'web';
+
+        console.log(`[PushDebug] Platform detected: ${platform}, isNative: ${isNative}`);
+
+        if (isNative) {
             try {
                 const { PushNotifications } = await import('@capacitor/push-notifications');
+
+                // If we are turning it OFF
+                if (notificationsEnabled) {
+                    console.log('[PushDebug] Disabling notifications');
+                    setNotificationsEnabled(false);
+                    localStorage.setItem('audio_enabled', 'false');
+                    toast.success("Notifications Disabled");
+                    return;
+                }
+
+                // If we are turning it ON
+                console.log('[PushDebug] Attempting native push registration...');
                 let perm = await PushNotifications.checkPermissions();
-                if (perm.receive === 'prompt') perm = await PushNotifications.requestPermissions();
-                const newState = perm.receive === 'granted';
-                setNotificationsEnabled(newState);
-                localStorage.setItem('audio_enabled', newState.toString());
-                if (newState) {
-                    toast.success("Notifications Enabled");
-                    await PushNotifications.register();
+
+                if (perm.receive === 'prompt' || perm.receive === 'denied') {
+                    perm = await PushNotifications.requestPermissions();
+                }
+
+                const granted = perm.receive === 'granted';
+                if (granted) {
+                    setNotificationsEnabled(true);
+                    localStorage.setItem('audio_enabled', 'true');
+                    toast.success("Notifications Enabled (Native)");
+                    try {
+                        await PushNotifications.register();
+                    } catch (regErr) {
+                        console.error("[PushDebug] Registration failed", regErr);
+                    }
                 } else {
-                    toast.error("Notification permission denied");
+                    toast.error(`Permission denied: ${perm.receive}`);
                 }
             } catch (e) {
-                toast.error("Push setup failed");
+                console.error("[PushDebug] Native Error:", e);
+                toast.error("Native push error. Ensure you are using the installed App.");
             }
             return;
         }
 
-        // Standard Browser logic
+        // Standard Browser logic (Fallback for web)
+        console.log('[PushDebug] Using Web Push fallback logic');
         if (!("Notification" in window)) {
-            toast.error("Browser does not support notifications");
+            const isMobileBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMobileBrowser) {
+                toast.error(`Mobile browsers don't support web push. Open the installed App.`);
+            } else {
+                toast.error(`Notifications not supported in this browser (${platform})`);
+            }
             return;
         }
 
@@ -124,13 +156,13 @@ export default function Profile() {
                     localStorage.setItem('audio_enabled', 'true');
                     toast.success("Notifications Enabled");
                 } else {
-                    toast.error("Notification permission denied");
+                    toast.error("Permission denied");
                 }
             } catch (e) {
                 toast.error("Failed to request permission");
             }
         } else {
-            toast.error("Notifications are blocked. Please enable in browser settings.");
+            toast.error("Notifications are blocked in browser settings.");
         }
     };
 
