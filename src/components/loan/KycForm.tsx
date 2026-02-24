@@ -23,6 +23,7 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useStore } from '@/store/useStore';
+import { apiFetch } from '@/lib/api';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -48,6 +49,8 @@ const STEPS = [
 export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false }: KycFormProps) {
     const { user } = useStore();
     const [currentStep, setCurrentStep] = useState(0);
+    const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string }>({});
+    const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean }>({});
 
     // Dynamic schema based on role
     const kycSchema = z.object({
@@ -118,7 +121,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     useEffect(() => {
         if (initialData) {
             Object.keys(initialData).forEach((key) => {
-                const value = (initialData as any)[key];
+                let value = (initialData as any)[key];
+
+                // Extra safety: Sanitize state if it contains email (prevent mapping bugs)
+                if (key === 'state' && typeof value === 'string' && value.includes('@')) {
+                    value = '';
+                }
+
                 if (value !== undefined) {
                     setValue(key as any, value);
                 }
@@ -126,9 +135,54 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
     }, [initialData, setValue]);
 
+    const aadharValue = watch('aadhar_number');
+    const panValue = watch('pan_number');
+
+    useEffect(() => {
+        if (aadharValue && aadharValue.length === 12) {
+            checkUniqueness('aadhar', aadharValue);
+        } else {
+            setUniquenessErrors(prev => ({ ...prev, aadhar: undefined }));
+        }
+    }, [aadharValue]);
+
+    useEffect(() => {
+        if (panValue && panValue.length === 10) {
+            checkUniqueness('pan', panValue);
+        } else {
+            setUniquenessErrors(prev => ({ ...prev, pan: undefined }));
+        }
+    }, [panValue]);
+
+    const checkUniqueness = async (type: 'aadhar' | 'pan', value: string) => {
+        setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
+        try {
+            const res = await apiFetch('/loans/check-kyc-uniqueness', {
+                method: 'POST',
+                body: JSON.stringify({ type, value })
+            });
+
+            if (!res.unique) {
+                setUniquenessErrors(prev => ({ ...prev, [type]: res.message }));
+            } else {
+                setUniquenessErrors(prev => ({ ...prev, [type]: undefined }));
+            }
+        } catch (e) {
+            console.error('Failed to check uniqueness', e);
+        } finally {
+            setCheckingUniqueness(prev => ({ ...prev, [type]: false }));
+        }
+    };
+
     const nextStep = async () => {
         const fieldsToValidate = getFieldsForStep(currentStep);
         const isStepValid = await trigger(fieldsToValidate as any);
+
+        // Prevent next step if uniqueness check is failing
+        if (currentStep === 2 && (uniquenessErrors.aadhar || uniquenessErrors.pan)) {
+            return;
+        }
+
         if (isStepValid) {
             setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1));
         }
@@ -265,9 +319,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         target.value = target.value.replace(/\D/g, '').slice(0, 12);
                                     }}
                                     {...register('aadhar_number')}
-                                    className={inputClasses}
+                                    className={cn(inputClasses, (errors.aadhar_number || uniquenessErrors.aadhar) && "border-rose-500 ring-rose-50")}
                                 />
                                 {errors.aadhar_number && <p className={errorClasses}>{errors.aadhar_number.message}</p>}
+                                {uniquenessErrors.aadhar && <p className={errorClasses}>{uniquenessErrors.aadhar}</p>}
+                                {checkingUniqueness.aadhar && <p className="text-[9px] text-blue-500 mt-1 ml-2 font-bold animate-pulse uppercase tracking-widest">Verifying Aadhaar...</p>}
                             </div>
                             <div>
                                 <label className={labelClasses}>PAN Card Number</label>
@@ -279,9 +335,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                             e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
                                         }
                                     })}
-                                    className={`${inputClasses} uppercase tracking-widest`}
+                                    className={cn(inputClasses, "uppercase tracking-widest", (errors.pan_number || uniquenessErrors.pan) && "border-rose-500 ring-rose-50")}
                                 />
                                 {errors.pan_number && <p className={errorClasses}>{errors.pan_number.message}</p>}
+                                {uniquenessErrors.pan && <p className={errorClasses}>{uniquenessErrors.pan}</p>}
+                                {checkingUniqueness.pan && <p className="text-[9px] text-blue-500 mt-1 ml-2 font-bold animate-pulse uppercase tracking-widest">Verifying PAN...</p>}
                             </div>
                         </div>
 

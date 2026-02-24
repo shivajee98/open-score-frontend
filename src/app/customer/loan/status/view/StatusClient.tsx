@@ -130,10 +130,16 @@ export default function LoanStatus() {
             if (!data.phone) data.phone = userData.mobile_number || '';
             if (!data.street_address) data.street_address = userData.business_address || '';
             if (!data.city) data.city = userData.city || '';
+            if (!data.state) data.state = userData.state || '';
             if (!data.postal_code) data.postal_code = userData.pincode || '';
             if (!data.employer) data.employer = userData.business_name || '';
             if (!data.aadhar_number) data.aadhar_number = userData.aadhar_number || '';
             if (!data.pan_number) data.pan_number = userData.pan_number || '';
+        }
+
+        // Cleanup: If state accidentally contains an email (known legacy mapping bug)
+        if (data.state && data.state.includes('@')) {
+            data.state = '';
         }
 
         return data;
