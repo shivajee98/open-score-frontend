@@ -389,27 +389,39 @@ export default function RepaymentDashboard() {
 
                     <div className="space-y-3">
                         {regularEmis.map((emi, index) => (
-                            <div key={emi.id} className="bg-white rounded-[1.25rem] p-4 shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-50 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F0F6FF] flex items-center justify-center text-blue-500 font-black text-sm border border-blue-50">
-                                        {emi.emi_number}
-                                    </div>
-                                    <div>
-                                        <div className={cn(
-                                            "inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest mb-1.5",
-                                            emi.status === 'PAID' ? "bg-emerald-50 text-emerald-600" :
-                                                new Date(emi.due_date) < new Date() && emi.status !== 'PAID' ? "bg-rose-50 text-rose-600" :
-                                                    "bg-[#EEF2FF] text-blue-600"
-                                        )}>
-                                            {emi.status === 'PAID' ? 'PAID' : new Date(emi.due_date) < new Date() ? 'OVERDUE' : 'UPCOMING'}
+                            <div key={emi.id} className="space-y-3">
+                                <div className="bg-white rounded-[1.25rem] p-4 shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-50 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F0F6FF] flex items-center justify-center text-blue-500 font-black text-sm border border-blue-50">
+                                            {emi.emi_number}
                                         </div>
-                                        <p className="text-[11px] font-black text-slate-700">Due: {new Date(emi.due_date).toLocaleDateString('en-GB')}</p>
+                                        <div>
+                                            <div className={cn(
+                                                "inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest mb-1.5",
+                                                emi.status === 'PAID' ? "bg-emerald-50 text-emerald-600" :
+                                                    new Date(emi.due_date) < new Date() && emi.status !== 'PAID' ? "bg-rose-50 text-rose-600" :
+                                                        "bg-[#EEF2FF] text-blue-600"
+                                            )}>
+                                                {emi.status === 'PAID' ? 'PAID' : new Date(emi.due_date) < new Date() ? 'OVERDUE' : 'UPCOMING'}
+                                            </div>
+                                            <p className="text-[11px] font-black text-slate-700">Due: {new Date(emi.due_date).toLocaleDateString('en-GB')}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right flex flex-col items-end">
+                                        <p className="text-[15px] font-black text-slate-800 tracking-tight mb-0.5">₹{Number(emi.amount).toLocaleString()}</p>
+                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.05em]">Installment {index + 1} of {regularEmis.length}</p>
                                     </div>
                                 </div>
-                                <div className="text-right flex flex-col items-end">
-                                    <p className="text-[15px] font-black text-slate-800 tracking-tight mb-0.5">₹{Number(emi.amount).toLocaleString()}</p>
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.05em]">Installment {index + 1} of {regularEmis.length}</p>
-                                </div>
+                                {emi.admin_note && emi.status === 'PENDING' && (
+                                    <div className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl animate-in fade-in slide-in-from-top-1">
+                                        <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                                            <AlertCircle size={10} /> Payment Rejected
+                                        </p>
+                                        <p className="text-[10px] font-medium text-rose-500 leading-relaxed">
+                                            {emi.admin_note}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -422,6 +434,6 @@ export default function RepaymentDashboard() {
                     Auto-Debit Active via Wallet
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

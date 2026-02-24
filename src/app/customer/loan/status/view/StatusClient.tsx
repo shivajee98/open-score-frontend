@@ -22,6 +22,7 @@ export default function LoanStatus() {
     const [showKycForm, setShowKycForm] = useState(false);
     const [userData, setUserData] = useState<any>(null);
     const [existingKycData, setExistingKycData] = useState<any>(null);
+    const [tickets, setTickets] = useState<any[]>([]);
 
     const fetchLoan = async () => {
         try {
@@ -86,9 +87,27 @@ export default function LoanStatus() {
         }
     };
 
+    const fetchTickets = async () => {
+        try {
+            const data = await apiFetch('/support/tickets');
+            setTickets(Array.isArray(data) ? data : (data?.data || []));
+        } catch (e) {
+            console.error("Failed to fetch tickets", e);
+        }
+    };
+
     useEffect(() => {
         fetchLoan();
         fetchUserData();
+        fetchTickets();
+
+        const interval = setInterval(() => {
+            fetchLoan();
+            fetchUserData();
+            fetchTickets();
+        }, 3000); // Poll every 3 seconds
+
+        return () => clearInterval(interval);
     }, [loanId]);
 
     // Prepare initial KYC data from user profile and existing form data
@@ -200,6 +219,18 @@ export default function LoanStatus() {
                                                     (loan.status === 'APPLIED' || loan.status === 'PENDING') ? 'bg-blue-50 border-blue-100 text-blue-600' :
                                                         'bg-slate-50 border-slate-100 text-slate-600'
                                     }`}>{(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'COMPLETED' : loan.status.replace('_', ' ')}</span>
+
+                                {loan.status === 'REJECTED' && loan.reason && (
+                                    <div className="mt-4 p-4 bg-rose-50 border border-rose-100 rounded-xl animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-6 h-6 bg-rose-100 rounded-full flex items-center justify-center">
+                                                <Ban size={12} className="text-rose-600" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-rose-700 uppercase tracking-widest">Application Rejected</span>
+                                        </div>
+                                        <p className="text-sm text-rose-600 font-medium leading-relaxed pl-8">{loan.reason}</p>
+                                    </div>
+                                )}
                             </div>
                             <h2 className="text-xl font-normal text-slate-900 tracking-tight">#{loan.display_id || loanId}</h2>
                         </div>
@@ -278,54 +309,55 @@ export default function LoanStatus() {
                     </button>
 
                     {/* Fast Disbursal CTA */}
-                    {/* Fast Disbursal CTA */}
-                    {!['DISBURSED', 'CLOSED', 'REJECTED', 'CANCELLED', 'PREVIEW'].includes(loan.status) && (
-                        <button
-                            onClick={async () => {
-                                try {
-                                    setSubmitting(true);
-                                    const res: any = await apiFetch('/support/tickets', {
-                                        method: 'POST',
-                                        body: JSON.stringify({
-                                            subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
-                                            message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
-                                            priority: 'high',
-                                            issue_type: 'loan_kyc_other'
-                                        })
-                                    });
-                                    toast.success('Fast disbursal request sent successfully!');
+                    {!['DISBURSED', 'CLOSED', 'REJECTED', 'CANCELLED', 'PREVIEW', 'DISBURSAL'].includes(loan.status) &&
+                        !tickets.some(t => t.subject?.includes('Fast Disbursal Request') && t.status !== 'CLOSED') && (
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        setSubmitting(true);
+                                        const res: any = await apiFetch('/support/tickets', {
+                                            method: 'POST',
+                                            body: JSON.stringify({
+                                                subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
+                                                message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
+                                                priority: 'high',
+                                                issue_type: 'loan_kyc_other'
+                                            })
+                                        });
+                                        toast.success('Fast disbursal request sent successfully!');
+                                        fetchTickets(); // Refresh tickets list
 
-                                    // Navigate to the created ticket
-                                    if (res && res.id) {
-                                        const ticketData = encodeURIComponent(JSON.stringify({
-                                            id: res.id
-                                        }));
-                                        router.push(`/customer/support?ticket=${ticketData}`);
+                                        // Navigate to the created ticket
+                                        if (res && res.id) {
+                                            const ticketData = encodeURIComponent(JSON.stringify({
+                                                id: res.id
+                                            }));
+                                            router.push(`/customer/support?ticket=${ticketData}`);
+                                        }
+                                    } catch (e: any) {
+                                        toast.error(e.message || 'Failed to send request');
+                                    } finally {
+                                        setSubmitting(false);
                                     }
-                                } catch (e: any) {
-                                    toast.error(e.message || 'Failed to send request');
-                                } finally {
-                                    setSubmitting(false);
-                                }
-                            }}
-                            disabled={submitting}
-                            className="w-full py-3 bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 transition-all rounded-b-lg shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
-                        >
-                            {submitting ? (
-                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <MessageSquare className="w-3.5 h-3.5" />
-                            )}
-                            Click here for fast disbursal
-                        </button>
-                    )}
+                                }}
+                                disabled={submitting}
+                                className="w-full py-3 bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 transition-all rounded-b-lg shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+                            >
+                                {submitting ? (
+                                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                )}
+                                Click here for fast disbursal
+                            </button>
+                        )}
                 </div>
 
                 {/* Timeline Stepper */}
                 <div className="bg-white rounded-lg p-4 py-6 shadow-xl shadow-blue-900/5">
                     <div className="flex items-center justify-between relative px-2">
                         {/* Connecting Line - Thinner and Elegant */}
-                        <div className="absolute left-6 right-6 top-[20px] h-[2px] bg-slate-50 z-0 text-center">
+                        <div className="absolute left-6 right-6 top-[20px] h-[2px] bg-slate-50 z-0">
                             <div className={`h-full bg-emerald-500 transition-all duration-1000 ${loan.status === 'CLOSED' || loan.status === 'DISBURSED' ? 'w-full' :
                                 loan.status === 'APPROVED' ? 'w-[75%]' :
                                     (['FORM_SUBMITTED', 'KYC_SUBMITTED'].includes(loan.status)) ? 'w-[50%]' :
@@ -431,7 +463,7 @@ export default function LoanStatus() {
                         <div>
                             <h2 className="text-lg font-bold text-yellow-400 uppercase tracking-tight">Congratulations!</h2>
                             <p className="text-slate-400 text-[11px] font-medium mt-1 px-4 leading-relaxed">
-                            <h3 className="text-lg font-black uppercase tracking-tight">Your loan is approved!</h3>    
+                                Your loan is approved!
                             </p>
                         </div>
                         <button
@@ -450,8 +482,8 @@ export default function LoanStatus() {
                             // Navigate to support page with pre-filled ticket data
                             const ticketData = encodeURIComponent(JSON.stringify({
                                 prefill: true,
-                                subject: `Fund Release Request - Loan #${loan.display_id || loan.id}`,
-                                message: `Hello,\n\nMy loan application #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()} has been approved, but the funds have not been released to my account yet.\n\nPlease release the approved amount to my wallet at the earliest.\n\nThank you.`,
+                                subject: `unable to transfer`,
+                                message: `I have completed 3 stage of verification and loan disbursal spending kindly check and disburse my loan.`,
                                 category: 'loan_kyc_other',
                                 loanId: loan.id
                             }));

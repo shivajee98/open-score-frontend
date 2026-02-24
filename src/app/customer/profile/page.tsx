@@ -29,7 +29,11 @@ export default function Profile() {
         business_type: '',
         map_location_url: '',
         shop_images: '[]',
-        business_name: ''
+        business_name: '',
+        street_address: '',
+        city: '',
+        state: '',
+        postal_code: ''
     });
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
@@ -75,7 +79,11 @@ export default function Profile() {
                     business_type: user.business_type || '',
                     map_location_url: user.map_location_url || '',
                     shop_images: Array.isArray(user.shop_images) ? JSON.stringify(user.shop_images) : (user.shop_images || '[]'),
-                    business_name: user.business_name || ''
+                    business_name: user.business_name || '',
+                    street_address: user.address || '',
+                    city: user.city || '',
+                    state: user.state || '',
+                    postal_code: user.pincode || ''
                 });
                 initialDataLoaded.current = true;
             }
@@ -185,7 +193,11 @@ export default function Profile() {
 
         try {
             // Parse shop_images to array if string
-            const payload: any = { ...formData };
+            const payload: any = {
+                ...formData,
+                address: formData.street_address,
+                pincode: formData.postal_code
+            };
             try {
                 if (typeof formData.shop_images === 'string') {
                     payload.shop_images = JSON.parse(formData.shop_images);
@@ -495,6 +507,72 @@ export default function Profile() {
                                             >
                                                 {user.map_location_url || 'Not Set'}
                                             </a>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Address Section */}
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
+                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Business Address</p>
+
+                                    <div>
+                                        <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">Street Address</p>
+                                        {isEditing ? (
+                                            <textarea
+                                                value={formData.street_address}
+                                                onChange={(e) => setFormData({ ...formData, street_address: e.target.value })}
+                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full min-h-[60px] resize-none`}
+                                                placeholder="Building, Street, Area"
+                                            />
+                                        ) : (
+                                            <p className="text-sm font-semibold text-slate-900">{user.address || 'Not Set'}</p>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">City</p>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={formData.city}
+                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="City"
+                                                />
+                                            ) : (
+                                                <p className="text-sm font-semibold text-slate-900">{user.city || 'Not Set'}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">State</p>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={formData.state}
+                                                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="State"
+                                                />
+                                            ) : (
+                                                <p className="text-sm font-semibold text-slate-900">{user.state || 'Not Set'}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">PIN Code</p>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                maxLength={6}
+                                                value={formData.postal_code}
+                                                onChange={(e) => setFormData({ ...formData, postal_code: e.target.value.replace(/\D/g, '') })}
+                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                placeholder="6 digits"
+                                            />
+                                        ) : (
+                                            <p className="text-sm font-semibold text-slate-900">{user.pincode || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
