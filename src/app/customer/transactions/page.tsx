@@ -197,11 +197,24 @@ export default function CustomerTransactions() {
                                                         <p className="font-bold text-slate-900 text-[11px] tracking-tight">
                                                             {(() => {
                                                                 const desc = t.description?.toLowerCase() || '';
+                                                                const srcType = t.source_type || '';
                                                                 if (desc.includes('welcome bonus')) return 'Welcome Bonus';
                                                                 if (desc.includes('referral') || desc.includes('earning')) return 'Earning';
-                                                                if (t.source_type === 'PLATFORM_FEE' || desc.includes('platform fee') || desc.includes('service fee') || desc.includes('emi #0')) return 'Service Fee';
-                                                                if (desc.includes('emi') || t.source_type === 'LOAN_REPAYMENT') return 'EMI Payment';
-                                                                if (desc.includes('recharge') || t.source_type === 'WALLET_TOPUP' || t.source_type === 'WALLET_RECHARGE') return 'Wallet Recharge';
+                                                                if (desc.includes('cashback')) return 'Cashback Reward';
+
+                                                                // EMI / Repayment - check description for more specific info
+                                                                if (srcType === 'LOAN_REPAYMENT') {
+                                                                    if (desc.includes('platform fee') || desc.includes('emi #0')) return 'Platform Fee';
+                                                                    const emiMatch = desc.match(/emi\s*#?(\d+)/i);
+                                                                    if (emiMatch) return `EMI #${emiMatch[1]} Payment`;
+                                                                    return 'EMI Payment';
+                                                                }
+
+                                                                // Platform Fee via ticket action
+                                                                if (srcType === 'PLATFORM_FEE') return 'Platform Fee';
+
+                                                                if (desc.includes('disbursement') || (srcType === 'LOAN' && t.type === 'CREDIT')) return 'Loan Disbursed';
+                                                                if (desc.includes('recharge') || srcType === 'WALLET_TOPUP' || srcType === 'WALLET_RECHARGE') return 'Wallet Recharge';
 
                                                                 if (t.counterparty_vpa === 'System' || t.counterparty_vpa === 'Open Score') {
                                                                     return t.type === 'CREDIT' ? t.counterparty_name || 'Open Score' : 'Withdrawal';

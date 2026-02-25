@@ -286,7 +286,18 @@ export default function RepaymentDashboard() {
                                 {serviceFeeEmi.status}
                             </div>
                             <h3 className="text-[15px] font-black text-slate-800 mb-0.5">Pay Fees & Charges to Unlock Your Loan</h3>
-                            <p className="text-[10px] text-slate-400 font-medium">Processed on {new Date(serviceFeeEmi.due_date).toLocaleDateString('en-GB')}</p>
+                            <p className="text-[10px] text-slate-400 font-medium tracking-tight">Processed on {new Date(serviceFeeEmi.due_date).toLocaleDateString('en-GB')}</p>
+
+                            {serviceFeeEmi.admin_note && serviceFeeEmi.status === 'PENDING' && (
+                                <div className="mt-3 px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl animate-in fade-in slide-in-from-top-1">
+                                    <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                                        <AlertCircle size={10} /> Payment Rejected
+                                    </p>
+                                    <p className="text-[10px] font-medium text-rose-500 leading-relaxed">
+                                        {serviceFeeEmi.admin_note}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                         <div className="text-right flex flex-col items-end">
                             <p className="text-xl font-black text-slate-800 tracking-tight mb-2">₹{Number(serviceFeeEmi.amount).toLocaleString()}</p>

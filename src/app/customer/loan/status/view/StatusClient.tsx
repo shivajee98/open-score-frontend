@@ -2,7 +2,7 @@
 
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, MessageSquare } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { apiFetch } from '@/lib/api';
 import KycForm from '@/components/loan/KycForm';
 import { toast } from '@/components/ui/Toast';
@@ -101,17 +101,20 @@ export default function LoanStatus() {
         fetchUserData();
         fetchTickets();
 
+        // If KYC form is open, we stop polling to prevent form resets and unnecessary background noise
+        if (showKycForm) return;
+
         const interval = setInterval(() => {
             fetchLoan();
             fetchUserData();
             fetchTickets();
-        }, 3000); // Poll every 3 seconds
+        }, 15000); // Poll every 15 seconds instead of 3
 
         return () => clearInterval(interval);
-    }, [loanId]);
+    }, [loanId, showKycForm]);
 
     // Prepare initial KYC data from user profile and existing form data
-    const getInitialKycData = () => {
+    const initialKycData = useMemo(() => {
         const data: any = {};
 
         // From existing form_data (if user edited before)
@@ -143,7 +146,7 @@ export default function LoanStatus() {
         }
 
         return data;
-    };
+    }, [userData, existingKycData]);
 
     const handleConfirmClick = () => {
         // Always show KYC form before confirmation
@@ -567,7 +570,7 @@ export default function LoanStatus() {
                     onSubmit={handleKycSubmit}
                     onCancel={handleKycCancel}
                     loading={submitting}
-                    initialData={getInitialKycData()}
+                    initialData={initialKycData}
                 />
             )}
         </div>
