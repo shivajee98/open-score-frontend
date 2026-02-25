@@ -79,6 +79,14 @@ export default function DashboardLayout({
         if (audioContextRef.current?.state === 'suspended') {
             audioContextRef.current.resume();
         }
+
+        // UNLOCK SpeechSynthesis: On many mobile browsers, we must speak
+        // at least once during a user gesture to "prime" the engine.
+        if (window.speechSynthesis && !window.speechSynthesis.speaking) {
+            const silent = new SpeechSynthesisUtterance("");
+            silent.volume = 0;
+            window.speechSynthesis.speak(silent);
+        }
     };
 
     useEffect(() => {
@@ -184,7 +192,7 @@ export default function DashboardLayout({
     const playNotificationSound = (text: string) => {
         if (typeof window === 'undefined') return;
 
-        // Ensure AudioContext is ready
+        // Ensure AudioContext and SpeechSynthesis are ready
         initAudio();
 
         // 1. Play high-frequency Tech Beep
@@ -209,23 +217,33 @@ export default function DashboardLayout({
 
         // 2. Clear out existing speech and try to speak
         if (window.speechSynthesis) {
+            // Cancel any pending speech to ensure the new one starts immediately
             window.speechSynthesis.cancel();
 
             const speak = () => {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.rate = 1.0;
                 utterance.pitch = 1.0;
+                utterance.volume = 1.0;
 
                 const voices = window.speechSynthesis.getVoices();
-                const betterVoice = voices.find(v => v.lang.includes('en-IN')) ||
+
+                // Prioritize Premium or Native sounding voices if available
+                const betterVoice =
+                    voices.find(v => v.lang.includes('en-IN') && v.name.includes('Google')) ||
+                    voices.find(v => v.lang.includes('en-IN')) ||
                     voices.find(v => v.lang.includes('en-GB')) ||
                     voices.find(v => v.lang.includes('en-US'));
 
                 if (betterVoice) utterance.voice = betterVoice;
-                window.speechSynthesis.speak(utterance);
+
+                // Mobile robustness: sometimes utterance needs a tiny delay after cancel
+                setTimeout(() => {
+                    window.speechSynthesis.speak(utterance);
+                }, 100);
             };
 
-            // Voices often load asynchronously
+            // Voices often load asynchronously or might be empty on mobile initially
             if (window.speechSynthesis.getVoices().length === 0) {
                 window.speechSynthesis.onvoiceschanged = speak;
             } else {

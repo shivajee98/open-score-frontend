@@ -5,7 +5,7 @@ import { createEcho } from '@/lib/echo';
 import { Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.msmeloan.sbs/api';
 
 export default function IncomingCallModal() {
     const [incomingCall, setIncomingCall] = useState<{ offer: any, caller: any } | null>(null);
