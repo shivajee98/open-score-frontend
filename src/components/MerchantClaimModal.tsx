@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import { Store, Briefcase, Users, TrendingUp, MapPin, ArrowRight, CheckCircle2, Lock, ChevronDown, X } from 'lucide-react';
 
@@ -9,28 +9,48 @@ interface MerchantClaimModalProps {
     onClose: () => void;
     onSuccess: (user: any) => void;
     bonusAmount?: number;
+    user?: any; // Add user prop definition
 }
 
-export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAmount = 250 }: MerchantClaimModalProps) {
+export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAmount = 250, user }: MerchantClaimModalProps) {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+
+    // Initialize form data, prioritizing user data if available passed as prop
     const [formData, setFormData] = useState({
-        business_name: '',
-        business_nature: '',
-        customer_segment: '',
-        daily_turnover: '',
-        business_address: '',
-        pincode: ''
+        business_name: user?.business_name || '',
+        business_nature: user?.business_nature || '',
+        customer_segment: user?.customer_segment || '',
+        daily_turnover: user?.daily_turnover || '',
+        business_address: user?.business_address || '',
+        pincode: user?.pincode || ''
     });
+
+    // Effect to update formData when the user prop changes (e.g. data is loaded later)
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev, // Keep any user edits if they started typing before data loaded (unlikely, but good practice)
+                business_name: prev.business_name || user.business_name || '',
+                business_nature: prev.business_nature || user.business_nature || '',
+                customer_segment: prev.customer_segment || user.customer_segment || '',
+                daily_turnover: prev.daily_turnover || user.daily_turnover || '',
+                business_address: prev.business_address || user.business_address || '',
+                pincode: prev.pincode || user.pincode || ''
+            }));
+        }
+    }, [user]);
 
     if (!isOpen) return null;
 
     const turnoverOptions = [
-        { label: "₹1,00,000 - ₹5,00,000", sub: "Cashback: ₹500 - ₹2,000", value: "1l-5l" },
-        { label: "₹5,00,000 - ₹10,00,000", sub: "Cashback: ₹2,000 - ₹5,000", value: "5l-10l" },
-        { label: "₹10,00,000 - ₹20,00,000", sub: "Cashback: ₹5,000 - ₹10,000", value: "10l-20l" },
-        { label: "₹20,00,000 - ₹50,00,000", sub: "Cashback: ₹10,000 - ₹25,000", value: "20l-50l" },
-        { label: "₹50,00,000+", sub: "Cashback: ₹25,000+", value: "50l+" },
+        { label: "₹1,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "1k-5k" },
+        { label: "₹5,000 - ₹10,000", sub: "Cashback: ₹50 - ₹200", value: "5k-10k" },
+        { label: "₹10,000 - ₹20,000", sub: "Cashback: ₹200 - ₹400", value: "10k-20k" },
+        { label: "₹20,000 - ₹50,000", sub: "Cashback: ₹500 - ₹1,000", value: "20k-50k" },
+        { label: "₹50,000 - ₹1,00,000", sub: "Cashback: ₹1,000 - ₹2,000", value: "50k-1l" },
+        { label: "₹1,00,000 - ₹2,00,000", sub: "Cashback: ₹2,000 - ₹4,000", value: "1l-2l" },
+        { label: "₹2,00,000 - ₹5,00,000", sub: "Cashback: ₹3,000 - ₹5,000", value: "2l-5l" },
     ];
 
     const handleSubmit = async () => {

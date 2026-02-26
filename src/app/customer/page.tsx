@@ -4,13 +4,12 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import MerchantClaimModal from '@/components/MerchantClaimModal';
 import SupportModal from '@/components/SupportModal';
-import MerchantLocator from '@/components/MerchantLocator';
 import HomeBannerCarousel from '@/components/HomeBannerCarousel';
 
 import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
@@ -228,9 +227,16 @@ export default function CustomerHome() {
         <div className="min-h-screen bg-slate-50 pb-32">
             <WelcomeBonusPopup isOpen={showWelcomeBonus} onClose={handleCloseWelcomeBonus} amount={welcomeBonusAmount} />
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
-            <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} />
+            <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} user={activeUser} />
 
-            <MerchantLocator />
+            <Link href="/customer/merchant-locator">
+                <button
+                    className="fixed bottom-24 right-4 rounded-full w-12 h-12 shadow-2xl z-40 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-blue-500/20"
+                    title="Find Merchants"
+                >
+                    <MapPin className="w-6 h-6" />
+                </button>
+            </Link>
 
             {/* Header Redesign - Tech/Circuit Theme */}
             <div className={`px-4 pt-8 pb-10 relative overflow-hidden shadow-2xl ${isMerchant ? 'bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950' : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950'}`}>
