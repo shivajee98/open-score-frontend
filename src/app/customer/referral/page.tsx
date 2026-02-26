@@ -162,9 +162,15 @@ export default function ReferralPage() {
                                         <h4 className="text-sm font-black text-slate-900">{friend.name}</h4>
                                         <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{friend.mobile}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Earning</p>
-                                        <p className="text-xs font-black text-blue-600">₹{(Number(friend.signup_bonus) + Number(friend.loan_bonus)).toFixed(0)}</p>
+                                    <div className="flex gap-4 text-right">
+                                        <div>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Signup Earn</p>
+                                            <p className="text-xs font-black text-emerald-600">₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Earn</p>
+                                            <p className="text-xs font-black text-indigo-600">₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                        </div>
                                     </div>
                                 </div>
 
