@@ -317,14 +317,13 @@ export default function LoanStatus() {
                         {isDetailsOpen ? 'View Less' : 'View More'} <ChevronDown className={`w-4 h-4 transition-transform ${isDetailsOpen ? 'rotate-180' : ''}`} />
                     </button>
 
-                    {/* Fast Disbursal CTA */}
                     {!['DISBURSED', 'CLOSED', 'REJECTED', 'CANCELLED', 'PREVIEW', 'DISBURSAL'].includes(loan.status) &&
                         !tickets.some(t => t.subject?.includes('Fast Disbursal Request') && t.status !== 'CLOSED') && (
                             <button
-                                onClick={async () => {
+                                onClick={() => {
                                     try {
-                                        setSubmitting(true);
-                                        const res: any = await apiFetch('/support/tickets', {
+                                        // Trigger background ticket creation
+                                        apiFetch('/support/tickets', {
                                             method: 'POST',
                                             body: JSON.stringify({
                                                 subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
@@ -332,21 +331,20 @@ export default function LoanStatus() {
                                                 priority: 'high',
                                                 issue_type: 'loan_kyc_other'
                                             })
-                                        });
-                                        toast.success('Fast disbursal request sent successfully!');
+                                        }).catch(e => console.error('Background fast disbursal fail:', e));
 
-                                        // Update tickets list locally and redirect immediately
-                                        if (res && res.id) {
-                                            setTickets(prev => [res, ...prev]);
-                                            const ticketData = encodeURIComponent(JSON.stringify({
-                                                id: res.id
-                                            }));
-                                            router.push(`/customer/support?ticket=${ticketData}`);
-                                        }
+                                        toast.success('Fast disbursal request initiated!');
+
+                                        // Redirect immediately
+                                        const ticketData = encodeURIComponent(JSON.stringify({
+                                            prefill: true,
+                                            subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
+                                            message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
+                                            category: 'loan_kyc_other'
+                                        }));
+                                        router.push(`/customer/support?ticket=${ticketData}`);
                                     } catch (e: any) {
-                                        toast.error(e.message || 'Failed to send request');
-                                    } finally {
-                                        setSubmitting(false);
+                                        toast.error('Failed to redirect');
                                     }
                                 }}
                                 disabled={submitting}
