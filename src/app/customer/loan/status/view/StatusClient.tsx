@@ -334,10 +334,10 @@ export default function LoanStatus() {
                                             })
                                         });
                                         toast.success('Fast disbursal request sent successfully!');
-                                        fetchTickets(); // Refresh tickets list
 
-                                        // Navigate to the created ticket
+                                        // Update tickets list locally and redirect immediately
                                         if (res && res.id) {
+                                            setTickets(prev => [res, ...prev]);
                                             const ticketData = encodeURIComponent(JSON.stringify({
                                                 id: res.id
                                             }));
