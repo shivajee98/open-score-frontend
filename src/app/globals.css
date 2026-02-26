@@ -134,7 +134,7 @@ body {
   transform: rotateY(180deg);
 }
 
-.translate-z-[-500px] {
+.translate-z-\[-500px\] {
   transform: translateZ(-500px);
 }
 

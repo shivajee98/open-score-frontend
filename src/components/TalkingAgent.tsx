@@ -53,10 +53,12 @@ export default function TalkingAgent() {
         try {
             setIsConnecting(true);
 
-            // Call our Laravel backend
-            const data: any = await apiFetch("/retell/start-dynamic-call", {
+            // Call our local test server
+            const response = await fetch("http://localhost:8081/start-dynamic-call", {
                 method: "POST",
             });
+
+            const data = await response.json();
 
             setAgentName(data.persona.name);
 
