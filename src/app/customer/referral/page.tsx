@@ -155,7 +155,7 @@ export default function ReferralPage() {
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No earning history</p>
                         </div>
                     ) : (
-                        statsData.referrals.filter((f: any) => f.is_onboarded || f.has_received_cashback).map((friend: any) => (
+                        statsData.referrals.filter((f: any) => f.is_onboarded || f.has_received_cashback || f.has_applied_loan).map((friend: any) => (
                             <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
@@ -171,7 +171,7 @@ export default function ReferralPage() {
                                 {/* Progress Indicator */}
                                 <div className="grid grid-cols-4 gap-1 relative pt-2">
                                     <div className="flex flex-col items-center gap-1.5 z-10">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${true ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.type !== 'LOAN' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
                                             <Users size={12} />
                                         </div>
                                         <span className="text-[7px] font-black uppercase text-slate-400">Joined</span>

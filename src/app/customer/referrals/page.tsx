@@ -209,19 +209,19 @@ export default function ReferralPage() {
                                         </div>
                                         <div>
                                             <p className="font-bold text-slate-900 text-sm">
-                                                {referral.referred?.name || referral.referred?.mobile_number || 'User'}
+                                                {referral.name || referral.mobile || 'User'}
                                             </p>
                                             <p className="text-slate-500 text-xs">
-                                                {new Date(referral.created_at).toLocaleDateString()}
+                                                {new Date(referral.joined_at).toLocaleDateString()}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="font-black text-green-600 text-sm">
-                                            +₹{Number(referral.signup_bonus_earned || 0) + Number(referral.loan_bonus_earned || 0)}
+                                            +₹{Number(referral.signup_bonus || 0) + Number(referral.loan_bonus || 0)}
                                         </p>
                                         <p className="text-slate-400 text-xs">
-                                            {referral.loan_bonus_paid ? 'Loan Disbursed' : 'Signed Up'}
+                                            {referral.type === 'LOAN' ? (referral.has_received_cashback ? 'Loan Disbursed' : 'Loan Applied') : (referral.is_onboarded ? 'Signed Up' : 'Joined')}
                                         </p>
                                     </div>
                                 </div>
