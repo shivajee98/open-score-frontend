@@ -8,7 +8,6 @@ import MobileNavigationHandler from "@/components/MobileNavigationHandler";
 import NotificationHandler from "@/components/NotificationHandler";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import AppLockGuard from "@/components/AppLockGuard";
-import TalkingAgent from "@/components/TalkingAgent";
 
 export default function ClientLayout({
     children,
@@ -41,7 +40,6 @@ export default function ClientLayout({
             <AppLockGuard>
                 {children}
             </AppLockGuard>
-            <TalkingAgent />
             <MobileNav />
         </AuthGuard>
     );
