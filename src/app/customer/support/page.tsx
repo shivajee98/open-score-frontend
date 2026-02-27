@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import TicketList from '@/components/support/TicketList';
 import ChatWindow from '@/components/support/ChatWindow';
 import CreateTicketModal from '@/components/support/CreateTicketModal';
-import { Home, Plus, ArrowLeft, ScanBarcode, History, User } from 'lucide-react';
+import { Home, Plus, ArrowLeft, ScanBarcode, History, User, MessageSquare } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { toast } from '@/components/ui/Toast';
 
@@ -19,6 +19,7 @@ const navItems = [
 
 function SupportPageContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const [tickets, setTickets] = useState<any[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
     const [messages, setMessages] = useState<any[]>([]);
@@ -32,6 +33,7 @@ function SupportPageContent() {
         message?: string;
         category?: string;
     } | null>(null);
+    const processedPrefill = React.useRef(false);
 
     const filteredTickets = (tickets || []).filter(ticket => {
         const isClosed = ticket.status === 'closed' || ticket.status === 'resolved';
@@ -44,9 +46,16 @@ function SupportPageContent() {
         fetchTickets();
 
         const ticketParam = searchParams.get('ticket');
-        if (ticketParam) {
+        if (ticketParam && !processedPrefill.current) {
+            processedPrefill.current = true;
             try {
                 const data = JSON.parse(decodeURIComponent(ticketParam));
+
+                // Remove the ticket param from URL to prevent re-processing
+                const newParams = new URLSearchParams(searchParams.toString());
+                newParams.delete('ticket');
+                router.replace(`/customer/support?${newParams.toString()}`);
+
                 if (data.prefill) {
                     setPrefillData({
                         subject: data.subject || '',
@@ -55,19 +64,18 @@ function SupportPageContent() {
                     });
 
                     if (data.autoSubmit) {
+                        toast.info('Initiating fast disbursal request...');
                         handleCreateTicket(
                             data.subject || 'Support Request',
                             data.message || 'Auto-generated request',
-                            'medium', // priority
-                            data.category || 'General' // issueType
+                            'high',
+                            data.category || 'General'
                         );
                     } else {
                         setIsCreateModalOpen(true);
                     }
                 } else if (data.id) {
-                    // Direct navigation to created ticket
                     setSelectedTicket(data);
-                    // Ensure it's in the list if not already
                     setTickets(prev => {
                         if (!prev.find(t => t.id === data.id)) {
                             return [data, ...prev];
@@ -79,7 +87,7 @@ function SupportPageContent() {
                 console.error('Failed to parse ticket data:', e);
             }
         }
-    }, [searchParams]);
+    }, [searchParams, router]);
 
     useEffect(() => {
         fetchTickets();
@@ -113,7 +121,6 @@ function SupportPageContent() {
             if (afterId) url += `?after_id=${afterId}`;
             const res = await apiFetch(url);
 
-            // Handle direct array, { data: [...] }, or { messages: [...] } responses
             const msgData = Array.isArray(res) ? res : (res?.data || res?.messages || []);
 
             if (Array.isArray(msgData)) {
@@ -123,7 +130,7 @@ function SupportPageContent() {
                         const newMsgs = msgData.filter((m: any) => !prev.find(p => p.id === m.id));
                         return [...prev, ...newMsgs];
                     }
-                    return msgData; // Initial load or full refresh
+                    return msgData;
                 });
             }
         } catch (error) {
@@ -136,7 +143,6 @@ function SupportPageContent() {
             setMessages([]);
             return;
         }
-        // Clear old messages first to avoid stale data
         setMessages([]);
 
         fetchMessages(selectedTicket.id);
@@ -151,13 +157,18 @@ function SupportPageContent() {
 
     const handleCreateTicket = async (subject: string, message: string, priority: string, issueType: string) => {
         try {
-            await apiFetch('/support/tickets', {
+            const res = await apiFetch('/support/tickets', {
                 method: 'POST',
                 body: JSON.stringify({ subject, message, priority, issue_type: issueType })
             });
             fetchTickets();
             toast.success('Ticket created successfully');
             setPrefillData(null);
+
+            // Navigate directly to the new ticket chat
+            if (res && (res.id || res.ticket?.id)) {
+                setSelectedTicket(res.id ? res : res.ticket);
+            }
         } catch (error) {
             console.error(error);
             toast.error('Failed to create ticket');
@@ -190,7 +201,6 @@ function SupportPageContent() {
                 setMessages(prev => [...prev, res]);
             }
 
-            // Still fetch in background just in case
             fetchMessages(selectedTicket.id, messagesRef.current.length > 0 ? messagesRef.current[messagesRef.current.length - 1].id : 0);
         } catch (error) {
             console.error(error);
@@ -268,7 +278,7 @@ function SupportPageContent() {
                     ) : (
                         <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-slate-50/50">
                             <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center mb-4 shadow-sm border border-slate-100">
-                                <Home size={32} className="text-slate-300" />
+                                <MessageSquare size={32} className="text-slate-300" />
                             </div>
                             <h3 className="font-bold text-slate-900 mb-1">Support Center</h3>
                             <p className="max-w-xs mx-auto text-sm font-medium">Select an active conversation or check your archive.</p>

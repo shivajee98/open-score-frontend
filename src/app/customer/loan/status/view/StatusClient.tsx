@@ -321,40 +321,19 @@ export default function LoanStatus() {
                         !tickets.some(t => t.subject?.includes('Fast Disbursal Request') && t.status !== 'CLOSED') && (
                             <button
                                 onClick={() => {
-                                    try {
-                                        // Trigger background ticket creation
-                                        apiFetch('/support/tickets', {
-                                            method: 'POST',
-                                            body: JSON.stringify({
-                                                subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
-                                                message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
-                                                priority: 'high',
-                                                issue_type: 'loan_kyc_other'
-                                            })
-                                        }).catch(e => console.error('Background fast disbursal fail:', e));
-
-                                        toast.success('Fast disbursal request initiated!');
-
-                                        // Redirect immediately
-                                        const ticketData = encodeURIComponent(JSON.stringify({
-                                            prefill: true,
-                                            subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
-                                            message: `Hello,\n\nI would like to request a fast disbursal for my loan application #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()}.\n\nPlease process it at the earliest.\n\nThank you.`,
-                                            category: 'loan_kyc_other'
-                                        }));
-                                        router.push(`/customer/support?ticket=${ticketData}`);
-                                    } catch (e: any) {
-                                        toast.error('Failed to redirect');
-                                    }
+                                    // Direct redirect with prefill data - no background API call here
+                                    const ticketData = encodeURIComponent(JSON.stringify({
+                                        prefill: true,
+                                        autoSubmit: true,
+                                        subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
+                                        message: `I have applied for Loan #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()} and my current status is ${loan.status}. Please proceed with my fast disbursal.`,
+                                        category: 'Loan Disbursal'
+                                    }));
+                                    router.push(`/customer/support?ticket=${ticketData}`);
                                 }}
-                                disabled={submitting}
                                 className="w-full py-3 bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 transition-all rounded-b-lg shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
                             >
-                                {submitting ? (
-                                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <MessageSquare className="w-3.5 h-3.5" />
-                                )}
+                                <MessageSquare className="w-3.5 h-3.5" />
                                 Click here for fast disbursal
                             </button>
                         )}
@@ -561,16 +540,18 @@ export default function LoanStatus() {
             </div>
 
             {/* KYC Form Modal */}
-            {showKycForm && (
-                <KycForm
-                    isModal={true}
-                    loanAmount={Number(loan.amount)}
-                    onSubmit={handleKycSubmit}
-                    onCancel={handleKycCancel}
-                    loading={submitting}
-                    initialData={initialKycData}
-                />
-            )}
-        </div>
+            {
+                showKycForm && (
+                    <KycForm
+                        isModal={true}
+                        loanAmount={Number(loan.amount)}
+                        onSubmit={handleKycSubmit}
+                        onCancel={handleKycCancel}
+                        loading={submitting}
+                        initialData={initialKycData}
+                    />
+                )
+            }
+        </div >
     );
 }
