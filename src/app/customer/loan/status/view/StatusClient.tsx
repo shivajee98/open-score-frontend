@@ -327,7 +327,7 @@ export default function LoanStatus() {
                                         autoSubmit: true,
                                         subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
                                         message: `I have applied for Loan #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()} and my current status is ${loan.status}. Please proceed with my fast disbursal.`,
-                                        category: 'Loan Disbursal'
+                                        category: 'loan_kyc_other'
                                     }));
                                     router.push(`/customer/support?ticket=${ticketData}`);
                                 }}
