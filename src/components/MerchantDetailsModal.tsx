@@ -100,18 +100,21 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                             </div>
 
                             {merchant.map_location_url && (
-                                <div
+                                <button
                                     onClick={() => window.open(merchant.map_location_url, '_blank')}
-                                    className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-emerald-50 transition-colors group"
+                                    className="w-full flex items-center justify-between gap-4 p-4 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 active:scale-[0.98] group"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-200 transition-colors">
-                                        <Map size={20} />
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                            <Map size={18} />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-[10px] font-black text-emerald-100/60 uppercase tracking-[0.2em]">Navigation</p>
+                                            <p className="text-xs font-black uppercase tracking-widest">Get Directions to Store</p>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Google Maps Link</p>
-                                        <p className="font-bold text-emerald-600 leading-snug break-words underline text-sm truncate">{merchant.map_location_url}</p>
-                                    </div>
-                                </div>
+                                    <ExternalLink size={18} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                                </button>
                             )}
 
                             {merchant.email && (
