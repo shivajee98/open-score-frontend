@@ -60,25 +60,7 @@ export default function Onboarding() {
         checkAuth();
     }, [router]);
 
-    const handleMerchantSelection = async () => {
-        setLoading(true);
-        try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const res = await apiFetch('/auth/verify', {
-                method: 'POST',
-                body: JSON.stringify({ mobile_number: user.mobile_number, otp: 'BYPASS', role: 'MERCHANT' })
-            });
 
-            // Update local state
-            const updatedUser = { ...res.user, role: 'MERCHANT' };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-
-            router.push('/auth/merchant-onboarding');
-        } catch (err: any) {
-            setErrors({ api: err.message });
-            setLoading(false);
-        }
-    };
 
     const handleFinalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -109,16 +91,11 @@ export default function Onboarding() {
             const userLocalStorage = JSON.parse(localStorage.getItem('user') || '{}');
             const mobile = userLocalStorage.mobile_number;
 
-            // 1. Update role if needed
-            await apiFetch('/auth/verify', {
-                method: 'POST',
-                body: JSON.stringify({ mobile_number: mobile, otp: 'BYPASS', role })
-            });
-
-            // 2. Complete Onboarding with everything in one call
+            // Complete Onboarding with everything in one call
             const onboardRes = await apiFetch('/auth/onboarding', {
                 method: 'POST',
                 body: JSON.stringify({
+                    role,
                     name,
                     email,
                     app_pin: appPin,

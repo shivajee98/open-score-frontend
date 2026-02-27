@@ -177,6 +177,7 @@ function MerchantOnboardingForm() {
             formDataObj.append('email', formData.email);
             formDataObj.append('business_name', formData.business_name);
             formDataObj.append('daily_turnover', formData.daily_turnover);
+            formDataObj.append('role', 'MERCHANT');
 
             if (imageFile) {
                 formDataObj.append('profile_image', imageFile, imageFile.name);
