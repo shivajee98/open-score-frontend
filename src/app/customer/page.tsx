@@ -499,7 +499,7 @@ export default function CustomerHome() {
                         {banners.map((banner, i) => (
                             <div
                                 key={i}
-                                onClick={() => router.push('/customer/loan/apply?apply=true')}
+                                onClick={() => router.push('/customer/loan')}
                                 className={`w-[88%] h-24 mr-3 ${banner.color} rounded-2xl py-4 px-6 flex-shrink-0 flex flex-col justify-center shadow-2xl shadow-slate-900/40 cursor-pointer border border-white/10 relative overflow-hidden transition-all duration-300 ${i === activeBanner ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`}
                             >
                                 <div className={`absolute top-0 right-0 w-32 h-32 ${banner.accent}/10 rounded-full blur-2xl -mr-10 -mt-10`}></div>

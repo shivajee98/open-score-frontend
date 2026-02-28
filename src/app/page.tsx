@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap } from 'lucide-react';
+import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap, Lock, ShieldCheck } from 'lucide-react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 import ReferralHandler from '@/components/ReferralHandler';
 
@@ -18,14 +18,23 @@ export default function Home() {
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [tempReferralCode, setTempReferralCode] = useState('');
 
-  // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'processing'
-  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'role_select' | 'processing'>('onboarding');
+  // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'pin_login' | 'pin_reset_setup' | 'role_select' | 'processing'
+  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'pin_login' | 'pin_reset_setup' | 'role_select' | 'processing'>('onboarding');
+  const [isResettingPin, setIsResettingPin] = useState(false);
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
   const [showLogoutHint, setShowLogoutHint] = useState(false);
+
+  // Account Check States
   const [userExists, setUserExists] = useState<boolean | null>(null);
+  const [isCheckingUser, setIsCheckingUser] = useState(false);
+  const [hasPin, setHasPin] = useState<boolean | null>(null);
+  const [resendTimer, setResendTimer] = useState(0);
+
   const isRegistering = useRef(false);
   const router = useRouter();
 
@@ -80,6 +89,14 @@ export default function Home() {
     };
   }, [router]);
 
+  // Resend OTP Timer
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
+
   useEffect(() => {
     if (flow === 'processing' && role) {
       handleRegister();
@@ -89,18 +106,24 @@ export default function Home() {
   // Debounced User Existence Check
   useEffect(() => {
     if (mobile.length === 10) {
+      setIsCheckingUser(true);
       const handler = setTimeout(async () => {
         try {
           const data = await apiFetch(`/auth/check-user/${mobile}`, { skipAuthCheck: true });
           setUserExists(data.exists);
+          setHasPin(data.has_pin);
         } catch (e) {
           setUserExists(null);
+          setHasPin(null);
+        } finally {
+          setIsCheckingUser(false);
         }
       }, 500); // 500ms debounce
 
       return () => clearTimeout(handler);
     } else {
       setUserExists(null);
+      setIsCheckingUser(false);
     }
   }, [mobile]);
 
@@ -142,9 +165,16 @@ export default function Home() {
     else router.push('/customer');
   };
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = async (isReset = false) => {
     setLoading(true);
     setError('');
+
+    if (isReset) {
+      setIsResettingPin(true);
+    } else {
+      setIsResettingPin(false);
+    }
+
     const normalizedTempCode = tempReferralCode.trim().toUpperCase();
     if (normalizedTempCode) {
       localStorage.setItem('referral_code', normalizedTempCode);
@@ -158,8 +188,56 @@ export default function Home() {
         body: JSON.stringify({ mobile_number: mobile }),
       });
       setFlow('otp_verify');
+      setResendTimer(30);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePinLogin = async () => {
+    if (pin.length !== 4) return;
+    setLoading(true);
+    setError('');
+
+    try {
+      const data = await apiFetch('/auth/login-via-pin', {
+        method: 'POST',
+        body: JSON.stringify({
+          mobile_number: mobile,
+          pin
+        }),
+        skipAuthCheck: true
+      });
+
+      localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.access_token) localStorage.setItem('token', data.access_token);
+      localStorage.setItem('hasSeenOnboarding', 'true');
+
+      // Prevent AppLockGuard from triggering immediately since they just entered their PIN
+      sessionStorage.setItem("app_unlocked", "true");
+
+      if (data.user.role === 'ADMIN' || data.user.role === 'SUPPORT') {
+        redirectUser(data.user);
+        return;
+      }
+
+      if (data.onboarding_status === 'REQUIRED') {
+        data.user.is_onboarded = false;
+        localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.user.role) redirectUser(data.user);
+        else setFlow('role_select');
+      } else {
+        data.user.is_onboarded = true;
+        localStorage.setItem('user', JSON.stringify(data.user));
+        window.dispatchEvent(new Event('auth-login'));
+        registerPush();
+        redirectUser(data.user);
+      }
+    } catch (err: any) {
+      setError(err.message);
+      setPin(''); // clear on fail
     } finally {
       setLoading(false);
     }
@@ -180,6 +258,13 @@ export default function Home() {
         }),
         skipAuthCheck: true
       });
+
+      if (isResettingPin) {
+        setFlow('pin_reset_setup');
+        // keep token for later use when setting pin
+        localStorage.setItem('temp_reset_token', data.access_token);
+        return;
+      }
 
       if (data.status === 'NEW_USER') {
         setFlow('role_select');
@@ -256,6 +341,48 @@ export default function Home() {
       isRegistering.current = false;
     } finally {
       setLoading(false);
+      isRegistering.current = false;
+    }
+  };
+
+  const handlePinReset = async () => {
+    if (pin !== confirmPin) {
+      setError("PINs do not match");
+      setPin("");
+      setConfirmPin("");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    const token = localStorage.getItem('temp_reset_token');
+
+    try {
+      // Need to include token in this specific call as it's not in the main localStorage 'token' yet
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      await apiFetch("/auth/set-app-pin", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ pin, pin_confirmation: confirmPin })
+      });
+
+      // Verification successful, now we can log them in properly
+      const userData = await apiFetch('/auth/me', { headers });
+      localStorage.setItem('user', JSON.stringify(userData));
+      if (token) localStorage.setItem('token', token);
+      localStorage.removeItem('temp_reset_token'); // Cleanup
+      localStorage.setItem('hasSeenOnboarding', 'true');
+
+      sessionStorage.setItem("app_unlocked", "true");
+      window.dispatchEvent(new Event('auth-login'));
+      registerPush();
+      redirectUser(userData);
+
+    } catch (err: any) {
+      setError(err.message || "Failed to set PIN");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -324,7 +451,7 @@ export default function Home() {
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Mobile Number</label>
                 <div className="relative">
-                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm select-none border-r border-slate-100 pr-3mr-3">+91</div>
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm select-none border-r border-slate-100 pr-3 mr-3">+91</div>
                   <input
                     type="tel"
                     autoFocus
@@ -366,15 +493,148 @@ export default function Home() {
                 </div>
               )}
 
+              {/* Continue Button - Hidden until user existence is checked */}
+              {mobile.length === 10 && !isCheckingUser && userExists !== null && (
+                <button
+                  onClick={() => {
+                    if (hasPin) {
+                      setFlow('pin_login');
+                    } else {
+                      handleSendOtp(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group animate-in fade-in slide-in-from-bottom-2"
+                >
+                  {loading ? (
+                    <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
+                  ) : (
+                    <>
+                      {userExists ? 'Login with PIN' : 'Get OTP'}
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Loading State for account check */}
+              {isCheckingUser && (
+                <div className="w-full py-5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center gap-3 animate-pulse">
+                  <span className="animate-spin w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full"></span>
+                  <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Checking Account...</span>
+                </div>
+              )}
+            </div>
+
+            <button onClick={() => setFlow('onboarding')} className="w-full text-center text-xs font-bold text-slate-400 uppercase tracking-widest py-2">Back to Intro</button>
+          </div>
+        )}
+
+        {flow === 'pin_login' && (
+          <div className="space-y-6 text-center animate-in fade-in slide-in-from-bottom-4">
+            <div>
+              <div className="mx-auto w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
+                <Lock className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-black mb-2">Welcome Back</h2>
+              <p className="text-slate-500 text-sm font-medium">Enter your 4-digit Security PIN</p>
+            </div>
+
+            <div className="flex justify-center gap-4 py-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="w-14 h-16 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center justify-center text-2xl font-black text-primary transition-all shadow-sm">
+                  {pin[i] ? <span className="w-3 h-3 bg-primary rounded-full animate-in zoom-in"></span> : ""}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 max-w-[280px] mx-auto">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, "clear", 0, "delete"].map((key, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (key === "clear") {
+                      setPin("");
+                    } else if (key === "delete") {
+                      setPin(pin.slice(0, -1));
+                    } else if (pin.length < 4) {
+                      setPin(pin + key);
+                    }
+                  }}
+                  className="h-16 rounded-2xl bg-white border border-slate-100 font-bold text-xl text-slate-700 hover:bg-slate-50 active:scale-90 transition-all shadow-sm flex items-center justify-center"
+                >
+                  {key === "clear" ? "C" : key === "delete" ? "←" : key}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-4 pt-4">
               <button
-                onClick={handleSendOtp}
-                disabled={loading || mobile.length < 10}
-                className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group"
+                onClick={handlePinLogin}
+                disabled={loading || pin.length !== 4}
+                className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
               >
-                {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : <>Get OTP <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
+                {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Unlock'}
+              </button>
+              <div className="flex justify-between px-2">
+                <button onClick={() => { setFlow('mobile_entry'); setPin(''); }} className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest">Change Number</button>
+                <button onClick={() => { handleSendOtp(true); }} className="text-xs font-bold text-blue-500 hover:text-blue-700 transition-colors uppercase tracking-widest">Forgot PIN?</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {flow === 'pin_reset_setup' && (
+          <div className="space-y-6 text-center animate-in fade-in slide-in-from-right-4">
+            <div>
+              <div className="mx-auto w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-black mb-2">Create New PIN</h2>
+              <p className="text-slate-500 text-sm font-medium">
+                {pin.length === 4 ? "Confirm your new 4-digit PIN" : "Enter a new 4-digit Security PIN"}
+              </p>
+            </div>
+
+            <div className="flex justify-center gap-4 py-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className={`w-14 h-16 bg-slate-50 border-2 ${pin.length === 4 ? 'border-emerald-100' : 'border-slate-100'} rounded-2xl flex items-center justify-center text-2xl font-black text-primary transition-all shadow-sm`}>
+                  {(pin.length === 4 ? confirmPin[i] : pin[i]) ? <span className={`w-3 h-3 ${pin.length === 4 ? 'bg-emerald-500' : 'bg-primary'} rounded-full animate-in zoom-in`}></span> : ""}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 max-w-[280px] mx-auto">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, "clear", 0, "delete"].map((key, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    const isConfirming = pin.length === 4;
+                    if (key === "clear") {
+                      isConfirming ? setConfirmPin("") : setPin("");
+                    } else if (key === "delete") {
+                      isConfirming ? setConfirmPin(confirmPin.slice(0, -1)) : setPin(pin.slice(0, -1));
+                    } else {
+                      if (isConfirming && confirmPin.length < 4) setConfirmPin(confirmPin + key);
+                      else if (!isConfirming && pin.length < 4) setPin(pin + key);
+                    }
+                  }}
+                  className="h-16 rounded-2xl bg-white border border-slate-100 font-bold text-xl text-slate-700 hover:bg-slate-50 active:scale-90 transition-all shadow-sm flex items-center justify-center"
+                >
+                  {key === "clear" ? "C" : key === "delete" ? "←" : key}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <button
+                onClick={handlePinReset}
+                disabled={loading || confirmPin.length !== 4}
+                className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-base shadow-xl shadow-emerald-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+              >
+                {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Set New PIN & Login'}
               </button>
             </div>
-            <button onClick={() => setFlow('onboarding')} className="w-full text-center text-xs font-bold text-slate-400 uppercase tracking-widest py-2">Back to Intro</button>
           </div>
         )}
 
@@ -402,7 +662,23 @@ export default function Home() {
               >
                 {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Verify Code'}
               </button>
-              <button onClick={() => setFlow('mobile_entry')} className="text-xs font-bold text-slate-400 uppercase tracking-widest">Change Number</button>
+
+              <div className="flex flex-col items-center gap-4">
+                <button onClick={() => setFlow('mobile_entry')} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Change Number</button>
+
+                <div className="pt-2">
+                  {resendTimer > 0 ? (
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resend OTP in <span className="text-slate-900">{resendTimer}s</span></p>
+                  ) : (
+                    <button
+                      onClick={() => handleSendOtp(isResettingPin)}
+                      className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 active:scale-95 transition-all"
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -446,6 +722,20 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+
+              <div className="pt-4 text-center border-t border-slate-100">
+                <button
+                  onClick={() => {
+                    setFlow('mobile_entry');
+                    setOtp('');
+                    setRole(null);
+                    setError('');
+                  }}
+                  className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                >
+                  Start Over
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -462,7 +752,7 @@ export default function Home() {
 
       </div>
 
-      <div className="absolute bottom-6 left-0 right-0 text-center opacity-60 pointer-events-none animate-in fade-in duration-1000 delay-500">
+      <div className="mt-8 mb-4 text-center opacity-60 pointer-events-none animate-in fade-in duration-1000 delay-500 pb-2">
         <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Powered by MSME Shakti</p>
       </div>
     </main>

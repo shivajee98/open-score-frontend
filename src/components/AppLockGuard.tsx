@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Lock, ArrowRight, ShieldCheck } from "lucide-react";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, clearAuthState } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 
 export default function AppLockGuard({ children }: { children: React.ReactNode }) {
@@ -59,6 +59,11 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
             sessionStorage.setItem("app_unlocked", "true");
             setIsLocked(false);
         } catch (err: any) {
+            if (err.message === "Unauthenticated." || err.message === "Account not found" || err.message === "No PIN set. Please login via OTP.") {
+                clearAuthState();
+                window.location.href = "/";
+                return;
+            }
             toast.error("Invalid Security PIN");
             setPin("");
         } finally {

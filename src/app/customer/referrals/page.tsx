@@ -2,10 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Share2, Users, Gift, TrendingUp, Copy, Check, ChevronRight } from 'lucide-react';
+import {
+    WhatsappShareButton,
+    FacebookShareButton,
+    TwitterShareButton,
+    TelegramShareButton,
+    EmailShareButton,
+    WhatsappIcon,
+    FacebookIcon,
+    TwitterIcon,
+    TelegramIcon,
+    EmailIcon,
+    LinkedinShareButton,
+    LinkedinIcon
+} from 'react-share';
+import { Share2, Users, Gift, TrendingUp, Copy, Check, ChevronRight, MessageCircle, X } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 import MobileNav from '@/components/MobileNav';
+
 
 export default function ReferralPage() {
     const router = useRouter();
@@ -25,6 +40,7 @@ export default function ReferralPage() {
         loan_disbursement_bonus: 250
     });
     const [copied, setCopied] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     useEffect(() => {
         fetchReferralData();
@@ -74,10 +90,10 @@ export default function ReferralPage() {
             if (navigator.share) {
                 await navigator.share(shareData);
             } else {
-                handleCopy(referralLink);
+                setShowShareModal(true);
             }
         } catch (error) {
-            console.log('Share failed', error);
+            setShowShareModal(true);
         }
     };
 
@@ -91,6 +107,125 @@ export default function ReferralPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-24">
+            {/* Share Modal / Bottom Sheet */}
+            {showShareModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-all"
+                    onClick={() => setShowShareModal(false)}
+                >
+                    <div
+                        className="bg-white w-full sm:w-[400px] rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 shadow-2xl relative pointer-events-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden" />
+
+                        <button
+                            className="absolute top-6 right-6 p-2 bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors"
+                            onClick={() => setShowShareModal(false)}
+                            aria-label="Close"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <Share2 className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-900">Share with Friends</h3>
+                            <p className="text-slate-500 text-sm mt-1">Spread the word and earn rewards</p>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-y-6 gap-x-2 justify-items-center mb-8">
+                            <div className="flex flex-col items-center gap-2 group">
+                                <WhatsappShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!`} separator="\n">
+                                    <div className="hover:scale-110 transition-transform active:scale-95">
+                                        <WhatsappIcon size={56} round />
+                                    </div>
+                                </WhatsappShareButton>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">WhatsApp</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 group">
+                                <TelegramShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!`}>
+                                    <div className="hover:scale-110 transition-transform active:scale-95">
+                                        <TelegramIcon size={56} round />
+                                    </div>
+                                </TelegramShareButton>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Telegram</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 group">
+                                <FacebookShareButton url={referralLink}>
+                                    <div className="hover:scale-110 transition-transform active:scale-95">
+                                        <FacebookIcon size={56} round />
+                                    </div>
+                                </FacebookShareButton>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Facebook</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 group">
+                                <TwitterShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!`}>
+                                    <div className="hover:scale-110 transition-transform active:scale-95">
+                                        <TwitterIcon size={56} round />
+                                    </div>
+                                </TwitterShareButton>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">X (Twitter)</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 group">
+                                <LinkedinShareButton url={referralLink} title="Join OpenScore!">
+                                    <div className="hover:scale-110 transition-transform active:scale-95">
+                                        <LinkedinIcon size={56} round />
+                                    </div>
+                                </LinkedinShareButton>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">LinkedIn</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 group">
+                                <button
+                                    onClick={() => window.open(`sms:?body=Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus! ${referralLink}`)}
+                                    className="w-[56px] h-[56px] bg-green-500 text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform active:scale-95 shadow-md flex-shrink-0"
+                                >
+                                    <MessageCircle className="w-7 h-7" />
+                                </button>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">SMS</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 group">
+                                <EmailShareButton url={referralLink} subject={`Join OpenScore!`} body={`Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!\n${referralLink}`}>
+                                    <div className="hover:scale-110 transition-transform active:scale-95">
+                                        <EmailIcon size={56} round />
+                                    </div>
+                                </EmailShareButton>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Email</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 group">
+                                <button
+                                    onClick={() => handleCopy(referralLink)}
+                                    className="w-[56px] h-[56px] bg-slate-900 text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform active:scale-95 shadow-md flex-shrink-0"
+                                >
+                                    {copied ? <Check className="w-7 h-7" /> : <Copy className="w-7 h-7" />}
+                                </button>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Link</span>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3 border border-slate-100">
+                            <div className="flex-1 truncate font-mono text-xs text-slate-500">
+                                {referralLink}
+                            </div>
+                            <button
+                                onClick={() => handleCopy(referralLink)}
+                                className="text-blue-600 font-black text-xs uppercase tracking-wider hover:text-blue-700"
+                            >
+                                {copied ? 'Copied' : 'Copy'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-md mx-auto p-4 space-y-4">
                 {/* Header */}
                 <div className="text-center mb-6">
@@ -101,7 +236,7 @@ export default function ReferralPage() {
                 </div>
 
                 {/* Earnings Summary Card */}
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl p-6 text-white shadow-xl">
+                <div className="bg-linear-to-br from-blue-600 to-indigo-600 rounded-3xl p-6 text-white shadow-xl">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                             <Gift className="w-6 h-6" />
@@ -142,7 +277,7 @@ export default function ReferralPage() {
 
                     <button
                         onClick={handleShare}
-                        className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-sm shadow-lg flex items-center justify-center gap-2 hover:from-blue-700 hover:to-indigo-700 transition-all active:scale-95"
+                        className="w-full py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-sm shadow-lg flex items-center justify-center gap-2 hover:from-blue-700 hover:to-indigo-700 transition-all active:scale-95"
                     >
                         <Share2 className="w-4 h-4" />
                         Share Referral Link

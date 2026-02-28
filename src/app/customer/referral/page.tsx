@@ -4,45 +4,66 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { Gift, Copy, Share2, ArrowLeft, Trophy, Users, Banknote, Loader2 } from 'lucide-react';
+import { Gift, Copy, Share2, ArrowLeft, Trophy, Users, Banknote, Loader2, MessageCircle, X, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/Toast';
+import {
+    WhatsappShareButton,
+    FacebookShareButton,
+    TwitterShareButton,
+    TelegramShareButton,
+    EmailShareButton,
+    WhatsappIcon,
+    FacebookIcon,
+    TwitterIcon,
+    TelegramIcon,
+    EmailIcon,
+    LinkedinShareButton,
+    LinkedinIcon
+} from 'react-share';
 
 export default function ReferralPage() {
     const router = useRouter();
     const { data: referralData, isLoading, error } = useApi('/referral/my-code');
     const { data: statsData, isLoading: statsLoading } = useApi('/referral/my-stats');
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     // Combine loading state
     const loading = isLoading || statsLoading;
 
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        toast.success('Copied to clipboard!');
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     const copyToClipboard = () => {
         if (referralData?.referral_code) {
-            navigator.clipboard.writeText(referralData.referral_code);
-            toast.success("Referral code copied!");
+            handleCopy(referralData.referral_code);
         }
     };
 
     const shareCode = async () => {
         const shareText = `Use my referral code ${referralData?.referral_code} to join OpenScore and get a welcome bonus!`;
-        const shareUrl = `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`;
+        const shareUrl = referralData?.referral_link || `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`;
+
+        const shareData = {
+            title: 'Join OpenScore',
+            text: shareText,
+            url: shareUrl
+        };
 
         if (navigator.share && referralData?.referral_code) {
             try {
-                await navigator.share({
-                    title: 'Join OpenScore',
-                    text: shareText,
-                    url: shareUrl
-                });
+                await navigator.share(shareData);
             } catch (err) {
                 console.log('Share failed', err);
-                // Fallback to clipboard if share was cancelled or failed
-                navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-                toast.success("Link copied to clipboard!");
+                setShowShareModal(true);
             }
         } else if (referralData?.referral_code) {
-            navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-            toast.success("Link copied to clipboard!");
+            setShowShareModal(true);
         }
     };
 
@@ -54,6 +75,134 @@ export default function ReferralPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
+            {/* Share Modal / Bottom Sheet */}
+            {showShareModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-all animate-in fade-in"
+                    onClick={() => setShowShareModal(false)}
+                >
+                    <div
+                        className="bg-white w-full sm:w-[400px] rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 shadow-2xl relative animate-in slide-in-from-bottom sm:zoom-in duration-300 pointer-events-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden" />
+
+                        <button
+                            className="absolute top-6 right-6 p-2 bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors"
+                            onClick={() => setShowShareModal(false)}
+                            aria-label="Close"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <Share2 className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-900">Share with Friends</h3>
+                            <p className="text-slate-500 text-sm mt-1">Spread the word and earn rewards</p>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-y-6 gap-x-2 justify-items-center mb-8">
+                            {/* Get the properly formatted values */}
+                            {(() => {
+                                const shareText = `Use my referral code ${referralData?.referral_code} to join OpenScore and get a welcome bonus!`;
+                                const shareUrl = referralData?.referral_link || `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`;
+
+                                return (
+                                    <>
+                                        <div className="flex flex-col items-center gap-2 group">
+                                            <WhatsappShareButton url={shareUrl} title={shareText} separator="\n">
+                                                <div className="hover:scale-110 transition-transform active:scale-95">
+                                                    <WhatsappIcon size={56} round />
+                                                </div>
+                                            </WhatsappShareButton>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">WhatsApp</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-2 group">
+                                            <TelegramShareButton url={shareUrl} title={shareText}>
+                                                <div className="hover:scale-110 transition-transform active:scale-95">
+                                                    <TelegramIcon size={56} round />
+                                                </div>
+                                            </TelegramShareButton>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Telegram</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-2 group">
+                                            <FacebookShareButton url={shareUrl}>
+                                                <div className="hover:scale-110 transition-transform active:scale-95">
+                                                    <FacebookIcon size={56} round />
+                                                </div>
+                                            </FacebookShareButton>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Facebook</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-2 group">
+                                            <TwitterShareButton url={shareUrl} title={shareText}>
+                                                <div className="hover:scale-110 transition-transform active:scale-95">
+                                                    <TwitterIcon size={56} round />
+                                                </div>
+                                            </TwitterShareButton>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">X</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-2 group">
+                                            <LinkedinShareButton url={shareUrl} title="Join OpenScore!">
+                                                <div className="hover:scale-110 transition-transform active:scale-95">
+                                                    <LinkedinIcon size={56} round />
+                                                </div>
+                                            </LinkedinShareButton>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">LinkedIn</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-2 group">
+                                            <button
+                                                onClick={() => window.open(`sms:?body=${encodeURIComponent(shareText + " " + shareUrl)}`)}
+                                                className="w-[56px] h-[56px] bg-green-500 text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform active:scale-95 shadow-md flex-shrink-0"
+                                            >
+                                                <MessageCircle className="w-7 h-7" />
+                                            </button>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">SMS</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-2 group">
+                                            <EmailShareButton url={shareUrl} subject={`Join OpenScore!`} body={shareText}>
+                                                <div className="hover:scale-110 transition-transform active:scale-95">
+                                                    <EmailIcon size={56} round />
+                                                </div>
+                                            </EmailShareButton>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Email</span>
+                                        </div>
+
+                                        <div className="flex flex-col items-center gap-2 group">
+                                            <button
+                                                onClick={() => handleCopy(shareUrl)}
+                                                className="w-[56px] h-[56px] bg-slate-900 text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform active:scale-95 shadow-md flex-shrink-0"
+                                            >
+                                                {copied ? <Check className="w-7 h-7" /> : <Copy className="w-7 h-7" />}
+                                            </button>
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Link</span>
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                        </div>
+
+                        <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3 border border-slate-100">
+                            <div className="flex-1 truncate font-mono text-xs text-slate-500">
+                                {referralData?.referral_link || `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`}
+                            </div>
+                            <button
+                                onClick={() => handleCopy(referralData?.referral_link || `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`)}
+                                className="text-blue-600 font-black text-xs uppercase tracking-wider hover:text-blue-700"
+                            >
+                                {copied ? 'Copied' : 'Copy'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="bg-slate-900 px-6 pt-8 pb-16 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>

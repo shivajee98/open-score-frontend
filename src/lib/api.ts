@@ -95,17 +95,14 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
             headers,
         });
 
-        // Handle unauthorized/forbidden
         if ((response.status === 401 || response.status === 403) && !skipAuthCheck) {
             handleUnauthorized();
             throw new Error('Session expired. Please login again.');
-        } else if (response.status === 401 || response.status === 403) {
-            throw new Error('Unauthorized');
         }
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || errorData.message || `API request failed with status ${response.status}`);
+            throw new Error(errorData.error || errorData.message || (response.status === 401 ? 'Unauthorized' : `API request failed with status ${response.status}`));
         }
 
         return response.json();

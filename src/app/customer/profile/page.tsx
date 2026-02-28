@@ -27,6 +27,9 @@ export default function Profile() {
         account_holder_name: '',
         business_segment: '',
         business_type: '',
+        business_nature: '',
+        customer_segment: '',
+        daily_turnover: '',
         map_location_url: '',
         shop_images: '[]',
         business_name: '',
@@ -35,6 +38,7 @@ export default function Profile() {
         state: '',
         postal_code: ''
     });
+    const [newShopImages, setNewShopImages] = useState<File[]>([]);
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -77,6 +81,9 @@ export default function Profile() {
                     account_holder_name: user.account_holder_name || '',
                     business_segment: user.business_segment || '',
                     business_type: user.business_type || '',
+                    business_nature: user.business_nature || '',
+                    customer_segment: user.customer_segment || '',
+                    daily_turnover: user.daily_turnover || '',
                     map_location_url: user.map_location_url || '',
                     shop_images: Array.isArray(user.shop_images) ? JSON.stringify(user.shop_images) : (user.shop_images || '[]'),
                     business_name: user.business_name || '',
@@ -192,27 +199,50 @@ export default function Profile() {
         }
 
         try {
-            // Parse shop_images to array if string
-            const payload: any = {
-                ...formData,
-                address: formData.street_address,
-                pincode: formData.postal_code
-            };
+            const uploadData = new FormData();
+            uploadData.append('name', formData.name);
+            uploadData.append('email', formData.email);
+            uploadData.append('business_name', formData.business_name);
+            uploadData.append('business_nature', formData.business_nature);
+            uploadData.append('customer_segment', formData.customer_segment);
+            uploadData.append('daily_turnover', formData.daily_turnover);
+            uploadData.append('business_address', formData.street_address);
+            uploadData.append('city', formData.city);
+            uploadData.append('state', formData.state);
+            uploadData.append('pincode', formData.postal_code);
+            uploadData.append('map_location_url', formData.map_location_url);
+
+            // Bank details
+            if (!user?.account_number) {
+                uploadData.append('bank_name', formData.bank_name);
+                uploadData.append('account_number', formData.account_number);
+                uploadData.append('ifsc_code', formData.ifsc_code);
+                uploadData.append('account_holder_name', formData.account_holder_name);
+            }
+
+            let currentImages: string[] = [];
             try {
                 if (typeof formData.shop_images === 'string') {
-                    payload.shop_images = JSON.parse(formData.shop_images);
+                    currentImages = JSON.parse(formData.shop_images);
                 }
-            } catch (e) {
-                payload.shop_images = [];
-            }
+            } catch (e) { currentImages = []; }
+
+            currentImages.forEach((img) => {
+                uploadData.append('retained_shop_images[]', img);
+            });
+
+            newShopImages.forEach((file) => {
+                uploadData.append('shop_images[]', file);
+            });
 
             const res = await apiFetch('/auth/update-profile', {
                 method: 'POST',
-                body: JSON.stringify(payload)
+                body: uploadData
             });
             if (res.error) throw new Error(res.error);
             await mutateUser(); // Refresh user data
             setIsEditing(false);
+            setNewShopImages([]);
             toast.success('Profile updated successfully!');
         } catch (e: any) {
             toast.error(e.message || 'Failed to update profile');
@@ -271,35 +301,23 @@ export default function Profile() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const uploadToCloudinary = async () => {
-            try {
-                toast.info("Uploading image...");
-                const uploadData = new FormData();
-                uploadData.append('file', file);
-                uploadData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
-                uploadData.append('cloud_name', process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!);
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Image must be less than 5MB");
+            return;
+        }
 
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
-                    method: 'POST',
-                    body: uploadData
-                });
-                const data = await res.json();
-                if (data.secure_url) {
-                    let currentImages: string[] = [];
-                    try {
-                        currentImages = formData.shop_images ? JSON.parse(formData.shop_images) : [];
-                    } catch (e) { currentImages = []; }
+        setNewShopImages(prev => [...prev, file]);
+        toast.success("Image selected for upload");
 
-                    const newImages = [...currentImages, data.secure_url];
-                    setFormData(prev => ({ ...prev, shop_images: JSON.stringify(newImages) }));
-                    toast.success("Image uploaded!");
-                }
-            } catch (err) {
-                console.error(err);
-                toast.error("Upload failed");
-            }
-        };
-        uploadToCloudinary();
+        // Optionally add a temporary local preview to shop_images string
+        const previewUrl = URL.createObjectURL(file);
+        let currentImages: string[] = [];
+        try {
+            currentImages = formData.shop_images ? JSON.parse(formData.shop_images) : [];
+        } catch (err) { currentImages = []; }
+
+        const updatedImages = [...currentImages, previewUrl];
+        setFormData(prev => ({ ...prev, shop_images: JSON.stringify(updatedImages) }));
     };
 
     const isMerchant = user?.role === 'MERCHANT';
@@ -443,38 +461,64 @@ export default function Profile() {
 
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Segment</p>
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Customer Segment</p>
                                         {isEditing ? (
                                             <select
-                                                value={formData.business_segment}
-                                                onChange={(e) => setFormData({ ...formData, business_segment: e.target.value })}
+                                                value={formData.customer_segment}
+                                                onChange={(e) => setFormData({ ...formData, customer_segment: e.target.value })}
                                                 className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
                                             >
                                                 <option value="">Select Segment</option>
-                                                <option value="retailer">Retailer</option>
-                                                <option value="wholesaler">Wholesaler</option>
-                                                <option value="distributor">Distributor</option>
-                                                <option value="super_distributor">Super Distributor</option>
+                                                <option value="Wholesale">Wholesale</option>
+                                                <option value="Retail">Retail</option>
+                                                <option value="Distributor">Distributor</option>
+                                                <option value="Super Distributor">Super Distributor</option>
+                                                <option value="Manufacturer">Manufacturer</option>
+                                                <option value="Supplier">Supplier</option>
                                             </select>
                                         ) : (
-                                            <p className="text-base font-semibold text-slate-900 capitalize">{user.business_segment?.replace('_', ' ') || 'Not Set'}</p>
+                                            <p className="text-base font-semibold text-slate-900 capitalize">{user.customer_segment?.replace('_', ' ') || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
 
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Type</p>
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Nature</p>
                                         {isEditing ? (
                                             <input
                                                 type="text"
-                                                value={formData.business_type}
-                                                onChange={(e) => setFormData({ ...formData, business_type: e.target.value })}
+                                                value={formData.business_nature}
+                                                onChange={(e) => setFormData({ ...formData, business_nature: e.target.value })}
                                                 className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                placeholder="e.g. Grocery, Electronics"
+                                                placeholder="e.g. Grocery, Electronics, Garment"
                                             />
                                         ) : (
-                                            <p className="text-base font-semibold text-slate-900">{user.business_type || 'Not Set'}</p>
+                                            <p className="text-base font-semibold text-slate-900">{user.business_nature || 'Not Set'}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Daily Turnover</p>
+                                        {isEditing ? (
+                                            <select
+                                                value={formData.daily_turnover}
+                                                onChange={(e) => setFormData({ ...formData, daily_turnover: e.target.value })}
+                                                className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
+                                            >
+                                                <option value="">Select Turnover</option>
+                                                <option value="1k-5k">₹1,000 - ₹5,000</option>
+                                                <option value="5k-10k">₹5,000 - ₹10,000</option>
+                                                <option value="10k-20k">₹10,000 - ₹20,000</option>
+                                                <option value="20k-50k">₹20,000 - ₹50,000</option>
+                                                <option value="50k-1l">₹50,000 - ₹1,00,000</option>
+                                                <option value="1l-2l">₹1,00,000 - ₹2,00,000</option>
+                                                <option value="2l-5l">₹2,00,000 - ₹5,00,000</option>
+                                            </select>
+                                        ) : (
+                                            <p className="text-base font-semibold text-slate-900">{user.daily_turnover || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -630,6 +674,12 @@ export default function Profile() {
                                                     {isEditing && (
                                                         <button
                                                             onClick={() => {
+                                                                const imgUrl = images[idx];
+                                                                if (imgUrl.startsWith('blob:')) {
+                                                                    const firstBlobIndex = images.findIndex((i: string) => i.startsWith('blob:'));
+                                                                    const newShopImageIndex = idx - firstBlobIndex;
+                                                                    setNewShopImages(prev => prev.filter((_, i) => i !== newShopImageIndex));
+                                                                }
                                                                 const updated = images.filter((_, i) => i !== idx);
                                                                 setFormData(prev => ({ ...prev, shop_images: JSON.stringify(updated) }));
                                                             }}
