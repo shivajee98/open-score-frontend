@@ -8,6 +8,7 @@ import MobileNavigationHandler from "@/components/MobileNavigationHandler";
 import NotificationHandler from "@/components/NotificationHandler";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import AppLockGuard from "@/components/AppLockGuard";
+import MaintenanceGuard from "@/components/MaintenanceGuard";
 
 export default function ClientLayout({
     children,
@@ -32,15 +33,17 @@ export default function ClientLayout({
     }, []);
 
     return (
-        <AuthGuard>
-            <NotificationHandler />
-            <IncomingCallModal />
-            <MobileNavigationHandler />
-            <ToastContainer />
-            <AppLockGuard>
-                {children}
-            </AppLockGuard>
-            <MobileNav />
-        </AuthGuard>
+        <MaintenanceGuard>
+            <AuthGuard>
+                <NotificationHandler />
+                <IncomingCallModal />
+                <MobileNavigationHandler />
+                <ToastContainer />
+                <AppLockGuard>
+                    {children}
+                </AppLockGuard>
+                <MobileNav />
+            </AuthGuard>
+        </MaintenanceGuard>
     );
 }
