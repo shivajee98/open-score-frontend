@@ -862,7 +862,7 @@ export default function Profile() {
                                 </div>
 
                                 {/* T&C */}
-                                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div onClick={() => router.push('/t-and-c')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
                                     <div className="w-8 h-8 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 shadow-sm">
                                         <FileText className="w-4 h-4" />
                                     </div>
@@ -870,7 +870,7 @@ export default function Profile() {
                                 </div>
 
                                 {/* Privacy */}
-                                <div onClick={() => router.push('/privacy-policy')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div onClick={() => router.push('/p-policy')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
                                     <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
                                         <Shield className="w-4 h-4" />
                                     </div>
