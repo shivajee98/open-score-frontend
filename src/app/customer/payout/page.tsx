@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Plus, X, Download, Users } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
@@ -77,11 +77,7 @@ export default function PayoutPage() {
     const [isProcessing, setIsProcessing] = useState(false); // Simulated processing state
     const [isSuccess, setIsSuccess] = useState(false);
     const [showRestricted, setShowRestricted] = useState(false); // Show restriction screen after attempt
-    const [showTransferModal, setShowTransferModal] = useState(false);
-    const [transferSaving, setTransferSaving] = useState(false);
-    const [transferSuccess, setTransferSuccess] = useState(false);
-    const [lastBatchId, setLastBatchId] = useState('');
-    const [recipients, setRecipients] = useState([{ recipient_name: '', bank_name: '', account_number: '', ifsc_code: '' }]);
+    const [transferStatus, setTransferStatus] = useState<any>(null);
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
@@ -176,75 +172,12 @@ export default function PayoutPage() {
     const themeColor = isMerchant ? 'emerald' : 'indigo';
     const transferEnabled = user?.transfer_enabled;
 
-    const addRecipient = () => {
-        setRecipients(prev => [...prev, { recipient_name: '', bank_name: '', account_number: '', ifsc_code: '' }]);
-    };
-
-    const removeRecipient = (idx: number) => {
-        if (recipients.length === 1) return;
-        setRecipients(prev => prev.filter((_, i) => i !== idx));
-    };
-
-    const updateRecipient = (idx: number, field: string, value: string) => {
-        setRecipients(prev => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
-    };
-
-    const handleTransferSave = async () => {
-        // Validate all recipients have required fields
-        for (let i = 0; i < recipients.length; i++) {
-            const r = recipients[i];
-            if (!r.recipient_name || !r.bank_name || !r.account_number || !r.ifsc_code) {
-                toast.error(`Please fill all fields for recipient ${i + 1}`);
-                return;
-            }
+    // Fetch transfer status for merchants
+    useEffect(() => {
+        if (isMerchant && transferEnabled) {
+            apiFetch('/merchant/bank-transfers/status').then(setTransferStatus).catch(() => { });
         }
-
-        setTransferSaving(true);
-        try {
-            const result = await apiFetch('/merchant/bank-transfers', {
-                method: 'POST',
-                body: JSON.stringify({ recipients }),
-            });
-            setLastBatchId(result.batch_id);
-            setTransferSuccess(true);
-            toast.success(`${result.count} recipient(s) saved successfully!`);
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to save transfers');
-        } finally {
-            setTransferSaving(false);
-        }
-    };
-
-    const handleExportExcel = async () => {
-        try {
-            const url = `${(await import('@/lib/api')).API_BASE_URL}/merchant/bank-transfers/export?batch_id=${lastBatchId}`;
-            const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-            const res = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'text/csv',
-                },
-            });
-            if (!res.ok) throw new Error('Export failed');
-            const blob = await res.blob();
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `bank_transfers_${lastBatchId}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            toast.success('Excel file downloaded!');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to export');
-        }
-    };
-
-    const resetTransferModal = () => {
-        setShowTransferModal(false);
-        setTransferSuccess(false);
-        setLastBatchId('');
-        setRecipients([{ recipient_name: '', bank_name: '', account_number: '', ifsc_code: '' }]);
-    };
+    }, [isMerchant, transferEnabled]);
 
     // Processing UI (Simulated Wait)
     if (isProcessing) {
@@ -473,11 +406,11 @@ export default function PayoutPage() {
                         {/* Transfer Button */}
                         {isMerchant && (
                             <button
-                                onClick={() => setShowTransferModal(true)}
+                                onClick={() => router.push('/customer/transfer')}
                                 disabled={!transferEnabled}
                                 className={`w-full py-4 mt-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg ${transferEnabled
-                                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-violet-200'
-                                        : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'
+                                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-violet-200'
+                                    : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'
                                     }`}
                                 title={!transferEnabled ? 'Transfer is not enabled for your account. Contact admin.' : 'Transfer to bank accounts'}
                             >
@@ -485,6 +418,29 @@ export default function PayoutPage() {
                                 Transfer
                                 {!transferEnabled && <Lock size={14} className="ml-1 opacity-50" />}
                             </button>
+                        )}
+
+                        {/* Transfer Status Banner */}
+                        {isMerchant && transferStatus?.has_transfers && (
+                            <div className={`w-full mt-3 p-4 rounded-2xl border flex items-center gap-3 ${transferStatus.status === 'PENDING' ? 'bg-amber-50 border-amber-200' :
+                                    transferStatus.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-200' :
+                                        transferStatus.status === 'REJECTED' ? 'bg-rose-50 border-rose-200' :
+                                            'bg-slate-50 border-slate-200'
+                                }`}>
+                                {transferStatus.status === 'PENDING' && <Clock className="w-5 h-5 text-amber-500" />}
+                                {transferStatus.status === 'APPROVED' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                                {transferStatus.status === 'REJECTED' && <XCircle className="w-5 h-5 text-rose-500" />}
+                                <div>
+                                    <p className="text-xs font-black text-slate-900">
+                                        {transferStatus.status === 'PENDING' ? 'Transfer Under Process' :
+                                            transferStatus.status === 'APPROVED' ? 'Transfer Approved' :
+                                                transferStatus.status === 'REJECTED' ? 'Transfer Rejected' : transferStatus.status}
+                                    </p>
+                                    <p className="text-[10px] font-bold text-slate-400">
+                                        Bulk Pay ₹{transferStatus.total_amount?.toLocaleString('en-IN')} • {transferStatus.count} recipients
+                                    </p>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -559,135 +515,6 @@ export default function PayoutPage() {
                         )}
                     </div>
                 </div>
-
-                {/* Transfer Modal */}
-                {showTransferModal && (
-                    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-6 md:p-8 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-                            {!transferSuccess ? (
-                                <>
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div>
-                                            <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                                <ArrowRightLeft className="w-5 h-5 text-violet-600" />
-                                                Bank Transfer
-                                            </h3>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Add recipients for bank transfer</p>
-                                        </div>
-                                        <button onClick={resetTransferModal} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                            <X className="w-5 h-5 text-slate-400" />
-                                        </button>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        {recipients.map((r, idx) => (
-                                            <div key={idx} className="bg-slate-50 rounded-2xl p-4 space-y-3 relative group">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                                        <Users className="w-3 h-3 inline mr-1" />
-                                                        Recipient {idx + 1}
-                                                    </span>
-                                                    {recipients.length > 1 && (
-                                                        <button
-                                                            onClick={() => removeRecipient(idx)}
-                                                            className="p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Recipient Name"
-                                                    value={r.recipient_name}
-                                                    onChange={(e) => updateRecipient(idx, 'recipient_name', e.target.value)}
-                                                    className="w-full bg-white border-none rounded-xl py-3 px-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-1 focus:ring-violet-200 outline-none"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Bank Name"
-                                                    value={r.bank_name}
-                                                    onChange={(e) => updateRecipient(idx, 'bank_name', e.target.value)}
-                                                    className="w-full bg-white border-none rounded-xl py-3 px-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-1 focus:ring-violet-200 outline-none"
-                                                />
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Account Number"
-                                                        value={r.account_number}
-                                                        onChange={(e) => updateRecipient(idx, 'account_number', e.target.value)}
-                                                        className="w-full bg-white border-none rounded-xl py-3 px-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-1 focus:ring-violet-200 outline-none font-mono"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="IFSC Code"
-                                                        value={r.ifsc_code}
-                                                        onChange={(e) => updateRecipient(idx, 'ifsc_code', e.target.value.toUpperCase())}
-                                                        className="w-full bg-white border-none rounded-xl py-3 px-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-1 focus:ring-violet-200 outline-none font-mono uppercase"
-                                                    />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <button
-                                        onClick={addRecipient}
-                                        className="w-full mt-4 py-3 border-2 border-dashed border-slate-200 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest hover:border-violet-300 hover:text-violet-500 transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        Add Another Recipient
-                                    </button>
-
-                                    <div className="flex gap-3 mt-6">
-                                        <button
-                                            onClick={resetTransferModal}
-                                            className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={handleTransferSave}
-                                            disabled={transferSaving}
-                                            className="flex-1 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:from-violet-700 hover:to-indigo-700 shadow-xl shadow-violet-200 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                        >
-                                            {transferSaving ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                            ) : (
-                                                'Save Transfer'
-                                            )}
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-6">
-                                    <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                                    </div>
-                                    <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">Transfer Saved!</h3>
-                                    <p className="text-xs font-bold text-slate-400 mb-1">Batch ID: <span className="font-mono text-slate-600">{lastBatchId}</span></p>
-                                    <p className="text-xs font-medium text-slate-500 mb-6 max-w-xs mx-auto leading-relaxed">
-                                        Your recipients have been saved. Download the Excel file to process the transfer.
-                                    </p>
-
-                                    <button
-                                        onClick={handleExportExcel}
-                                        className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:from-emerald-600 hover:to-teal-700 shadow-xl shadow-emerald-200 transition-all active:scale-95 flex items-center justify-center gap-3 mb-3"
-                                    >
-                                        <Download size={18} />
-                                        Export as Excel
-                                    </button>
-
-                                    <button
-                                        onClick={resetTransferModal}
-                                        className="w-full py-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
