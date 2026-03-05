@@ -94,8 +94,8 @@ export default function CustomerHome() {
             sub: "Daily Increment  2 %",
             color: "bg-gradient-to-br from-amber-600 via-orange-700 to-red-800",
             accent: "bg-amber-500",
-            amount: "₹2,00,000",
-            label: "Min Balance"
+            amount: "Increament Upto 2% Daily",
+            label: ""
         },
     ] : [];
 
