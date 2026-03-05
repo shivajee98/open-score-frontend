@@ -6,6 +6,7 @@ import { apiFetch } from '@/lib/api';
 import TransactionDetailModal from '@/components/TransactionDetailModal';
 import { useStore } from '@/store/useStore';
 import { Home, Smartphone, QrCode, Receipt, ArrowDownLeft, ArrowUpRight, Search, Landmark, Loader2, FileText } from 'lucide-react';
+import { getTransactionLabel, getTransactionSubtitle } from '@/lib/transactionLabels';
 import { toast } from '@/components/ui/Toast';
 
 export default function CustomerTransactions() {
@@ -195,35 +196,10 @@ export default function CustomerTransactions() {
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-slate-900 text-[11px] tracking-tight">
-                                                            {(() => {
-                                                                const desc = t.description?.toLowerCase() || '';
-                                                                const srcType = t.source_type || '';
-                                                                if (desc.includes('welcome bonus')) return 'Welcome Bonus';
-                                                                if (desc.includes('referral') || desc.includes('earning')) return 'Earning';
-                                                                if (desc.includes('cashback')) return 'Cashback Reward';
-
-                                                                // EMI / Repayment - check description for more specific info
-                                                                if (srcType === 'LOAN_REPAYMENT') {
-                                                                    if (desc.includes('platform fee') || desc.includes('emi #0')) return 'Platform Fee';
-                                                                    const emiMatch = desc.match(/emi\s*#?(\d+)/i);
-                                                                    if (emiMatch) return `EMI #${emiMatch[1]} Payment`;
-                                                                    return 'EMI Payment';
-                                                                }
-
-                                                                // Platform Fee via ticket action
-                                                                if (srcType === 'PLATFORM_FEE') return 'Platform Fee';
-
-                                                                if (desc.includes('disbursement') || (srcType === 'LOAN' && t.type === 'CREDIT')) return 'Loan Disbursed';
-                                                                if (desc.includes('recharge') || srcType === 'WALLET_TOPUP' || srcType === 'WALLET_RECHARGE') return 'Wallet Recharge';
-
-                                                                if (t.counterparty_vpa === 'System' || t.counterparty_vpa === 'Open Score') {
-                                                                    return t.type === 'CREDIT' ? t.counterparty_name || 'Open Score' : 'Withdrawal';
-                                                                }
-                                                                return t.type === 'CREDIT' ? `Received from ${t.counterparty_name}` : `Paid to ${t.counterparty_name}`;
-                                                            })()}
+                                                            {getTransactionLabel(t)}
                                                         </p>
                                                         <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                                                            {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {(t.counterparty_vpa === 'Open Score' && t.type === 'DEBIT') ? 'Withdrawal' : (t.counterparty_vpa || 'Wallet Transfer')}
+                                                            {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {getTransactionSubtitle(t)}
                                                         </p>
                                                     </div>
                                                 </div>

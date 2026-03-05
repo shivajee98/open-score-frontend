@@ -157,17 +157,6 @@ export default function PayoutPage() {
         }
     };
 
-    if (!isAuthenticated || !user) return null;
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
-                <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4"></div>
-                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading Profile...</p>
-            </div>
-        );
-    }
-
     const isMerchant = user?.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'indigo';
     const transferEnabled = user?.transfer_enabled;
@@ -178,6 +167,17 @@ export default function PayoutPage() {
             apiFetch('/merchant/bank-transfers/status').then(setTransferStatus).catch(() => { });
         }
     }, [isMerchant, transferEnabled]);
+
+    if (!isAuthenticated || !user) return null;
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+                <div className="w-16 h-16 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4"></div>
+                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Loading Profile...</p>
+            </div>
+        );
+    }
 
     // Processing UI (Simulated Wait)
     if (isProcessing) {
@@ -423,9 +423,9 @@ export default function PayoutPage() {
                         {/* Transfer Status Banner */}
                         {isMerchant && transferStatus?.has_transfers && (
                             <div className={`w-full mt-3 p-4 rounded-2xl border flex items-center gap-3 ${transferStatus.status === 'PENDING' ? 'bg-amber-50 border-amber-200' :
-                                    transferStatus.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-200' :
-                                        transferStatus.status === 'REJECTED' ? 'bg-rose-50 border-rose-200' :
-                                            'bg-slate-50 border-slate-200'
+                                transferStatus.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-200' :
+                                    transferStatus.status === 'REJECTED' ? 'bg-rose-50 border-rose-200' :
+                                        'bg-slate-50 border-slate-200'
                                 }`}>
                                 {transferStatus.status === 'PENDING' && <Clock className="w-5 h-5 text-amber-500" />}
                                 {transferStatus.status === 'APPROVED' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}

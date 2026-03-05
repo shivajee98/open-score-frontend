@@ -49,8 +49,10 @@ export default function CustomerHome() {
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [activeBanner, setActiveBanner] = useState(0);
     const [dynamicText, setDynamicText] = useState("Apply Now & Get 0% Interest Credit");
+    const isMerchant = activeUser?.role === 'MERCHANT';
+    const themeColor = isMerchant ? 'emerald' : 'blue';
 
-    const banners = [
+    const baseBanners = [
         {
             title: dynamicText,
             sub: "First Users Only!",
@@ -77,11 +79,33 @@ export default function CustomerHome() {
         }
     ];
 
+    // Merchant-only promotional cards
+    const merchantBanners = isMerchant ? [
+        {
+            title: "Unlimited Transactions",
+            sub: "No Limits on Payments",
+            color: "bg-gradient-to-br from-violet-700 via-purple-800 to-indigo-900",
+            accent: "bg-violet-500",
+            amount: "∞",
+            label: "Available"
+        },
+        {
+            title: "Maintain ₹2L Wallet",
+            sub: "Unlock Transfer Fund Feature",
+            color: "bg-gradient-to-br from-amber-600 via-orange-700 to-red-800",
+            accent: "bg-amber-500",
+            amount: "₹2,00,000",
+            label: "Min Balance"
+        },
+    ] : [];
+
+    const banners = [...baseBanners, ...merchantBanners];
+
     // Auto Slide for Banners
     useEffect(() => {
         const interval = setInterval(() => {
             setActiveBanner((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
-        }, 8000); // Slower speed
+        }, 12000); // Slower speed for merchants with more cards
         return () => clearInterval(interval);
     }, [banners.length]);
 
@@ -219,8 +243,6 @@ export default function CustomerHome() {
         </div>
     );
 
-    const isMerchant = user.role === 'MERCHANT';
-    const themeColor = isMerchant ? 'emerald' : 'blue';
 
 
     return (
@@ -493,7 +515,7 @@ export default function CustomerHome() {
 
                 <div className="overflow-hidden mx-4">
                     <div
-                        className="flex transition-transform duration-500 ease-out"
+                        className="flex transition-transform duration-700 ease-out"
                         style={{ transform: `translateX(calc(-${activeBanner} * (88% + 0.75rem)))` }}
                     >
                         {banners.map((banner, i) => (
