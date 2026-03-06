@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Search, X, Store, Navigation, Phone, MessageCircle } from "lucide-react";
+import { MapPin, Search, X, Store, Navigation, Phone, MessageCircle, SlidersHorizontal } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 import MerchantDetailsModal from "./MerchantDetailsModal";
@@ -20,6 +20,7 @@ interface Merchant {
     shop_images?: string;
     map_location_url?: string;
     business_segment?: string;
+    business_nature?: string;
 }
 
 // Simple debounce hook
@@ -138,16 +139,23 @@ export default function MerchantLocator() {
                             </div>
                         </div>
 
-                        <div className="flex overflow-x-auto gap-2 pb-1 -mx-2 px-2 snap-x scrollbar-hide">
-                            {['All', 'Retail', 'Grocery', 'Pharmacy', 'Electronics', 'Clothing', 'Restaurant', 'Hardware', 'Services'].map(cat => (
-                                <button
-                                    key={cat}
-                                    onClick={() => setCategory(cat)}
-                                    className={`shrink-0 snap-center px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-900'}`}
-                                >
-                                    {cat}
+                        <div className="relative">
+                            <div className="flex overflow-x-auto gap-2 pb-1 -mx-2 px-2 snap-x scrollbar-hide pr-12">
+                                {['All', 'Retail', 'Grocery', 'Pharmacy', 'Electronics', 'Clothing', 'Restaurant', 'Hardware', 'Services'].map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setCategory(cat)}
+                                        className={`shrink-0 snap-center px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${category === cat ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-900'}`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="absolute right-0 top-0 h-full bg-gradient-to-l from-white via-white to-transparent w-16 flex items-start justify-end pr-2 pointer-events-none">
+                                <button className="w-9 h-9 mt-0.5 rounded-xl bg-red-50 text-red-500 border border-red-100 flex items-center justify-center shadow-sm pointer-events-auto hover:bg-red-100 hover:text-red-600 transition-colors active:scale-95">
+                                    <SlidersHorizontal size={14} strokeWidth={2.5} />
                                 </button>
-                            ))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -189,6 +197,11 @@ export default function MerchantLocator() {
                                                 {merchant.business_segment && (
                                                     <span className="shrink-0 bg-blue-600 text-white text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg shadow-blue-600/20">
                                                         {merchant.business_segment}
+                                                    </span>
+                                                )}
+                                                {merchant.business_nature && (
+                                                    <span className="shrink-0 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">
+                                                        {merchant.business_nature}
                                                     </span>
                                                 )}
                                             </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -617,6 +617,9 @@ export default function CustomerHome() {
                     {[
                         { title: 'Digital Gold', sub: 'Secure & Instant Savings', icon: <Landmark size={24} className="text-amber-500" /> },
                         { title: 'Mutual Funds', sub: 'Wealth Management', icon: <TrendingUp size={24} className="text-emerald-500" /> },
+                        { title: 'Shakti Credit Card', sub: 'Powering Your Purchases', icon: <CreditCard size={24} className="text-blue-500" /> },
+                        { title: 'EMI Card', sub: 'Easy Installments', icon: <CreditCard size={24} className="text-indigo-500" /> },
+                        { title: 'Medical Card', sub: 'Healthcare Support', icon: <Activity size={24} className="text-rose-500" /> },
                     ].map((item, i) => (
                         <div key={i} className="bg-white rounded-2xl p-4 border border-slate-50 shadow-xl shadow-slate-900/5 flex items-center justify-between group cursor-pointer active:scale-[0.99] transition-all">
                             <div className="flex items-center gap-3">

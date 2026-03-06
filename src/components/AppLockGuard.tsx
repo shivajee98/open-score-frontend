@@ -176,6 +176,20 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
                                     : "Unlock App"
                             )}
                         </button>
+
+                        {!needsSetup && (
+                            <div className="pt-2 text-center">
+                                <button
+                                    onClick={() => {
+                                        clearAuthState();
+                                        window.location.href = "/";
+                                    }}
+                                    className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
+                                >
+                                    Forgot PIN?
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

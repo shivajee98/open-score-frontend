@@ -36,10 +36,10 @@ export default function NewPrivacyPolicyPage() {
             <div className="px-4 -mt-8 relative z-20 max-w-4xl mx-auto">
                 <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl border border-slate-100 flex flex-col gap-6 text-sm text-slate-700 leading-relaxed font-medium">
                     <p>
-                        <strong>Last Updated: [Date]</strong>
+                        <strong>Last Updated: 19/02/2026</strong>
                     </p>
                     <p>
-                        This Privacy Policy describes how [App Name] (“Company”, “we”, “our”, or “us”) collects, uses, stores, processes, and protects user information when users access or use our mobile application, website, and related digital services.
+                        This Privacy Policy describes how <strong>Open Score</strong> (“Company”, “we”, “our”, or “us”) collects, uses, stores, processes, and protects user information when users access or use our mobile application, website, and related digital services.
                     </p>
                     <p>
                         Our platform provides a digital ecosystem where customers and merchants connect with each other for payments, transactions, shopping, rewards, and financial service eligibility.

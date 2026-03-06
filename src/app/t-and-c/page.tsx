@@ -36,10 +36,10 @@ export default function TermsAndConditionsPage() {
             <div className="px-4 -mt-8 relative z-20 max-w-4xl mx-auto">
                 <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl border border-slate-100 flex flex-col gap-6 text-sm text-slate-700 leading-relaxed font-medium">
                     <p>
-                        <strong>Last Updated: [Date]</strong>
+                        <strong>Last Updated: 19/02/2026</strong>
                     </p>
                     <p>
-                        These Terms and Conditions (“Terms”) govern the access and use of <strong>[App Name]</strong> mobile application, website, and related services operated by <strong>[Company Name]</strong> (“Company”, “we”, “our”, or “us”).
+                        These Terms and Conditions (“Terms”) govern the access and use of <strong>Open Score</strong> mobile application, website, and related services operated by <strong>MSME SHAKTI</strong> (“Company”, “we”, “our”, or “us”).
                     </p>
                     <p>
                         By registering, accessing, or using our platform, you agree to comply with and be legally bound by these Terms and Conditions.
@@ -230,9 +230,9 @@ export default function TermsAndConditionsPage() {
                         <h2 className="text-lg font-black text-slate-900 mt-4">15. Contact Information</h2>
                         <p>For any questions regarding these Terms and Conditions, users may contact:</p>
                         <p>
-                            <strong>Company Name:</strong> [Company Name]<br />
-                            <strong>Email:</strong> [Support Email]<br />
-                            <strong>Address:</strong> [Company Address]
+                            <strong>Company Name:</strong> MSME SHAKTI(Scheme Budget Support)<br />
+                            <strong>Email:</strong>c.care@msmeloan.sbs<br />
+                            <strong>Address:</strong> Door No.2/1, 5th Cross Street, CIT Colony, Mylapore, Chennai Chennai TN 600004 IN
                         </p>
                     </div>
                 </div>

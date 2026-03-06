@@ -486,13 +486,24 @@ export default function Profile() {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Nature</p>
                                         {isEditing ? (
-                                            <input
-                                                type="text"
+                                            <select
                                                 value={formData.business_nature}
                                                 onChange={(e) => setFormData({ ...formData, business_nature: e.target.value })}
-                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                placeholder="e.g. Grocery, Electronics, Garment"
-                                            />
+                                                className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
+                                            >
+                                                <option value="">Select Business Nature</option>
+                                                <option value="Retailer">Retailer</option>
+                                                <option value="Seller">Seller</option>
+                                                <option value="Service">Service</option>
+                                                <option value="Wholesale">Wholesale</option>
+                                                <option value="Manufacturing">Manufacturing</option>
+                                                <option value="Distribution">Distribution</option>
+                                                <option value="Food & Beverage">Food & Beverage</option>
+                                                <option value="Healthcare">Healthcare</option>
+                                                <option value="Technology/IT">Technology/IT</option>
+                                                <option value="Real Estate">Real Estate</option>
+                                                <option value="Other">Other</option>
+                                            </select>
                                         ) : (
                                             <p className="text-base font-semibold text-slate-900">{user.business_nature || 'Not Set'}</p>
                                         )}
