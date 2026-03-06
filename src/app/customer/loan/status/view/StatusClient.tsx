@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, Me
 import { useState, useEffect, useMemo } from 'react';
 import { apiFetch } from '@/lib/api';
 import KycForm from '@/components/loan/KycForm';
+import KycVerificationLoading from '@/components/loan/KycVerificationLoading';
 import { toast } from '@/components/ui/Toast';
 
 export default function LoanStatus() {
@@ -23,6 +24,7 @@ export default function LoanStatus() {
     const [userData, setUserData] = useState<any>(null);
     const [existingKycData, setExistingKycData] = useState<any>(null);
     const [tickets, setTickets] = useState<any[]>([]);
+    const [showVerificationLoading, setShowVerificationLoading] = useState(false);
 
     const fetchLoan = async () => {
         try {
@@ -156,6 +158,12 @@ export default function LoanStatus() {
     const handleKycSubmit = async (kycData: any) => {
         setSubmitting(true);
         try {
+            // First, start the Sci-Fi loading animation
+            setShowVerificationLoading(true);
+
+            // Wait for 7 seconds for the "Cyberpunk Verification Process"
+            await new Promise(resolve => setTimeout(resolve, 7000));
+
             // First, save the KYC data to the loan
             await apiFetch(`/loans/${loan.id}/kyc-data`, {
                 method: 'POST',
@@ -177,6 +185,7 @@ export default function LoanStatus() {
             toast.error(e.message || 'Confirmation failed');
         } finally {
             setSubmitting(false);
+            setShowVerificationLoading(false);
         }
     };
 
@@ -552,6 +561,9 @@ export default function LoanStatus() {
                     />
                 )
             }
+
+            {/* Sci-Fi Loading Overlay */}
+            {showVerificationLoading && <KycVerificationLoading />}
         </div >
     );
 }
