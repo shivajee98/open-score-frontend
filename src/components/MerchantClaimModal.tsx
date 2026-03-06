@@ -111,13 +111,25 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
                             </div>
                             <div className="relative">
                                 <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="text"
-                                    placeholder="Nature of Business (e.g. Garment)"
-                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none"
+                                <select
+                                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:border-blue-600 focus:bg-white transition-all outline-none appearance-none"
                                     value={formData.business_nature}
                                     onChange={e => setFormData({ ...formData, business_nature: e.target.value })}
-                                />
+                                >
+                                    <option value="">Select Nature of Business</option>
+                                    <option value="Retailer">Retailer</option>
+                                    <option value="Seller">Seller</option>
+                                    <option value="Service">Service</option>
+                                    <option value="Wholesale">Wholesale</option>
+                                    <option value="Manufacturing">Manufacturing</option>
+                                    <option value="Distribution">Distribution</option>
+                                    <option value="Food & Beverage">Food & Beverage</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Technology/IT">Technology/IT</option>
+                                    <option value="Real Estate">Real Estate</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
                             </div>
                             <div className="relative">
                                 <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />

@@ -526,8 +526,8 @@ export default function CustomerHome() {
                             >
                                 <div className={`absolute top-0 right-0 w-32 h-32 ${banner.accent}/10 rounded-full blur-2xl -mr-10 -mt-10`}></div>
                                 <div className="relative z-10 flex justify-between items-center">
-                                    <div className="flex-1">
-                                        <h3 className="text-white font-black text-[15px] tracking-tight leading-tight">
+                                    <div className="flex-1 min-w-0 pr-2">
+                                        <h3 className="text-white font-black text-[13px] sm:text-[15px] tracking-tight leading-tight line-clamp-2">
                                             {banner.title}
                                         </h3>
                                         <div className="flex items-center gap-3 mt-2">

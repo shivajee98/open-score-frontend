@@ -69,7 +69,7 @@ export default function MerchantLocator() {
             const params = new URLSearchParams();
             if (searchPincode) params.append('pincode', searchPincode);
             if (searchCity) params.append('city', searchCity);
-            if (searchCategory && searchCategory !== 'All') params.append('business_segment', searchCategory);
+            if (searchCategory && searchCategory !== 'All') params.append('business_nature', searchCategory);
 
             const res = await apiFetch(`/merchants/nearby?${params.toString()}`);
             setMerchants(res);

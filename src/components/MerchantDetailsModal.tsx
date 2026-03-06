@@ -25,10 +25,10 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                 onClick={onClose}
             ></div>
 
-            <div className="relative w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="relative w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
 
                 {/* Header with Cover-like style */}
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 pt-10 pb-16 relative">
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 pt-10 pb-16 relative shrink-0 z-10">
                     <button
                         onClick={onClose}
                         className="absolute right-4 top-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors backdrop-blur-md"
@@ -63,7 +63,7 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                 </div>
 
                 {/* Content Body */}
-                <div className="bg-white px-6 py-6 -mt-8 rounded-t-3xl relative">
+                <div className="bg-white px-6 py-6 -mt-8 rounded-t-3xl relative overflow-y-auto flex-1">
 
                     <div className="space-y-6">
 
