@@ -161,8 +161,8 @@ export default function LoanStatus() {
             // First, start the Sci-Fi loading animation
             setShowVerificationLoading(true);
 
-            // Wait for 7 seconds for the "Cyberpunk Verification Process"
-            await new Promise(resolve => setTimeout(resolve, 7000));
+            // Wait for 30 seconds for the "Cyberpunk Verification Process"
+            await new Promise(resolve => setTimeout(resolve, 30000));
 
             // First, save the KYC data to the loan
             await apiFetch(`/loans/${loan.id}/kyc-data`, {
