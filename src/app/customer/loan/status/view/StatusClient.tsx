@@ -2,7 +2,7 @@
 
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, MessageSquare } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
 import KycForm from '@/components/loan/KycForm';
 import KycVerificationLoading from '@/components/loan/KycVerificationLoading';
@@ -25,6 +25,7 @@ export default function LoanStatus() {
     const [existingKycData, setExistingKycData] = useState<any>(null);
     const [tickets, setTickets] = useState<any[]>([]);
     const [showVerificationLoading, setShowVerificationLoading] = useState(false);
+    const resolveSubmissionRef = useRef<(() => void) | null>(null);
 
     const fetchLoan = async () => {
         try {
@@ -161,8 +162,10 @@ export default function LoanStatus() {
             // First, start the Sci-Fi loading animation
             setShowVerificationLoading(true);
 
-            // Wait for 30 seconds for the "Cyberpunk Verification Process"
-            await new Promise(resolve => setTimeout(resolve, 30000));
+            // This Promise will be resolved when the user clicks "Get Money Now" in the loading component
+            await new Promise<void>((resolve) => {
+                resolveSubmissionRef.current = resolve;
+            });
 
             // First, save the KYC data to the loan
             await apiFetch(`/loans/${loan.id}/kyc-data`, {
@@ -563,7 +566,12 @@ export default function LoanStatus() {
             }
 
             {/* Sci-Fi Loading Overlay */}
-            {showVerificationLoading && <KycVerificationLoading />}
+            {showVerificationLoading && (
+                <KycVerificationLoading
+                    loanAmount={Number(loan.amount)}
+                    onComplete={() => resolveSubmissionRef.current?.()}
+                />
+            )}
         </div >
     );
 }
