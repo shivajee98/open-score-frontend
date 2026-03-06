@@ -44,6 +44,8 @@ export default function MerchantLocator() {
     const [city, setCity] = useState("");
     const [category, setCategory] = useState("All");
     const [merchants, setMerchants] = useState<Merchant[]>([]);
+    const [availableCategories, setAvailableCategories] = useState<string[]>(['All', 'Retail', 'Grocery', 'Pharmacy']);
+    const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
     // Details Modal State
     const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null);
@@ -83,9 +85,9 @@ export default function MerchantLocator() {
         setDetailsOpen(true);
     };
 
-    // Initial load from profile
+    // Initial load from profile and fetch categories
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchInitialData = async () => {
             try {
                 const res = await apiFetch('/auth/me');
                 if (res.pincode) setPincode(res.pincode);
@@ -93,8 +95,17 @@ export default function MerchantLocator() {
             } catch (e) {
                 console.error(e);
             }
-        }
-        fetchProfile();
+
+            try {
+                const cats = await apiFetch('/merchants/categories');
+                if (Array.isArray(cats)) {
+                    setAvailableCategories(['All', ...cats.filter(Boolean)]);
+                }
+            } catch (e) {
+                console.error('Failed to fetch categories:', e);
+            }
+        };
+        fetchInitialData();
     }, []);
 
     // Trigger search on debounce
@@ -141,7 +152,7 @@ export default function MerchantLocator() {
 
                         <div className="relative">
                             <div className="flex overflow-x-auto gap-2 pb-1 -mx-2 px-2 snap-x scrollbar-hide pr-12">
-                                {['All', 'Retail', 'Grocery', 'Pharmacy', 'Electronics', 'Clothing', 'Restaurant', 'Hardware', 'Services'].map(cat => (
+                                {availableCategories.map(cat => (
                                     <button
                                         key={cat}
                                         onClick={() => setCategory(cat)}
@@ -152,7 +163,7 @@ export default function MerchantLocator() {
                                 ))}
                             </div>
                             <div className="absolute right-0 top-0 h-full bg-gradient-to-l from-white via-white to-transparent w-16 flex items-start justify-end pr-2 pointer-events-none">
-                                <button className="w-9 h-9 mt-0.5 rounded-xl bg-red-50 text-red-500 border border-red-100 flex items-center justify-center shadow-sm pointer-events-auto hover:bg-red-100 hover:text-red-600 transition-colors active:scale-95">
+                                <button onClick={() => setCategoryModalOpen(true)} className="w-9 h-9 mt-0.5 rounded-xl bg-red-50 text-red-500 border border-red-100 flex items-center justify-center shadow-sm pointer-events-auto hover:bg-red-100 hover:text-red-600 transition-colors active:scale-95">
                                     <SlidersHorizontal size={14} strokeWidth={2.5} />
                                 </button>
                             </div>
@@ -268,6 +279,37 @@ export default function MerchantLocator() {
                 onClose={() => setDetailsOpen(false)}
                 merchant={selectedMerchant}
             />
+
+            {/* Category Modal */}
+            {categoryModalOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setCategoryModalOpen(false)}></div>
+                    <div className="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                            <h3 className="font-black text-slate-900 text-lg">Select Category</h3>
+                            <button onClick={() => setCategoryModalOpen(false)} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="p-4 overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-3">
+                                {availableCategories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => {
+                                            setCategory(cat);
+                                            setCategoryModalOpen(false);
+                                        }}
+                                        className={`px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border text-left ${category === cat ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-white hover:border-slate-200 hover:shadow-md'}`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
