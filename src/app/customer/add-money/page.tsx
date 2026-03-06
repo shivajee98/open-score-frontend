@@ -17,7 +17,7 @@ import {
     FileText, ChevronRight, Sparkles, ShieldCheck,
     Coins, ReceiptText, RefreshCcw
 } from 'lucide-react';
-import QRCode from 'react-qr-code';
+
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 
@@ -50,8 +50,8 @@ export default function AddMoneyPage() {
     const [uploadSuccess, setUploadSuccess] = useState(false);
 
     const getUpiUrl = () => {
-        const payeeVpa = "risexpe@ybl";
-        const payeeName = "OpenScore";
+        const payeeVpa = "6204342466@indianbk";
+        const payeeName = "RISEX PAY";
         const transactionRef = `TXN${Date.now()}`;
         const transactionNote = paymentPurpose === 'emi_payment' ? "EMI Payment" : "Wallet Topup";
         const currency = "INR";
@@ -475,14 +475,14 @@ export default function AddMoneyPage() {
                         </div>
 
                         <div className="p-10 flex flex-col items-center bg-white">
-                            <div className="bg-white p-5 rounded-[2.5rem] border-8 border-slate-50 shadow-inner mb-8 transition-all hover:scale-105 duration-700">
-                                <QRCode value={getUpiUrl()} size={200} viewBox={`0 0 256 256`} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
+                            <div className="bg-white p-2 rounded-[2.5rem] border-8 border-slate-50 shadow-inner mb-8 transition-all hover:scale-105 duration-700">
+                                <img src="/upi_qr.jpeg" alt="UPI QR Code" className="w-[200px] h-auto rounded-[1.5rem]" />
                             </div>
 
                             <div className="space-y-6 w-full text-center">
                                 <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 relative">
                                     <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.15em] mb-1">Payee VPA</p>
-                                    <p className="text-slate-900 font-black text-base tracking-tight uppercase">risexpe@ybl</p>
+                                    <p className="text-slate-900 font-black text-base tracking-tight uppercase">6204342466@indianbk</p>
                                     <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[8px] font-black p-1.5 px-3 rounded-lg uppercase tracking-tighter shadow-lg shadow-blue-500/30">Verified</div>
                                 </div>
 
