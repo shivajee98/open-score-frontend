@@ -379,18 +379,48 @@ export default function Profile() {
                     <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-500/10' : 'bg-blue-500/10'} rounded-full blur-3xl -mr-16 -mt-16`}></div>
 
                     <div className="relative text-center mb-12">
-                        <div className="w-32 h-32 mx-auto bg-slate-900 border-4 border-white text-white rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-2xl mb-6 overflow-hidden relative group">
-                            {user.profile_image ? (
-                                <img src={user.profile_image} className="w-full h-full object-cover" alt={user.name} />
-                            ) : (
-                                <span>{user.name?.[0]}</span>
-                            )}
-                            {isEditing && (
+                        <label htmlFor="profile-photo-upload" className="cursor-pointer block">
+                             <div className="w-32 h-32 mx-auto bg-slate-900 border-4 border-white text-white rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-2xl mb-6 overflow-hidden relative group">
+                                {user.profile_image ? (
+                                    <img src={user.profile_image} className="w-full h-full object-cover" alt={user.name} />
+                                ) : (
+                                    <span>{user.name?.[0]}</span>
+                                )}
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Camera size={24} className="text-white" />
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        </label>
+                        <input
+                            type="file"
+                            id="profile-photo-upload"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                if (file.size > 5 * 1024 * 1024) {
+                                    toast.error("Image must be less than 5MB");
+                                    return;
+                                }
+                                try {
+                                    const formData = new FormData();
+                                    formData.append('profile_image', file);
+                                    
+                                    toast.success("Uploading profile photo...");
+                                    const res = await apiFetch('/auth/update-profile-photo', {
+                                        method: 'POST',
+                                        body: formData
+                                    });
+                                    if (res.error) throw new Error(res.error);
+                                    await mutateUser();
+                                    toast.success("Profile photo updated!");
+                                } catch (error: any) {
+                                    toast.error(error.message || "Failed to upload photo");
+                                }
+                            }}
+                        />
+
                         {isEditing ? (
                             <>
                                 <input
@@ -854,6 +884,14 @@ export default function Profile() {
                                         <User className="w-4 h-4" />
                                     </div>
                                     <span className="text-xs font-medium text-slate-700">Profile</span>
+                                </div>
+
+                                {/* My Work */}
+                                <div onClick={() => router.push('/customer/my-work')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-8 h-8 bg-violet-50 rounded-xl flex items-center justify-center text-violet-500 shadow-sm">
+                                        <Briefcase className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-700">My Work</span>
                                 </div>
 
                                 {/* Tutorial */}

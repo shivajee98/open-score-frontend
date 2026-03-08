@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -251,14 +251,25 @@ export default function CustomerHome() {
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} user={activeUser} />
 
-            <Link href="/customer/merchant-locator">
-                <button
-                    className="fixed bottom-24 right-4 rounded-full w-12 h-12 shadow-2xl z-40 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-blue-500/20"
-                    title="Find Merchants"
-                >
-                    <MapPin className="w-6 h-6" />
-                </button>
-            </Link>
+            <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-3 items-end">
+                <Link href="/customer/profile?editPhoto=true">
+                    <button
+                        className="rounded-full w-12 h-12 shadow-2xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-indigo-500/20"
+                        title="Add Profile Photo"
+                    >
+                        <User className="w-6 h-6" />
+                    </button>
+                </Link>
+                
+                <Link href="/customer/merchant-locator">
+                    <button
+                        className="rounded-full w-12 h-12 shadow-2xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-blue-500/20"
+                        title="Find Merchants"
+                    >
+                        <MapPin className="w-6 h-6" />
+                    </button>
+                </Link>
+            </div>
 
             {/* Header Redesign - Tech/Circuit Theme */}
             <div className={`px-4 pt-8 pb-10 relative overflow-hidden shadow-2xl ${isMerchant ? 'bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950' : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950'}`}>
@@ -436,6 +447,30 @@ export default function CustomerHome() {
                     </div>
                 </div>
             </div>
+
+            {/* Tie User OTP Alert */}
+            {
+                user?.pending_tie_otp && (
+                    <div className="px-4 mb-3">
+                        <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 p-5 rounded-3xl shadow-2xl shadow-indigo-900/40 border-[3px] border-indigo-500/30 flex flex-col gap-4 overflow-hidden relative">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shadow-inner border border-indigo-400/30">
+                                    <Lock size={24} strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-black text-sm leading-tight uppercase tracking-tight">Agent Link Request</h3>
+                                    <p className="text-indigo-200/80 text-[10px] font-black leading-tight mt-1 uppercase tracking-widest">Share this OTP with your agent</p>
+                                </div>
+                            </div>
+                            <div className="relative z-10 bg-black/40 backdrop-blur-md rounded-2xl py-3 px-5 border border-indigo-500/20 flex items-center justify-between">
+                                <span className="text-indigo-300 text-[10px] font-black uppercase tracking-widest">Secret Code</span>
+                                <span className="text-white text-3xl font-black tracking-[0.25em]">{user.pending_tie_otp}</span>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* KYC Alert (If any) */}
             {

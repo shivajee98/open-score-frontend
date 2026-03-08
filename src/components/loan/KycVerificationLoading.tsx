@@ -76,19 +76,20 @@ export default function KycVerificationLoading({ loanAmount, onComplete }: KycVe
                 <div className="absolute w-[300px] h-[300px] bg-cyan-500/15 rounded-full blur-[60px] -top-[50px] -left-[50px]"></div>
                 <div className="absolute w-[350px] h-[350px] bg-emerald-500/10 rounded-full blur-[70px] -bottom-[100px] -right-[50px]"></div>
 
-                <div className={`relative bg-slate-900/40 backdrop-blur-3xl border border-cyan-500/20 rounded-[28px] p-12 w-full max-w-[340px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-[1s] z-10 ${showSuccess ? 'translate-y-0 scale-100' : 'translate-y-[30px] scale-[0.95]'
+                <div className={`relative bg-slate-900/40 backdrop-blur-3xl border border-cyan-500/20 rounded-[28px] px-6 py-10 w-full max-w-[360px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-[1s] z-10 ${showSuccess ? 'translate-y-0 scale-100' : 'translate-y-[30px] scale-[0.95]'
                     }`}>
-                    <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(16,185,129,0.4)] animate-float border-4 border-[#050b14]">
-                        <Check size={48} className="text-white" strokeWidth={3} />
+                    <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(16,185,129,0.4)] animate-float border-4 border-[#050b14]">
+                        <Check size={40} className="text-white" strokeWidth={3} />
                     </div>
 
-                    <h1 className="text-[28px] font-black text-white mb-2 tracking-wide shadow-cyan-500/50 drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">CONGRATULATIONS</h1>
-                    <p className="text-cyan-100/70 font-medium mb-10 text-sm">Your profile has been verified successfully.</p>
+                    <h1 className="text-2xl font-black text-white mb-2 tracking-wide shadow-cyan-500/50 drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">CONGRATULATIONS</h1>
+                    <p className="text-cyan-100/70 font-medium mb-8 text-sm">Your profile has been verified successfully.</p>
 
                     <div className="bg-[#0b1325] border border-cyan-500/20 rounded-2xl p-6 mb-8 relative overflow-hidden group">
                         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 opacity-50"></div>
-                        <p className="text-[11px] font-bold text-cyan-400 uppercase tracking-widest mb-2 relative z-10">Approved Loan Amount</p>
-                        <p className="text-5xl font-black text-white drop-shadow-[0_0_12px_rgba(16,185,129,0.6)] relative z-10 tracking-tight">₹{loanAmount.toLocaleString()}</p>
+                        <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-2 relative z-10">Approved Loan Amount</p>
+                        <p className={`font-black text-white drop-shadow-[0_0_12px_rgba(16,185,129,0.6)] relative z-10 tracking-tight break-all ${loanAmount.toLocaleString().length > 7 ? 'text-3xl' : 'text-4xl'
+                            }`}>₹{loanAmount.toLocaleString()}</p>
                     </div>
 
                     <button
@@ -193,11 +194,11 @@ export default function KycVerificationLoading({ loanAmount, onComplete }: KycVe
                             <div
                                 key={i}
                                 className={`flex items-center gap-5 transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' :
-                                        isPast ? 'opacity-50 translate-y-0' : 'opacity-30 translate-y-3'
+                                    isPast ? 'opacity-50 translate-y-0' : 'opacity-30 translate-y-3'
                                     }`}
                             >
                                 <div className={`w-12 h-12 rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all duration-500 ${isActive ? 'border-cyan-400 bg-cyan-50 shadow-[0_4px_15px_rgba(6,182,212,0.2)] scale-110 animate-soft-pulse' :
-                                        isPast ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-white'
+                                    isPast ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-white'
                                     }`}>
                                     {isPast ? (
                                         <Check size={22} className="text-emerald-500" strokeWidth={3} />
@@ -207,7 +208,7 @@ export default function KycVerificationLoading({ loanAmount, onComplete }: KycVe
                                 </div>
                                 <div className="flex flex-col flex-1 overflow-hidden">
                                     <span className={`text-[13px] font-black uppercase tracking-wider truncate transition-colors duration-500 ${isActive ? 'text-slate-900' :
-                                            isPast ? 'text-emerald-600 font-bold' : 'text-slate-400'
+                                        isPast ? 'text-emerald-600 font-bold' : 'text-slate-400'
                                         }`}>
                                         {p.title}
                                     </span>
