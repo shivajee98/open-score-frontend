@@ -136,11 +136,16 @@ export default function TeamEarningsPage() {
                             stats.history.map((item: any) => (
                                 <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.role === 'MERCHANT' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
                                             <Users size={18} />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black text-slate-900 leading-tight">{item.name}</p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-xs font-black text-slate-900 leading-tight">{item.name}</p>
+                                                <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${item.role === 'MERCHANT' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
+                                                    {item.role}
+                                                </span>
+                                            </div>
                                             <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.mobile}</p>
                                         </div>
                                     </div>
@@ -148,6 +153,10 @@ export default function TeamEarningsPage() {
                                         <p className="text-sm font-black text-emerald-600 tracking-tight">
                                             +₹{item.signup_bonus + item.loan_bonus}
                                         </p>
+                                        <div className="text-[8px] font-bold text-slate-400 mt-0.5 space-x-1">
+                                            {item.signup_bonus > 0 && <span>QR: +₹{item.signup_bonus}</span>}
+                                            {item.loan_bonus > 0 && <span>Loan: +₹{item.loan_bonus}</span>}
+                                        </div>
                                         <div className="flex items-center justify-end gap-1 mt-0.5">
                                             {item.status === 'VERIFIED' ? <CheckCircle size={10} className="text-emerald-500" /> : <Clock size={10} className="text-amber-500" />}
                                             <p className={`text-[8px] font-black uppercase tracking-widest ${item.status === 'VERIFIED' ? 'text-emerald-500' : 'text-amber-500'}`}>
