@@ -107,19 +107,45 @@ export default function TeamEarningsPage() {
                     </p>
                 </div>
 
-                {/* Status/Banner */}
-                <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200/50 relative overflow-hidden">
-                    <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mb-16"></div>
-                    <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                            <Users size={24} className="text-white" />
-                        </div>
-                        <div>
-                            <h3 className="font-black text-sm uppercase tracking-wider">Referring Profit</h3>
-                            <p className="text-xs text-indigo-100 font-medium">Earn ₹10 per signup & ₹600 per loan disbursement from your direct refers.</p>
+                {/* Status/Banner — Earning Rates */}
+                {(stats?.my_rates?.qr_onboarding_rate > 0 || stats?.my_rates?.loan_disbursement_rate > 0) ? (
+                    <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200/50 relative overflow-hidden">
+                        <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mb-16"></div>
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md shrink-0">
+                                <TrendingUp size={24} className="text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-black text-sm uppercase tracking-wider mb-2">Your Earning Rates</h3>
+                                <div className="flex flex-wrap gap-3">
+                                    <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
+                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">QR Onboarding</p>
+                                        <p className="text-lg font-black">₹{stats.my_rates.qr_onboarding_rate.toLocaleString()}</p>
+                                        <p className="text-[8px] text-indigo-200/70 uppercase">Per Merchant</p>
+                                    </div>
+                                    <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
+                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Loan Disbursement</p>
+                                        <p className="text-lg font-black">₹{stats.my_rates.loan_disbursement_rate.toLocaleString()}</p>
+                                        <p className="text-[8px] text-indigo-200/70 uppercase">Per Loan</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200/50 relative overflow-hidden">
+                        <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mb-16"></div>
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                                <Users size={24} className="text-white" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-sm uppercase tracking-wider">Referring Profit</h3>
+                                <p className="text-xs text-indigo-100 font-medium">Earn per signup & per loan disbursement from your direct refers.</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Earnings List */}
                 <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
