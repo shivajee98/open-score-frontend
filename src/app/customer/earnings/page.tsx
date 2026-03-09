@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 
@@ -59,6 +59,40 @@ export default function TeamEarningsPage() {
             </div>
 
             <div className="max-w-2xl mx-auto px-4 -mt-10 relative z-20 space-y-4">
+
+                {/* Earn Wallet Card */}
+                <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-[2rem] p-6 shadow-2xl text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16" />
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <p className="text-[9px] font-black text-violet-200 uppercase tracking-widest">Earn Wallet</p>
+                                <h3 className="text-3xl font-black mt-1">
+                                    ₹{((stats?.qr_earning || 0) + (stats?.loan_earning || 0) + (stats?.bonus_earned || 0)).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                                </h3>
+                                <p className="text-[10px] text-violet-200 font-medium mt-1">Total Earnings</p>
+                            </div>
+                            <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 shrink-0">
+                                <Coins size={26} className="text-white" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
+                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Onboarding</p>
+                                <p className="text-base font-black">₹{(stats?.qr_earning || 0).toLocaleString('en-IN')}</p>
+                            </div>
+                            <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
+                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Loan Bonus</p>
+                                <p className="text-base font-black">₹{(stats?.loan_earning || 0).toLocaleString('en-IN')}</p>
+                            </div>
+                            <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
+                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Milestone</p>
+                                <p className="text-base font-black">₹{(stats?.bonus_earned || 0).toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Balance Card */}
                 <div className="bg-white rounded-[2rem] p-8 shadow-2xl shadow-slate-200/50 border border-slate-100">
                     <div className="flex justify-between items-start mb-6">
@@ -124,11 +158,20 @@ export default function TeamEarningsPage() {
                                         <p className="text-[8px] text-indigo-200/70 uppercase">Per Merchant</p>
                                     </div>
                                     <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
-                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Loan Disbursement</p>
-                                        <p className="text-lg font-black">₹{stats.my_rates.loan_disbursement_rate.toLocaleString()}</p>
-                                        <p className="text-[8px] text-indigo-200/70 uppercase">Per Loan</p>
-                                    </div>
-                                </div>
+                                         <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Loan Disbursement</p>
+                                         <p className="text-lg font-black">₹{stats.my_rates.loan_disbursement_rate.toLocaleString()}</p>
+                                         <p className="text-[8px] text-indigo-200/70 uppercase">Per Loan</p>
+                                     </div>
+                                     {stats.my_rates.bonus_milestone_count > 0 && (
+                                         <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl px-4 py-2 backdrop-blur-md">
+                                             <p className="text-[9px] text-amber-200 uppercase tracking-widest font-bold flex items-center gap-1">
+                                                 <Trophy size={8} /> Milestone
+                                             </p>
+                                             <p className="text-lg font-black">₹{stats.my_rates.bonus_milestone_amount.toLocaleString()}</p>
+                                             <p className="text-[8px] text-amber-200/70 uppercase">Per {stats.my_rates.bonus_milestone_count} Onboards</p>
+                                         </div>
+                                     )}
+                                 </div>
                             </div>
                         </div>
                     </div>

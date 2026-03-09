@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Briefcase, FileText, CheckCircle, Clock, XCircle, ShieldCheck, QrCode, UploadCloud, Coins, ArrowRight, Lock, File, IdCard, Wallet, MapPin, ZoomIn, ZoomOut, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Briefcase, FileText, CheckCircle, Clock, XCircle, ShieldCheck, QrCode, UploadCloud, Coins, ArrowRight, Lock, File, IdCard, Wallet, MapPin, ZoomIn, ZoomOut, ShieldAlert, Smartphone, Camera } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import QrStatusStepper from '@/components/qr/QrStatusStepper';
@@ -23,15 +23,20 @@ export default function MyWorkDashboard() {
     // Letter Editable Values
     const [editableOnboardingAmount, setEditableOnboardingAmount] = useState('100');
     const [editableLoanAmount, setEditableLoanAmount] = useState('600');
-    const [editableBonusThreshold, setEditableBonusThreshold] = useState('4000');
-    const [editableBonusLoans, setEditableBonusLoans] = useState('40');
+    const [editableBonusMilestoneCount, setEditableBonusMilestoneCount] = useState('10');
+    const [editableBonusMilestoneAmount, setEditableBonusMilestoneAmount] = useState('200');
 
     useEffect(() => {
         if (user) {
             const onboardingAmount = user.merchant_onboarding_amount || user.sub_user?.merchant_onboarding_amount || user.sub_user?.referral_amount || 100;
             const loanAmount = user.loan_disbursement_commission || user.sub_user?.loan_disbursement_commission || user.sub_user?.cashback_flat_amount || 600;
+            const bonusCount = user.bonus_milestone_count || user.sub_user?.bonus_milestone_count || 10;
+            const bonusAmount = user.bonus_milestone_amount || user.sub_user?.bonus_milestone_amount || 200;
+            
             setEditableOnboardingAmount(onboardingAmount.toString());
             setEditableLoanAmount(loanAmount.toString());
+            setEditableBonusMilestoneCount(bonusCount.toString());
+            setEditableBonusMilestoneAmount(bonusAmount.toString());
         }
     }, [user]);
     
@@ -41,6 +46,7 @@ export default function MyWorkDashboard() {
 
     // Earn Wallet State
     const [earnStats, setEarnStats] = useState<any>(null);
+    const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
     const fetchEarnStats = async () => {
         try {
@@ -241,42 +247,6 @@ export default function MyWorkDashboard() {
                             )}
                         </div>
 
-                        {/* Earn Wallet Card */}
-                        {user?.sub_user_id && (
-                            <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16" />
-                                <div className="relative z-10">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                            <p className="text-[9px] font-black text-violet-200 uppercase tracking-widest">Earn Wallet</p>
-                                            <h3 className="text-3xl font-black mt-1">
-                                                ₹{((earnStats?.qr_earning || 0) + (earnStats?.loan_earning || 0)).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
-                                            </h3>
-                                            <p className="text-[10px] text-violet-200 font-medium mt-1">Total Earnings (Read-only)</p>
-                                        </div>
-                                        <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 shrink-0">
-                                            <Coins size={26} className="text-white" />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3 mb-4">
-                                        <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                                            <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Onboarding</p>
-                                            <p className="text-base font-black">₹{(earnStats?.qr_earning || 0).toLocaleString('en-IN')}</p>
-                                        </div>
-                                        <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                                            <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Loan Bonus</p>
-                                            <p className="text-base font-black">₹{(earnStats?.loan_earning || 0).toLocaleString('en-IN')}</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => router.push('/customer/earnings')}
-                                        className="w-full py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
-                                    >
-                                        View Full Earnings <ArrowRight size={12} />
-                                    </button>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Digital I-Card Summary */}
 
@@ -353,10 +323,18 @@ export default function MyWorkDashboard() {
                                 <p className="text-xs text-emerald-700 mt-1">Your documents have been verified.</p>
                                 <button 
                                     onClick={handleReKyc} 
-                                    className="mt-6 px-5 py-2.5 bg-white text-emerald-800 text-xs font-black uppercase tracking-widest rounded-xl shadow-sm border border-emerald-200 hover:bg-emerald-100 transition-colors active:scale-95"
+                                    disabled={!user?.kyc_verification?.re_kyc_allowed}
+                                    className={`mt-6 px-5 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl shadow-sm border transition-all active:scale-95 ${
+                                        user?.kyc_verification?.re_kyc_allowed 
+                                        ? 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-100' 
+                                        : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50'
+                                    }`}
                                 >
-                                    Replace Documents (Re-KYC)
+                                    {user?.kyc_verification?.re_kyc_allowed ? 'Replace Documents (Re-KYC)' : 'Re-KYC Locked by Agent'}
                                 </button>
+                                {!user?.kyc_verification?.re_kyc_allowed && (
+                                    <p className="text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-tighter">Contact your Agent to enable Re-KYC</p>
+                                )}
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -395,7 +373,7 @@ export default function MyWorkDashboard() {
                                         if (!file) return;
                                         if (file.size > 5 * 1024 * 1024) { return toast.error("Image too large (max 5MB)"); }
                                         
-                                        toast.info(`Uploading ${docLabel}...`);
+                                        setUploadingDoc(doc);
                                         try {
                                             const fd = new FormData();
                                             fd.append(doc, file);
@@ -408,6 +386,8 @@ export default function MyWorkDashboard() {
                                             mutate(); // Refresh user data to show new image
                                         } catch (err: any) {
                                             toast.error(err.message || "Upload failed");
+                                        } finally {
+                                            setUploadingDoc(null);
                                         }
                                     };
 
@@ -420,19 +400,36 @@ export default function MyWorkDashboard() {
                                                 </div>
                                                 
                                                 {/* Preview Image if exists */}
-                                                {existingImg ? (
+                                                {uploadingDoc === doc ? (
+                                                    <div className="flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest animate-pulse">
+                                                        <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                                                        Uploading...
+                                                    </div>
+                                                ) : existingImg ? (
                                                     <div className="flex items-center gap-3">
-                                                        <img src={`https://api.msmeloan.sbs${existingImg}`} className="h-10 w-16 rounded-md object-cover border border-slate-200" />
-                                                        <label className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest cursor-pointer hover:underline">
-                                                            Change
-                                                        <input type="file" className="hidden" accept="image/*" onChange={handleUploadDoc} {...(doc === 'live_selfie' ? { capture: 'user' } : {})} />
-                                                        </label>
+                                                        <img src={`https://api.msmeloan.sbs${existingImg}`} className="h-10 w-16 rounded-md object-cover border border-slate-200 shadow-sm" />
+                                                        <div className="flex flex-col gap-1">
+                                                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest cursor-pointer hover:underline flex items-center gap-1">
+                                                                <Camera size={10} /> Cam
+                                                                <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleUploadDoc} />
+                                                            </label>
+                                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:underline flex items-center gap-1">
+                                                                <UploadCloud size={10} /> Gal
+                                                                <input type="file" className="hidden" accept="image/*" onChange={handleUploadDoc} />
+                                                            </label>
+                                                        </div>
                                                     </div>
                                                 ) : (
-                                                    <label className="flex items-center justify-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors shadow-sm">
-                                                        <UploadCloud size={14} /> Upload
-                                                        <input type="file" className="hidden" accept="image/*" onChange={handleUploadDoc} {...(doc === 'live_selfie' ? { capture: 'user' } : {})} />
-                                                    </label>
+                                                    <div className="flex items-center gap-2">
+                                                        <label className="flex items-center justify-center gap-1.5 bg-indigo-50 border border-indigo-100 px-3 py-2 rounded-xl text-[10px] font-black text-indigo-700 cursor-pointer hover:bg-indigo-100 transition-all shadow-sm uppercase tracking-widest whitespace-nowrap">
+                                                            <Camera size={14} /> Camera
+                                                            <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleUploadDoc} />
+                                                        </label>
+                                                        <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 px-3 py-2 rounded-xl text-[10px] font-black text-slate-600 cursor-pointer hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest whitespace-nowrap">
+                                                            <UploadCloud size={14} /> Gallery
+                                                            <input type="file" className="hidden" accept="image/*" onChange={handleUploadDoc} />
+                                                        </label>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -471,7 +468,40 @@ export default function MyWorkDashboard() {
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                <QrBookingForm onRefresh={() => {mutate(); fetchQrHistory();}} />
+                                <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50 text-center space-y-6">
+                                    <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto text-indigo-600 shadow-inner">
+                                        <QrCode size={40} strokeWidth={2.5} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Order Physical QR Cards</h3>
+                                        <p className="text-slate-500 text-xs font-bold leading-relaxed mt-2 px-4 uppercase tracking-widest">
+                                            Get high-quality branded QR cards delivered to your doorstep. Stand out from the competition.
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Security Deposit</p>
+                                            <p className="text-lg font-black text-slate-900">₹1,000</p>
+                                        </div>
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery</p>
+                                            <p className="text-lg font-black text-emerald-600 uppercase">Free</p>
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={() => router.push('/customer/qr-payment')}
+                                        className="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl uppercase tracking-[0.2em] text-xs shadow-2xl shadow-indigo-600/30 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                    >
+                                        <Smartphone size={16} /> Book QR Now
+                                        <ArrowRight size={16} className="opacity-50" />
+                                    </button>
+                                    
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                                        Instant Approval • Doorstep Delivery • Premium Quality
+                                    </p>
+                                </div>
                                 <QrHistoryList history={qrHistory} loading={loadingHistory} onRefresh={fetchQrHistory} />
                             </div>
                         )}
@@ -699,9 +729,9 @@ export default function MyWorkDashboard() {
                                                 </td>
                                             </tr>
                                             <tr className="bg-amber-50/30">
-                                                <td className="p-4 text-indigo-950 italic">Monthly Bonus Target (Threshold)</td>
+                                                <td className="p-4 text-indigo-950 italic">Onboarding Bonus Milestone</td>
                                                 <td className="p-4 text-indigo-900 flex items-center gap-1">
-                                                    ₹<input type="text" className="w-12 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusThreshold} onChange={(e) => setEditableBonusThreshold(e.target.value)} /> on <input type="text" className="w-10 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusLoans} onChange={(e) => setEditableBonusLoans(e.target.value)} /> Successful Loans
+                                                    ₹<input type="text" className="w-12 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneAmount} onChange={(e) => setEditableBonusMilestoneAmount(e.target.value)} /> on completing <input type="text" className="w-10 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneCount} onChange={(e) => setEditableBonusMilestoneCount(e.target.value)} /> Onboardings
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -780,266 +810,6 @@ export default function MyWorkDashboard() {
     );
 }
 
-function QrBookingForm({ onRefresh }: { onRefresh: () => void }) {
-    const [step, setStep] = useState(1);
-    const [submitting, setSubmitting] = useState(false);
-    
-    const [form, setForm] = useState({
-        full_name: '',
-        mobile_number: '',
-        address: '',
-        city: '',
-        pin_code: '',
-        landmark: '',
-        alternate_mobile: '',
-        security_amount: '1000'
-    });
-    const [screenshot, setScreenshot] = useState<File | null>(null);
-
-    const handleNext = () => {
-        if (!form.address || !form.city || !form.pin_code) {
-            return toast.error("Please fill in all address fields");
-        }
-        setStep(2);
-    };
-
-    const handleSubmit = async () => {
-        if (!screenshot) {
-            return toast.error("Please upload payment screenshot");
-        }
-        setSubmitting(true);
-        try {
-            const fd = new FormData();
-            fd.append('full_name', form.full_name);
-            fd.append('mobile_number', form.mobile_number);
-            fd.append('address', form.address);
-            fd.append('city', form.city);
-            fd.append('pin_code', form.pin_code);
-            fd.append('landmark', form.landmark);
-            fd.append('alternate_mobile', form.alternate_mobile);
-            fd.append('security_amount', form.security_amount);
-            fd.append('payment_screenshot', screenshot);
-
-            const res = await apiFetch('/auth/team/qr-book', {
-                method: 'POST',
-                body: fd,
-            });
-
-            if (res.error) throw new Error(res.error);
-            toast.success("QR Code requested successfully! Pending Agent approval.");
-            onRefresh();
-        } catch (err: any) {
-            toast.error(err.message || "Failed to book QR Code");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    return (
-        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
-            <h2 className="text-lg font-black text-slate-900 mb-1">Book Physical QR</h2>
-            <p className="text-xs font-medium text-slate-500 mb-6">Security Deposit QR is not refundable or not transferable</p>
-
-            {/* Progress Bar */}
-            <div className="flex items-center mb-8">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${step >= 1 ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>1</div>
-                <div className={`flex-1 h-1 mx-2 ${step >= 2 ? 'bg-indigo-600' : 'bg-slate-200'} transition-all`}></div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${step >= 2 ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>2</div>
-            </div>
-
-            {step === 1 && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
-                    <div>
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">Full Name</label>
-                        <input
-                            type="text"
-                            value={form.full_name}
-                            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                            placeholder="Full Name..."
-                            className="w-full text-sm font-medium text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 outline-none"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">Mobile Number</label>
-                        <input
-                            type="text"
-                            value={form.mobile_number}
-                            onChange={(e) => setForm({ ...form, mobile_number: e.target.value })}
-                            placeholder="Mobile Number..."
-                            className="w-full text-sm font-medium text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 outline-none"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">Alternate Mobile Number</label>
-                        <input
-                            type="text"
-                            value={form.alternate_mobile}
-                            onChange={(e) => setForm({ ...form, alternate_mobile: e.target.value })}
-                            placeholder="Alternate Mobile Number..."
-                            className="w-full text-sm font-medium text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 outline-none"
-                        />
-                    </div>
-                    <div>
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">Delivery Address</label>
-                        <textarea
-                            value={form.address}
-                            onChange={(e) => setForm({ ...form, address: e.target.value })}
-                            placeholder="Full street address..."
-                            className="w-full text-sm font-medium text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 outline-none"
-                            rows={3}
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">City</label>
-                            <input
-                                type="text"
-                                value={form.city}
-                                onChange={(e) => setForm({ ...form, city: e.target.value })}
-                                placeholder="City"
-                                className="w-full text-sm font-medium text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">PIN Code</label>
-                            <input
-                                type="text"
-                                value={form.pin_code}
-                                onChange={(e) => setForm({ ...form, pin_code: e.target.value.replace(/\D/g, '') })}
-                                maxLength={6}
-                                placeholder="6 Digits"
-                                className="w-full text-sm font-medium text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 outline-none"
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">Landmark</label>
-                        <input
-                            type="text"
-                            value={form.landmark}
-                            onChange={(e) => setForm({ ...form, landmark: e.target.value })}
-                            placeholder="Near by..."
-                            className="w-full text-sm font-medium text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl p-3 outline-none"
-                        />
-                    </div>
-                    <button onClick={handleNext} className="w-full py-4 mt-4 bg-indigo-600 text-white font-black rounded-xl uppercase tracking-widest text-xs shadow-xl hover:bg-indigo-700 transition-colors">
-                        Proceed To Payment
-                    </button>
-                </div>
-            )}
-
-            {step === 2 && (
-                <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
-                    {/* Amount Selection */}
-                    <div>
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">Security Deposit Amount</label>
-                        <div className="grid grid-cols-3 gap-3">
-                            {['1000', '2000', '5000'].map((amt) => (
-                                <button
-                                    key={amt}
-                                    type="button"
-                                    onClick={() => setForm({ ...form, security_amount: amt })}
-                                    className={`py-3 rounded-xl border-2 font-black text-sm transition-all ${form.security_amount === amt ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-md' : 'border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'}`}
-                                >
-                                    ₹{amt}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Payment Instructions */}
-                    <div className="bg-gradient-to-br from-indigo-900 to-indigo-950 rounded-2xl p-5 text-white shadow-xl">
-                        <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest mb-1">Step 1 — Make Payment</p>
-                        <h4 className="text-lg font-black mb-3">Pay ₹{form.security_amount} via UPI</h4>
-                        <div className="bg-white/10 rounded-xl px-4 py-3 flex items-center justify-between gap-3 border border-white/10">
-                            <span className="text-sm font-mono font-bold tracking-wide">openscore@ybl</span>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    navigator.clipboard.writeText('openscore@ybl');
-                                    toast.info('UPI ID copied!');
-                                }}
-                                className="text-[9px] font-black uppercase tracking-widest bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-all active:scale-95"
-                            >
-                                Copy
-                            </button>
-                        </div>
-                        <p className="text-[10px] text-indigo-200 mt-3 font-medium">
-                            Open any UPI app (PhonePe, GPay, Paytm), pay ₹{form.security_amount} to the UPI ID above, then take a screenshot of the success screen.
-                        </p>
-                    </div>
-
-                    {/* Upload Screenshot */}
-                    <div>
-                        <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Step 2 — Upload Screenshot</p>
-                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">Payment Confirmation Screenshot</label>
-                        {screenshot ? (
-                            <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-3 flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-3 truncate">
-                                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 shrink-0">
-                                        <CheckCircle size={20} />
-                                    </div>
-                                    <div className="truncate">
-                                        <p className="text-xs font-bold text-slate-700 truncate">{screenshot.name}</p>
-                                        <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">Screenshot ready</p>
-                                    </div>
-                                </div>
-                                <button type="button" onClick={() => setScreenshot(null)} className="p-2 text-slate-400 hover:bg-slate-200 rounded-lg transition-colors shrink-0">
-                                    <XCircle size={16} />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-2 gap-3">
-                                {/* Camera Option */}
-                                <label className="border-2 border-dashed border-indigo-200 bg-indigo-50/50 rounded-xl p-5 flex flex-col items-center justify-center text-indigo-500 cursor-pointer hover:bg-indigo-50 hover:border-indigo-400 transition-all group">
-                                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                        <QrCode size={20} className="text-indigo-500" />
-                                    </div>
-                                    <span className="font-black text-[9px] uppercase tracking-widest">Open Camera</span>
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        accept="image/*"
-                                        capture="environment"
-                                        onChange={(e) => e.target.files && setScreenshot(e.target.files[0])}
-                                    />
-                                </label>
-                                {/* Gallery Option */}
-                                <label className="border-2 border-dashed border-slate-200 rounded-xl p-5 flex flex-col items-center justify-center text-slate-500 cursor-pointer hover:bg-slate-50 hover:border-slate-400 transition-all group">
-                                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                        <UploadCloud size={20} className="text-slate-500" />
-                                    </div>
-                                    <span className="font-black text-[9px] uppercase tracking-widest">From Gallery</span>
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        accept="image/*"
-                                        onChange={(e) => e.target.files && setScreenshot(e.target.files[0])}
-                                    />
-                                </label>
-                            </div>
-                        )}
-                        <p className="text-[10px] text-slate-400 font-medium mt-2">Admin will verify your screenshot and approve the QR booking.</p>
-                    </div>
-
-                    <div className="flex gap-3 pt-2">
-                        <button type="button" onClick={() => setStep(1)} className="py-4 px-6 bg-slate-100 text-slate-700 font-black rounded-xl uppercase tracking-widest text-xs hover:bg-slate-200 transition-colors">
-                            Back
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={submitting || !screenshot}
-                            className="flex-1 py-4 bg-indigo-600 text-white font-black rounded-xl uppercase tracking-widest text-xs shadow-xl hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                        >
-                            {submitting ? 'Submitting...' : 'Submit for Verification'}
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
 
 function QrHistoryList({ history, loading, onRefresh }: { history: any[], loading: boolean, onRefresh: () => void }) {
     if (loading) return <div className="text-center py-10 font-bold text-slate-400 animate-pulse uppercase tracking-widest text-[10px]">Loading history...</div>;
