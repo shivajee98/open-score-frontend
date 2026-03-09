@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -252,14 +252,20 @@ export default function CustomerHome() {
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} user={activeUser} />
 
             <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-3 items-end">
-                <Link href="/customer/profile?editPhoto=true">
-                    <button
-                        className="rounded-full w-12 h-12 shadow-2xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-indigo-500/20"
-                        title="Add Profile Photo"
-                    >
-                        <User className="w-6 h-6" />
-                    </button>
-                </Link>
+                {user?.sub_user_id && (
+                    <Link href="/customer/my-work">
+                        <button
+                            className="relative rounded-full w-12 h-12 shadow-2xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-[0_0_15px_rgba(79,70,229,0.5)] animate-[pulse_2s_ease-in-out_infinite]"
+                            title="My Work"
+                        >
+                            <Users className="w-5 h-5" />
+                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border border-white"></span>
+                            </span>
+                        </button>
+                    </Link>
+                )}
                 
                 <Link href="/customer/merchant-locator">
                     <button
