@@ -486,7 +486,7 @@ export default function MyWorkDashboard() {
                                         </div>
                                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery</p>
-                                            <p className="text-lg font-black text-emerald-600 uppercase">Free</p>
+                                            <p className="text-lg font-black text-emerald-600 uppercase">Fee</p>
                                         </div>
                                     </div>
 

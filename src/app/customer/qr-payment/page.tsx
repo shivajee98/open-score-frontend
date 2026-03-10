@@ -24,9 +24,9 @@ import { apiFetch } from '@/lib/api';
 import { useStore } from '@/store/useStore';
 
 const SECURITY_AMOUNTS = [
-    { value: '1000', label: 'Basic', desc: '10 QR Cards' },
-    { value: '2000', label: 'Standard', desc: '25 QR Cards' },
-    { value: '5000', label: 'Premium', desc: '75 QR Cards' },
+    { value: '1000', label: 'Basic', desc: '1 Bunch' },
+    { value: '2000', label: 'Standard', desc: '2 Bunch' },
+    { value: '5000', label: 'Premium', desc: '6 Bunch' },
 ];
 
 export default function QrPaymentPage() {
@@ -39,6 +39,7 @@ export default function QrPaymentPage() {
         name: user?.name || '',
         mobile: user?.mobile || '',
         address: '',
+        city: '',
         pincode: '',
         landmark: '',
         security_amount: '1000'
@@ -58,7 +59,7 @@ export default function QrPaymentPage() {
     }, [user]);
 
     const handleNext = () => {
-        if (!form.name || !form.mobile || !form.address || !form.pincode) {
+        if (!form.name || !form.mobile || !form.address || !form.pincode || !form.city) {
             toast.error('Please fill all required fields');
             return;
         }
@@ -97,12 +98,14 @@ export default function QrPaymentPage() {
         setUploading(true);
         try {
             const formData = new FormData();
-            formData.append('name', form.name);
-            formData.append('mobile', form.mobile);
-            formData.append('address', `${form.address}, ${form.landmark}`.trim());
-            formData.append('pincode', form.pincode);
-            formData.append('amount', form.security_amount);
-            formData.append('image', screenshot);
+            formData.append('full_name', form.name);
+            formData.append('mobile_number', form.mobile);
+            formData.append('address', form.address);
+            formData.append('landmark', form.landmark);
+            formData.append('pin_code', form.pincode);
+            formData.append('city', form.city);
+            formData.append('security_amount', form.security_amount);
+            formData.append('payment_screenshot', screenshot);
 
             await apiFetch('/auth/team/qr-book', {
                 method: 'POST',
@@ -235,6 +238,16 @@ export default function QrPaymentPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
+                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">City</label>
+                                        <input
+                                            type="text"
+                                            value={form.city}
+                                            onChange={(e) => setForm({ ...form, city: e.target.value })}
+                                            placeholder="City Name"
+                                            className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                                        />
+                                    </div>
+                                    <div>
                                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Pincode</label>
                                         <input
                                             type="tel"
@@ -245,16 +258,16 @@ export default function QrPaymentPage() {
                                             className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Landmark</label>
-                                        <input
-                                            type="text"
-                                            value={form.landmark}
-                                            onChange={(e) => setForm({ ...form, landmark: e.target.value })}
-                                            placeholder="Optional"
-                                            className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
-                                        />
-                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Landmark</label>
+                                    <input
+                                        type="text"
+                                        value={form.landmark}
+                                        onChange={(e) => setForm({ ...form, landmark: e.target.value })}
+                                        placeholder="Optional"
+                                        className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                                    />
                                 </div>
                             </div>
                         </div>
