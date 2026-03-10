@@ -87,14 +87,10 @@ export default function RepaymentDashboard() {
         if (!pendingEmi) return;
 
         const amount = pendingEmi.amount;
-        const payeeVpa = "rzpy.test@icici"; // Testing VPA or user config
-        const payeeName = "OpenScore";
-        const transactionRef = `EMI${loanId}${Date.now()}`;
         const transactionNote = `EMI Payment for Loan #${loanId}`;
-        const currency = "INR";
 
         // Construct the UPI Intent URL
-        const upiUrl = `upi://pay?pa=${payeeVpa}&pn=${payeeName}&tr=${transactionRef}&tn=${transactionNote}&am=${amount}&cu=${currency}`;
+        const upiUrl = `upi://pay?pa=risexpe@ibl&pn=MS%20RISEX%20PAY&mc=0000&mode=02&purpose=00&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
 
         // Create a hidden link and click it
         const link = document.createElement('a');

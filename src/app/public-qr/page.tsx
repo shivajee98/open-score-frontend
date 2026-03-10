@@ -21,7 +21,6 @@ import {
 
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
-import { useStore } from '@/store/useStore';
 
 const SECURITY_AMOUNTS = [
     { value: '1000', label: 'Basic', desc: '1 Bunch' },
@@ -29,15 +28,14 @@ const SECURITY_AMOUNTS = [
     { value: '5000', label: 'Premium', desc: '6 Bunch' },
 ];
 
-export default function QrPaymentPage() {
+export default function PublicQrPage() {
     const router = useRouter();
-    const { user } = useStore();
     const [step, setStep] = useState(1);
     
     // Form State
     const [form, setForm] = useState({
-        name: user?.name || '',
-        mobile: user?.mobile || '',
+        name: '',
+        mobile: '',
         address: '',
         city: '',
         pincode: '',
@@ -51,12 +49,7 @@ export default function QrPaymentPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [success, setSuccess] = useState(false);
-
-    useEffect(() => {
-        if (user) {
-            setForm(prev => ({ ...prev, name: user.name, mobile: user.mobile }));
-        }
-    }, [user]);
+    const [bookingId, setBookingId] = useState<string | null>(null);
 
     const handleNext = () => {
         if (!form.name || !form.mobile || !form.address || !form.pincode || !form.city) {
@@ -107,16 +100,14 @@ export default function QrPaymentPage() {
             formData.append('security_amount', form.security_amount);
             formData.append('payment_screenshot', screenshot);
 
-            await apiFetch('/auth/team/qr-book', {
+            const res = await apiFetch('/public/qr-book', {
                 method: 'POST',
                 body: formData
             });
 
+            setBookingId(res.booking?.id);
             setSuccess(true);
             toast.success('QR Booking request submitted!');
-            setTimeout(() => {
-                router.push('/customer/my-work');
-            }, 3000);
         } catch (error: any) {
             toast.error(error.message || 'Failed to submit request');
         } finally {
@@ -126,7 +117,9 @@ export default function QrPaymentPage() {
 
     const upiUrl = `upi://pay?pa=risexpe@ibl&pn=MS%20RISEX%20PAY&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
 
-    if (success) {
+    if (success && bookingId) {
+        const trackingUrl = typeof window !== 'undefined' ? `${window.location.origin}/qr-update?id=${bookingId}` : '';
+        
         return (
             <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6">
                 <div className="bg-white rounded-[3rem] p-10 w-full max-w-sm text-center space-y-6 animate-in zoom-in-95 duration-500">
@@ -137,11 +130,33 @@ export default function QrPaymentPage() {
                     <p className="text-slate-500 text-sm font-bold leading-relaxed">
                         Your QR booking request for ₹{form.security_amount} has been received. Our team will verify the payment and ship your cards soon.
                     </p>
-                    <div className="pt-4">
-                        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500 animate-[loading_3s_ease-in-out_infinite]" />
+                    
+                    <div className="pt-4 space-y-4">
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">
+                            Save this exact link to track your order status in real-time
+                        </p>
+                        
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <p className="text-xs font-mono font-bold text-slate-700 break-all">{trackingUrl}</p>
                         </div>
-                        <p className="text-[10px] text-slate-400 font-black uppercase mt-4 tracking-widest">Redirecting to Dashboard...</p>
+
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => {
+                                    navigator.clipboard.writeText(trackingUrl);
+                                    toast.success('Tracking Link Copied!');
+                                }}
+                                className="flex-1 py-4 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
+                            >
+                                Copy Link
+                            </button>
+                            <button 
+                                onClick={() => router.push(`/qr-update?id=${bookingId}`)}
+                                className="flex-1 py-4 bg-white border-2 border-slate-200 text-slate-700 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 active:scale-95 transition-all"
+                            >
+                                View Now
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <style jsx>{`

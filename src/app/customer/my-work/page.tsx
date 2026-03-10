@@ -13,13 +13,13 @@ import { Package, Truck, Home, CreditCard } from 'lucide-react';
 export default function MyWorkDashboard() {
     const router = useRouter();
     const { data: user, isLoading, mutate } = useApi('/auth/me');
-    
+
     // UI State
     const [activeTab, setActiveTab] = useState<'profile' | 'kyc' | 'qr'>('profile');
     const [showICard, setShowICard] = useState(false);
     const [showAuthLetter, setShowAuthLetter] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(0.5);
-    
+
     // Letter Editable Values
     const [editableOnboardingAmount, setEditableOnboardingAmount] = useState('100');
     const [editableLoanAmount, setEditableLoanAmount] = useState('600');
@@ -32,14 +32,14 @@ export default function MyWorkDashboard() {
             const loanAmount = user.loan_disbursement_commission || user.sub_user?.loan_disbursement_commission || user.sub_user?.cashback_flat_amount || 600;
             const bonusCount = user.bonus_milestone_count || user.sub_user?.bonus_milestone_count || 10;
             const bonusAmount = user.bonus_milestone_amount || user.sub_user?.bonus_milestone_amount || 200;
-            
+
             setEditableOnboardingAmount(onboardingAmount.toString());
             setEditableLoanAmount(loanAmount.toString());
             setEditableBonusMilestoneCount(bonusCount.toString());
             setEditableBonusMilestoneAmount(bonusAmount.toString());
         }
     }, [user]);
-    
+
     // QR History State
     const [qrHistory, setQrHistory] = useState<any[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
@@ -84,7 +84,7 @@ export default function MyWorkDashboard() {
         const handleFocus = () => setIsFocused(true);
         const handleKeyDown = (e: KeyboardEvent) => {
             // Block PrintScreen, Ctrl+P, CMD+P, CMD+S, etc.
-            if (e.key === 'PrintScreen' || 
+            if (e.key === 'PrintScreen' ||
                 ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.key === 's' || e.key === 'S'))) {
                 e.preventDefault();
                 toast.error("Screen capture is disabled for this document.");
@@ -94,7 +94,7 @@ export default function MyWorkDashboard() {
         window.addEventListener('blur', handleBlur);
         window.addEventListener('focus', handleFocus);
         window.addEventListener('keydown', handleKeyDown);
-        
+
         // Prevent context menu globally while letter is open
         const preventDefault = (e: any) => e.preventDefault();
         document.addEventListener('contextmenu', preventDefault);
@@ -119,7 +119,7 @@ export default function MyWorkDashboard() {
             // I should double check what route we need for the user to delete their own KYC, or if we even added one.
             // The instructions asked for `POST /sub-user/users/{id}/re-kyc` which is for the agent.
             // Let's create an endpoint in `AuthController` for the user to do it themselves.
-            await apiFetch('/auth/team/kyc-submit/re-kyc', { method: 'POST' }); 
+            await apiFetch('/auth/team/kyc-submit/re-kyc', { method: 'POST' });
             toast.success('Re-KYC initialized. Please upload new documents.');
             mutate();
             setActiveTab('kyc');
@@ -156,32 +156,32 @@ export default function MyWorkDashboard() {
                     <BackButton className="mb-6 flex items-center gap-2 text-indigo-200 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-all">
                         <ArrowLeft className="w-4 h-4" /> Back to Profile
                     </BackButton>
-                    
+
                     <div className="flex justify-between items-end">
                         <div>
                             <h1 className="text-2xl font-black text-white tracking-tight">My Work</h1>
                             <p className="text-indigo-200 text-xs font-bold mt-1 uppercase tracking-widest">{profile ? 'Active Employee' : user?.sub_user_id ? 'Profile Pending' : 'Not Linked Yet'}</p>
                         </div>
                         <div className="flex gap-2">
-                            <button 
+                            <button
                                 onClick={() => setActiveTab('profile')}
                                 className="w-11 h-11 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md text-white hover:bg-white/20 transition-all"
                             >
                                 <Briefcase size={20} />
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setShowAuthLetter(true)}
                                 className="w-11 h-11 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md text-white hover:bg-white/20 transition-all"
                             >
                                 <FileText size={20} />
                             </button>
-                            <button 
+                            <button
                                 onClick={() => router.push('/customer/earnings')}
                                 className="w-11 h-11 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md text-white hover:bg-white/20 transition-all"
                             >
                                 <Wallet size={20} />
                             </button>
-                            <button 
+                            <button
                                 onClick={() => isKycApproved ? setShowICard(true) : setActiveTab('kyc')}
                                 className="w-11 h-11 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md text-white hover:bg-white/20 transition-all"
                             >
@@ -195,20 +195,20 @@ export default function MyWorkDashboard() {
             <div className="max-w-2xl mx-auto px-4 -mt-6 relative z-20">
                 {/* Tabs */}
                 <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-1 mb-6 flex border border-slate-100">
-                    <button 
-                        onClick={() => setActiveTab('profile')} 
+                    <button
+                        onClick={() => setActiveTab('profile')}
                         className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}
                     >
                         Overview
                     </button>
-                    <button 
-                        onClick={() => setActiveTab('kyc')} 
+                    <button
+                        onClick={() => setActiveTab('kyc')}
                         className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === 'kyc' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}
                     >
                         KYC Docs
                     </button>
-                    <button 
-                        onClick={() => setActiveTab('qr')} 
+                    <button
+                        onClick={() => setActiveTab('qr')}
                         className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'qr' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}
                     >
                         QR Code
@@ -221,24 +221,23 @@ export default function MyWorkDashboard() {
                     <div className="space-y-4">
                         {/* Status Card */}
                         <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center text-center">
-                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner mb-4 ${
-                                isKycApproved ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                kycStatus === 'pending' ? 'bg-amber-50 text-amber-500 border border-amber-100' :
-                                kycStatus === 'rejected' ? 'bg-rose-50 text-rose-500 border border-rose-100' :
-                                'bg-slate-100 text-slate-400 border border-slate-200'
-                            }`}>
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner mb-4 ${isKycApproved ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                    kycStatus === 'pending' ? 'bg-amber-50 text-amber-500 border border-amber-100' :
+                                        kycStatus === 'rejected' ? 'bg-rose-50 text-rose-500 border border-rose-100' :
+                                            'bg-slate-100 text-slate-400 border border-slate-200'
+                                }`}>
                                 <ShieldCheck size={32} />
                             </div>
                             <h2 className="text-xl font-black text-slate-900 tracking-tight">
                                 {isKycApproved ? 'Verified Partner' : kycStatus === 'pending' ? 'Verification Pending' : kycStatus === 'rejected' ? 'Verification Rejected' : 'Verification Required'}
                             </h2>
                             <p className="text-sm font-medium text-slate-500 mt-2 max-w-sm">
-                                {isKycApproved ? 'Your account is fully verified. You can now access all features, order QR codes, and transfer earnings.' 
-                                : 'Complete your KYC verification to unlock your ID card, Earnings transfers, and QR Code booking.'}
+                                {isKycApproved ? 'Your account is fully verified. You can now access all features, order QR codes, and transfer earnings.'
+                                    : 'Complete your KYC verification to unlock your ID card, Earnings transfers, and QR Code booking.'}
                             </p>
-                            
+
                             {!isKycApproved && (
-                                <button 
+                                <button
                                     onClick={() => setActiveTab('kyc')}
                                     className="mt-6 w-full py-4 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl hover:bg-slate-800 transition-all active:scale-95"
                                 >
@@ -281,14 +280,13 @@ export default function MyWorkDashboard() {
 
                                 {/* View ID Card Button - Locked if KYC pending */}
                                 <div className="mt-6">
-                                    <button 
+                                    <button
                                         onClick={() => setShowICard(true)}
                                         disabled={!isKycApproved}
-                                        className={`w-full py-3.5 font-black text-xs uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${
-                                            isKycApproved 
-                                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200' 
-                                            : 'bg-slate-100 text-slate-400 border border-slate-200 opacity-70 cursor-not-allowed'
-                                        }`}
+                                        className={`w-full py-3.5 font-black text-xs uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${isKycApproved
+                                                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'
+                                                : 'bg-slate-100 text-slate-400 border border-slate-200 opacity-70 cursor-not-allowed'
+                                            }`}
                                     >
                                         <IdCard size={16} /> Digital I-Card
                                         {!isKycApproved && <Lock size={12} />}
@@ -306,7 +304,7 @@ export default function MyWorkDashboard() {
                                 </div>
                             </div>
                         )}
-                        
+
                     </div>
                 )}
 
@@ -315,20 +313,19 @@ export default function MyWorkDashboard() {
                     <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
                         <h2 className="text-lg font-black text-slate-900 mb-1">Identity Verification (KYC)</h2>
                         <p className="text-xs font-medium text-slate-500 mb-6">Upload clear photos of your original documents.</p>
-                        
+
                         {kycStatus === 'approved' ? (
                             <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 text-center">
                                 <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
                                 <h3 className="font-bold text-emerald-900">Verification Complete</h3>
                                 <p className="text-xs text-emerald-700 mt-1">Your documents have been verified.</p>
-                                <button 
-                                    onClick={handleReKyc} 
+                                <button
+                                    onClick={handleReKyc}
                                     disabled={!user?.kyc_verification?.re_kyc_allowed}
-                                    className={`mt-6 px-5 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl shadow-sm border transition-all active:scale-95 ${
-                                        user?.kyc_verification?.re_kyc_allowed 
-                                        ? 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-100' 
-                                        : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50'
-                                    }`}
+                                    className={`mt-6 px-5 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl shadow-sm border transition-all active:scale-95 ${user?.kyc_verification?.re_kyc_allowed
+                                            ? 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                                            : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50'
+                                        }`}
                                 >
                                     {user?.kyc_verification?.re_kyc_allowed ? 'Replace Documents (Re-KYC)' : 'Re-KYC Locked by Agent'}
                                 </button>
@@ -364,15 +361,15 @@ export default function MyWorkDashboard() {
                                 </div>
 
                                 {['aadhar_front', 'aadhar_back', 'pan_card', 'live_selfie', 'qualification_doc'].map((doc) => {
-                                    const docLabel = doc === 'live_selfie' ? 'Live Selfie (verification)' : 
-                                                     doc.replace(/_/g, ' ');
+                                    const docLabel = doc === 'live_selfie' ? 'Live Selfie (verification)' :
+                                        doc.replace(/_/g, ' ');
                                     const existingImg = user?.kyc_verification?.[doc];
-                                    
+
                                     const handleUploadDoc = async (e: any) => {
                                         const file = e.target.files?.[0];
                                         if (!file) return;
                                         if (file.size > 5 * 1024 * 1024) { return toast.error("Image too large (max 5MB)"); }
-                                        
+
                                         setUploadingDoc(doc);
                                         try {
                                             const fd = new FormData();
@@ -398,7 +395,7 @@ export default function MyWorkDashboard() {
                                                     <p className="font-bold text-sm text-slate-700 capitalize">{docLabel}</p>
                                                     {!existingImg && <p className="text-[10px] text-rose-500 font-bold tracking-widest uppercase mt-0.5">Required</p>}
                                                 </div>
-                                                
+
                                                 {/* Preview Image if exists */}
                                                 {uploadingDoc === doc ? (
                                                     <div className="flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest animate-pulse">
@@ -435,13 +432,13 @@ export default function MyWorkDashboard() {
                                         </div>
                                     );
                                 })}
-                                
+
                                 {kycStatus === 'rejected' && (
-                                     <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
-                                         <XCircle size={16} className="shrink-0" /> Your previous submission was rejected: {user?.kyc_verification?.notes || 'Invalid documents.'}
-                                     </div>
+                                    <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
+                                        <XCircle size={16} className="shrink-0" /> Your previous submission was rejected: {user?.kyc_verification?.notes || 'Invalid documents.'}
+                                    </div>
                                 )}
-                                
+
                                 <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mt-4">
                                     <p className="text-xs text-indigo-700 font-medium text-center">
                                         Documents are reviewed by your Agent. Once all 5 documents are uploaded, they will be sent for review automatically.
@@ -478,7 +475,7 @@ export default function MyWorkDashboard() {
                                             Get high-quality branded QR cards delivered to your doorstep. Stand out from the competition.
                                         </p>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Security Deposit</p>
@@ -490,14 +487,14 @@ export default function MyWorkDashboard() {
                                         </div>
                                     </div>
 
-                                    <button 
+                                    <button
                                         onClick={() => router.push('/customer/qr-payment')}
                                         className="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl uppercase tracking-[0.2em] text-xs shadow-2xl shadow-indigo-600/30 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3"
                                     >
                                         <Smartphone size={16} /> Book QR Now
                                         <ArrowRight size={16} className="opacity-50" />
                                     </button>
-                                    
+
                                     <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
                                         Instant Approval • Doorstep Delivery • Premium Quality
                                     </p>
@@ -518,7 +515,7 @@ export default function MyWorkDashboard() {
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-3xl animate-pulse"></div>
                         <div className="absolute top-12 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 blur-2xl"></div>
                         <div className="absolute top-48 left-0 w-full h-full bg-slate-50"></div>
-                        
+
                         {/* Card Header */}
                         <div className="relative z-10 p-8 flex justify-between items-start h-48">
                             <div>
@@ -548,11 +545,15 @@ export default function MyWorkDashboard() {
                         {/* Details */}
                         <div className="relative z-10 px-8 pb-10 text-center">
                             <h3 className="text-2xl font-black text-slate-900 tracking-tight">{profile?.name_as_per_aadhar || user?.kyc_verification?.full_name || user?.name}</h3>
+                            <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 bg-indigo-50">
+                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></div>
+                                <p className="text-2xl font-black text-slate-900 tracking-tight uppercase">{profile?.profile_name || ''}</p>
+                            </div>
                             <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 bg-indigo-50 rounded-full border border-indigo-100">
                                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></div>
-                                <p className="text-indigo-700 font-black text-[9px] uppercase tracking-widest">{profile?.profile_name || 'Authorized Independent Partner'}</p>
+                                <p className="text-indigo-700 font-black text-[9px] uppercase tracking-widest">Authorized Independent Partner</p>
                             </div>
-                            
+
                             <div className="grid grid-cols-2 gap-6 mt-8 text-left border-t border-slate-200/60 pt-8">
                                 <div className="space-y-1">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Associate ID</p>
@@ -591,7 +592,7 @@ export default function MyWorkDashboard() {
                         </div>
 
                         {/* Close Button */}
-                        <button 
+                        <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowICard(false);
@@ -606,7 +607,7 @@ export default function MyWorkDashboard() {
 
             {/* Authorization Letter Modal */}
             {showAuthLetter && (
-                <div 
+                <div
                     className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md p-0 overflow-y-auto flex flex-col items-center select-none"
                     onClick={() => setShowAuthLetter(false)}
                 >
@@ -614,7 +615,7 @@ export default function MyWorkDashboard() {
                     <div className="sticky top-0 w-full z-[120] bg-slate-900/80 backdrop-blur-xl border-b border-white/10 p-4 flex items-center justify-between px-6 shadow-2xl">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2 bg-white/10 rounded-xl p-1 border border-white/10">
-                                <button 
+                                <button
                                     onClick={(e) => { e.stopPropagation(); setZoomLevel(Math.max(0.5, zoomLevel - 0.1)); }}
                                     className="p-2 hover:bg-white/10 rounded-lg text-white transition-all"
                                     title="Zoom Out"
@@ -622,7 +623,7 @@ export default function MyWorkDashboard() {
                                     <ZoomOut size={18} />
                                 </button>
                                 <span className="text-[10px] font-black text-white w-12 text-center uppercase tracking-widest">{Math.round(zoomLevel * 100)}%</span>
-                                <button 
+                                <button
                                     onClick={(e) => { e.stopPropagation(); setZoomLevel(Math.min(2, zoomLevel + 0.1)); }}
                                     className="p-2 hover:bg-white/10 rounded-lg text-white transition-all"
                                     title="Zoom In"
@@ -635,8 +636,8 @@ export default function MyWorkDashboard() {
                                 <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Security Protected • Printing Disabled</span>
                             </div>
                         </div>
-                        
-                        <button 
+
+                        <button
                             onClick={() => setShowAuthLetter(false)}
                             className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/20 flex items-center justify-center"
                         >
@@ -644,14 +645,14 @@ export default function MyWorkDashboard() {
                         </button>
                     </div>
 
-                    <div 
+                    <div
                         className={`relative transition-all duration-500 origin-top my-8 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] ${!isFocused ? 'blur-3xl saturate-0 scale-[0.98] opacity-20' : ''}`}
                         style={{ transform: `scale(${zoomLevel})`, width: '210mm' }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Security Overlay */}
                         <div className="absolute inset-0 z-[115] bg-transparent cursor-default" onContextMenu={(e) => e.preventDefault()}></div>
-                        
+
                         {!isFocused && (
                             <div className="absolute inset-0 z-[116] flex items-center justify-center p-20 text-center">
                                 <div className="bg-white/10 backdrop-blur-md p-10 rounded-[3rem] border border-white/20 shadow-2xl">
@@ -719,19 +720,19 @@ export default function MyWorkDashboard() {
                                             <tr className="border-b border-slate-100">
                                                 <td className="p-4">Merchant QR Onboarding</td>
                                                 <td className="p-4 text-indigo-900 flex items-center gap-1">
-                                                    ₹<input type="text" className="w-12 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableOnboardingAmount} onChange={(e) => setEditableOnboardingAmount(e.target.value)} /> successful Onboarding
+                                                    ₹<input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableOnboardingAmount} onChange={(e) => setEditableOnboardingAmount(e.target.value)} />  successful Onboarding
                                                 </td>
                                             </tr>
                                             <tr className="border-b border-slate-100">
                                                 <td className="p-4">Loan Successfully Processed through App</td>
                                                 <td className="p-4 text-indigo-900 border-t-transparent flex items-center gap-1">
-                                                    ₹<input type="text" className="w-12 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableLoanAmount} onChange={(e) => setEditableLoanAmount(e.target.value)} /> per successful loan
+                                                    ₹<input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableLoanAmount} onChange={(e) => setEditableLoanAmount(e.target.value)} />  successful loan
                                                 </td>
                                             </tr>
                                             <tr className="bg-amber-50/30">
                                                 <td className="p-4 text-indigo-950 italic">Onboarding Bonus Milestone</td>
                                                 <td className="p-4 text-indigo-900 flex items-center gap-1">
-                                                    ₹<input type="text" className="w-12 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneAmount} onChange={(e) => setEditableBonusMilestoneAmount(e.target.value)} /> on completing <input type="text" className="w-10 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneCount} onChange={(e) => setEditableBonusMilestoneCount(e.target.value)} /> Onboardings
+                                                    ₹<input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneAmount} onChange={(e) => setEditableBonusMilestoneAmount(e.target.value)} /> on <input type="text" className="w-10 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneCount} onChange={(e) => setEditableBonusMilestoneCount(e.target.value)} /> Onboardings
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -748,7 +749,7 @@ export default function MyWorkDashboard() {
                             <div className="p-16 text-slate-900 font-serif leading-relaxed relative h-full flex flex-col">
                                 {/* Border Accent */}
                                 <div className="absolute inset-8 border border-[#d4af37]/20 pointer-events-none"></div>
-                                
+
                                 <div className="relative z-10 text-[13px] font-sans text-slate-500 mb-8 italic leading-relaxed mt-8">
                                     <p>The onboarding and operational guidance for freelancers under this project is being conducted by the following Authorized Vendor / Agent, who has been permitted to represent the Open Score project for the purpose of freelancer engagement and operational explanation.</p>
                                 </div>
@@ -789,7 +790,8 @@ export default function MyWorkDashboard() {
                         </div>
 
                         {/* Print Protection Overlay for Standard Browser Print */}
-                        <style dangerouslySetInnerHTML={{ __html: `
+                        <style dangerouslySetInnerHTML={{
+                            __html: `
                             @media print {
                                 body * { visibility: hidden !important; background: none !important; }
                                 html, body { background: #fff !important; }
@@ -813,7 +815,7 @@ export default function MyWorkDashboard() {
 
 function QrHistoryList({ history, loading, onRefresh }: { history: any[], loading: boolean, onRefresh: () => void }) {
     if (loading) return <div className="text-center py-10 font-bold text-slate-400 animate-pulse uppercase tracking-widest text-[10px]">Loading history...</div>;
-    
+
     if (history.length === 0) return (
         <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-slate-200">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No previous QR bookings found</p>
