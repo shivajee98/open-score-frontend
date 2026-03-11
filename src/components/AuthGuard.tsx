@@ -20,7 +20,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         const path = (pathname || "").replace(/\/$/, "");
 
         const isAuthRoute = path === "" || path === "/" || path === "/login" || path.startsWith("/auth");
-        const isPublicRoute = path.startsWith("/public") || path.startsWith("/privacy-policy");
+        const isPublicRoute = path.startsWith("/public") || path.startsWith("/privacy-policy") || path.startsWith("/qr-update");
 
         if (token) {
             // User is logged in

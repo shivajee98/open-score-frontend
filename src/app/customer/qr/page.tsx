@@ -10,12 +10,17 @@ import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X, Scan,
 export default function CustomerQR() {
     const router = useRouter();
     const [qrData, setQrData] = useState('');
+    const [physicalQrs, setPhysicalQrs] = useState<string[]>([]);
+    const [hasMappedWithAgent, setHasMappedWithAgent] = useState(false);
+    const [activeQrIndex, setActiveQrIndex] = useState(0);
     const [user, setUser] = useState<any>(null);
     const [copied, setCopied] = useState(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     // Mapping State
     const [isMapping, setIsMapping] = useState(false);
     const [mapCode, setMapCode] = useState('');
+    const [agentCode, setAgentCode] = useState('');
     const [mapStatus, setMapStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [scanning, setScanning] = useState(false);
     const scannerRef = useRef<any>(null);
@@ -32,7 +37,11 @@ export default function CustomerQR() {
     }, []);
 
     useEffect(() => {
-        apiFetch('/payment/qr').then(data => setQrData(data.qr_data));
+        apiFetch('/payment/qr').then((data: any) => {
+            setQrData(data.qr_data);
+            if (data.physical_qrs) setPhysicalQrs(data.physical_qrs);
+            if (typeof data.has_mapped_with_agent !== 'undefined') setHasMappedWithAgent(data.has_mapped_with_agent);
+        });
 
         const stored = localStorage.getItem('user');
         if (stored) {
@@ -53,6 +62,18 @@ export default function CustomerQR() {
         { label: 'Payout', href: '/customer/payout', icon: <Landmark className="w-5 h-5" /> },
         { label: 'Activity', href: '/customer/transactions', icon: <Receipt className="w-5 h-5" /> },
     ];
+
+    const handleScrollRight = () => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollBy({ left: 250, behavior: 'smooth' });
+        }
+    };
+
+    const handleScrollLeft = () => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollBy({ left: -250, behavior: 'smooth' });
+        }
+    };
 
     const copyVPA = () => {
         const vpa = `${user?.mobile_number}@openscore`;
@@ -115,15 +136,23 @@ export default function CustomerQR() {
         try {
             await apiFetch('/merchant/link-qr', {
                 method: 'POST',
-                body: JSON.stringify({ code: mapCode })
+                body: JSON.stringify({ 
+                    code: mapCode,
+                    agent_referral_code: agentCode || undefined
+                })
             });
             setMapStatus('success');
             // Refresh QR data
-            apiFetch('/payment/qr').then(data => setQrData(data.qr_data));
+            apiFetch('/payment/qr').then((data: any) => {
+                setQrData(data.qr_data);
+                if (data.physical_qrs) setPhysicalQrs(data.physical_qrs);
+                if (typeof data.has_mapped_with_agent !== 'undefined') setHasMappedWithAgent(data.has_mapped_with_agent);
+            });
             setTimeout(() => {
                 setIsMapping(false);
                 setMapStatus('idle');
                 setMapCode('');
+                setAgentCode('');
             }, 2000);
         } catch (err) {
             setMapStatus('error');
@@ -156,28 +185,95 @@ export default function CustomerQR() {
                             Unlock Cashback Rewards!
                         </p>
 
-                        {/* QR Code Container */}
-                        <div className="relative w-64 h-64 bg-white rounded-[2rem] p-4 shadow-[0_0_40px_rgba(16,185,129,0.3)] flex items-center justify-center mb-10 transition-transform duration-500 hover:scale-[1.02]">
+                        {/* QR Code Container (Slider) */}
+                        <div className="relative w-72 bg-white rounded-[2rem] p-4 shadow-[0_0_40px_rgba(16,185,129,0.3)] flex flex-col items-center mb-10 transition-transform duration-500 hover:scale-[1.02]">
                             {/* Animated Border Glow */}
                             <div className="absolute -inset-1 bg-gradient-to-tr from-emerald-400 via-teal-400 to-emerald-600 rounded-[2.2rem] opacity-30 blur-md animate-pulse"></div>
 
-                            <div className="relative w-full h-full bg-white rounded-[1.6rem] flex items-center justify-center p-3 border border-slate-100 overflow-hidden">
-                                {qrData ? (
-                                    <QRCode
-                                        value={qrData}
-                                        size={256}
-                                        style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                        viewBox={`0 0 256 256`}
-                                        level="H"
-                                    />
-                                ) : (
-                                    <div className="animate-pulse w-full h-full bg-slate-50 flex flex-col items-center justify-center gap-2">
-                                        <QrCode className="text-slate-300 w-12 h-12" />
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading QR...</span>
-                                    </div>
-                                )}
+                            {/* Left Navigation Arrow */}
+                            {physicalQrs.length > 0 && activeQrIndex > 0 && (
+                                <button 
+                                    onClick={handleScrollLeft}
+                                    className="absolute left-1 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-slate-800/80 backdrop-blur text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-colors"
+                                >
+                                    <ArrowLeft size={16} />
+                                </button>
+                            )}
 
+                            {/* Horizontal scrolling container */}
+                            <div 
+                                ref={scrollContainerRef}
+                                className="relative w-full flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden" 
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                onScroll={(e) => {
+                                    const el = e.currentTarget;
+                                    const index = Math.round(el.scrollLeft / el.clientWidth);
+                                    setActiveQrIndex(index);
+                                }}
+                            >
+                                {/* Default Digital QR */}
+                                <div className="w-full flex-shrink-0 snap-center flex justify-center p-2">
+                                    <div className="w-full bg-white rounded-[1.6rem] flex items-center justify-center p-3 border border-slate-100 overflow-hidden aspect-square">
+                                        {qrData ? (
+                                            <QRCode
+                                                value={qrData}
+                                                size={256}
+                                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                                viewBox={`0 0 256 256`}
+                                                level="H"
+                                            />
+                                        ) : (
+                                            <div className="animate-pulse w-full h-full bg-slate-50 flex flex-col items-center justify-center gap-2">
+                                                <QrCode className="text-slate-300 w-12 h-12" />
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading QR...</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Physical QRs */}
+                                {physicalQrs.map((code, idx) => (
+                                    <div key={idx} className="w-full flex-shrink-0 snap-center flex justify-center p-2">
+                                        <div className="w-full bg-white rounded-[1.6rem] flex items-center justify-center p-3 border border-slate-100 overflow-hidden aspect-square">
+                                            <QRCode
+                                                value={code} // Contains the physical mapping code
+                                                size={256}
+                                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                                viewBox={`0 0 256 256`}
+                                                level="H"
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
+
+                            {/* Right Navigation Arrow */}
+                            {physicalQrs.length > 0 && activeQrIndex < physicalQrs.length && (
+                                <button 
+                                    onClick={handleScrollRight}
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-slate-800/80 backdrop-blur text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-colors"
+                                >
+                                    <ArrowLeft size={16} className="rotate-180" />
+                                </button>
+                            )}
+                            
+                            {/* Pagination Dots */}
+                            {physicalQrs.length > 0 && (
+                                <div className="flex justify-center gap-1.5 mt-2 z-10 w-full relative">
+                                    {Array.from({ length: physicalQrs.length + 1 }).map((_, i) => (
+                                        <div 
+                                            key={i} 
+                                            className={`h-1.5 rounded-full transition-all duration-300 ${i === activeQrIndex ? 'w-4 bg-emerald-500' : 'w-1.5 bg-slate-200'}`} 
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                            
+                            {physicalQrs.length > 0 && (
+                                <p className="text-[9px] text-emerald-800/80 font-black tracking-widest uppercase mt-3 w-full text-center z-10 relative">
+                                    {activeQrIndex === 0 ? 'Digital QR' : `Physical QR #${activeQrIndex}`}
+                                </p>
+                            )}
                         </div>
 
                         <div className="relative w-full">
@@ -278,8 +374,21 @@ export default function CustomerQR() {
                                             onChange={(e) => setMapCode(e.target.value)}
                                             placeholder="Ex: MSME-8839"
                                             className="w-full p-4 bg-slate-50 rounded-xl font-black text-center text-lg tracking-widest border border-slate-200 focus:border-slate-900 focus:ring-0 outline-none transition-all uppercase placeholder:text-slate-300"
+                                            required
                                         />
                                     </div>
+                                    
+                                    {!hasMappedWithAgent && (
+                                        <div>
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Agent Referral Code (Optional)</label>
+                                            <input
+                                                value={agentCode}
+                                                onChange={(e) => setAgentCode(e.target.value)}
+                                                placeholder="Enter Agent's Code"
+                                                className="w-full p-4 bg-slate-50 rounded-xl font-bold text-center text-sm tracking-widest border border-slate-200 focus:border-emerald-500 focus:ring-0 outline-none transition-all uppercase placeholder:text-slate-300"
+                                            />
+                                        </div>
+                                    )}
 
                                     <button
                                         disabled={mapStatus === 'loading' || !mapCode}

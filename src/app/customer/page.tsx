@@ -338,14 +338,16 @@ export default function CustomerHome() {
                                     </div>
                                 </button>
                             </Link>
-                            <Link href="/customer/referral" prefetch={false}>
-                                <button
-                                    className="w-6 h-6 rounded-lg bg-amber-400 border border-amber-300 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-slate-900 hover:bg-amber-500"
-                                    title="Refer & Earn"
-                                >
-                                    <Gift size={12} strokeWidth={2.5} />
-                                </button>
-                            </Link>
+                            {!user?.sub_user_id && (
+                                <Link href="/customer/referral" prefetch={false}>
+                                    <button
+                                        className="w-6 h-6 rounded-lg bg-amber-400 border border-amber-300 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-slate-900 hover:bg-amber-500"
+                                        title="Refer & Earn"
+                                    >
+                                        <Gift size={12} strokeWidth={2.5} />
+                                    </button>
+                                </Link>
+                            )}
                             <Link href="/customer/support" prefetch={false}>
                                 <button
                                     className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"

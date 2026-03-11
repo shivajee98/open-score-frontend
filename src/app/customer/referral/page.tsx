@@ -21,9 +21,11 @@ import {
     LinkedinShareButton,
     LinkedinIcon
 } from 'react-share';
+import { useStore } from '@/store/useStore';
 
 export default function ReferralPage() {
     const router = useRouter();
+    const { user } = useStore();
     const { data: referralData, isLoading, error } = useApi('/referral/my-code');
     const { data: statsData, isLoading: statsLoading } = useApi('/referral/my-stats');
     const [showShareModal, setShowShareModal] = useState(false);
@@ -31,6 +33,12 @@ export default function ReferralPage() {
 
     // Combine loading state
     const loading = isLoading || statsLoading;
+
+    useEffect(() => {
+        if (user?.sub_user_id) {
+            router.replace('/customer');
+        }
+    }, [user, router]);
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);

@@ -927,12 +927,14 @@ export default function Profile() {
                                 </div>
 
                                 {/* Share & Earn */}
-                                <div onClick={() => router.push('/customer/referral')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
-                                        <Trophy className="w-4 h-4" />
+                                {!user?.sub_user_id && (
+                                    <div onClick={() => router.push('/customer/referral')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                        <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                            <Trophy className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-xs font-medium text-slate-700">Share & Earn</span>
                                     </div>
-                                    <span className="text-xs font-medium text-slate-700">Share & Earn</span>
-                                </div>
+                                )}
 
                                 {/* Contact Us */}
                                 <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">

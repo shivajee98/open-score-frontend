@@ -28,10 +28,10 @@ export default function MyWorkDashboard() {
 
     useEffect(() => {
         if (user) {
-            const onboardingAmount = user.merchant_onboarding_amount || user.sub_user?.merchant_onboarding_amount || user.sub_user?.referral_amount || 100;
-            const loanAmount = user.loan_disbursement_commission || user.sub_user?.loan_disbursement_commission || user.sub_user?.cashback_flat_amount || 600;
-            const bonusCount = user.bonus_milestone_count || user.sub_user?.bonus_milestone_count || 10;
-            const bonusAmount = user.bonus_milestone_amount || user.sub_user?.bonus_milestone_amount || 200;
+            const onboardingAmount = user.merchant_onboarding_amount ?? user.sub_user?.merchant_onboarding_amount ?? user.sub_user?.referral_amount ?? 100;
+            const loanAmount = user.loan_disbursement_commission ?? user.sub_user?.loan_disbursement_commission ?? user.sub_user?.cashback_flat_amount ?? 600;
+            const bonusCount = user.bonus_milestone_count ?? user.sub_user?.bonus_milestone_count ?? 10;
+            const bonusAmount = user.bonus_milestone_amount ?? user.sub_user?.bonus_milestone_amount ?? 200;
 
             setEditableOnboardingAmount(onboardingAmount.toString());
             setEditableLoanAmount(loanAmount.toString());
@@ -169,12 +169,14 @@ export default function MyWorkDashboard() {
                             >
                                 <Briefcase size={20} />
                             </button>
-                            <button
-                                onClick={() => setShowAuthLetter(true)}
-                                className="w-11 h-11 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md text-white hover:bg-white/20 transition-all"
-                            >
-                                <FileText size={20} />
-                            </button>
+                            {isKycApproved && profile && (
+                                <button
+                                    onClick={() => setShowAuthLetter(true)}
+                                    className="w-11 h-11 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md text-white hover:bg-white/20 transition-all"
+                                >
+                                    <FileText size={20} />
+                                </button>
+                            )}
                             <button
                                 onClick={() => router.push('/customer/earnings')}
                                 className="w-11 h-11 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md text-white hover:bg-white/20 transition-all"

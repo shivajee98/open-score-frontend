@@ -4,34 +4,92 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy } from 'lucide-react';
+import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
+import { useStore } from '@/store/useStore';
 
 export default function TeamEarningsPage() {
     const router = useRouter();
-    const { data: user, mutate: mutateUser } = useApi('/auth/me');
+    const { user } = useStore();
     const { data: stats, isLoading, mutate: mutateStats } = useApi('/auth/team/earnings');
-    const [submitting, setSubmitting] = useState(false);
+    const { data: referralData } = useApi(user?.sub_user_id ? '/referral/my-code' : null);
 
-    const handleTransfer = async () => {
+    // UI State
+    const [submitting, setSubmitting] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [showTransferModal, setShowTransferModal] = useState(false);
+    const [transferAmount, setTransferAmount] = useState('');
+
+    // Timer State
+    const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, locked: boolean }>({ d: 0, h: 0, m: 0, locked: false });
+
+    useEffect(() => {
+        if (!stats?.next_transfer_available_at) {
+            setTimeLeft({ d: 0, h: 0, m: 0, locked: false });
+            return;
+        }
+
+        const target = new Date(stats.next_transfer_available_at).getTime();
+
+        const updateTimer = () => {
+            const now = new Date().getTime();
+            const diff = target - now;
+
+            if (diff <= 0) {
+                setTimeLeft({ d: 0, h: 0, m: 0, locked: false });
+            } else {
+                setTimeLeft({
+                    d: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                    h: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+                    locked: true
+                });
+            }
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 60000);
+        return () => clearInterval(interval);
+    }, [stats?.next_transfer_available_at]);
+
+    const handleCopy = () => {
+        if (!referralData?.referral_code) return;
+        navigator.clipboard.writeText(referralData.referral_code);
+        setCopied(true);
+        toast.success("Referral code copied!");
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleTransferClick = () => {
         const available = stats?.available || 0;
         if (available <= 0) return toast.error("No earnings available for transfer");
+        if (timeLeft.locked) return toast.error("Transfer is locked by time rules.");
+        setTransferAmount('');
+        setShowTransferModal(true);
+    };
 
-        const amount = window.prompt(`Enter amount to transfer to your main wallet (Max: ₹${available}):`);
-        if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
-        if (Number(amount) > available) return toast.error("Amount exceeds available balance");
+    const submitTransfer = async () => {
+        const available = stats?.available || 0;
+        const amountNum = Number(transferAmount);
+
+        if (!amountNum || isNaN(amountNum) || amountNum <= 0) return;
+        if (amountNum > available) return toast.error("Amount exceeds available balance");
+        if (stats?.transfer_min_amount > 0 && amountNum < stats.transfer_min_amount) {
+            return toast.error(`Minimum allowed amount is ₹${stats.transfer_min_amount}`);
+        }
 
         setSubmitting(true);
         try {
             const res = await apiFetch('/auth/team/transfer-earnings', {
                 method: 'POST',
-                body: JSON.stringify({ amount: Number(amount) })
+                body: JSON.stringify({ amount: amountNum })
             });
             if (res.error) throw new Error(res.error);
             toast.success(res.message || "Transfer requested successfully");
+            setShowTransferModal(false);
+            setTransferAmount('');
             mutateStats();
-            mutateUser();
         } catch (e: any) {
             toast.error(e.message || "Transfer failed");
         } finally {
@@ -52,13 +110,28 @@ export default function TeamEarningsPage() {
                     <BackButton className="mb-6 flex items-center gap-2 text-indigo-200 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-all">
                         <ArrowLeft className="w-4 h-4" /> Back to Profile
                     </BackButton>
-                    
+
                     <h1 className="text-2xl font-black text-white tracking-tight">My Earnings</h1>
                     <p className="text-indigo-200 text-xs font-bold mt-1 uppercase tracking-widest">Performance Dashboard</p>
                 </div>
             </div>
 
             <div className="max-w-2xl mx-auto px-4 -mt-10 relative z-20 space-y-4">
+
+                {user?.sub_user_id && referralData?.referral_code && (
+                    <div className="bg-white rounded-2xl p-4 shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">My Referral Code</p>
+                            <p className="text-xl font-black text-slate-900 tracking-wider">{referralData.referral_code}</p>
+                        </div>
+                        <button
+                            onClick={handleCopy}
+                            className="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl flex items-center justify-center active:scale-95 transition-all"
+                        >
+                            {copied ? <Check size={18} className="text-emerald-500" /> : <Copy size={18} />}
+                        </button>
+                    </div>
+                )}
 
                 {/* Earn Wallet Card */}
                 <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-[2rem] p-6 shadow-2xl text-white relative overflow-hidden">
@@ -99,6 +172,12 @@ export default function TeamEarningsPage() {
                         <div>
                             <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Available for Transfer</p>
                             <h2 className="text-4xl font-black text-slate-900 tracking-tighter">₹{stats?.available?.toLocaleString() || 0}</h2>
+                            {timeLeft.locked && (
+                                <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-amber-200">
+                                    <Clock size={12} className="animate-pulse" />
+                                    <span>Apply in: {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m</span>
+                                </div>
+                            )}
                         </div>
                         <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-inner">
                             <Coins size={24} />
@@ -115,7 +194,7 @@ export default function TeamEarningsPage() {
                             <p className="text-lg font-black text-slate-800">₹{stats?.transferred?.toLocaleString() || 0}</p>
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                             <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">QR Onboarding Earning</p>
@@ -127,22 +206,25 @@ export default function TeamEarningsPage() {
                         </div>
                     </div>
 
-                    <button 
-                        onClick={handleTransfer}
-                        disabled={submitting || (stats?.available || 0) <= 0}
-                        className="w-full py-4 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    <button
+                        onClick={handleTransferClick}
+                        disabled={submitting || (stats?.available || 0) <= 0 || timeLeft.locked}
+                        className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${timeLeft.locked
+                                ? 'bg-slate-300 cursor-not-allowed shadow-none'
+                                : 'bg-slate-900 hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
+                            }`}
                     >
-                        {submitting ? 'Processing...' : (stats?.available || 0) <= 0 ? 'No Earnings Available' : 'Transfer to Wallet'}
+                        {timeLeft.locked ? 'Currently Time Locked' : (stats?.available || 0) <= 0 ? 'No Earnings Available' : 'Transfer to Wallet'}
                         <ArrowUpRight size={16} />
                     </button>
-                    
+
                     <p className="text-[9px] text-center text-slate-400 mt-4 font-bold uppercase tracking-widest">
                         Transfer requests are reviewed by the Admin.
                     </p>
                 </div>
 
                 {/* Status/Banner — Earning Rates */}
-                {(stats?.my_rates?.qr_onboarding_rate > 0 || stats?.my_rates?.loan_disbursement_rate > 0) ? (
+                {(stats?.my_rates?.qr_onboarding_rate > 0 || stats?.my_rates?.loan_disbursement_rate > 0 || user?.sub_user_id) ? (
                     <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200/50 relative overflow-hidden">
                         <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mb-16"></div>
                         <div className="flex items-center gap-4 relative z-10">
@@ -154,24 +236,27 @@ export default function TeamEarningsPage() {
                                 <div className="flex flex-wrap gap-3">
                                     <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
                                         <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">QR Onboarding</p>
-                                        <p className="text-lg font-black">₹{stats.my_rates.qr_onboarding_rate.toLocaleString()}</p>
+                                        <p className="text-lg font-black">₹{(stats?.my_rates?.qr_onboarding_rate || 0).toLocaleString()}</p>
                                         <p className="text-[8px] text-indigo-200/70 uppercase">Per Merchant</p>
                                     </div>
                                     <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
-                                         <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Loan Disbursement</p>
-                                         <p className="text-lg font-black">₹{stats.my_rates.loan_disbursement_rate.toLocaleString()}</p>
-                                         <p className="text-[8px] text-indigo-200/70 uppercase">Per Loan</p>
-                                     </div>
-                                     {stats.my_rates.bonus_milestone_count > 0 && (
-                                         <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl px-4 py-2 backdrop-blur-md">
-                                             <p className="text-[9px] text-amber-200 uppercase tracking-widest font-bold flex items-center gap-1">
-                                                 <Trophy size={8} /> Milestone
-                                             </p>
-                                             <p className="text-lg font-black">₹{stats.my_rates.bonus_milestone_amount.toLocaleString()}</p>
-                                             <p className="text-[8px] text-amber-200/70 uppercase">Per {stats.my_rates.bonus_milestone_count} Onboards</p>
-                                         </div>
-                                     )}
-                                 </div>
+                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Loan Disbursement</p>
+                                        <p className="text-lg font-black">₹{(stats?.my_rates?.loan_disbursement_rate || 0).toLocaleString()}</p>
+                                        <p className="text-[8px] text-indigo-200/70 uppercase">Per Loan</p>
+                                    </div>
+                                    {(stats?.my_rates?.bonus_milestone_count > 0 || (user?.sub_user_id && stats?.my_rates?.bonus_milestone_amount === 0)) && (
+                                        <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl px-4 py-2 backdrop-blur-md">
+                                            <p className="text-[9px] text-amber-200 uppercase tracking-widest font-bold flex items-center gap-1">
+                                                <Trophy size={8} /> Milestone
+                                            </p>
+                                            <p className="text-lg font-black">₹{(stats?.my_rates?.bonus_milestone_amount || 0).toLocaleString()}</p>
+                                            <p className="text-[8px] text-amber-200/70 uppercase">Target: {stats?.my_rates?.bonus_milestone_count || '-'} Onboards</p>
+                                        </div>
+                                    )}
+                                </div>
+                                {user?.sub_user_id && !stats?.my_rates?.qr_onboarding_rate && !stats?.my_rates?.loan_disbursement_rate && (
+                                    <p className="text-[9px] text-indigo-200 mt-3 font-bold uppercase tracking-widest">Note: Your commission rates are currently set to 0 by your agency.</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -195,43 +280,61 @@ export default function TeamEarningsPage() {
                     <div className="p-6 border-b border-slate-50 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-slate-900">
                             <History size={18} />
-                            <h3 className="font-black text-sm uppercase tracking-widest">Referral History</h3>
+                            <h3 className="font-black text-sm uppercase tracking-widest">My Work Earnings</h3>
                         </div>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Since {new Date(stats?.joined_date).toLocaleDateString()}</p>
                     </div>
 
-                    <div className="divide-y divide-slate-50">
+                    <div className="space-y-3 p-4">
                         {stats?.history?.length > 0 ? (
-                            stats.history.map((item: any) => (
-                                <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.role === 'MERCHANT' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
-                                            <Users size={18} />
-                                        </div>
+                            stats.history.map((friend: any) => (
+                                <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                                    <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-xs font-black text-slate-900 leading-tight">{item.name}</p>
-                                                <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${item.role === 'MERCHANT' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
-                                                    {item.role}
-                                                </span>
+                                            <h4 className="text-sm font-black text-slate-900">{friend.name}</h4>
+                                            <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{friend.mobile}</p>
+                                        </div>
+                                        <div className="flex gap-4 text-right">
+                                            <div>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
+                                                <p className="text-xs font-black text-emerald-600">₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
                                             </div>
-                                            <p className="text-[10px] text-slate-400 font-bold mt-0.5">{item.mobile}</p>
+                                            <div>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Disbursed Earn</p>
+                                                <p className="text-xs font-black text-indigo-600">₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-black text-emerald-600 tracking-tight">
-                                            +₹{item.signup_bonus + item.loan_bonus}
-                                        </p>
-                                        <div className="text-[8px] font-bold text-slate-400 mt-0.5 space-x-1">
-                                            {item.signup_bonus > 0 && <span>QR: +₹{item.signup_bonus}</span>}
-                                            {item.loan_bonus > 0 && <span>Loan: +₹{item.loan_bonus}</span>}
+
+                                    {/* Progress Indicator */}
+                                    <div className="grid grid-cols-4 gap-1 relative pt-2">
+                                        <div className="flex flex-col items-center gap-1.5 z-10">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.type !== 'LOAN' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
+                                                <Users size={12} />
+                                            </div>
+                                            <span className="text-[7px] font-black uppercase text-slate-400">Signed Up</span>
                                         </div>
-                                        <div className="flex items-center justify-end gap-1 mt-0.5">
-                                            {item.status === 'VERIFIED' ? <CheckCircle size={10} className="text-emerald-500" /> : <Clock size={10} className="text-amber-500" />}
-                                            <p className={`text-[8px] font-black uppercase tracking-widest ${item.status === 'VERIFIED' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                                {item.status}
-                                            </p>
+                                        <div className="flex flex-col items-center gap-1.5 z-10">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.is_onboarded ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
+                                                <Trophy size={11} />
+                                            </div>
+                                            <span className="text-[7px] font-black uppercase text-slate-400">Earning</span>
                                         </div>
+                                        <div className="flex flex-col items-center gap-1.5 z-10">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_applied_loan ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white border-slate-200 text-slate-300'} ${friend.has_applied_loan && !friend.has_received_cashback ? 'animate-pulse' : ''}`}>
+                                                <History size={12} />
+                                            </div>
+                                            <span className="text-[7px] font-black uppercase text-slate-400">Loan Applied</span>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-1.5 z-10">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_received_cashback ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
+                                                <Trophy size={12} />
+                                            </div>
+                                            <span className="text-[7px] font-black uppercase text-slate-400">Earning</span>
+                                        </div>
+
+                                        {/* Connecting Line Backdrop */}
+                                        <div className="absolute top-5 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-slate-100 -z-0"></div>
                                     </div>
                                 </div>
                             ))
@@ -239,7 +342,7 @@ export default function TeamEarningsPage() {
                             <div className="p-12 text-center">
                                 <TrendingUp className="w-12 h-12 text-slate-100 mx-auto mb-4" />
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No referral earnings yet</p>
-                                <button 
+                                <button
                                     onClick={() => router.push('/customer/referral')}
                                     className="mt-4 text-xs font-black text-indigo-600 uppercase tracking-widest hover:underline"
                                 >
@@ -250,6 +353,52 @@ export default function TeamEarningsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Transfer Modal */}
+            {showTransferModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-black text-xl text-slate-900 tracking-tight">Withdraw Earnings</h3>
+                            <button onClick={() => setShowTransferModal(false)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {stats?.transfer_min_amount > 0 && (
+                            <div className="bg-amber-50 text-amber-700 p-3 rounded-xl text-xs font-bold flex items-start gap-2 mb-6 border border-amber-200/50">
+                                <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                                <span>Minimum allowed withdraw amount is ₹{stats.transfer_min_amount.toLocaleString()}.</span>
+                            </div>
+                        )}
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available to withdraw: ₹{stats?.available?.toLocaleString()}</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span className="text-slate-400 font-bold text-lg">₹</span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        value={transferAmount}
+                                        onChange={(e) => setTransferAmount(e.target.value)}
+                                        placeholder="Enter amount"
+                                        className="w-full bg-white border-2 border-indigo-500 rounded-2xl py-4 pl-10 pr-4 font-black text-2xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all shadow-sm"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                onClick={submitTransfer}
+                                disabled={submitting || !transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > stats?.available}
+                                className="w-full py-4 bg-indigo-400 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {submitting ? 'Processing...' : 'Confirm Withdrawal'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

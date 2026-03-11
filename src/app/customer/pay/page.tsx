@@ -187,15 +187,41 @@ function CustomerPayPage() {
         if (!id) return;
         setLoading(true);
         setError('');
-        console.log("Fetching payee details for:", id);
+        console.log("Fetching details for:", id);
         try {
-            const data = await apiFetch(`/payment/payee/${id}`);
-            setPayee(data);
-            setStep(2);
-            setSearchSuggestions([]);
-            setSearchQuery('');
+            // First try as a payment payee
+            try {
+                const data = await apiFetch(`/payment/payee/${id}`);
+                setPayee(data);
+                setStep(2);
+                setSearchSuggestions([]);
+                setSearchQuery('');
+                setLoading(false);
+                return;
+            } catch (err) {
+                // Not a payee, try as a coupon
+                console.log("Not a payee, checking if it's a coupon...");
+            }
+
+            // try to claim as a coupon
+            try {
+                const res = await apiFetch('/auth/coupons/claim', {
+                    method: 'POST',
+                    body: JSON.stringify({ code: id })
+                });
+                toast.success(`Coupon Claimed: ₹${res.amount} Cashback!`);
+                router.push('/customer/rewards');
+                return;
+            } catch (couponErr: any) {
+                // If it's a specific coupon error (already claimed, etc), show it
+                if (couponErr.message && (couponErr.message.includes('coupon') || couponErr.message.includes('batch'))) {
+                    throw couponErr;
+                }
+                // Otherwise fallback to general error
+                throw new Error('Invalid QR or User Not Found');
+            }
         } catch (err: any) {
-            console.error("Payee fetch error:", err);
+            console.error("Fetch error:", err);
             setError(err.message || 'Invalid QR or User Not Found');
             toast.error(err.message || 'Invalid QR or User Not Found');
             hasScanned.current = false; // Allow retry
