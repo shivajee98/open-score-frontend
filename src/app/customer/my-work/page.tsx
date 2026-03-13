@@ -108,7 +108,7 @@ export default function MyWorkDashboard() {
     }, [showAuthLetter]);
 
     const kycStatus = user?.kyc_verification?.status || 'Missing';
-    const isKycApproved = kycStatus === 'approved';
+    const isKycApproved = kycStatus.toUpperCase() === 'APPROVED';
     const profile = user?.team_profile;
 
     const handleReKyc = async () => {
@@ -169,7 +169,7 @@ export default function MyWorkDashboard() {
                             >
                                 <Briefcase size={20} />
                             </button>
-                            {isKycApproved && profile && (
+                            {isKycApproved && profile && user?.show_letter && (
                                 <button
                                     onClick={() => setShowAuthLetter(true)}
                                     className="w-11 h-11 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner backdrop-blur-md text-white hover:bg-white/20 transition-all"

@@ -82,11 +82,11 @@ export default function CustomerHome() {
     // Merchant-only promotional cards
     const merchantBanners = isMerchant ? [
         {
-            title: "Unlimited Transactions",
-            sub: "No Limits on Payments",
+            title: "Unlimited Transfer",
+            sub: "On Zero Cost",
             color: "bg-gradient-to-br from-violet-700 via-purple-800 to-indigo-900",
             accent: "bg-violet-500",
-            amount: "∞",
+            amount: "No Hidden Charge",
             label: "Available"
         },
         {
@@ -409,6 +409,51 @@ export default function CustomerHome() {
                 </div>
             </div>
 
+            {/* Pending Transfer OTP Card */}
+            {activeUser?.pending_transfer_otp && (
+                <div className="px-6 -mt-4 relative z-20 mb-6 mx-auto max-w-sm">
+                    <div className="bg-slate-900 border border-white/20 rounded-3xl p-6 shadow-2xl overflow-hidden relative group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl -mr-8 -mt-8"></div>
+                        
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-amber-400 text-slate-900 rounded-2xl flex items-center justify-center font-black shadow-lg shadow-amber-400/20 animate-pulse">
+                                <Lock size={20} strokeWidth={3} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-amber-200 uppercase tracking-[0.2em] leading-none mb-1">Incoming Transfer</p>
+                                <p className="text-sm font-black text-white tracking-tight">Verification Code (OTP)</p>
+                            </div>
+                            <div className="ml-auto text-right">
+                                <p className="text-[11px] font-black text-emerald-400 uppercase tracking-widest leading-none mb-1">₹{Number(activeUser.pending_transfer_amount).toLocaleString()}</p>
+                                <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">Pending</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white/5 rounded-[1.5rem] p-4 border border-white/5 flex items-center justify-between mb-2">
+                            <div className="flex gap-2">
+                                {String(activeUser.pending_transfer_otp).split('').map((digit, i) => (
+                                    <div key={i} className="w-8 h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-xl font-black text-amber-400">
+                                        {digit}
+                                    </div>
+                                ))}
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    navigator.clipboard.writeText(activeUser.pending_transfer_otp);
+                                    toast.success("OTP Copied!");
+                                }}
+                                className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all"
+                            >
+                                <History size={16} />
+                            </button>
+                        </div>
+                        <p className="text-[9px] text-center text-white/40 font-bold uppercase tracking-widest italic">
+                            Share this code with the sender to verify
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Quick Actions - Floating Card */}
             <div className="px-6 -mt-8 relative z-20 mb-3">
                 <div className="bg-white py-1 px-1 rounded-xl shadow-xl shadow-slate-200/50 border border-slate-50">
@@ -474,6 +519,30 @@ export default function CustomerHome() {
                             <div className="relative z-10 bg-black/40 backdrop-blur-md rounded-2xl py-3 px-5 border border-indigo-500/20 flex items-center justify-between">
                                 <span className="text-indigo-300 text-[10px] font-black uppercase tracking-widest">Secret Code</span>
                                 <span className="text-white text-3xl font-black tracking-[0.25em]">{user.pending_tie_otp}</span>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Transfer Verification Alert */}
+            {
+                user?.pending_transfer_otp && (
+                    <div className="px-4 mb-3">
+                        <div className="bg-gradient-to-br from-emerald-900 via-slate-900 to-emerald-950 p-5 rounded-3xl shadow-2xl shadow-emerald-900/40 border-[3px] border-emerald-500/30 flex flex-col gap-4 overflow-hidden relative">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
+                            <div className="flex items-center gap-3 relative z-10">
+                                <div className="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center shadow-inner border border-emerald-400/30">
+                                    <Check size={24} strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-black text-sm leading-tight uppercase tracking-tight">Transfer Verification</h3>
+                                    <p className="text-emerald-200/80 text-[10px] font-black leading-tight mt-1 uppercase tracking-widest">Share this code to receive ₹{user.pending_transfer_amount}</p>
+                                </div>
+                            </div>
+                            <div className="relative z-10 bg-black/40 backdrop-blur-md rounded-2xl py-3 px-5 border border-emerald-500/20 flex items-center justify-between">
+                                <span className="text-emerald-300 text-[10px] font-black uppercase tracking-widest">Verification Code</span>
+                                <span className="text-white text-3xl font-black tracking-[0.25em]">{user.pending_transfer_otp}</span>
                             </div>
                         </div>
                     </div>

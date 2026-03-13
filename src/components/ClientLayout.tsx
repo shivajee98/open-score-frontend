@@ -9,6 +9,8 @@ import NotificationHandler from "@/components/NotificationHandler";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import AppLockGuard from "@/components/AppLockGuard";
 import MaintenanceGuard from "@/components/MaintenanceGuard";
+import ReferralHandler from "@/components/ReferralHandler";
+import { Suspense } from "react";
 
 export default function ClientLayout({
     children,
@@ -40,6 +42,9 @@ export default function ClientLayout({
                 <MobileNavigationHandler />
                 <ToastContainer />
                 <AppLockGuard>
+                    <Suspense fallback={null}>
+                        <ReferralHandler />
+                    </Suspense>
                     {children}
                 </AppLockGuard>
                 <MobileNav />

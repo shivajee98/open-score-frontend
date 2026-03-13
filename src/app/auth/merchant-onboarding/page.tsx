@@ -139,6 +139,17 @@ function MerchantOnboardingForm() {
         }
     };
 
+    const BUSINESS_STRUCTURE = {
+        'Food & Daily Essentials': ['Grocery / Kirana Store', 'Dairy / Milk Booth', 'Fruit & Vegetable Vendor', 'Bakery', 'Sweet Shop / Mithai Shop', 'Fast Food Stall', 'Tea / Coffee Stall', 'Juice Shop', 'Restaurant', 'Dhaba', 'Hotel / Lodge'],
+        'Health & Medical': ['Pharmacy / Medical Store', 'Clinic', 'Pathology Lab', 'Medical Equipment Shop', 'Ayurvedic / Herbal Store'],
+        'Retail Shops': ['General Store', 'Departmental Store', 'Clothing / Garment Shop', 'Footwear Shop', 'Mobile Shop', 'Electronics Shop', 'Gift Shop', 'Cosmetic / Beauty Store', 'Stationery Shop', 'Toy Shop'],
+        'Street Vendors / Small Traders': ['Street Food Cart', 'Paan Shop', 'Ice Cream Cart', 'Egg / Chicken Vendor', 'Fish / Meat Shop', 'Flower Vendor'],
+        'Services (Daily Use)': ['Barber / Salon', 'Beauty Parlour', 'Laundry / Dry Cleaner', 'Tailor', 'Repair Shop (Mobile / Electronics)', 'Bike / Car Garage', 'Photocopy / Printing Shop', 'Cyber Cafe'],
+        'Home & Utility': ['Hardware Store', 'Electrical Shop', 'Plumbing Store', 'Paint Shop', 'Furniture Shop', 'Mattress Shop', 'Kitchenware / Utensils Store'],
+        'Agriculture & Rural': ['Fertilizer Shop', 'Seeds Store', 'Animal Feed Shop', 'Pesticide Store', 'Dairy Farm'],
+        'Education & Others': ['Book Store', 'Coaching Institute', 'Computer Training Center', 'Play School / Daycare']
+    };
+
     const turnoverOptions = [
         { label: "₹1,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "1k-5k" },
         { label: "₹5,000 - ₹10,000", sub: "Cashback: ₹50 - ₹200", value: "5k-10k" },
@@ -176,6 +187,8 @@ function MerchantOnboardingForm() {
             formDataObj.append('name', formData.name);
             formDataObj.append('email', formData.email);
             formDataObj.append('business_name', formData.business_name);
+            formDataObj.append('business_nature', formData.business_nature);
+            formDataObj.append('business_segment', formData.customer_segment); // Map customer_segment to business_segment if that's the intent, or just add business_segment
             formDataObj.append('daily_turnover', formData.daily_turnover);
             formDataObj.append('role', 'MERCHANT');
 
@@ -297,6 +310,38 @@ function MerchantOnboardingForm() {
                                 </select>
                                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
                             </div>
+
+                            <div className="relative group">
+                                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
+                                <select
+                                    className="w-full pl-12 pr-10 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none appearance-none"
+                                    value={formData.business_nature}
+                                    onChange={e => setFormData({ ...formData, business_nature: e.target.value, customer_segment: '' })}
+                                >
+                                    <option value="" disabled>Select Business Nature</option>
+                                    {Object.keys(BUSINESS_STRUCTURE).map((cat) => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                            </div>
+
+                            {formData.business_nature && (
+                                <div className="relative group animate-in slide-in-from-top-2">
+                                    <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
+                                    <select
+                                        className="w-full pl-12 pr-10 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none appearance-none"
+                                        value={formData.customer_segment}
+                                        onChange={e => setFormData({ ...formData, customer_segment: e.target.value })}
+                                    >
+                                        <option value="" disabled>Select Business Segment</option>
+                                        {(BUSINESS_STRUCTURE as any)[formData.business_nature].map((sub: string) => (
+                                            <option key={sub} value={sub}>{sub}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                                </div>
+                            )}
 
                             {/* Image Upload */}
                             <div className="relative">

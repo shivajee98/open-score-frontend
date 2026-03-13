@@ -7,7 +7,6 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap, Lock, ShieldCheck } from 'lucide-react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
-import ReferralHandler from '@/components/ReferralHandler';
 
 export default function Home() {
   const [mobile, setMobile] = useState('');
@@ -429,9 +428,6 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white p-6 text-primary overflow-hidden">
-      <Suspense fallback={null}>
-        <ReferralHandler />
-      </Suspense>
       <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-10 duration-700">
 
         {error && (

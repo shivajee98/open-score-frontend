@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -43,6 +43,17 @@ export default function Profile() {
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+    const BUSINESS_STRUCTURE = {
+        'Food & Daily Essentials': ['Grocery / Kirana Store', 'Dairy / Milk Booth', 'Fruit & Vegetable Vendor', 'Bakery', 'Sweet Shop / Mithai Shop', 'Fast Food Stall', 'Tea / Coffee Stall', 'Juice Shop', 'Restaurant', 'Dhaba', 'Hotel / Lodge'],
+        'Health & Medical': ['Pharmacy / Medical Store', 'Clinic', 'Pathology Lab', 'Medical Equipment Shop', 'Ayurvedic / Herbal Store'],
+        'Retail Shops': ['General Store', 'Departmental Store', 'Clothing / Garment Shop', 'Footwear Shop', 'Mobile Shop', 'Electronics Shop', 'Gift Shop', 'Cosmetic / Beauty Store', 'Stationery Shop', 'Toy Shop'],
+        'Street Vendors / Small Traders': ['Street Food Cart', 'Paan Shop', 'Ice Cream Cart', 'Egg / Chicken Vendor', 'Fish / Meat Shop', 'Flower Vendor'],
+        'Services (Daily Use)': ['Barber / Salon', 'Beauty Parlour', 'Laundry / Dry Cleaner', 'Tailor', 'Repair Shop (Mobile / Electronics)', 'Bike / Car Garage', 'Photocopy / Printing Shop', 'Cyber Cafe'],
+        'Home & Utility': ['Hardware Store', 'Electrical Shop', 'Plumbing Store', 'Paint Shop', 'Furniture Shop', 'Mattress Shop', 'Kitchenware / Utensils Store'],
+        'Agriculture & Rural': ['Fertilizer Shop', 'Seeds Store', 'Animal Feed Shop', 'Pesticide Store', 'Dairy Farm'],
+        'Education & Others': ['Book Store', 'Coaching Institute', 'Computer Training Center', 'Play School / Daycare']
+    };
 
     const hasPin = pinData?.has_pin || false;
     const router = useRouter();
@@ -204,6 +215,7 @@ export default function Profile() {
             uploadData.append('email', formData.email);
             uploadData.append('business_name', formData.business_name);
             uploadData.append('business_nature', formData.business_nature);
+            uploadData.append('business_segment', formData.business_segment);
             uploadData.append('customer_segment', formData.customer_segment);
             uploadData.append('daily_turnover', formData.daily_turnover);
             uploadData.append('business_address', formData.street_address);
@@ -491,7 +503,7 @@ export default function Profile() {
 
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Customer Segment</p>
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Merchant Type</p>
                                         {isEditing ? (
                                             <select
                                                 value={formData.customer_segment}
@@ -514,28 +526,41 @@ export default function Profile() {
 
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Nature</p>
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Nature (Category)</p>
                                         {isEditing ? (
                                             <select
                                                 value={formData.business_nature}
-                                                onChange={(e) => setFormData({ ...formData, business_nature: e.target.value })}
+                                                onChange={(e) => setFormData({ ...formData, business_nature: e.target.value, business_segment: '' })}
                                                 className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
                                             >
-                                                <option value="">Select Business Nature</option>
-                                                <option value="Retailer">Retailer</option>
-                                                <option value="Seller">Seller</option>
-                                                <option value="Service">Service</option>
-                                                <option value="Wholesale">Wholesale</option>
-                                                <option value="Manufacturing">Manufacturing</option>
-                                                <option value="Distribution">Distribution</option>
-                                                <option value="Food & Beverage">Food & Beverage</option>
-                                                <option value="Healthcare">Healthcare</option>
-                                                <option value="Technology/IT">Technology/IT</option>
-                                                <option value="Real Estate">Real Estate</option>
-                                                <option value="Other">Other</option>
+                                                <option value="">Select Category</option>
+                                                {Object.keys(BUSINESS_STRUCTURE).map(cat => (
+                                                    <option key={cat} value={cat}>{cat}</option>
+                                                ))}
                                             </select>
                                         ) : (
                                             <p className="text-base font-semibold text-slate-900">{user.business_nature || 'Not Set'}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Business Segment (Subcategory)</p>
+                                        {isEditing ? (
+                                            <select
+                                                value={formData.business_segment}
+                                                onChange={(e) => setFormData({ ...formData, business_segment: e.target.value })}
+                                                disabled={!formData.business_nature}
+                                                className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none disabled:opacity-50`}
+                                            >
+                                                <option value="">Select Subcategory</option>
+                                                {formData.business_nature && (BUSINESS_STRUCTURE as any)[formData.business_nature]?.map((sub: string) => (
+                                                    <option key={sub} value={sub}>{sub}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <p className="text-base font-semibold text-slate-900">{user.business_segment || 'Not Set'}</p>
                                         )}
                                     </div>
                                 </div>
@@ -943,6 +968,33 @@ export default function Profile() {
                                     </div>
                                     <span className="text-xs font-medium text-slate-700">Contact Us</span>
                                 </div>
+                                {/* Become a Partner */}
+                                <div onClick={() => router.push('/customer/partner')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
+                                        <Plus className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-700">Become a Partner</span>
+                                </div>
+
+                                {/* Switch to Partner Panel */}
+                                {user?.is_vendor && (
+                                    <div 
+                                        onClick={async () => {
+                                            const { Browser } = await import('@capacitor/browser');
+                                            await Browser.open({ url: 'https://agent.msmeloan.sbs' });
+                                        }} 
+                                        className="bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200 flex items-center gap-3 cursor-pointer hover:bg-indigo-700 transition-all border border-indigo-400/20 group mt-2"
+                                    >
+                                        <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                            <Briefcase className="w-4 h-4" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <span className="text-[10px] block font-black text-indigo-100 uppercase tracking-widest leading-none mb-1">Partner Account</span>
+                                            <span className="text-xs font-bold text-white">Switch to Partner Panel</span>
+                                        </div>
+                                        <ArrowRight className="w-4 h-4 text-indigo-100/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Notifications Toggle */}
