@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 export default function NotificationHandler() {
     const hasRegistered = useRef(false);
+    const hasNativePushSupport = () => Capacitor.isPluginAvailable('PushNotifications');
 
     /**
      * Sync FCM token to backend.
@@ -174,7 +175,7 @@ export default function NotificationHandler() {
         if (hasRegistered.current) return;
         hasRegistered.current = true;
 
-        const isNative = Capacitor.isNativePlatform();
+        const isNative = hasNativePushSupport();
 
         // ONLY attach native listeners if on a native platform
         if (isNative) {

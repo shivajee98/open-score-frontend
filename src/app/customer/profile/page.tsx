@@ -64,6 +64,11 @@ export default function Profile() {
         if (saved === 'true') setNotificationsEnabled(true);
     }, []);
 
+    const hasNativePushSupport = () => {
+        if (typeof window === 'undefined') return false;
+        return Capacitor.isPluginAvailable('PushNotifications');
+    };
+
     useEffect(() => {
         if (typeof window !== 'undefined' && window.location.search.includes('editBank=true')) {
             setIsEditing(true);
@@ -112,7 +117,7 @@ export default function Profile() {
         if (typeof window === 'undefined') return;
 
         const platform = Capacitor.getPlatform();
-        const isNative = platform !== 'web';
+        const isNative = hasNativePushSupport();
 
         console.log(`[PushDebug] Platform detected: ${platform}, isNative: ${isNative}`);
 
