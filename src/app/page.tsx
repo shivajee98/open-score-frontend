@@ -70,10 +70,25 @@ export default function Home() {
 
     const checkReferral = () => {
       const code = localStorage.getItem('referral_code') || localStorage.getItem('referral code');
-      if (code) setReferralCode(code);
+      if (code) {
+        if (code.toUpperCase().startsWith('SU')) {
+          localStorage.removeItem('referral_code');
+          localStorage.removeItem('referral code');
+          setReferralCode(null);
+        } else {
+          setReferralCode(code);
+        }
+      }
 
       const temp = localStorage.getItem('temp_referral_code');
-      if (temp) setTempReferralCode(temp);
+      if (temp) {
+        if (temp.toUpperCase().startsWith('SU')) {
+          localStorage.removeItem('temp_referral_code');
+          setTempReferralCode('');
+        } else {
+          setTempReferralCode(temp);
+        }
+      }
     };
     checkReferral();
 
@@ -176,9 +191,16 @@ export default function Home() {
 
     const normalizedTempCode = tempReferralCode.trim().toUpperCase();
     if (normalizedTempCode) {
-      localStorage.setItem('referral_code', normalizedTempCode);
-      setReferralCode(normalizedTempCode);
-      localStorage.removeItem('temp_referral_code');
+      if (normalizedTempCode.startsWith('SU')) {
+        // Discard sub-user referral codes for regular onboarding
+        localStorage.removeItem('temp_referral_code');
+        setTempReferralCode('');
+        setReferralCode(null);
+      } else {
+        localStorage.setItem('referral_code', normalizedTempCode);
+        setReferralCode(normalizedTempCode);
+        localStorage.removeItem('temp_referral_code');
+      }
     }
 
     try {
