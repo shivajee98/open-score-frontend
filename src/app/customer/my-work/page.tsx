@@ -8,7 +8,18 @@ import { ArrowLeft, Briefcase, FileText, CheckCircle, Clock, XCircle, ShieldChec
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import QrStatusStepper from '@/components/qr/QrStatusStepper';
-import { Package, Truck, Home, CreditCard } from 'lucide-react';
+import { Package, Truck, Home, CreditCard, ScanBarcode, History, User, MessageSquare } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
+import SupportTicketScreen from '@/components/support/SupportTicketScreen';
+import DirectSupportChat from '@/components/support/DirectSupportChat';
+import FloatingHelpButton from '@/components/FloatingHelpButton';
+
+const navItems = [
+    { label: 'Home', href: '/customer', icon: <Home size={20} /> },
+    { label: 'Scan & Pay', href: '/customer/pay?scan=true', icon: <ScanBarcode size={20} /> },
+    { label: 'History', href: '/customer/transactions', icon: <History size={20} /> },
+    { label: 'Profile', href: '/customer/profile', icon: <User size={20} /> },
+];
 
 export default function MyWorkDashboard() {
     const router = useRouter();
@@ -18,6 +29,7 @@ export default function MyWorkDashboard() {
     const [activeTab, setActiveTab] = useState<'profile' | 'kyc' | 'qr'>('profile');
     const [showICard, setShowICard] = useState(false);
     const [showAuthLetter, setShowAuthLetter] = useState(false);
+    const [showSupport, setShowSupport] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(0.5);
 
     // Letter Editable Values
@@ -148,7 +160,8 @@ export default function MyWorkDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-24">
+        <DashboardLayout navItems={navItems} title="My Work Dashboard">
+            <div className="min-h-screen bg-slate-50 pb-10">
             {/* Header */}
             <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 pt-10 pb-12 px-4 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] -mr-32 -mt-32"></div>
@@ -214,7 +227,6 @@ export default function MyWorkDashboard() {
                         className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'qr' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}
                     >
                         QR Code
-                        {!isKycApproved && <Lock size={10} className="text-slate-300" />}
                     </button>
                 </div>
 
@@ -453,57 +465,42 @@ export default function MyWorkDashboard() {
 
                 {/* Tab: QR Booking */}
                 {activeTab === 'qr' && (
-                    <div>
-                        {!isKycApproved ? (
-                            <div className="bg-white rounded-3xl p-8 text-center shadow-xl border border-slate-100">
-                                <div className="w-16 h-16 bg-slate-100 rounded-2xl mx-auto flex items-center justify-center text-slate-300 mb-4">
-                                    <Lock size={32} />
-                                </div>
-                                <h3 className="font-black text-slate-900 text-lg">Feature Locked</h3>
-                                <p className="text-sm text-slate-500 font-medium mt-2 mb-6">Physical QR code bookings are only available to verified profiles.</p>
-                                <button onClick={() => setActiveTab('kyc')} className="w-full py-3 bg-indigo-50 text-indigo-700 font-black rounded-xl text-xs uppercase tracking-widest hover:bg-indigo-100 transition-colors">
-                                    Go to KYC
-                                </button>
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50 text-center space-y-6">
+                            <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto text-indigo-600 shadow-inner">
+                                <QrCode size={40} strokeWidth={2.5} />
                             </div>
-                        ) : (
-                            <div className="space-y-6">
-                                <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/50 text-center space-y-6">
-                                    <div className="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto text-indigo-600 shadow-inner">
-                                        <QrCode size={40} strokeWidth={2.5} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Order Physical QR Cards</h3>
-                                        <p className="text-slate-500 text-xs font-bold leading-relaxed mt-2 px-4 uppercase tracking-widest">
-                                            Get high-quality branded QR cards delivered to your doorstep. Stand out from the competition.
-                                        </p>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Security Deposit</p>
-                                            <p className="text-lg font-black text-slate-900">₹1,000</p>
-                                        </div>
-                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery</p>
-                                            <p className="text-lg font-black text-emerald-600 uppercase">Fee</p>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => router.push('/customer/qr-payment')}
-                                        className="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl uppercase tracking-[0.2em] text-xs shadow-2xl shadow-indigo-600/30 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3"
-                                    >
-                                        <Smartphone size={16} /> Book QR Now
-                                        <ArrowRight size={16} className="opacity-50" />
-                                    </button>
-
-                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                                        Instant Approval • Doorstep Delivery • Premium Quality
-                                    </p>
-                                </div>
-                                <QrHistoryList history={qrHistory} loading={loadingHistory} onRefresh={fetchQrHistory} />
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Order Physical QR Cards</h3>
+                                <p className="text-slate-500 text-xs font-bold leading-relaxed mt-2 px-4 uppercase tracking-widest">
+                                    Get high-quality branded QR cards delivered to your doorstep. Stand out from the competition.
+                                </p>
                             </div>
-                        )}
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Security Deposit</p>
+                                    <p className="text-lg font-black text-slate-900">₹1,000</p>
+                                </div>
+                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery</p>
+                                    <p className="text-lg font-black text-emerald-600 uppercase">Fee</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => router.push('/customer/qr-payment')}
+                                className="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl uppercase tracking-[0.2em] text-xs shadow-2xl shadow-indigo-600/30 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3"
+                            >
+                                <Smartphone size={16} /> Book QR Now
+                                <ArrowRight size={16} className="opacity-50" />
+                            </button>
+
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                                Instant Approval • Doorstep Delivery • Premium Quality
+                            </p>
+                        </div>
+                        <QrHistoryList history={qrHistory} loading={loadingHistory} onRefresh={fetchQrHistory} />
                     </div>
                 )}
             </div>
@@ -810,7 +807,15 @@ export default function MyWorkDashboard() {
                     </div>
                 </div>
             )}
+
+            <DirectSupportChat 
+                isOpen={showSupport} 
+                onClose={() => setShowSupport(false)} 
+            />
+
+            <FloatingHelpButton onClick={() => setShowSupport(true)} />
         </div>
+        </DashboardLayout>
     );
 }
 

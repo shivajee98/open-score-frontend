@@ -29,7 +29,8 @@ export default function IncomingCallModal() {
         const user = JSON.parse(userStr);
         const userId = user.id;
 
-        // Initialize Echo
+        // Initialize Echo (DISABLED - Using Polling instead of WebSockets per user request)
+        /*
         const echo = createEcho(token);
         echoRef.current = echo;
 
@@ -54,10 +55,11 @@ export default function IncomingCallModal() {
                 toast.info('Call ended');
                 endCall(false);
             });
+        */
 
         return () => {
             if (echoRef.current) {
-                echoRef.current.leave(`App.Models.User.${userId}`);
+                // echoRef.current.leave(`App.Models.User.${userId}`);
             }
         };
     }, []);

@@ -43,6 +43,7 @@ export default function Profile() {
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+    const [isPortalOpen, setIsPortalOpen] = useState(false);
 
     const BUSINESS_STRUCTURE = {
         'Food & Daily Essentials': ['Grocery / Kirana Store', 'Dairy / Milk Booth', 'Fruit & Vegetable Vendor', 'Bakery', 'Sweet Shop / Mithai Shop', 'Fast Food Stall', 'Tea / Coffee Stall', 'Juice Shop', 'Restaurant', 'Dhaba', 'Hotel / Lodge'],
@@ -984,10 +985,7 @@ export default function Profile() {
                                 {/* Switch to Partner Panel */}
                                 {user?.is_vendor && (
                                     <div 
-                                        onClick={async () => {
-                                            const { Browser } = await import('@capacitor/browser');
-                                            await Browser.open({ url: 'https://agent.msmeloan.sbs' });
-                                        }} 
+                                        onClick={() => setIsPortalOpen(true)} 
                                         className="bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200 flex items-center gap-3 cursor-pointer hover:bg-indigo-700 transition-all border border-indigo-400/20 group mt-2"
                                     >
                                         <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
@@ -1078,6 +1076,37 @@ export default function Profile() {
                 </div>
             )}
 
+            {isPortalOpen && (
+                <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-[#0a0f1d] text-white p-4 flex items-center justify-between shadow-md border-b border-white/5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg border border-white/10">
+                                <Briefcase className="w-4 h-4" />
+                            </div>
+                            <span className="font-bold text-sm tracking-tight">Partner Panel</span>
+                        </div>
+                        <button 
+                            onClick={() => setIsPortalOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border border-rose-500/20"
+                        >
+                            Exit Portal
+                        </button>
+                    </div>
+                    <div className="flex-1 w-full h-full relative">
+                        <iframe 
+                            src="https://agent.msmeloan.sbs" 
+                            className="w-full h-full border-none"
+                            title="Partner Panel"
+                        />
+                    </div>
+                </div>
+            )}
+
+            <TutorialPlayer
+                isOpen={isTutorialOpen}
+                onClose={() => setIsTutorialOpen(false)}
+            />
+            
             <PinModal
                 isOpen={isPinModalOpen}
                 onClose={() => setIsPinModalOpen(false)}

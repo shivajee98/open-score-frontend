@@ -134,10 +134,10 @@ export default function LoanList() {
     return (
         <div className="min-h-screen bg-slate-50 relative pb-24 font-sans selection:bg-blue-100 selection:text-blue-900">
             {/* Themed Header */}
-            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-950 via-green-900 to-teal-950' : 'from-slate-900 via-indigo-950 to-violet-950'} pt-12 pb-24 px-4 relative overflow-hidden shadow-2xl`}>
+            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-950 via-green-900 to-teal-950' : 'from-slate-900 via-indigo-950 to-violet-950'} pt-8 pb-14 px-4 relative overflow-hidden shadow-2xl`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/20' : 'bg-blue-600/20'} rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse`}></div>
                 <div className="relative z-10 max-w-2xl mx-auto">
-                    <button onClick={() => router.push('/customer')} className="mb-6 flex items-center gap-2 text-white/50 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
+                    <button onClick={() => router.push('/customer')} className="mb-4 flex items-center gap-2 text-white/50 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
                         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                     </button>
                     <div className="flex items-center justify-between">
@@ -152,7 +152,7 @@ export default function LoanList() {
                 </div>
             </div>
 
-            <div className="max-w-2xl mx-auto px-4 -mt-12 relative z-20">
+            <div className="max-w-2xl mx-auto px-4 -mt-10 relative z-20">
 
                 {/* Recent Activity / History Highlight - MOVED TO TOP */}
                 {recentLoan && (

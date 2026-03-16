@@ -16,13 +16,12 @@ export default function HomeBannerCarousel({ isOpen, onClose }: HomeBannerCarous
             id: 1,
             color: "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700",
             content: (
-                <div className="flex flex-col h-full justify-center text-white">
-                    <div className="flex items-center mb-2">
-                        <div>
-                            <h3 className="text-2xl font-black leading-tight mb-1">Transfer & Get <br /><span className="text-yellow-300">Heavy Discounts</span></h3>
-                            <p className="text-xl text-blue-100 font-medium">at Restaurants & Merchant Shops</p>
-                        </div>
-                    </div>
+                <div className="flex flex-col h-full justify-center text-white px-2">
+                    <h3 className="text-3xl font-black leading-tight mb-2">
+                        Transfer & Get <br />
+                        <span className="text-yellow-300">Heavy Discounts</span>
+                    </h3>
+                    <p className="text-lg text-blue-100 font-bold opacity-90 tracking-tight">at Restaurants & Merchant Shops</p>
                 </div>
             )
         },
@@ -30,14 +29,13 @@ export default function HomeBannerCarousel({ isOpen, onClose }: HomeBannerCarous
             id: 2,
             color: "bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700",
             content: (
-                <div className="flex flex-col h-full justify-center text-white">
-                    <div className="flex items-start gap-3 mb-2">
-                        <div>
-                            <h3 className="text-lg font-black leading-tight mb-1">Scan QR & Fulfill <br /><span className="text-yellow-300">Your Daily Needs</span></h3>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm">Exclusive Discounts</span>
-                            </div>
-                        </div>
+                <div className="flex flex-col h-full justify-center text-white px-2">
+                    <h3 className="text-3xl font-black leading-tight mb-2">
+                        Scan QR & Fulfill <br />
+                        <span className="text-yellow-300">Your Daily Needs</span>
+                    </h3>
+                    <div className="flex justify-center">
+                        <span className="text-[10px] font-black bg-white/20 px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-sm border border-white/10">Exclusive Discounts</span>
                     </div>
                 </div>
             )
@@ -46,16 +44,14 @@ export default function HomeBannerCarousel({ isOpen, onClose }: HomeBannerCarous
             id: 3,
             color: "bg-gradient-to-r from-rose-600 via-pink-600 to-orange-500",
             content: (
-                <div className="flex flex-col h-full justify-center text-white">
-                    <div className="flex items-start gap-3 mb-1">
-                        <div>
-                            <h3 className="text-2xl font-black leading-tight">Scan QR for Daily Needs</h3>
-                            <p className="text-xl font-bold text-white/90">Pay Less. Get More.</p>
-                        </div>
+                <div className="flex flex-col h-full justify-center text-white px-2">
+                    <div className="space-y-1">
+                        <h3 className="text-2xl font-black leading-none tracking-tight">Scan QR for Daily Needs</h3>
+                        <p className="text-lg font-bold text-white/90">Pay Less. Get More.</p>
                     </div>
-                    <div className="mt-5 bg-white/10 rounded-lg p-2 border border-white/10 backdrop-blur-sm">
-                        <p className="text-[10px] uppercase tracking-widest font-bold text-yellow-200 mb-0.5">Smart Savings</p>
-                        <p className="text-lg leading-tight">Transfer Instantly. Save More.</p>
+                    <div className="mt-4 bg-white/10 rounded-xl p-2.5 border border-white/10 backdrop-blur-sm">
+                        <p className="text-[10px] uppercase tracking-widest font-black text-yellow-200 mb-0.5">Smart Savings</p>
+                        <p className="text-base font-bold leading-tight">Transfer Instantly. Save More.</p>
                     </div>
                 </div>
             )
@@ -83,7 +79,7 @@ export default function HomeBannerCarousel({ isOpen, onClose }: HomeBannerCarous
             ></div>
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-sm z-10 animate-[scale-in_0.2s_ease-out]">
+            <div className="relative w-full max-w-[310px] z-10 animate-[scale-in_0.2s_ease-out]">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
@@ -92,9 +88,9 @@ export default function HomeBannerCarousel({ isOpen, onClose }: HomeBannerCarous
                     <X size={20} />
                 </button>
 
-                <div className="relative w-full overflow-hidden rounded-[2rem] shadow-2xl shadow-black/50 border border-white/10">
+                <div className="relative w-full overflow-hidden rounded-2xl shadow-2xl shadow-black/50 border border-white/10">
                     <div
-                        className={`w-full ${banner.color} p-8 relative overflow-hidden flex flex-col justify-center items-center text-center h-80`}
+                        className={`w-full ${banner.color} p-6 relative overflow-hidden flex flex-col justify-center items-center text-center h-56`}
                     >
                         {/* Fancy Background Elements */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>

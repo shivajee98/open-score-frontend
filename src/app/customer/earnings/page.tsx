@@ -167,61 +167,79 @@ export default function TeamEarningsPage() {
                 </div>
 
                 {/* Balance Card */}
-                <div className="bg-white rounded-[2rem] p-8 shadow-2xl shadow-slate-200/50 border border-slate-100">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Available for Transfer</p>
-                            <h2 className="text-4xl font-black text-slate-900 tracking-tighter">₹{stats?.available?.toLocaleString() || 0}</h2>
-                            {timeLeft.locked && (
-                                <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-amber-200">
-                                    <Clock size={12} className="animate-pulse" />
-                                    <span>Apply in: {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m</span>
-                                </div>
-                            )}
+                {stats?.kyc_status === 'approved' ? (
+                    <div className="bg-white rounded-[2rem] p-8 shadow-2xl shadow-slate-200/50 border border-slate-100">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Available for Transfer</p>
+                                <h2 className="text-4xl font-black text-slate-900 tracking-tighter">₹{stats?.available?.toLocaleString() || 0}</h2>
+                                {timeLeft.locked && (
+                                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-amber-200">
+                                        <Clock size={12} className="animate-pulse" />
+                                        <span>Apply in: {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-inner">
+                                <Coins size={24} />
+                            </div>
                         </div>
-                        <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-inner">
-                            <Coins size={24} />
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Earned</p>
+                                <p className="text-lg font-black text-slate-800">₹{stats?.total_earned?.toLocaleString() || 0}</p>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Pending/Transferred</p>
+                                <p className="text-lg font-black text-slate-800">₹{stats?.transferred?.toLocaleString() || 0}</p>
+                            </div>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">QR Onboarding Earning</p>
+                                <p className="text-lg font-black text-slate-800">₹{stats?.qr_earning?.toLocaleString() || 0}</p>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Loan Earning</p>
+                                <p className="text-lg font-black text-slate-800">₹{stats?.loan_earning?.toLocaleString() || 0}</p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={handleTransferClick}
+                            disabled={submitting || (stats?.available || 0) <= 0 || timeLeft.locked}
+                            className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${timeLeft.locked
+                                    ? 'bg-slate-300 cursor-not-allowed shadow-none'
+                                    : 'bg-slate-900 hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
+                                }`}
+                        >
+                            {timeLeft.locked ? 'Currently Time Locked' : (stats?.available || 0) <= 0 ? 'No Earnings Available' : 'Transfer to Wallet'}
+                            <ArrowUpRight size={16} />
+                        </button>
+
+                        <p className="text-[9px] text-center text-slate-400 mt-4 font-bold uppercase tracking-widest">
+                            Transfer requests are reviewed by the Admin.
+                        </p>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Earned</p>
-                            <p className="text-lg font-black text-slate-800">₹{stats?.total_earned?.toLocaleString() || 0}</p>
+                ) : (
+                    <div className="bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center text-center">
+                        <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mb-4 shadow-inner">
+                            <AlertCircle size={32} />
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Pending/Transferred</p>
-                            <p className="text-lg font-black text-slate-800">₹{stats?.transferred?.toLocaleString() || 0}</p>
-                        </div>
+                        <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2">KYC Verification Required</h3>
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-widest leading-relaxed max-w-[240px]">
+                            Please complete your KYC to enable earnings withdrawal and transfer.
+                        </p>
+                        <button 
+                            onClick={() => router.push('/customer/my-work')}
+                            className="mt-6 px-8 py-3 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-200"
+                        >
+                            Complete KYC
+                        </button>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">QR Onboarding Earning</p>
-                            <p className="text-lg font-black text-slate-800">₹{stats?.qr_earning?.toLocaleString() || 0}</p>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                            <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Loan Earning</p>
-                            <p className="text-lg font-black text-slate-800">₹{stats?.loan_earning?.toLocaleString() || 0}</p>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={handleTransferClick}
-                        disabled={submitting || (stats?.available || 0) <= 0 || timeLeft.locked}
-                        className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${timeLeft.locked
-                                ? 'bg-slate-300 cursor-not-allowed shadow-none'
-                                : 'bg-slate-900 hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
-                            }`}
-                    >
-                        {timeLeft.locked ? 'Currently Time Locked' : (stats?.available || 0) <= 0 ? 'No Earnings Available' : 'Transfer to Wallet'}
-                        <ArrowUpRight size={16} />
-                    </button>
-
-                    <p className="text-[9px] text-center text-slate-400 mt-4 font-bold uppercase tracking-widest">
-                        Transfer requests are reviewed by the Admin.
-                    </p>
-                </div>
+                )}
 
                 {/* Status/Banner — Earning Rates */}
                 {(stats?.my_rates?.qr_onboarding_rate > 0 || stats?.my_rates?.loan_disbursement_rate > 0 || user?.sub_user_id) ? (
