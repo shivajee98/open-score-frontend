@@ -320,7 +320,7 @@ export default function LoanList() {
                 {/* Loan Plans List Section */}
                 <div>
                     <div className="flex justify-between items-end mb-4 px-2">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Select Term Loan</h3>
+                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Demand Voucher</h3>
                         <span className="text-[10px] font-bold text-slate-400">Fixed Tenure</span>
                     </div>
                     <div className="flex flex-col gap-2.5 mb-8">

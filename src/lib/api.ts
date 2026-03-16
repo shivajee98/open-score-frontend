@@ -1,5 +1,9 @@
 // Static Export: Always talk directly to backend
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.msmeloan.sbs/api';
+// Static Export: Always talk directly to backend
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+        ? 'http://localhost:8000/api' 
+        : 'https://api.msmeloan.sbs/api');
 
 // Loop Prevention
 let isRedirecting = false;

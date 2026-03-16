@@ -660,7 +660,7 @@ export default function Home() {
           <div className="space-y-8 text-center">
             <div>
               <h2 className="text-2xl font-black mb-2">Verify Identity</h2>
-              <p className="text-slate-500 text-sm">Enter the code sent to +91 {mobile}</p>
+              <p className="text-slate-500 text-sm">Pick Up The call to listen the Otp sent to +91 {mobile}</p>
             </div>
 
             <input

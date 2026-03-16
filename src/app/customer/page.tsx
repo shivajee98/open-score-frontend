@@ -13,6 +13,7 @@ import SupportModal from '@/components/SupportModal';
 import HomeBannerCarousel from '@/components/HomeBannerCarousel';
 
 import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
+import MerchantLoanMilestone from '@/components/MerchantLoanMilestone';
 
 export default function CustomerHome() {
     const { user: cachedUser, wallet: cachedWallet, loans: cachedLoans, setUser, setWallet, setLoans } = useStore();
@@ -266,7 +267,7 @@ export default function CustomerHome() {
                         </button>
                     </Link>
                 )}
-                
+
                 <Link href="/customer/merchant-locator">
                     <button
                         className="rounded-full w-12 h-12 shadow-2xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-blue-500/20"
@@ -307,6 +308,17 @@ export default function CustomerHome() {
                         <h1 className="text-lg font-black tracking-tighter drop-shadow-sm uppercase">
                             {isMerchant ? (user?.business_name || 'MY STORE') : (user?.name || 'CUSTOMER')}
                         </h1>
+                        {isMerchant && (
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)] animate-pulse">
+                                    <Gift size={10} strokeWidth={3} />
+                                    <span className="text-[9px] font-black uppercase tracking-wider">Incremental Value</span>
+                                </div>
+                                <span className="text-sm font-black text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                                    ₹ {showBalance ? Number(activeWallet?.cashback_balance || 0).toLocaleString() : '••••••'}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex flex-col items-end gap-2">
@@ -414,7 +426,7 @@ export default function CustomerHome() {
                 <div className="px-6 -mt-4 relative z-20 mb-6 mx-auto max-w-sm">
                     <div className="bg-slate-900 border border-white/20 rounded-3xl p-6 shadow-2xl overflow-hidden relative group">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 rounded-full blur-2xl -mr-8 -mt-8"></div>
-                        
+
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 bg-amber-400 text-slate-900 rounded-2xl flex items-center justify-center font-black shadow-lg shadow-amber-400/20 animate-pulse">
                                 <Lock size={20} strokeWidth={3} />
@@ -437,7 +449,7 @@ export default function CustomerHome() {
                                     </div>
                                 ))}
                             </div>
-                            <button 
+                            <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(activeUser.pending_transfer_otp);
                                     toast.success("OTP Copied!");
@@ -477,20 +489,25 @@ export default function CustomerHome() {
                 </div>
             </div>
 
+            {/* Merchant Loan Milestone Progress Bar */}
+            {isMerchant && (
+                <MerchantLoanMilestone 
+                    totalCreditVolume={Number(activeUser?.total_credit_volume || 0)} 
+                    milestonePlan={activeUser?.milestone_plan} 
+                />
+            )}
+
             {/* Marketing Banner - Get Needs Done */}
-            <div className="px-4 mb-3">
+            <div className="px-1 mb-1">
                 <div onClick={() => router.push('/customer/pay?scan=true')} className="cursor-pointer group">
                     <div className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 p-0.5 rounded-2xl shadow-xl shadow-amber-500/20 active:scale-[0.98] transition-transform">
-                        <div className="bg-slate-900 rounded-[0.9rem] px-4 py-3 relative overflow-hidden">
+                        <div className="bg-slate-900 rounded-[0.9rem] px-4 py-1 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-2xl -mr-16 -mt-16 animate-pulse"></div>
                             <div className="flex items-center justify-between relative z-10">
                                 <div className="flex-1">
                                     <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-100 font-black text-sm leading-tight tracking-tight mb-1">
-                                        Get Your Need Done
+                                        Transfer and Get Daily Essential
                                     </h3>
-                                    <p className="text-slate-400 text-[8px] font-bold uppercase tracking-widest">
-                                        By using this app or paying via this app
-                                    </p>
                                 </div>
                                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-300 to-yellow-600 flex items-center justify-center text-slate-900 shadow-lg group-hover:scale-110 transition-transform">
                                     <ScanBarcode size={16} strokeWidth={2.5} />
@@ -552,7 +569,7 @@ export default function CustomerHome() {
             {/* KYC Alert (If any) */}
             {
                 kycLoan && (
-                    <div className="px-4 mb-8">
+                    <div className="px-4 mb-3">
                         <Link href={`/customer/loan/status/view?id=${kycLoan.id}`} prefetch={false}>
                             <div className="bg-yellow-400 p-4 rounded-3xl shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
                                 <div className="flex items-center gap-3 relative z-10">
@@ -572,16 +589,15 @@ export default function CustomerHome() {
 
             {
                 isMerchant && !user.pincode && (
-                    <div className="px-4 mb-3">
+                    <div className="px-1 mb-1">
                         <div onClick={() => setShowClaimModal(true)} className="cursor-pointer">
-                            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 rounded-2xl shadow-xl shadow-purple-900/30 border-2 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
+                            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-1 rounded-2xl shadow-xl shadow-purple-900/30 border-2 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
                                 <div className="flex items-center gap-3 relative z-10">
-                                    <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                    <div className="w-7 h-7 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-lg backdrop-blur-sm">
                                         <Zap size={24} className="fill-white" />
                                     </div>
                                     <div>
-                                        <h3 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim ₹{merchantBonus} Cashback</h3>
-                                        <p className="text-white/80 text-[9px] font-black leading-tight mt-0.5 opacity-80 uppercase tracking-widest">Complete Setup Now</p>
+                                        <h4 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim ₹{merchantBonus} Cashback</h4>
                                     </div>
                                 </div>
                             </div>
@@ -593,12 +609,12 @@ export default function CustomerHome() {
             {/* Bank Setup Alert - Upfront */}
             {
                 (!user.account_number || !user.ifsc_code) && (
-                    <div className="px-4 mb-8">
+                    <div className="px-4 mb-4">
                         <Link href="/customer/profile?editBank=true" prefetch={false}>
-                            <div className="bg-rose-500 p-4 rounded-3xl shadow-2xl shadow-rose-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                            <div className="bg-rose-500 p-2 rounded-3xl shadow-2xl shadow-rose-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-12 -mt-12"></div>
                                 <div className="flex items-center gap-3 relative z-10">
-                                    <div className="w-12 h-12 rounded-xl bg-slate-900 text-rose-500 flex items-center justify-center shadow-lg">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-900 text-rose-500 flex items-center justify-center shadow-lg">
                                         <Landmark size={28} />
                                     </div>
                                     <div>

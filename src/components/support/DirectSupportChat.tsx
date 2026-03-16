@@ -193,10 +193,10 @@ export default function DirectSupportChat({ isOpen, onClose }: DirectSupportChat
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-y-0 right-0 lg:left-72 z-50 flex flex-col bg-white animate-in slide-in-from-right duration-500 overflow-hidden border-l border-slate-200 shadow-2xl">
+        <div className="fixed inset-0 lg:inset-y-0 lg:right-0 lg:left-72 z-[100] flex flex-col bg-white animate-in slide-in-from-right duration-500 overflow-hidden lg:border-l border-slate-200 shadow-2xl">
             {view === 'history' ? (
                 /* History View */
-                <div className="flex-1 flex flex-col p-8 overflow-hidden bg-slate-50">
+                <div className="flex-1 flex flex-col p-4 md:p-8 overflow-hidden bg-slate-50">
                     <div className="flex items-center justify-between mb-10">
                         <div>
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Support Center</h2>
@@ -330,7 +330,7 @@ export default function DirectSupportChat({ isOpen, onClose }: DirectSupportChat
                                                     ? "bg-indigo-600 text-white rounded-br-none shadow-indigo-100" 
                                                     : "bg-white text-slate-700 border border-slate-100 rounded-bl-none shadow-slate-100"
                                             )}>
-                                                <p className="text-[13px] font-semibold leading-relaxed whitespace-pre-wrap tracking-tight">{msg.message}</p>
+                                                <p className="text-[15px] font-semibold leading-relaxed whitespace-pre-wrap tracking-tight">{msg.message}</p>
                                                 
                                                 {msg.attachment_url && (
                                                     <div className="mt-3 rounded-2xl overflow-hidden border border-slate-100 shadow-inner group/img relative">
@@ -375,7 +375,7 @@ export default function DirectSupportChat({ isOpen, onClose }: DirectSupportChat
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-6 bg-white border-t border-slate-100">
+                    <div className="p-6 pb-12 md:pb-6 bg-white border-t border-slate-100">
                         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
                             {attachment && (
                                 <div className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-2xl w-fit border border-slate-100 mb-4 animate-in slide-in-from-bottom-2 duration-300 shadow-sm">
@@ -439,7 +439,7 @@ export default function DirectSupportChat({ isOpen, onClose }: DirectSupportChat
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         placeholder="Write your message..."
-                                        className="flex-1 bg-transparent border-none py-4 focus:outline-none text-slate-900 placeholder:text-slate-400 text-[14px] font-bold"
+                                        className="flex-1 bg-transparent border-none py-4 focus:outline-none text-slate-900 placeholder:text-slate-400 text-base font-bold"
                                         disabled={isSending}
                                     />
                                 </div>

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
@@ -84,6 +84,7 @@ export default function PayoutPage() {
     // Derived State
     const user = userData ? { ...userData, daily_earnings: walletData?.daily_earnings } : null;
     const balance = walletData?.balance || 0;
+    const cashbackBalance = walletData?.cashback_balance || 0;
 
     // Check restrictions (Logic kept for reference, but not for immediate blocking)
     const loansList = Array.isArray(loans) ? loans : (loans?.data || []);
@@ -292,28 +293,49 @@ export default function PayoutPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     {/* Input Side */}
                     <div className="space-y-4">
-                        <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-900 via-teal-950 to-emerald-900' : 'from-slate-900 via-indigo-950 to-slate-900'} rounded-2xl p-6 text-white shadow-lg shadow-slate-900/10 relative overflow-hidden group`}>
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700"></div>
-                            <div className="flex items-center gap-3 mb-6 opacity-60">
-                                <Wallet size={16} />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{isMerchant ? 'Sale Settlement' : 'Withdrawable Balance'}</span>
+                        <div className="grid grid-cols-2 gap-3">
+                            {/* Main Balance Card */}
+                            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-900 via-teal-950 to-emerald-900' : 'from-slate-900 via-indigo-950 to-indigo-900'} rounded-2xl p-4 text-white shadow-lg shadow-slate-900/10 relative overflow-hidden group h-32 flex flex-col justify-between`}>
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
+                                <div className="flex items-center gap-2 mb-1 opacity-60">
+                                    <Wallet size={12} />
+                                    <span className="text-[8px] font-black uppercase tracking-[0.2em]">{isMerchant ? 'Settlement' : 'Available'}</span>
+                                </div>
+                                <div className="mb-2">
+                                    <span className="text-sm opacity-40 font-black mr-1">₹</span>
+                                    <span className="text-2xl font-black tracking-tighter">
+                                        {balance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                    </span>
+                                </div>
+                                <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+                                    {[100, 500, 1000].map(val => (
+                                        <button
+                                            key={val}
+                                            onClick={() => setAmount(val.toString())}
+                                            className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-md text-[7px] font-black transition-colors whitespace-nowrap"
+                                        >
+                                            +₹{val}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="mb-6">
-                                <span className="text-lg opacity-40 font-black mr-2">₹</span>
-                                <span className="text-4xl font-black tracking-tighter">
-                                    {balance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                                </span>
-                            </div>
-                            <div className="flex gap-2">
-                                {[100, 500, 1000, 2000].map(val => (
-                                    <button
-                                        key={val}
-                                        onClick={() => setAmount(val.toString())}
-                                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-[9px] font-black transition-colors"
-                                    >
-                                        +₹{val}
-                                    </button>
-                                ))}
+
+                            {/* Cashback Card */}
+                            <div className="bg-gradient-to-br from-amber-500 via-orange-600 to-amber-600 rounded-2xl p-4 text-white shadow-lg shadow-orange-900/10 relative overflow-hidden group h-32 flex flex-col justify-between">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
+                                <div className="flex items-center gap-2 mb-1 opacity-60">
+                                    <Gift size={12} strokeWidth={3} />
+                                    <span className="text-[8px] font-black uppercase tracking-[0.2em]">Incremental</span>
+                                </div>
+                                <div className="mb-2">
+                                    <span className="text-sm opacity-40 font-black mr-1">₹</span>
+                                    <span className="text-2xl font-black tracking-tighter drop-shadow-md">
+                                        {cashbackBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                    </span>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-md rounded-lg py-1 px-2 border border-white/10">
+                                    <p className="text-[7px] font-black uppercase tracking-widest text-white/80 leading-tight">Reward Holdings</p>
+                                </div>
                             </div>
                         </div>
 

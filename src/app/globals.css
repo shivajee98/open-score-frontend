@@ -41,6 +41,15 @@ body {
   color: var(--foreground);
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* Allow text selection in inputs and textareas */
+input, textarea, [contenteditable="true"], .select-text {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .glass {

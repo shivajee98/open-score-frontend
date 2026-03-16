@@ -868,7 +868,7 @@ function QrHistoryList({ history, loading, onRefresh }: { history: any[], loadin
                                 <Package size={20} />
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-slate-900 leading-none">QR Standee</h4>
+                                <h4 className="text-sm font-black text-slate-900 leading-none">QR Bunch</h4>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">#{item.id} • ₹{item.security_amount}</p>
                             </div>
                         </div>
