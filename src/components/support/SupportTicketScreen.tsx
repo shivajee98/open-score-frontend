@@ -25,6 +25,19 @@ export default function SupportTicketScreen({ isOpen, onClose, userId, initialVi
     const [isChatLoading, setIsChatLoading] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [view, setView] = useState<'list' | 'direct'>(initialView);
+    const [availability, setAvailability] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchAvailability = async () => {
+            try {
+                const res = await apiFetch('/support/availability');
+                setAvailability(res);
+            } catch (err) {
+                console.error("Failed to fetch availability", err);
+            }
+        };
+        fetchAvailability();
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
@@ -147,12 +160,23 @@ export default function SupportTicketScreen({ isOpen, onClose, userId, initialVi
                         <ChevronLeft size={24} className="text-slate-600" />
                     </button>
                     <div>
-                        <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">
-                            {selectedTicket ? 'Ticket Conversation' : 'Support Center'}
+                        <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase leading-none">
+                            {selectedTicket ? 'Conversation' : 'Support Center'}
                         </h2>
-                        <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">
-                            {selectedTicket ? `#${selectedTicket.id} - ${selectedTicket.subject}` : 'We are here to help'}
-                        </p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                            {availability ? (
+                                <>
+                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                    <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none whitespace-nowrap">
+                                        {availability.message}
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest leading-none">
+                                    {selectedTicket ? `#${selectedTicket.id} - ${selectedTicket.subject}` : 'We are here to help'}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
                 {!selectedTicket && (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useStore } from '@/store/useStore';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { toast } from '@/components/ui/Toast';
 import {
@@ -75,11 +76,14 @@ function MerchantOnboardingForm() {
         customer_segment: '',
         daily_turnover: '',
         business_address: '',
+        date_of_birth: '',
         pin: '',
         confirm_pin: '',
         app_pin: '',
         app_pin_confirmation: ''
     });
+
+    const [errors, setErrors] = useState<any>({});
 
     // Image Upload State
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -190,6 +194,7 @@ function MerchantOnboardingForm() {
             formDataObj.append('business_nature', formData.business_nature);
             formDataObj.append('business_segment', formData.customer_segment); // Map customer_segment to business_segment if that's the intent, or just add business_segment
             formDataObj.append('daily_turnover', formData.daily_turnover);
+            formDataObj.append('date_of_birth', formData.date_of_birth);
             formDataObj.append('role', 'MERCHANT');
 
             if (imageFile) {
@@ -206,15 +211,24 @@ function MerchantOnboardingForm() {
             }
 
             // Complete Onboarding (Basic Info)
-            await apiFetch('/auth/onboarding', {
+            const onboardRes = await apiFetch('/auth/onboarding', {
                 method: 'POST',
                 body: formDataObj
             });
 
-            // Sync user in local storage
+            if (onboardRes.errors || onboardRes.message?.includes('invalid')) {
+                const apiErrors = onboardRes.errors || {};
+                setError(onboardRes.message || 'Validation failed. Please check your inputs.');
+                setErrors(apiErrors);
+                setLoading(false);
+                return;
+            }
+
+            // Sync user in local storage and store
             const updatedUser = await apiFetch('/auth/me');
             const user = { ...updatedUser, is_onboarded: true };
             localStorage.setItem('user', JSON.stringify(user));
+            useStore.getState().setUser(user);
 
             router.push('/customer');
         } catch (err: any) {
@@ -284,6 +298,47 @@ function MerchantOnboardingForm() {
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 />
+                            </div>
+                            
+                            <div className="relative group">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
+                                <input
+                                    type="date"
+                                    className={cn(
+                                        "w-full pl-12 pr-4 py-3.5 bg-slate-50 border rounded-2xl font-bold text-sm focus:bg-white transition-all outline-none",
+                                        errors.date_of_birth ? "border-rose-500 bg-rose-50" : "border-slate-100 focus:border-emerald-600"
+                                    )}
+                                    value={formData.date_of_birth}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        setFormData({ ...formData, date_of_birth: val });
+                                        
+                                        if (val) {
+                                            const birthDate = new Date(val);
+                                            const today = new Date();
+                                            let age = today.getFullYear() - birthDate.getFullYear();
+                                            const m = today.getMonth() - birthDate.getMonth();
+                                            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                                age--;
+                                            }
+                                            
+                                            if (age < 18) {
+                                                setErrors((prev: any) => ({
+                                                    ...prev,
+                                                    date_of_birth: `Minimum age for Merchant is 18 years. You are ${age}.`
+                                                }));
+                                            } else {
+                                                setErrors((prev: any) => {
+                                                    const { date_of_birth, ...rest } = prev;
+                                                    return rest;
+                                                });
+                                            }
+                                        }
+                                    }}
+                                />
+                                {errors.date_of_birth && (
+                                    <p className="text-[9px] font-bold text-rose-500 mt-1 ml-2 uppercase tracking-wider">{errors.date_of_birth}</p>
+                                )}
                             </div>
                             <div className="relative group">
                                 <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
@@ -367,7 +422,7 @@ function MerchantOnboardingForm() {
                             </div>
                         </div>
                         <button
-                            disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || loading}
+                            disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || !formData.date_of_birth || !!errors.date_of_birth || loading}
                             onClick={() => setStep(2)}
                             className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 group"
                         >

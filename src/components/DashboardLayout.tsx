@@ -89,6 +89,8 @@ export default function DashboardLayout({
         }
     };
 
+    const [availability, setAvailability] = useState<any>(null);
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
 
@@ -110,6 +112,11 @@ export default function DashboardLayout({
                     if (typeof window !== 'undefined') window.location.href = '/';
                 }
             });
+
+        // Fetch Support Availability
+        apiFetch('/support/availability')
+            .then(data => setAvailability(data))
+            .catch(err => console.error("Failed to fetch availability", err));
 
         // Poll for notifications - Reduced frequency to save compute
         let isMounted = true;
@@ -351,36 +358,49 @@ export default function DashboardLayout({
                                     fallback="/customer"
                                 />
                             )}
-                            <h2 className="text-lg md:text-2xl font-black tracking-tight text-slate-900">{title}</h2>
-                            <button
-                                onClick={toggleAudio}
-                                className={cn(
-                                    "p-2 rounded-full transition-all active:scale-95 border",
-                                    isAudioEnabled
-                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                        : "bg-slate-50 text-slate-400 border-slate-100"
-                                )}
-                                title={isAudioEnabled ? "Click to Mute" : "Click to Enable Audio Alerts"}
-                            >
-                                {isAudioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-                            </button>
-                            <Link href="/customer/notifications">
-                                <button
-                                    className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95 relative"
-                                    title="Notifications"
-                                >
-                                    <Bell size={18} />
-                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
-                                </button>
-                            </Link>
-                            <Link href="/customer/support">
-                                <button
-                                    className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
-                                    title="Help & Support"
-                                >
-                                    <Headphones size={18} />
-                                </button>
-                            </Link>
+                            <h2 className="text-lg md:text-2xl font-black tracking-tight text-slate-900 truncate min-w-0">{title}</h2>
+                            {!pathname.includes('/support') && (
+                                <>
+                                    <button
+                                        onClick={toggleAudio}
+                                        className={cn(
+                                            "p-2 rounded-full transition-all active:scale-95 border",
+                                            isAudioEnabled
+                                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                                : "bg-slate-50 text-slate-400 border-slate-100"
+                                        )}
+                                        title={isAudioEnabled ? "Click to Mute" : "Click to Enable Audio Alerts"}
+                                    >
+                                        {isAudioEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                                    </button>
+                                    <Link href="/customer/notifications">
+                                        <button
+                                            className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95 relative"
+                                            title="Notifications"
+                                        >
+                                            <Bell size={18} />
+                                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+                                        </button>
+                                    </Link>
+                                    <Link href="/customer/support">
+                                        <button
+                                            className="p-2 rounded-full bg-slate-50 text-slate-400 border border-slate-100 hover:bg-slate-100 transition-all active:scale-95"
+                                            title="Help & Support"
+                                        >
+                                            <Headphones size={18} />
+                                        </button>
+                                    </Link>
+                                </>
+                            )}
+
+                            {availability && (
+                                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 rounded-full border border-emerald-100 animate-in fade-in slide-in-from-right-4 duration-500 scale-90 sm:scale-100 origin-left flex-shrink-0">
+                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse flex-shrink-0"></div>
+                                    <span className="text-[9px] sm:text-[10px] font-black text-emerald-700 uppercase tracking-wider whitespace-nowrap">
+                                        {availability.message}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-center gap-2 md:hidden">
                             <Link href="/customer/profile">

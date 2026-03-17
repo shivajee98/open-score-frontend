@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useStore } from '@/store/useStore';
 import { apiFetch } from '@/lib/api';
 import { User as UserIcon, Store, Mail, ArrowRight, User, Lock, ArrowLeft, GraduationCap } from 'lucide-react';
 import BackButton from '@/components/BackButton';
@@ -17,6 +18,12 @@ export default function Onboarding() {
     const [confirmPin, setConfirmPin] = useState('');
     const [appPin, setAppPin] = useState('');
     const [appConfirmPin, setAppConfirmPin] = useState('');
+    const [dob, setDob] = useState('');
+    const [schoolName, setSchoolName] = useState('');
+    const [courseName, setCourseName] = useState('');
+    const [schoolAddress, setSchoolAddress] = useState('');
+    const [studentIdCard, setStudentIdCard] = useState<File | null>(null);
+    const [studentIdCardPreview, setStudentIdCardPreview] = useState<string | null>(null);
     const [showPin, setShowPin] = useState(false);
     const [errors, setErrors] = useState<any>({});
     const [loading, setLoading] = useState(false);
@@ -91,23 +98,47 @@ export default function Onboarding() {
             const userLocalStorage = JSON.parse(localStorage.getItem('user') || '{}');
             const mobile = userLocalStorage.mobile_number;
 
-            // Complete Onboarding with everything in one call
+            const formData = new FormData();
+            formData.append('role', role || '');
+            formData.append('name', name || '');
+            formData.append('email', email || '');
+            formData.append('app_pin', appPin || '');
+            formData.append('app_pin_confirmation', appConfirmPin || '');
+            formData.append('date_of_birth', dob || '');
+            
+            if (pin) {
+                formData.append('pin', pin);
+                formData.append('pin_confirmation', confirmPin);
+            }
+
+            if (role === 'STUDENT') {
+                formData.append('school_name', schoolName);
+                formData.append('course_name', courseName);
+                formData.append('school_address', schoolAddress);
+                if (studentIdCard) {
+                    formData.append('student_id_card', studentIdCard);
+                }
+            }
+
             const onboardRes = await apiFetch('/auth/onboarding', {
                 method: 'POST',
-                body: JSON.stringify({
-                    role,
-                    name,
-                    email,
-                    app_pin: appPin,
-                    app_pin_confirmation: appConfirmPin,
-                    pin: pin,
-                    pin_confirmation: confirmPin
-                })
+                body: formData
             });
+
+            if (onboardRes.errors || onboardRes.message?.includes('invalid')) {
+                const apiErrors = onboardRes.errors || {};
+                setErrors({
+                    ...apiErrors,
+                    general: onboardRes.message || 'Validation failed. Please check your inputs.'
+                });
+                setLoading(false);
+                return;
+            }
 
             // On success, update stored user and redirect
             const updatedUser = { ...onboardRes.user, is_onboarded: true };
             localStorage.setItem('user', JSON.stringify(updatedUser));
+            useStore.getState().setUser(updatedUser);
 
             if (role === 'CUSTOMER' || role === 'STUDENT') router.push('/customer');
             else if (role === 'MERCHANT') router.push('/auth/merchant-onboarding');
@@ -233,6 +264,119 @@ export default function Onboarding() {
                                         </div>
                                     </div>
 
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Date of Birth</label>
+                                        <div className="relative">
+                                            <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                                            <input
+                                                type="date"
+                                                value={dob}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setDob(val);
+                                                    
+                                                    // Real-time validation
+                                                    if (val) {
+                                                        const birthDate = new Date(val);
+                                                        const today = new Date();
+                                                        let age = today.getFullYear() - birthDate.getFullYear();
+                                                        const m = today.getMonth() - birthDate.getMonth();
+                                                        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                                            age--;
+                                                        }
+                                                        
+                                                        const minAge = role === 'STUDENT' ? 15 : 18;
+                                                        if (age < minAge) {
+                                                            setErrors((prev: any) => ({
+                                                                ...prev,
+                                                                date_of_birth: `Minimum age for ${role === 'STUDENT' ? 'Student' : 'this role'} is ${minAge} years. You are ${age}.`
+                                                            }));
+                                                        } else {
+                                                            setErrors((prev: any) => {
+                                                                const newErrors = { ...prev };
+                                                                delete newErrors.date_of_birth;
+                                                                return newErrors;
+                                                            });
+                                                        }
+                                                    }
+                                                }}
+                                                className={`w-full bg-slate-50 border ${errors.date_of_birth ? 'border-rose-500 bg-rose-50' : 'border-slate-200'} rounded-xl p-3 pl-14 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all`}
+                                                required
+                                            />
+                                        </div>
+                                        {errors.date_of_birth && (
+                                            <p className="text-[10px] font-bold text-rose-500 mt-1 ml-4 uppercase tracking-widest">
+                                                {errors.date_of_birth}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {role === 'STUDENT' && (
+                                        <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">School/College Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={schoolName}
+                                                    onChange={(e) => setSchoolName(e.target.value)}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 px-6 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
+                                                    placeholder="School/College Name"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">Class/Course Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={courseName}
+                                                    onChange={(e) => setCourseName(e.target.value)}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 px-6 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all"
+                                                    placeholder="Class/Course Name"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">School/College Address</label>
+                                                <textarea
+                                                    value={schoolAddress}
+                                                    onChange={(e) => setSchoolAddress(e.target.value)}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 px-6 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all min-h-[80px]"
+                                                    placeholder="Full Address"
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2 ml-4">ID Card Photo</label>
+                                                <div 
+                                                    onClick={() => document.getElementById('studentIdCard')?.click()}
+                                                    className="w-full aspect-video bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-all overflow-hidden relative"
+                                                >
+                                                    {studentIdCardPreview ? (
+                                                        <img src={studentIdCardPreview} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <>
+                                                            <User size={32} className="text-slate-300 mb-2" />
+                                                            <p className="text-[10px] font-black uppercase text-slate-400">Click to upload ID Card</p>
+                                                        </>
+                                                    )}
+                                                    <input 
+                                                        id="studentIdCard"
+                                                        type="file" 
+                                                        accept="image/*"
+                                                        className="hidden" 
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                setStudentIdCard(file);
+                                                                setStudentIdCardPreview(URL.createObjectURL(file));
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
 
                                 <button
@@ -257,6 +401,14 @@ export default function Onboarding() {
                                 {errors.api && (
                                     <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-100">
                                         {errors.api}
+                                    </div>
+                                )}
+
+                                {errors.general && (
+                                    <div className="bg-rose-50 border border-rose-100 p-4 rounded-xl mb-4 animate-in fade-in slide-in-from-top-2">
+                                        <p className="text-xs font-bold text-rose-600 text-center uppercase tracking-widest leading-relaxed">
+                                            {errors.general}
+                                        </p>
                                     </div>
                                 )}
 

@@ -126,7 +126,10 @@ export default function CustomerHome() {
     }, []);
 
     // Derived State
-    const balance = activeWallet?.balance || '0';
+    const mainBalance = activeWallet?.balance || '0';
+    const cashbackBalance = activeWallet?.cashback_balance || '0';
+    const balance = (parseFloat(mainBalance) + parseFloat(cashbackBalance)).toString();
+    
     // Prioritize active_locked_balance from user profile (loans), else wallet locked balance
     const lockedBalance = (activeUser?.active_locked_balance || 0) > 0
         ? activeUser.active_locked_balance
@@ -309,15 +312,15 @@ export default function CustomerHome() {
                             {isMerchant ? (user?.business_name || 'MY STORE') : (user?.name || 'CUSTOMER')}
                         </h1>
                         {isMerchant && (
-                            <div className="flex items-center gap-2 mt-1">
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)] animate-pulse">
-                                    <Gift size={10} strokeWidth={3} />
-                                    <span className="text-[9px] font-black uppercase tracking-wider">Incremental Value</span>
+                            <>
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 border border-indigo-500/30">
+                                    <Smartphone size={10} strokeWidth={3} />
+                                    <span className="text-[9px] font-black uppercase tracking-wider">Account ID</span>
                                 </div>
                                 <span className="text-sm font-black text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
-                                    ₹ {showBalance ? Number(activeWallet?.cashback_balance || 0).toLocaleString() : '••••••'}
+                                    {activeUser?.mobile_number}
                                 </span>
-                            </div>
+                            </>
                         )}
                     </div>
 
@@ -393,7 +396,7 @@ export default function CustomerHome() {
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center justify-between">
-                                    <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'} text-[8px] font-bold uppercase tracking-[0.15em] opacity-90`}>Elite Credit Value</p>
+                                    <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'} text-[8px] font-bold uppercase tracking-[0.15em] opacity-90`}>Available Balance</p>
                                     <button
                                         onClick={() => setShowBalance(!showBalance)}
                                         className="p-1 rounded-md hover:bg-white/10 transition-colors text-white/60"

@@ -16,6 +16,16 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
 
     useEffect(() => {
         const checkLockStatus = () => {
+            // Public Routes Bypass
+            const path = window.location.pathname.replace(/\/$/, "");
+            const isPublicRoute = path === "/qr" || path.startsWith("/qr?") || path.startsWith("/public") || path.startsWith("/privacy-policy") || path.startsWith("/qr-update");
+
+            if (isPublicRoute) {
+                setIsLocked(false);
+                setInitialized(true);
+                return;
+            }
+
             const userStr = localStorage.getItem("user");
             if (!userStr) {
                 setInitialized(true);

@@ -104,7 +104,17 @@ export default function CustomerQR() {
                     { facingMode: "environment" },
                     { fps: 15, qrbox: { width: 250, height: 250 } },
                     (decodedText) => {
-                        setMapCode(decodedText);
+                        let finalId = decodedText;
+                        if (decodedText.includes('openscore.msmeloan.sbs/qr')) {
+                            try {
+                                const url = new URL(decodedText);
+                                const idFromUrl = url.searchParams.get('id');
+                                if (idFromUrl) finalId = idFromUrl;
+                            } catch (e) {
+                                console.error("URL Parse error:", e);
+                            }
+                        }
+                        setMapCode(finalId);
                         stopScanner();
                     },
                     () => { }

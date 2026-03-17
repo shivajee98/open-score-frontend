@@ -41,9 +41,22 @@ export default function DirectSupportChat({ isOpen, onClose }: DirectSupportChat
     const [attachment, setAttachment] = useState<File | null>(null);
     const [showPlusMenu, setShowPlusMenu] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+    const [availability, setAvailability] = useState<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesRef = useRef(messages);
+
+    useEffect(() => {
+        const fetchAvailability = async () => {
+            try {
+                const res = await apiFetch('/support/availability');
+                setAvailability(res);
+            } catch (err) {
+                console.error("Failed to fetch availability", err);
+            }
+        };
+        fetchAvailability();
+    }, []);
 
     useEffect(() => {
         messagesRef.current = messages;
@@ -289,8 +302,16 @@ export default function DirectSupportChat({ isOpen, onClose }: DirectSupportChat
                                 <div>
                                     <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase leading-none">Support Assistant</h3>
                                     <div className="flex items-center gap-1.5 mt-1">
-                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                                        <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Live Assistance</p>
+                                        <div className={cn(
+                                            "w-1.5 h-1.5 rounded-full animate-pulse",
+                                            availability ? "bg-emerald-500" : "bg-slate-400"
+                                        )} />
+                                        <p className={cn(
+                                            "text-[9px] font-black uppercase tracking-widest",
+                                            availability ? "text-emerald-600" : "text-slate-400"
+                                        )}>
+                                            {availability ? availability.message : 'Live Assistance'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

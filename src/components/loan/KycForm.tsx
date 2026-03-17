@@ -114,6 +114,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         defaultValues: {
             consent: false,
             referral_code: '',
+            first_name: user?.name?.split(' ')[0] || '',
+            last_name: user?.name?.split(' ').slice(1).join(' ') || '',
+            email: user?.email || '',
+            birth_date: user?.date_of_birth || '',
+            employer: user?.role === 'STUDENT' ? (user?.student_profile?.school_name || '') : (user?.business_name || ''),
+            occupation: user?.role === 'STUDENT' ? (user?.student_profile?.course_name || 'Student') : '',
+            street_address: user?.role === 'STUDENT' ? (user?.student_profile?.school_address || '') : '',
             ...initialData
         }
     });
@@ -122,11 +129,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         if (initialData) {
             Object.keys(initialData).forEach((key) => {
                 let value = (initialData as any)[key];
-
-                // Extra safety: Sanitize state if it contains email (prevent mapping bugs)
-                if (key === 'state' && typeof value === 'string' && value.includes('@')) {
-                    value = '';
-                }
 
                 if (value !== undefined) {
                     setValue(key as any, value);
@@ -424,14 +426,22 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div>
-                            <label className={labelClasses}>Current Employer / Shop Name</label>
-                            <input placeholder="Company or Business Name" {...register('employer')} className={inputClasses} />
+                            <label className={labelClasses}>{user?.role === 'STUDENT' ? 'School / College Name' : 'Current Employer / Shop Name'}</label>
+                            <input 
+                                placeholder={user?.role === 'STUDENT' ? 'Enter your school or college name' : 'Company or Business Name'} 
+                                {...register('employer')} 
+                                className={inputClasses} 
+                            />
                             {errors.employer && <p className={errorClasses}>{errors.employer.message}</p>}
                         </div>
 
                         <div>
-                            <label className={labelClasses}>Occupation / Role</label>
-                            <input placeholder="e.g. Sales Manager, Shop Owner" {...register('occupation')} className={inputClasses} />
+                            <label className={labelClasses}>{user?.role === 'STUDENT' ? 'Course / Degree' : 'Occupation / Role'}</label>
+                            <input 
+                                placeholder={user?.role === 'STUDENT' ? 'e.g. B.Tech Computer Science' : 'e.g. Sales Manager, Shop Owner'} 
+                                {...register('occupation')} 
+                                className={inputClasses} 
+                            />
                             {errors.occupation && <p className={errorClasses}>{errors.occupation.message}</p>}
                         </div>
 

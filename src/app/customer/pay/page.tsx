@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import PinModal from '@/components/PinModal';
-import { Scan, X, ArrowRight, ArrowLeft, Smartphone, Search, Home, QrCode, Receipt, Lock, Landmark } from 'lucide-react';
+import { Scan, X, ArrowRight, ArrowLeft, Smartphone, Search, Home, QrCode, Receipt, Lock, Landmark, History } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -19,6 +19,8 @@ function CustomerPayPage() {
     const [loading, setLoading] = useState(false);
     const [balance, setBalance] = useState(0);
     const [lockedBalance, setLockedBalance] = useState(0);
+    const [cashbackBalance, setCashbackBalance] = useState(0);
+    const [useCashback, setUseCashback] = useState(true);
     const [payees, setPayees] = useState([]);
     const [payee, setPayee] = useState<any>(null);
     const [error, setError] = useState('');
@@ -54,6 +56,7 @@ function CustomerPayPage() {
         apiFetch('/wallet/balance').then(data => {
             setBalance(data.balance || 0);
             setLockedBalance(data.locked_balance || 0);
+            setCashbackBalance(data.cashback_balance || 0);
         });
 
         apiFetch('/wallet/transactions').then(res => {
@@ -178,7 +181,23 @@ function CustomerPayPage() {
 
         stopScanner();
         console.log("Scanned QR:", decodedText);
-        fetchPayeeDetails(decodedText);
+
+        // Sanitize Input: Extract ID if it's a redirection URL
+        let finalId = decodedText;
+        if (decodedText.includes('openscore.msmeloan.sbs/qr')) {
+            try {
+                const url = new URL(decodedText);
+                const idFromUrl = url.searchParams.get('id');
+                if (idFromUrl) {
+                    finalId = idFromUrl;
+                    console.log("Extracted ID from URL:", finalId);
+                }
+            } catch (e) {
+                console.error("Failed to parse QR URL:", e);
+            }
+        }
+
+        fetchPayeeDetails(finalId);
     }
 
     function onScanFailure(error: any) { }
@@ -273,7 +292,8 @@ function CustomerPayPage() {
                     body: JSON.stringify({
                         payee_wallet_uuid: payee.payee_wallet_uuid,
                         amount: parseFloat(amount),
-                        pin: pin
+                        pin: pin,
+                        use_cashback: useCashback
                     })
                 }),
                 new Promise(resolve => setTimeout(resolve, 1500))
@@ -482,6 +502,60 @@ function CustomerPayPage() {
                                     {/* Cursor blinker simulation if needed, or rely on browser default */}
                                 </div>
                             </div>
+
+                            {/* Cashback Usage Preview */}
+                            {amount && parseFloat(amount) > 0 && user?.cashback_usage_percentage > 0 && (
+                                <div className={`px-4 py-3 rounded-xl border-2 transition-all ${useCashback ? 'bg-emerald-50 border-emerald-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-6 h-6 rounded-md flex items-center justify-center ${useCashback ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-200 text-slate-400'}`}>
+                                                <History size={12} strokeWidth={3} />
+                                            </div>
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${useCashback ? 'text-emerald-900' : 'text-slate-400'}`}>Use Cashback Wallet</span>
+                                        </div>
+                                        <div 
+                                            onClick={() => setUseCashback(!useCashback)}
+                                            className={`w-10 h-5 rounded-full relative cursor-pointer transition-all duration-300 ${useCashback ? 'bg-emerald-500 shadow-inner' : 'bg-slate-300'}`}
+                                        >
+                                            <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 ${useCashback ? 'right-1 shadow-md' : 'left-1'}`}></div>
+                                        </div>
+                                    </div>
+                                    
+                                    {useCashback && (
+                                        <div className="space-y-1.5 pt-1 border-t border-emerald-100/50">
+                                            <div className="flex justify-between items-center text-[10px]">
+                                                <span className="text-emerald-700/60 font-bold uppercase tracking-tighter">Your Current Cashback</span>
+                                                <span className="text-emerald-900 font-black">₹{Number(cashbackBalance).toLocaleString()}</span>
+                                            </div>
+                                            
+                                            {cashbackBalance >= (user?.cashback_threshold_amount || 0) ? (
+                                                <>
+                                                    <div className="flex justify-between items-center text-[11px]">
+                                                        <span className="text-emerald-700 font-bold">Contribution ({user.cashback_usage_percentage}%)</span>
+                                                        <span className="text-emerald-600 font-black">
+                                                            - ₹{Math.min(
+                                                                parseFloat(amount) * (user.cashback_usage_percentage / 100),
+                                                                cashbackBalance
+                                                            ).toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-[11px] pt-1 mt-1 border-t border-emerald-100 italic">
+                                                        <span className="text-slate-600 font-black uppercase tracking-widest text-[8px]">Net Wallet Debit</span>
+                                                        <span className="text-slate-900 font-black">₹{(parseFloat(amount) - Math.min(parseFloat(amount) * (user.cashback_usage_percentage / 100), cashbackBalance)).toFixed(2)}</span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="p-2 bg-amber-50 rounded-lg border border-amber-100 flex items-start gap-2">
+                                                    <div className="text-amber-600 mt-0.5"><Lock size={10} /></div>
+                                                    <p className="text-[8px] font-bold text-amber-700 leading-tight uppercase tracking-tight">
+                                                        Cashback below ₹{user.cashback_threshold_amount}. Full amount will be debited from Main Wallet.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Available Balance</span>

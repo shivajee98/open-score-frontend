@@ -62,7 +62,10 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
         return () => clearInterval(timer);
     }, [config]);
 
-    if (config?.is_active) {
+    const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/$/, "") : "";
+    const isPublicRoute = path === "/qr" || path.startsWith("/qr?") || path.startsWith("/public") || path.startsWith("/privacy-policy") || path.startsWith("/qr-update");
+
+    if (config?.is_active && !isPublicRoute) {
         return (
             <div
                 className="fixed inset-0 z-[99999] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-700"
