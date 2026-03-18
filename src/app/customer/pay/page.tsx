@@ -32,6 +32,14 @@ function CustomerPayPage() {
     const [user, setUser] = useState<any>(null);
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
 
+    const isPayeeMerchant = payee?.role === 'MERCHANT';
+
+    useEffect(() => {
+        if (isPayeeMerchant) {
+            setUseCashback(false);
+        }
+    }, [isPayeeMerchant]);
+
     useEffect(() => {
         const stored = localStorage.getItem('user');
         if (stored) setUser(JSON.parse(stored));
@@ -505,23 +513,36 @@ function CustomerPayPage() {
 
                             {/* Cashback Usage Preview */}
                             {amount && parseFloat(amount) > 0 && user?.cashback_usage_percentage > 0 && (
-                                <div className={`px-4 py-3 rounded-xl border-2 transition-all ${useCashback ? 'bg-emerald-50 border-emerald-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                                <div className={`px-4 py-3 rounded-xl border-2 transition-all ${useCashback && !isPayeeMerchant ? 'bg-emerald-50 border-emerald-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
                                     <div className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-6 h-6 rounded-md flex items-center justify-center ${useCashback ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-200 text-slate-400'}`}>
+                                        <div className="flex items-center gap-1.5 overflow-hidden">
+                                            <div className={`shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${useCashback && !isPayeeMerchant ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-200 text-slate-400'}`}>
                                                 <History size={12} strokeWidth={3} />
                                             </div>
-                                            <span className={`text-[10px] font-black uppercase tracking-widest ${useCashback ? 'text-emerald-900' : 'text-slate-400'}`}>Use Cashback Wallet</span>
+                                            <div className="min-w-0">
+                                                <span className={`text-[10px] font-black uppercase tracking-widest block truncate ${useCashback && !isPayeeMerchant ? 'text-emerald-900' : 'text-slate-400'}`}>
+                                                    Use Cashback Wallet
+                                                </span>
+                                            </div>
                                         </div>
                                         <div 
-                                            onClick={() => setUseCashback(!useCashback)}
-                                            className={`w-10 h-5 rounded-full relative cursor-pointer transition-all duration-300 ${useCashback ? 'bg-emerald-500 shadow-inner' : 'bg-slate-300'}`}
+                                            onClick={() => !isPayeeMerchant && setUseCashback(!useCashback)}
+                                            className={`w-10 h-5 rounded-full shrink-0 relative cursor-pointer transition-all duration-300 ${useCashback && !isPayeeMerchant ? 'bg-emerald-500 shadow-inner' : 'bg-slate-300'} ${isPayeeMerchant ? 'cursor-not-allowed opacity-50' : ''}`}
                                         >
-                                            <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 ${useCashback ? 'right-1 shadow-md' : 'left-1'}`}></div>
+                                            <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 ${useCashback && !isPayeeMerchant ? 'right-1 shadow-md' : 'left-1'}`}></div>
                                         </div>
                                     </div>
                                     
-                                    {useCashback && (
+                                    {isPayeeMerchant && (
+                                        <div className="p-2 bg-slate-100/50 rounded-lg border border-slate-200/50 flex items-start gap-2">
+                                            <div className="text-slate-400 mt-0.5"><Lock size={10} /></div>
+                                            <p className="text-[8px] font-bold text-slate-500 leading-tight uppercase tracking-tight">
+                                                Merchants cannot accept Cashback Wallet funds.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {useCashback && !isPayeeMerchant && (
                                         <div className="space-y-1.5 pt-1 border-t border-emerald-100/50">
                                             <div className="flex justify-between items-center text-[10px]">
                                                 <span className="text-emerald-700/60 font-bold uppercase tracking-tighter">Your Current Cashback</span>

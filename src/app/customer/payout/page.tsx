@@ -4,9 +4,10 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
+import PinModal from '@/components/PinModal';
 
 export default function PayoutPage() {
     // Data Fetching
@@ -73,6 +74,9 @@ export default function PayoutPage() {
     };
 
     const [amount, setAmount] = useState('');
+    const [transferAmountValue, setTransferAmountValue] = useState('');
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false); // Simulated processing state
     const [isSuccess, setIsSuccess] = useState(false);
@@ -155,6 +159,56 @@ export default function PayoutPage() {
         } finally {
             setIsSubmitting(false);
             setIsProcessing(false);
+        }
+    };
+
+    const handleTransferToWallet = () => {
+        const threshold = user?.cashback_threshold_amount || 0;
+        const currentBalance = parseFloat(cashbackBalance.toString());
+        
+        if (currentBalance < threshold) {
+            const remaining = threshold - currentBalance;
+            toast.error(`Earn ₹${remaining.toLocaleString()} more to transfer to wallet.`);
+            return;
+        }
+        
+        setTransferAmountValue(cashbackBalance.toString());
+        setIsTransferModalOpen(true);
+    };
+
+    const confirmTransferAmount = () => {
+        const amt = parseFloat(transferAmountValue);
+        if (!amt || amt <= 0) {
+            toast.error("Please enter a valid amount");
+            return;
+        }
+        if (amt > parseFloat(cashbackBalance.toString())) {
+            toast.error("Insufficient cashback balance");
+            return;
+        }
+        setIsTransferModalOpen(false);
+        setIsPinModalOpen(true);
+    };
+
+    const handlePinVerification = async (pin: string) => {
+        setIsSubmitting(true);
+        try {
+            await apiFetch('/wallet/cashback-to-wallet', {
+                method: 'POST',
+                body: JSON.stringify({
+                    pin,
+                    amount: parseFloat(transferAmountValue)
+                })
+            });
+            toast.success("Rewards transferred successfully!");
+            setIsPinModalOpen(false);
+            setTransferAmountValue('');
+            mutateWallet();
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e.message || "Failed to transfer rewards");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -327,14 +381,23 @@ export default function PayoutPage() {
                                     <Gift size={12} strokeWidth={3} />
                                     <span className="text-[8px] font-black uppercase tracking-[0.2em]">Incremental</span>
                                 </div>
-                                <div className="mb-2">
+                                <div className="mb-1">
                                     <span className="text-sm opacity-40 font-black mr-1">₹</span>
                                     <span className="text-2xl font-black tracking-tighter drop-shadow-md">
                                         {cashbackBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                     </span>
                                 </div>
-                                <div className="bg-white/10 backdrop-blur-md rounded-lg py-1 px-2 border border-white/10">
-                                    <p className="text-[7px] font-black uppercase tracking-widest text-white/80 leading-tight">Reward Holdings</p>
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="bg-white/10 backdrop-blur-md rounded-lg py-1 px-2 border border-white/10 w-fit">
+                                        <p className="text-[7px] font-black uppercase tracking-widest text-white/80 leading-tight">Reward Holdings</p>
+                                    </div>
+                                    <button 
+                                        onClick={handleTransferToWallet}
+                                        disabled={isSubmitting}
+                                        className="p-1.5 text-white hover:bg-white/10 rounded-xl transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center border border-white/5 shadow-inner"
+                                    >
+                                        <ArrowRightLeft size={18} strokeWidth={3} />
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -538,6 +601,58 @@ export default function PayoutPage() {
                     </div>
                 </div>
             </div>
+            {/* Amount Input Modal */}
+            {isTransferModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+                        
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-black text-slate-900 tracking-tight">Transfer Rewards</h3>
+                            <button onClick={() => setIsTransferModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+                                <ArrowLeft className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 mb-4">
+                                <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-1">Available Rewards</p>
+                                <p className="text-xl font-black text-orange-900">₹{parseFloat(cashbackBalance.toString()).toLocaleString()}</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Amount to Transfer</label>
+                                <div className="relative group">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-black text-slate-300 group-focus-within:text-slate-900 transition-colors">₹</span>
+                                    <input
+                                        type="number"
+                                        value={transferAmountValue}
+                                        onChange={(e) => setTransferAmountValue(e.target.value)}
+                                        placeholder="Enter Amount"
+                                        className="w-full bg-slate-50 border-none rounded-xl py-4 pl-10 pr-4 text-xl font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={confirmTransferAmount}
+                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
+                            >
+                                Continue
+                                <ArrowRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* PIN Verification Modal */}
+            <PinModal
+                isOpen={isPinModalOpen}
+                onClose={() => setIsPinModalOpen(false)}
+                onComplete={handlePinVerification}
+                title="Verify Wallet PIN"
+            />
         </div>
     );
 }

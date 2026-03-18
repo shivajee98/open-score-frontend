@@ -22,6 +22,7 @@ import {
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 import { useStore } from '@/store/useStore';
+import { QRCodeSVG } from 'qrcode.react';
 
 const SECURITY_AMOUNTS = [
     { value: '1000', label: 'Basic', desc: '1 Bunch' },
@@ -33,7 +34,7 @@ export default function QrPaymentPage() {
     const router = useRouter();
     const { user } = useStore();
     const [step, setStep] = useState(1);
-    
+
     // Form State
     const [form, setForm] = useState({
         name: user?.name || '',
@@ -203,7 +204,7 @@ export default function QrPaymentPage() {
                     <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
                         <div className="bg-white rounded-[2rem] shadow-xl p-6 border border-slate-100 space-y-5">
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Shipping Details</h3>
-                            
+
                             <div className="grid grid-cols-1 gap-4">
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Receiver Name</label>
@@ -306,7 +307,7 @@ export default function QrPaymentPage() {
                         {/* Payment Hub */}
                         <div className="bg-[#0f172a] rounded-[2.5rem] p-6 text-white shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
-                            
+
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center">
                                     <Smartphone size={20} />
@@ -317,24 +318,47 @@ export default function QrPaymentPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/5 mb-6">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[9px] font-black text-indigo-300 uppercase tracking-widest">Payee VPA</span>
-                                    <div className="flex items-center gap-1 bg-emerald-500/20 text-emerald-400 text-[7px] font-black px-2 py-0.5 rounded-full uppercase">
-                                        <ShieldCheck size={8} /> Verified
+                            <div className="bg-white/5 backdrop-blur-xl rounded-[2rem] p-5 border border-white/10 mb-6 group transition-all hover:bg-white/[0.07]">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="space-y-0.5">
+                                        <span className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.15em] block">Merchant ID</span>
+                                        <p className="text-lg font-mono font-black tracking-wider text-white">risexpe@ibl</p>
                                     </div>
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                    <p className="text-lg font-mono font-black tracking-wider truncate">risexpe@ibl</p>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             navigator.clipboard.writeText('risexpe@ibl');
                                             toast.info('Copied!');
                                         }}
-                                        className="shrink-0 bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all"
+                                        className="w-10 h-10 bg-white/10 hover:bg-white/20 flex items-center justify-center rounded-xl transition-all active:scale-90"
                                     >
-                                        <FileText size={16} />
+                                        <FileText size={18} className="text-indigo-300" />
                                     </button>
+                                </div>
+
+                                <div className="bg-white rounded-[2rem] p-8 flex flex-col items-center gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/5 relative overflow-hidden group/qr">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent opacity-0 group-hover/qr:opacity-100 transition-opacity" />
+                                    
+                                    <div className="relative p-2 bg-white rounded-2xl shadow-inner border border-slate-100">
+                                        <QRCodeSVG 
+                                            value={upiUrl} 
+                                            size={180} 
+                                            level="H" 
+                                            includeMargin={false}
+                                            className="rounded-lg"
+                                        />
+                                    </div>
+
+                                    <div className="text-center relative">
+                                        <div className="flex items-center justify-center gap-2 mb-2">
+                                            <div className="h-[1px] w-4 bg-slate-200" />
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Scan to Pay</p>
+                                            <div className="h-[1px] w-4 bg-slate-200" />
+                                        </div>
+                                        <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-full border border-slate-200">
+                                            <ShieldCheck size={12} className="text-emerald-500" />
+                                            <code className="text-[10px] font-black text-slate-600 tracking-wider">SECURE TRANSACTION</code>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -358,7 +382,7 @@ export default function QrPaymentPage() {
                         {/* Upload Zone */}
                         <div className="bg-white rounded-[2rem] shadow-xl p-6 border border-slate-100">
                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 text-center">Step 2: Upload Screenshot</h4>
-                            
+
                             {screenshotPreview ? (
                                 <div className="relative rounded-2xl overflow-hidden border-2 border-indigo-500 bg-slate-50 group">
                                     <img src={screenshotPreview} alt="Screenshot" className="w-full max-h-64 object-contain" />
@@ -375,30 +399,30 @@ export default function QrPaymentPage() {
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
                                     <label className="border-2 border-dashed border-indigo-200 bg-indigo-50/50 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-indigo-50 hover:border-indigo-400 transition-all group">
-                                         <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
-                                             <Camera size={20} />
-                                         </div>
-                                         <span className="font-black text-[9px] uppercase tracking-widest text-indigo-600">Camera</span>
-                                         <input
-                                             type="file"
-                                             className="hidden"
-                                             accept="image/*"
-                                             capture="environment"
-                                             onChange={handleScreenshotSelect}
-                                         />
-                                     </label>
-                                     <label className="border-2 border-dashed border-slate-100 bg-slate-50/50 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition-all group">
-                                         <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
-                                             <UploadCloud size={20} />
-                                         </div>
-                                         <span className="font-black text-[9px] uppercase tracking-widest text-slate-500">Gallery</span>
-                                         <input
-                                             type="file"
-                                             className="hidden"
-                                             accept="image/*"
-                                             onChange={handleScreenshotSelect}
-                                         />
-                                     </label>
+                                        <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
+                                            <Camera size={20} />
+                                        </div>
+                                        <span className="font-black text-[9px] uppercase tracking-widest text-indigo-600">Camera</span>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            capture="environment"
+                                            onChange={handleScreenshotSelect}
+                                        />
+                                    </label>
+                                    <label className="border-2 border-dashed border-slate-100 bg-slate-50/50 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition-all group">
+                                        <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
+                                            <UploadCloud size={20} />
+                                        </div>
+                                        <span className="font-black text-[9px] uppercase tracking-widest text-slate-500">Gallery</span>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleScreenshotSelect}
+                                        />
+                                    </label>
                                 </div>
                             )}
                         </div>
@@ -406,11 +430,10 @@ export default function QrPaymentPage() {
                         <button
                             onClick={handleSubmit}
                             disabled={!screenshot || uploading}
-                            className={`w-full py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 ${
-                                !screenshot || uploading
+                            className={`w-full py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 ${!screenshot || uploading
                                     ? 'bg-slate-200 text-slate-400'
                                     : 'bg-emerald-600 text-white shadow-emerald-500/20 active:scale-95'
-                            }`}
+                                }`}
                         >
                             {uploading ? (
                                 <div className="w-5 h-5 border-3 border-white rounded-full animate-spin border-t-transparent" />

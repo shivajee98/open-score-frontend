@@ -229,7 +229,7 @@ export default function LoanDetail() {
                         <h4 className="font-black text-xs uppercase tracking-widest">Important Terms</h4>
                     </div>
                     <ul className="space-y-3">
-                        {['Earnings credited to wallet only.', 'Early closure cancels future payouts.', 'Repayment schedule locks after disbursal.'].map((term, i) => (
+                        {['Value credit to wallet only.', 'Early closure cancels future payouts.', 'Repayment schedule locks after disbursal.'].map((term, i) => (
                             <li key={i} className="flex gap-2 text-sm font-medium text-slate-600">
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-300 mt-2 shrink-0" />
                                 {term}

@@ -52,13 +52,13 @@ export default function TransactionDetailModal({ isOpen, transaction, onClose }:
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
-                        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Reference ID</span>
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Transfer ID</span>
                         <span className="font-bold text-slate-700 text-xs font-mono copy-text cursor-pointer hover:text-blue-600 transition-colors" onClick={() => navigator.clipboard.writeText(transaction.display_id || transaction.id)}>
                             {transaction.display_id || `TRN-ID-${String(transaction.id).padStart(8, '0')}`}
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
-                        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Transfer ID</span>
+                        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Reference ID</span>
                         <span className="font-bold text-slate-700 text-xs font-mono copy-text cursor-pointer hover:text-blue-600 transition-colors" onClick={() => navigator.clipboard.writeText(transaction.reference_id || transaction.id)}>
                             {transaction.reference_id || `REF-ID-${transaction.id}`}
                         </span>

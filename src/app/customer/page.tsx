@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -128,7 +128,7 @@ export default function CustomerHome() {
     // Derived State
     const mainBalance = activeWallet?.balance || '0';
     const cashbackBalance = activeWallet?.cashback_balance || '0';
-    const balance = (parseFloat(mainBalance) + parseFloat(cashbackBalance)).toString();
+    const balance = mainBalance;
     
     // Prioritize active_locked_balance from user profile (loans), else wallet locked balance
     const lockedBalance = (activeUser?.active_locked_balance || 0) > 0
@@ -141,6 +141,7 @@ export default function CustomerHome() {
     const activeLoan = loansList?.find((l: any) => l.status === 'DISBURSED' || l.status === 'OVERDUE');
     const hasActiveLoan = !!activeLoan;
     const loading = !activeUser && (userLoading || walletLoading);
+
 
     // Fetch Cashback Settings
     const { data: cashbackSettings } = useApi('/admin/cashback-settings');
@@ -312,15 +313,15 @@ export default function CustomerHome() {
                             {isMerchant ? (user?.business_name || 'MY STORE') : (user?.name || 'CUSTOMER')}
                         </h1>
                         {isMerchant && (
-                            <>
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 border border-indigo-500/30">
-                                    <Smartphone size={10} strokeWidth={3} />
-                                    <span className="text-[9px] font-black uppercase tracking-wider">Account ID</span>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)] animate-pulse">
+                                    <Gift size={10} strokeWidth={3} />
+                                    <span className="text-[9px] font-black uppercase tracking-wider">Incremental Value</span>
                                 </div>
                                 <span className="text-sm font-black text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
-                                    {activeUser?.mobile_number}
+                                    ₹ {showBalance ? Number(activeWallet?.cashback_balance || 0).toLocaleString() : '••••••'}
                                 </span>
-                            </>
+                            </div>
                         )}
                     </div>
 
@@ -376,7 +377,7 @@ export default function CustomerHome() {
                 </div>
 
                 {/* Balance Card - Elite Credit Value */}
-                <div className="relative group z-10 mx-auto max-w-sm">
+                <div className="relative group z-10 mx-auto max-w-sm mb-4">
                     {/* Outer Neon Glow */}
                     <div className={`absolute -inset-[2px] rounded-[1.4rem] ${isMerchant ? 'bg-emerald-400/50' : 'bg-indigo-500/30'} blur-md animate-pulse`}></div>
 
@@ -396,7 +397,7 @@ export default function CustomerHome() {
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center justify-between">
-                                    <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'} text-[8px] font-bold uppercase tracking-[0.15em] opacity-90`}>Available Balance</p>
+                                    <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'} text-[8px] font-bold uppercase tracking-[0.15em] opacity-90`}>Elite Credit Value</p>
                                     <button
                                         onClick={() => setShowBalance(!showBalance)}
                                         className="p-1 rounded-md hover:bg-white/10 transition-colors text-white/60"
