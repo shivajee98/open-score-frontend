@@ -31,6 +31,34 @@ function CustomerPayPage() {
     const [recentPayees, setRecentPayees] = useState<any[]>([]);
     const [user, setUser] = useState<any>(null);
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+    
+    // Error Popup State
+    const [showErrorPopup, setShowErrorPopup] = useState(false);
+    const [popupErrorMessage, setPopupErrorMessage] = useState('');
+
+    const cleanErrorMessage = (msg: string) => {
+        if (!msg) return 'An unexpected error occurred';
+        // Remove hex codes (0x followed by hex chars) - often scary for users
+        let cleaned = msg.replace(/\b0x[a-fA-F0-9]{6,}\b/g, '');
+        
+        // Remove other common technical noise
+        cleaned = cleaned.replace(/at\s+.*:\d+:\d+/g, ''); // Source maps/stack traces
+        
+        // Specific scary technical terms to simplify
+        if (cleaned.includes('Internal Server Error') || cleaned.toLowerCase().includes('database') || cleaned.includes('SQLSTATE')) {
+            return 'Something went wrong on our end. Please try again later or contact support.';
+        }
+        
+        // If everything was hex and became empty
+        if (!cleaned.trim()) return 'Connection error or invalid data received.';
+        
+        return cleaned.trim();
+    };
+
+    const triggerErrorPopup = (msg: string) => {
+        setPopupErrorMessage(cleanErrorMessage(msg));
+        setShowErrorPopup(true);
+    };
 
     const isPayeeMerchant = payee?.role === 'MERCHANT';
 
@@ -249,8 +277,9 @@ function CustomerPayPage() {
             }
         } catch (err: any) {
             console.error("Fetch error:", err);
-            setError(err.message || 'Invalid QR or User Not Found');
-            toast.error(err.message || 'Invalid QR or User Not Found');
+            const msg = cleanErrorMessage(err.message || 'Invalid QR or User Not Found');
+            setError(msg);
+            triggerErrorPopup(msg);
             hasScanned.current = false; // Allow retry
         } finally {
             setLoading(false);
@@ -310,11 +339,12 @@ function CustomerPayPage() {
             setSuccessData({
                 amount: amount,
                 payeeName: payee.name,
-                ref: res.ref
+                id: res.id,
+                ref: res.ref,
+                date: res.created_at
             });
         } catch (err: any) {
-            setError(err.message);
-            toast.error(err.message || 'Payment failed');
+            triggerErrorPopup(err.message || 'Payment failed');
         } finally {
             setLoading(false);
         }
@@ -330,7 +360,9 @@ function CustomerPayPage() {
                     isOpen={!!successData}
                     amount={successData?.amount || '0'}
                     payeeName={successData?.payeeName || ''}
-                    transactionRef={successData?.ref || ''}
+                    date={successData?.date || new Date().toISOString()}
+                    transactionId={successData?.id || ''}
+                    referenceId={successData?.ref || ''}
                     onClose={() => router.push('/customer')}
                 />
 
@@ -340,6 +372,28 @@ function CustomerPayPage() {
                     onComplete={handlePay}
                     onClose={() => setPinModalOpen(false)}
                 />
+
+                {showErrorPopup && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100">
+                            <div className="p-8 text-center bg-gradient-to-b from-rose-50/50 to-white">
+                                <div className="w-20 h-20 bg-rose-100 rounded-3xl flex items-center justify-center text-rose-500 mx-auto mb-6 shadow-inner ring-8 ring-rose-50/50">
+                                    <X size={40} strokeWidth={2.5} />
+                                </div>
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-3 uppercase">Payment Error</h3>
+                                <p className="text-slate-500 font-bold text-sm leading-relaxed mb-8 px-2">
+                                    {popupErrorMessage}
+                                </p>
+                                <button
+                                    onClick={() => setShowErrorPopup(false)}
+                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {error && <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-100">{error}</div>}
 

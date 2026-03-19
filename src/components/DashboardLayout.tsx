@@ -98,11 +98,24 @@ export default function DashboardLayout({
             setUser(JSON.parse(storedUser));
         }
 
+        if (storedUser) {
+            const parsed = JSON.parse(storedUser);
+            setUser(parsed);
+            
+            // Only hydrate if data is older than 5 minutes
+            const lastUpdated = localStorage.getItem('last_user_update');
+            const now = Date.now();
+            if (lastUpdated && (now - parseInt(lastUpdated) < 300000)) {
+                return;
+            }
+        }
+
         // Hydrate latest data from server
         apiFetch('/auth/me')
             .then(data => {
                 setUser(data);
                 localStorage.setItem('user', JSON.stringify(data));
+                localStorage.setItem('last_user_update', Date.now().toString());
             })
             .catch(err => {
                 console.error("Hydration failed", err);
@@ -113,7 +126,7 @@ export default function DashboardLayout({
                 }
             });
 
-        // Fetch Support Availability
+        // Fetch Support Availability - only on mount
         apiFetch('/support/availability')
             .then(data => setAvailability(data))
             .catch(err => console.error("Failed to fetch availability", err));
@@ -125,8 +138,8 @@ export default function DashboardLayout({
         const loop = async () => {
             if (!isMounted) return;
             await checkNewTransactions();
-            // Reduced from 2-3s to 10-30s to save Vercel compute time
-            const pollRate = user?.role === 'MERCHANT' ? 10000 : 30000;
+            // Consistent 30s polling for everyone
+            const pollRate = 30000;
             if (isMounted) {
                 timeoutId = setTimeout(loop, pollRate);
             }

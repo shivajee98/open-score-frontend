@@ -148,7 +148,9 @@ export default function RepaymentsPage() {
             setSuccessData({
                 amount: pending.amount,
                 payeeName: `Loan EMI - #${selectedLoan.id}`,
-                ref: res.ref
+                id: res.id,
+                ref: res.ref,
+                date: res.created_at
             });
 
             const data = await apiFetch(`/loans/${selectedLoan.id}/repayments`);
@@ -191,7 +193,9 @@ export default function RepaymentsPage() {
                 isOpen={!!successData}
                 amount={successData?.amount || '0'}
                 payeeName={successData?.payeeName || ''}
-                transactionRef={successData?.ref || ''}
+                date={successData?.date || new Date().toISOString()}
+                transactionId={successData?.id || ''}
+                referenceId={successData?.ref || ''}
                 onClose={() => setSuccessData(null)}
             />
 

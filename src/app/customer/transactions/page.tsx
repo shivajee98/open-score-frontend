@@ -198,8 +198,8 @@ export default function CustomerTransactions() {
                                                         <p className="font-bold text-slate-900 text-[11px] tracking-tight">
                                                             {getTransactionLabel(t)}
                                                         </p>
-                                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                                                            {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {getTransactionSubtitle(t)}
+                                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex flex-wrap gap-x-2">
+                                                            <span>{new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {getTransactionSubtitle(t)}</span>
                                                         </p>
                                                     </div>
                                                 </div>

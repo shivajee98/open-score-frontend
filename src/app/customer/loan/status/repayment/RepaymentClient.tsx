@@ -181,7 +181,9 @@ export default function RepaymentDashboard() {
             setSuccessData({
                 amount: pendingEmi.amount,
                 payeeName: `Loan EMI - #${loanId}`,
-                ref: res.ref
+                id: res.id,
+                ref: res.ref,
+                date: res.created_at
             });
 
             fetchData();
@@ -245,7 +247,9 @@ export default function RepaymentDashboard() {
                 isOpen={!!successData}
                 amount={successData?.amount || '0'}
                 payeeName={successData?.payeeName || ''}
-                transactionRef={successData?.ref || ''}
+                date={successData?.date || new Date().toISOString()}
+                transactionId={successData?.id || ''}
+                referenceId={successData?.ref || ''}
                 onClose={() => setSuccessData(null)}
             />
 

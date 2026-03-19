@@ -26,6 +26,9 @@ export function getTransactionLabel(tx: any): string {
     // ── Platform Fee ───────────────────────────────────────────
     if (srcType === 'PLATFORM_FEE') return 'Platform Fee';
 
+    // ── Maintenance Charge ─────────────────────────────────────
+    if (srcType === 'MAINTENANCE_CHARGE') return 'Maintenance Charge';
+
     // ── Loan Disbursal ─────────────────────────────────────────
     if (desc.includes('disbursement') || (srcType === 'LOAN' && tx.type === 'CREDIT')) {
         return 'Loan Disbursed';
@@ -64,8 +67,15 @@ export function getTransactionLabel(tx: any): string {
  * Returns the subtitle / VPA line shown below the title.
  */
 export function getTransactionSubtitle(tx: any): string {
-    if (tx.counterparty_vpa === 'Open Score' && tx.type === 'DEBIT') {
-        return 'Withdrawal';
+    const srcType = tx.source_type || '';
+    
+    if (tx.counterparty_vpa === 'Open Score' || tx.counterparty_vpa === 'System') {
+        if (srcType === 'MAINTENANCE_CHARGE') return 'Administrative';
+        if (srcType === 'PLATFORM_FEE') return 'System Fee';
+        
+        if (tx.type === 'DEBIT') return 'Withdrawal';
+        return 'System Credit';
     }
+    
     return tx.counterparty_vpa || 'Wallet Transfer';
 }

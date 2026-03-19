@@ -29,14 +29,8 @@ export default function CustomerHome() {
     useEffect(() => { if (walletData) setWallet(walletData); }, [walletData, setWallet]);
     useEffect(() => { if (loans) setLoans(Array.isArray(loans) ? loans : (loans.data || [])); }, [loans, setLoans]);
 
-    // Refresh user and wallet data every second for real-time updates
-    useEffect(() => {
-        const interval = setInterval(() => {
-            mutateWallet();
-            mutateUser();
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [mutateWallet, mutateUser]);
+    // Note: Manual 1s polling removed to prevent server resource exhaustion.
+    // SWR handles updates via revalidateOnFocus and automatic deduplication.
 
     const activeUser = user || cachedUser;
     const activeWallet = walletData || cachedWallet;

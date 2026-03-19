@@ -319,6 +319,33 @@ export default function MyWorkDashboard() {
                             </div>
                         )}
 
+                        {user?.show_parent_support && user?.parent_support_number && (
+                            <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner mb-4">
+                                    <MessageSquare size={32} />
+                                </div>
+                                <h3 className="text-xl font-black text-slate-900 tracking-tight">Need Support?</h3>
+                                <p className="text-sm font-medium text-slate-500 mt-2">
+                                    Your immediate senior is here to help you with your work, commissions, and platform guidance.
+                                </p>
+                                <div className="grid grid-cols-2 gap-4 w-full mt-6">
+                                    <a 
+                                        href={`tel:${user.parent_support_number}`}
+                                        className="py-3 bg-slate-900 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Smartphone size={14} /> 
+                                        {user.parent_support_number.slice(0,2)}xxxxxx{user.parent_support_number.slice(-2)}
+                                    </a>
+                                    <a 
+                                        href={`https://wa.me/91${user.parent_support_number}`}
+                                        target="_blank"
+                                        className="py-3 bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg hover:bg-emerald-700 transition-all"
+                                    >
+                                        WhatsApp Chat
+                                    </a>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 

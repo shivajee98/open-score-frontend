@@ -68,11 +68,15 @@ interface ApiOptions extends RequestInit {
     skipAuthCheck?: boolean;
 }
 
+// Request Deduplication Store
+const pendingRequests = new Map<string, Promise<any>>();
+
 export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
     const { skipAuthCheck, ...fetchOptions } = options;
 
     const isFormData = fetchOptions.body instanceof FormData;
     const isExternal = endpoint.startsWith('http');
+    const method = fetchOptions.method || 'GET';
 
     const headers: HeadersInit = {
         'Accept': 'application/json',
@@ -93,27 +97,46 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
         ? endpoint
         : (endpoint.startsWith('/') ? `${API_BASE_URL}${endpoint}` : `${API_BASE_URL}/${endpoint}`);
 
-    try {
-        const response = await fetch(url, {
-            ...fetchOptions,
-            headers,
-        });
-
-        if ((response.status === 401 || response.status === 403) && !skipAuthCheck) {
-            handleUnauthorized();
-            throw new Error('Session expired. Please login again.');
-        }
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || errorData.message || (response.status === 401 ? 'Unauthorized' : `API request failed with status ${response.status}`));
-        }
-
-        return response.json();
-    } catch (error: any) {
-        if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
-            throw new Error('Network error. Please check your connection.');
-        }
-        throw error;
+    // Request Deduplication for GET requests
+    const cacheKey = `${method}:${url}`;
+    if (method === 'GET' && pendingRequests.has(cacheKey)) {
+        return pendingRequests.get(cacheKey);
     }
+
+    const fetchPromise = (async () => {
+        try {
+            const response = await fetch(url, {
+                ...fetchOptions,
+                headers,
+            });
+
+            if ((response.status === 401 || response.status === 403) && !skipAuthCheck) {
+                handleUnauthorized();
+                throw new Error('Session expired. Please login again.');
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || errorData.message || (response.status === 401 ? 'Unauthorized' : `API request failed with status ${response.status}`));
+            }
+
+            return response.json();
+        } catch (error: any) {
+            if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
+                throw new Error('Network error. Please check your connection.');
+            }
+            throw error;
+        } finally {
+            // Remove from pending once settled
+            if (method === 'GET') {
+                pendingRequests.delete(cacheKey);
+            }
+        }
+    })();
+
+    if (method === 'GET') {
+        pendingRequests.set(cacheKey, fetchPromise);
+    }
+
+    return fetchPromise;
 };
