@@ -1,295 +1,412 @@
 'use client';
 
-import { ArrowLeft, Shield } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Mail, Calendar, Info, Landmark, Layers, Wallet, CreditCard, Users, Gift, Database, Zap, Share2, Scale, Lock, Cookie, UserCheck, AlertTriangle, RefreshCw, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function NewPrivacyPolicyPage() {
     const router = useRouter();
 
-    return (
-        <div className="min-h-screen bg-slate-50 font-sans pb-20">
-            {/* Header */}
-            <div className="bg-slate-900 pt-8 pb-12 px-6 rounded-b-[2.5rem] shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-600/20 rounded-full blur-3xl -ml-12 -mb-12"></div>
+    const sections = [
+        {
+            title: "1. Introduction",
+            icon: <Info className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Welcome to <strong>Open Score</strong> (“Company”, “we”, “our”, “us”), a fintech service provider platform.</p>
+                    <p>Open Score acts as an intermediary service provider that connects Users, Students, and Merchants to enable digital financial access, smart spending, savings, and business transactions.</p>
+                    <p>We are committed to protecting your privacy and ensuring transparency in how your information is collected, used, and shared.</p>
+                    <p>By accessing or using the Open Score application, you agree to this Privacy Policy.</p>
+                </div>
+            )
+        },
+        {
+            title: "2. Nature of Services",
+            icon: <Landmark className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Open Score is not a direct lender or financial institution. It operates as a fintech service platform that:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Connects users with listed financial and investment partners</li>
+                        <li>Facilitates demand-based credit voucher services</li>
+                        <li>Enables wallet-based transactions and QR payments</li>
+                        <li>Provides cashback, rewards, discount coupons, and referral (share & earn) programs</li>
+                        <li>Helps users improve their financial profile for future credit eligibility</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "3. Partner Network",
+            icon: <Layers className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Open Score collaborates with multiple financial and investment partners, including but not limited to:</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[
+                            "Open Capital", "Srinidhi", "E Suvidha", 
+                            "Cloud Revel", "Rise Pay X", "JV Finance",
+                            "Other domestic and international financial partners"
+                        ].map((partner) => (
+                            <div key={partner} className="flex items-center gap-3 p-3 bg-[oklch(0.98_0.01_240)] rounded-xl border border-[oklch(0.95_0.01_240)]">
+                                <div className="w-2 h-2 rounded-full bg-[oklch(0.7_0.15_160)]"></div>
+                                <span className="text-sm font-semibold text-[oklch(0.4_0.02_240)]">{partner}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-xs text-slate-500 italic mt-2">These partners provide financial services through the Open Score platform.</p>
+                </div>
+            )
+        },
+        {
+            title: "4. Demand Credit Voucher Service",
+            icon: <FileText className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Open Score offers a Demand Credit Voucher facility:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Voucher range: <strong>₹10,000 to ₹50,000</strong></li>
+                        <li>Available regardless of initial CIBIL score</li>
+                        <li>Designed for daily essential purchases</li>
+                        <li>Functions as a financial access tool, not a guaranteed loan</li>
+                    </ul>
+                    <div className="bg-[oklch(0.98_0.03_160)] p-4 rounded-2xl border border-[oklch(0.92_0.05_160)]">
+                        <h4 className="font-bold text-[oklch(0.3_0.05_160)] mb-2 text-sm uppercase tracking-wider flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4" /> Key Conditions:
+                        </h4>
+                        <ul className="space-y-2 text-[oklch(0.35_0.05_160)] text-sm">
+                            <li className="flex gap-2"><span>•</span> Users must complete full KYC and verification</li>
+                            <li className="flex gap-2"><span>•</span> Service is provided only to users with valid and stable income</li>
+                            <li className="flex gap-2"><span>•</span> Voucher access leads to profile upgrade, helping eligibility for future loans</li>
+                            <li className="flex gap-2"><span>•</span> It is intended for emergency and short-term usage</li>
+                        </ul>
+                    </div>
+                </div>
+            )
+        },
+        {
+            title: "5. Demand Voucher Fees, Charges & Cancellation Policy",
+            icon: <Zap className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>If a user chooses any Demand Voucher plan based on their use case:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>The user must pay the applicable job price, service fee, and platform charges at the time of registration or plan selection.</li>
+                        <li>All such charges are mandatory and must be paid upfront to activate the selected voucher plan.</li>
+                        <li>All fees and charges are <strong>strictly non-refundable under any circumstances</strong>.</li>
+                        <li>Once a Demand Voucher plan is selected and activated, it cannot be cancelled, modified, or reversed.</li>
+                    </ul>
+                    <p className="font-bold text-[oklch(0.2_0.02_240)] border-l-4 border-[oklch(0.7_0.15_160)] pl-4 py-2 bg-[oklch(0.98_0.01_240)] rounded-r-xl">By selecting a Demand Voucher plan, the user explicitly agrees to these fee, non-refund, and no-cancellation terms.</p>
+                </div>
+            )
+        },
+        {
+            title: "6. Wallet System (Elite Wallet)",
+            icon: <Wallet className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Voucher value is credited into the <strong>Elite Wallet</strong>.</p>
+                    <p>Users can:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Make QR payments to merchants</li>
+                        <li>Transfer Value to other users, students, or merchants</li>
+                        <li>No deductions on transfers within the platform</li>
+                        <li>Used for daily transactions, business, and savings optimization</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "7. EMI & Repayment Terms",
+            icon: <RefreshCw className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>EMI options: 1 to 7 days (Zero Interest)</li>
+                        <li>Above 7 days: charges applicable as per selected plan</li>
+                        <li>Flexible repayment as per user convenience</li>
+                        <li>Timely repayment helps in credit profile improvement</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "8. User Categories",
+            icon: <Users className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Open Score supports:</p>
+                    <div className="flex flex-wrap gap-2 text-sm">
+                        {["Users (Normal Individuals)", "Students", "Merchants"].map(u => (
+                            <span key={u} className="px-3 py-1 bg-[oklch(0.95_0.01_240)] rounded-full font-bold text-[oklch(0.4_0.02_240)]">{u}</span>
+                        ))}
+                    </div>
+                    <p>All categories can:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Send and receive funds</li>
+                        <li>Use vouchers</li>
+                        <li>Participate in earning and reward systems</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "9. Rewards, Cashback & Earnings",
+            icon: <Gift className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Open Score provides:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Cashback benefits</li>
+                        <li>Discount coupons</li>
+                        <li>Reward programs</li>
+                        <li>Referral earnings (Share & Earn model)</li>
+                    </ul>
+                    <div className="bg-[oklch(0.98_0.03_70)] p-4 rounded-xl border border-[oklch(0.92_0.05_70)]">
+                        <p className="text-[oklch(0.3_0.05_70)] font-semibold mb-1">Merchants Incentives:</p>
+                        <p className="text-[oklch(0.4_0.05_70)] text-sm">Merchants may receive incentives (up to 2%) based on daily transactions and holding balance duration.</p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            title: "10. Information We Collect",
+            icon: <Database className="w-5 h-5" />,
+            content: (
+                <div className="space-y-6">
+                    <div>
+                        <h4 className="font-bold text-[oklch(0.2_0.02_240)] mb-2">10.1 Personal Information</h4>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>Name, Mobile Number, Email Address, Address, Date of Birth</li>
+                            <li>Identity Documents (KYC)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-[oklch(0.2_0.02_240)] mb-2">10.2 Financial & Usage Data</h4>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>Wallet transactions, Voucher usage and repayment</li>
+                            <li>Transfer activity, Merchant interaction</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-[oklch(0.2_0.02_240)] mb-2">10.3 Technical Data</h4>
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>Device ID, IP Address, App usage behavior, Location data (if permitted)</li>
+                        </ul>
+                    </div>
+                </div>
+            )
+        },
+        {
+            title: "11. How We Use Your Information",
+            icon: <Zap className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Your information is used to:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                        <li>Provide and manage services, Verify identity and eligibility</li>
+                        <li>Connect you with financial partners, Process transactions and vouchers</li>
+                        <li>Improve platform experience, Prevent fraud and misuse</li>
+                        <li>Offer personalized services and upgrade eligibility</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "12. Data Sharing",
+            icon: <Share2 className="w-5 h-5" />,
+            content: (
+                <div className="space-y-6">
+                    <div>
+                        <h4 className="font-bold text-[oklch(0.2_0.02_240)] mb-1 leading-relaxed">12.1 Financial Partners</h4>
+                        <p>To provide services and evaluate eligibility.</p>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-[oklch(0.2_0.02_240)] mb-1 leading-relaxed">12.2 Service Providers</h4>
+                        <p>For KYC verification, Payment processing, and Technical infrastructure.</p>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-[oklch(0.2_0.02_240)] mb-1 leading-relaxed">12.3 Legal Authorities</h4>
+                        <p>If required by law or to prevent fraud.</p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            title: "13. User Eligibility & Verification",
+            icon: <UserCheck className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Service is available only after complete verification (KYC)</li>
+                        <li>Users must provide accurate and valid information</li>
+                        <li>Access depends on income validation and internal risk checks</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "14. Credit Profile Impact",
+            icon: <Zap className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Voucher usage may help improve creditworthiness</li>
+                        <li>Open Score may track repayment behavior</li>
+                        <li>Future loan eligibility depends on user performance and partner evaluation</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "15. Data Security",
+            icon: <Lock className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>We use industry-standard measures: <strong>Data encryption, Secure servers, Access control systems</strong>.</p>
+                    <p className="text-[oklch(0.5_0.02_240)] italic">However, users are responsible for maintaining account confidentiality.</p>
+                </div>
+            )
+        },
+        {
+            title: "16. Cookies & Tracking",
+            icon: <Cookie className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>We may use cookies and tracking tools to enhance performance, analyze user behavior, and personalize services.</p>
+                </div>
+            )
+        },
+        {
+            title: "17. User Rights",
+            icon: <Scale className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>Users have the right to:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Access their data, Update or correct information</li>
+                        <li>Request deletion (subject to compliance rules), Withdraw consent (may limit services)</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "18. Limitation of Liability",
+            icon: <AlertTriangle className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>Open Score acts only as a service facilitator</li>
+                        <li>Financial decisions and approvals are managed by partner entities</li>
+                        <li>Voucher service does not guarantee loan approval</li>
+                    </ul>
+                </div>
+            )
+        },
+        {
+            title: "19. Policy Updates",
+            icon: <RefreshCw className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>We may update this policy periodically. Users will be notified through the app or official communication channels.</p>
+                </div>
+            )
+        },
+        {
+            title: "20. Contact Information",
+            icon: <Mail className="w-5 h-5" />,
+            content: (
+                <div className="space-y-2 bg-[oklch(0.98_0.01_240)] p-6 rounded-2xl border border-[oklch(0.95_0.01_240)]">
+                    <p><strong>Company Name:</strong> Open Score</p>
+                    <p><strong>Email:</strong> c.care@openscore.sbs</p>
+                    <p><strong>Address:</strong> [Insert Address]</p>
+                </div>
+            )
+        },
+        {
+            title: "21. Consent",
+            icon: <UserCheck className="w-5 h-5" />,
+            content: (
+                <div className="space-y-4">
+                    <p>By using Open Score, you confirm that:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                        <li>You understand that Open Score is a fintech service provider</li>
+                        <li>You consent to data sharing with partner companies</li>
+                        <li>You agree to verification, eligibility, and usage policies</li>
+                        <li>You accept all terms related to vouchers, wallet, fees, and services</li>
+                    </ul>
+                </div>
+            )
+        }
+    ];
 
-                <div className="relative z-10">
+    return (
+        <div className="min-h-screen bg-[oklch(0.98_0.01_240)] selection:bg-[oklch(0.7_0.15_160)] selection:text-white pb-20">
+            {/* Header / Hero */}
+            <div className="bg-[oklch(0.2_0.02_240)] pt-12 pb-24 px-6 rounded-b-[3.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[oklch(0.7_0.15_160/0.05)] rounded-full blur-[120px] -mr-48 -mt-48 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[oklch(0.6_0.15_260/0.03)] rounded-full blur-[100px] -ml-24 -mb-24 pointer-events-none"></div>
+
+                <div className="max-w-4xl mx-auto relative z-10">
                     <button
                         onClick={() => router.back()}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-xl text-slate-300 font-bold text-xs uppercase tracking-widest hover:bg-white/20 hover:text-white transition-all mb-8"
+                        className="group inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl text-[oklch(0.8_0.02_240)] font-bold text-xs uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer mb-14 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
                     >
-                        <ArrowLeft size={14} /> Back
+                        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
                     </button>
 
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-900/50">
-                            <Shield className="text-white w-8 h-8" />
+                    <div className="flex flex-col md:flex-row md:items-end gap-7">
+                        <div className="w-24 h-24 bg-gradient-to-br from-[oklch(0.7_0.15_160)] to-[oklch(0.5_0.15_160)] rounded-[2.5rem] flex items-center justify-center shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white/10 transform -rotate-3 hover:rotate-0 transition-all duration-700 ease-out">
+                            <ShieldCheck className="text-white w-12 h-12" />
                         </div>
-                        <div>
-                            <h1 className="text-3xl font-black text-white tracking-tight">Privacy Policy</h1>
-                            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Data Protection</p>
+                        <div className="space-y-3">
+                             <div className="flex items-center gap-3 py-1 px-3 bg-white/5 rounded-full border border-white/5 w-fit">
+                                <Calendar className="w-3.5 h-3.5 text-[oklch(0.7_0.15_160)]" />
+                                <p className="text-[oklch(0.6_0.02_240)] font-bold text-[10px] uppercase tracking-[0.3em]">Last Updated: 19th March 2026</p>
+                            </div>
+                            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight leading-[0.9] flex flex-col">
+                                <span>Privacy</span>
+                                <span className="text-[oklch(0.7_0.15_160)]">Policy</span>
+                            </h1>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="px-4 -mt-8 relative z-20 max-w-4xl mx-auto">
-                <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl border border-slate-100 flex flex-col gap-6 text-sm text-slate-700 leading-relaxed font-medium">
-                    <p>
-                        <strong>Last Updated: 19/02/2026</strong>
-                    </p>
-                    <p>
-                        This Privacy Policy describes how <strong>Open Score</strong> (“Company”, “we”, “our”, or “us”) collects, uses, stores, processes, and protects user information when users access or use our mobile application, website, and related digital services.
-                    </p>
-                    <p>
-                        Our platform provides a digital ecosystem where customers and merchants connect with each other for payments, transactions, shopping, rewards, and financial service eligibility.
-                    </p>
-                    <p>
-                        By accessing or using our application or services, you agree to the collection and use of information in accordance with this Privacy Policy.
-                    </p>
+            {/* Main Content */}
+            <div className="px-5 -mt-12 relative z-20 max-w-4xl mx-auto">
+                <div className="bg-white rounded-[3rem] p-8 md:p-16 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.06)] border border-[oklch(0.95_0.01_240)] divide-y divide-[oklch(0.95_0.01_240)]">
+                    {sections.map((section, idx) => (
+                        <article key={idx} className="py-14 first:pt-0 last:pb-0 group">
+                            <div className="flex items-center gap-6 mb-10">
+                                <div className="w-14 h-14 bg-[oklch(0.98_0.01_240)] group-hover:bg-[oklch(0.7_0.15_160/0.05)] rounded-[1.25rem] flex items-center justify-center text-[oklch(0.6_0.02_240)] group-hover:text-[oklch(0.7_0.15_160)] transition-all duration-500 shadow-sm border border-[oklch(0.95_0.01_240)] rotate-0 group-hover:rotate-6">
+                                    {section.icon}
+                                </div>
+                                <h2 className="text-2xl md:text-3xl font-black text-[oklch(0.2_0.02_240)] tracking-tight">{section.title}</h2>
+                            </div>
+                            <div className="text-[16px] text-[oklch(0.4_0.02_240)] leading-relaxed font-medium md:pl-20">
+                                {section.content}
+                            </div>
+                        </article>
+                    ))}
+                </div>
 
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">1. Information We Collect</h2>
-                        <p>To provide our services effectively, we may collect the following categories of information.</p>
-
-                        <h3 className="font-bold text-slate-800">1.1 Personal Information</h3>
-                        <p>When users register or create an account, we may collect:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Full Name</li>
-                            <li>Mobile Number</li>
-                            <li>Email Address</li>
-                            <li>Date of Birth</li>
-                            <li>Address or location information</li>
-                            <li>Profile information</li>
-                            <li>Identification details (if required for verification)</li>
-                        </ul>
-                        <p>This information is used for account creation, user identification, and service delivery.</p>
-
-                        <h3 className="font-bold text-slate-800">1.2 Financial and Transaction Information</h3>
-                        <p>To operate our payment and digital wallet services, we may collect:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Payment transaction records</li>
-                            <li>Wallet activity</li>
-                            <li>Transfer details</li>
-                            <li>Cashback and reward records</li>
-                            <li>Invoice and merchant purchase data</li>
-                            <li>Payment recipient information</li>
-                        </ul>
-                        <p>These records help maintain secure transactions and accurate reward calculations.</p>
-
-                        <h3 className="font-bold text-slate-800">1.3 Device and Technical Information</h3>
-                        <p>When users access the platform, we may automatically collect:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Device type and model</li>
-                            <li>Operating system version</li>
-                            <li>IP address</li>
-                            <li>Device identifiers</li>
-                            <li>Log data and usage analytics</li>
-                        </ul>
-                        <p>This information helps us maintain platform security and improve service performance.</p>
+                {/* Bottom Card */}
+                <div className="mt-16 p-1 bg-[oklch(0.2_0.02_240)] rounded-[3rem] overflow-hidden shadow-2xl">
+                    <div className="p-10 md:p-16 rounded-[2.9rem] border border-white/5 relative group overflow-hidden">
+                        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[oklch(0.7_0.15_160/0.15)] rounded-full blur-[100px] -mr-48 -mt-48 group-hover:bg-[oklch(0.7_0.15_160/0.25)] transition-all duration-1000"></div>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+                            <div className="space-y-4 text-center md:text-left">
+                                <h3 className="text-3xl font-black text-white leading-tight">Your data is safe <br/> with us.</h3>
+                                <p className="text-[oklch(0.7_0.02_240)] text-base font-medium max-w-sm">We employ advanced encryption and security protocols to ensure your financial integrity.</p>
+                            </div>
+                            <div className="flex flex-col gap-4 w-full md:w-auto">
+                                <button className="px-10 py-5 bg-[oklch(0.7_0.15_160)] hover:bg-[oklch(0.75_0.15_160)] text-[oklch(0.15_0.05_160)] rounded-[1.5rem] font-black text-sm transition-all hover:scale-[1.03] active:scale-95 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-8px_rgba(0,0,0,0.4)] whitespace-nowrap">
+                                    Download Full Agreement
+                                </button>
+                                <p className="text-[oklch(0.5_0.02_240)] text-[11px] text-center font-bold uppercase tracking-[0.2em]">Available in PDF format</p>
+                            </div>
+                        </div>
                     </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">2. Platform Services</h2>
-                        <p>Our platform provides various services to registered users, including but not limited to:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Digital wallet services</li>
-                            <li>Wallet-to-wallet transfers</li>
-                            <li>Payment transfer services</li>
-                            <li>Merchant payment systems</li>
-                            <li>Online and offline shopping support</li>
-                            <li>Cashback and reward programs</li>
-                            <li>Value Card services</li>
-                            <li>Savings wallet functionality</li>
-                            <li>Bulk transfer services</li>
-                        </ul>
-                        <p>These services allow users and merchants to connect, transact, and grow business through a unified platform.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">3. Wallet and Payment Services</h2>
-                        <p>Users may use the platform for digital payments and transfers.</p>
-
-                        <h3 className="font-bold text-slate-800">3.1 Savings Wallet</h3>
-                        <p>Users may store or maintain funds within their wallet for saving or future transactions within the platform ecosystem.</p>
-                        <p>The wallet may be used for:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Saving funds</li>
-                            <li>Making payments</li>
-                            <li>Shopping transactions</li>
-                            <li>Merchant payments</li>
-                            <li>Wallet transfers</li>
-                        </ul>
-
-                        <h3 className="font-bold text-slate-800">3.2 Wallet to Wallet Transfer</h3>
-                        <p>Users may transfer funds from one wallet to another user wallet. No additional transfer charge may apply for wallet-to-wallet transfers within the platform. Users may receive promotional benefits such as cashback or reward incentives depending on active campaigns.</p>
-
-                        <h3 className="font-bold text-slate-800">3.3 Bulk Transfer</h3>
-                        <p>The platform may also support bulk transfer functionality, allowing users or merchants to transfer funds to multiple recipients through the system.</p>
-                        <p>Bulk transfer features may be subject to:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Platform limits</li>
-                            <li>Security verification</li>
-                            <li>Compliance policies</li>
-                        </ul>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">4. Shopping and Merchant Payments</h2>
-                        <p>Users may use transferred funds or wallet balances for shopping and merchant payments. Our platform connects business owners and customers, allowing:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Online shopping transactions</li>
-                            <li>Offline merchant purchases</li>
-                            <li>Invoice-based payments</li>
-                            <li>Cashback rewards</li>
-                            <li>Discount coupons</li>
-                        </ul>
-                        <p>Every eligible transaction may provide promotional incentives such as cashback, discount offers, or reward benefits, depending on company programs.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">5. Cashback, Rewards and Promotional Programs</h2>
-                        <p>Registered users may receive promotional benefits such as:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Cashback on eligible transactions</li>
-                            <li>Discount coupons</li>
-                            <li>Reward points</li>
-                            <li>Promotional offers</li>
-                            <li>Savings incentives</li>
-                        </ul>
-                        <p>These promotional programs are subject to company rules and may change without prior notice. The company reserves the right to modify, suspend, or terminate any reward or incentive program at its sole discretion.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">6. Loan Eligibility and Membership Policy</h2>
-                        <p>Our platform may offer financial service eligibility programs, including loan access for certain users such as:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Students (minimum age requirements apply)</li>
-                            <li>Individual users</li>
-                            <li>Self-employed individuals</li>
-                        </ul>
-                        <h3 className="font-bold text-slate-800">Membership Policy</h3>
-                        <p>Membership is not required for general platform usage, including:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Receiving payments</li>
-                            <li>Sending payments</li>
-                            <li>Wallet transfers</li>
-                            <li>Shopping transactions</li>
-                        </ul>
-                        <p>Membership is only required if a user chooses to apply for loan eligibility programs.</p>
-                        <p>Membership plans may range from ₹800 to ₹4500, depending on the loan eligibility category or amount requested.</p>
-                        <p>Membership fees are used for:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Verification processes</li>
-                            <li>Financial service eligibility review</li>
-                            <li>Platform service management</li>
-                        </ul>
-                        <p>Loan approval remains subject to internal review, eligibility checks, and company policies. The company reserves the right to approve or reject loan requests without obligation to provide specific reasons.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">7. How We Use Your Information</h2>
-                        <p>We may use collected information for the following purposes:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>To create and manage user accounts</li>
-                            <li>To enable wallet services and transactions</li>
-                            <li>To process payments and transfers</li>
-                            <li>To provide cashback and reward benefits</li>
-                            <li>To facilitate merchant and customer connections</li>
-                            <li>To process financial service eligibility requests</li>
-                            <li>To maintain system security</li>
-                            <li>To improve platform performance and features</li>
-                            <li>To prevent fraud or misuse of services</li>
-                            <li>To comply with legal and regulatory requirements</li>
-                        </ul>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">8. Information Sharing and Disclosure</h2>
-                        <p>We respect user privacy and do not sell or rent personal data to third parties. Information may be shared only in the following situations:</p>
-
-                        <h3 className="font-bold text-slate-800">Service Providers</h3>
-                        <p>With trusted third-party partners including:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Payment gateway providers</li>
-                            <li>Technology infrastructure providers</li>
-                            <li>SMS or email communication services</li>
-                        </ul>
-
-                        <h3 className="font-bold text-slate-800">Merchant Partners</h3>
-                        <p>Limited information may be shared with merchants for:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Transaction processing</li>
-                            <li>Purchase confirmation</li>
-                            <li>Customer service support</li>
-                        </ul>
-
-                        <h3 className="font-bold text-slate-800">Legal Compliance</h3>
-                        <p>Information may be disclosed if required by:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Government authorities</li>
-                            <li>Legal proceedings</li>
-                            <li>Regulatory compliance</li>
-                        </ul>
-
-                        <h3 className="font-bold text-slate-800">Fraud Prevention</h3>
-                        <p>Information may be used to detect or prevent:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Fraudulent transactions</li>
-                            <li>Unauthorized platform usage</li>
-                            <li>Security risks</li>
-                        </ul>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">9. Data Security</h2>
-                        <p>We implement strong security practices to protect user information, including:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Secure server systems</li>
-                            <li>Encrypted data transmission</li>
-                            <li>Access control mechanisms</li>
-                            <li>Continuous system monitoring</li>
-                        </ul>
-                        <p>While we take reasonable steps to protect user information, no digital system can guarantee absolute security. Users are responsible for protecting their login credentials and account access.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">10. Data Retention</h2>
-                        <p>User data may be retained for a period necessary to:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Provide platform services</li>
-                            <li>Maintain financial and transaction records</li>
-                            <li>Comply with legal obligations</li>
-                            <li>Resolve disputes or security issues</li>
-                        </ul>
-                        <p>After the required retention period, data may be deleted or anonymized securely.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">11. User Rights</h2>
-                        <p>Users may have the right to:</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                            <li>Access their personal data</li>
-                            <li>Request correction of inaccurate information</li>
-                            <li>Request account deletion (subject to regulatory obligations)</li>
-                            <li>Contact support for privacy-related inquiries</li>
-                        </ul>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">12. Changes to Privacy Policy</h2>
-                        <p>The Company reserves the right to update or modify this Privacy Policy at any time. Any changes will be published on the application or website with an updated revision date. Continued use of the platform indicates acceptance of the updated policy.</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h2 className="text-lg font-black text-slate-900 mt-4">13. Contact Information</h2>
-                        <p>If you have any questions regarding this Privacy Policy, please contact us:</p>
-                        <p>
-                            <strong>Company Name:</strong> MSME SHAKTI ( OPEN SCORE )<br />
-                            <strong>Email:</strong> c.care@msmeloan.sbs
-                        </p>
-                    </div>
-
                 </div>
             </div>
         </div>
