@@ -2,8 +2,29 @@ import React, { useState, useEffect } from 'react';
 import SplashStep from './SplashStep';
 import StepContainer from './StepContainer';
 import AuthEntry from './AuthEntry';
-import { BrandBadge } from './BrandComponents';
-import { Package, ShieldCheck, TrendingUp, Zap, Building2 } from 'lucide-react';
+import { 
+    CreditCard, 
+    ShoppingCart, 
+    Percent, 
+    QrCode, 
+    Smartphone, 
+    ShieldCheck, 
+    Lock, 
+    CheckCircle2, 
+    Zap,
+    Banknote,
+    ArrowRightLeft
+} from 'lucide-react';
+
+// --- Reusable Content Component ---
+const ListItem = ({ text }: { text: string }) => (
+    <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-3 animate-in slide-in-from-bottom-2 fade-in duration-500 w-full group hover:border-blue-200 transition-all">
+        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 transition-colors">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 group-hover:text-white transition-colors" />
+        </div>
+        <span className="text-slate-700 font-bold text-sm leading-tight">{text}</span>
+    </div>
+);
 
 interface OnboardingFlowProps {
     onComplete: (mode: 'login' | 'signup') => void;
@@ -11,19 +32,12 @@ interface OnboardingFlowProps {
 
 export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     const [step, setStep] = useState<'splash' | number | 'auth'>('splash');
-    const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
-
-    useEffect(() => {
-        const seen = localStorage.getItem('hasSeenOnboarding') === 'true';
-        setHasSeenOnboarding(seen);
-        if (seen) {
-            setStep('auth');
-        }
-    }, []);
+    
+    const TOTAL_STEPS = 4;
 
     const nextStep = () => {
         if (typeof step === 'number') {
-            if (step < 5) {
+            if (step < TOTAL_STEPS) {
                 setStep(step + 1);
             } else {
                 setStep('auth');
@@ -35,10 +49,8 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         setStep('auth');
     };
 
-    if (hasSeenOnboarding === null) return null;
-
     if (step === 'splash') {
-        return <SplashStep onComplete={() => setStep(hasSeenOnboarding ? 'auth' : 1)} />;
+        return <SplashStep onComplete={() => setStep(1)} />;
     }
 
     if (step === 'auth') {
@@ -50,25 +62,28 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         );
     }
 
-    // Onboarding Steps
     switch (step) {
         case 1:
             return (
                 <StepContainer
                     stepIndex={0}
-                    totalSteps={5}
-                    title="Running a Business Needs Cash, Not Stress"
-                    subtitle="Daily expenses shouldn’t wait for approvals or high interest."
+                    totalSteps={TOTAL_STEPS}
+                    title="💳 Unlock ₹10K–₹50K Instantly"
+                    subtitle="No Credit Score Needed!"
+                    footer="🚀 Start with Open Score Today"
                     ctaText="Next"
                     onNext={nextStep}
+                    onSkip={skipOnboarding}
                 >
-                    <div className="relative group">
+                    <div className="relative group animate-in zoom-in duration-700">
                         <div className="w-48 h-48 bg-slate-50 rounded-full flex items-center justify-center relative overflow-hidden">
-                            <Building2 className="w-24 h-24 text-blue-600 opacity-10" />
-                            <div className="absolute inset-0 flex items-center justify-center animate-pulse">
-                                <Package className="w-16 h-16 text-blue-500 absolute -top-4 -left-4 animate-[float_3s_ease-in-out_infinite]" />
-                                <Zap className="w-12 h-12 text-purple-500 absolute top-1/2 -right-8 animate-[float_4s_ease-in-out_infinite_500ms]" />
-                                <ShieldCheck className="w-14 h-14 text-blue-600 absolute -bottom-4 left-1/2 animate-[float_3.5s_ease-in-out_infinite_1s]" />
+                            <CreditCard className="w-24 h-24 text-blue-600 opacity-10" strokeWidth={1.5} />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-blue-500/10 blur-2xl rounded-full" />
+                                    <CreditCard className="w-32 h-32 text-blue-600 drop-shadow-xl animate-[float_3s_ease-in-out_infinite]" strokeWidth={1} />
+                                    <Banknote className="w-16 h-16 text-green-500 absolute -bottom-4 -right-4 drop-shadow-lg animate-[float_4s_ease-in-out_infinite_500ms]" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -78,21 +93,25 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             return (
                 <StepContainer
                     stepIndex={1}
-                    totalSteps={5}
-                    title="Get Credit at 0% Interest"
-                    subtitle="Open Score provides scheme-based budget support for MSMEs."
+                    totalSteps={TOTAL_STEPS}
+                    title="🛒 On Every Transfer, Earn Up to 2%!"
                     ctaText="Next"
                     onNext={nextStep}
+                    onSkip={skipOnboarding}
                 >
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="text-7xl font-black bg-gradient-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent animate-[outline-to-solid_1s_ease-out_forwards]">
-                            0%
+                    <div className="w-full space-y-2">
+                        <div className="flex items-center justify-center gap-4 mb-8">
+                            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center shadow-inner">
+                                <ShoppingCart className="w-10 h-10 text-blue-600" />
+                            </div>
+                            <ArrowRightLeft className="w-6 h-6 text-slate-300 animate-pulse" />
+                            <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center shadow-inner">
+                                <Percent className="w-10 h-10 text-purple-600" />
+                            </div>
                         </div>
-                        <div className="flex flex-wrap justify-center gap-2">
-                            <BrandBadge text="0% Interest" />
-                            <BrandBadge text="Fast Disbursal" />
-                            <BrandBadge text="Trusted Schemes" />
-                        </div>
+                        <ListItem text="Instant Value Transfer" />
+                        <ListItem text="Merchant Rewards up to 2% on Collections" />
+                        <ListItem text="Fast Transfers – No Deductions" />
                     </div>
                 </StepContainer>
             );
@@ -100,22 +119,27 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             return (
                 <StepContainer
                     stepIndex={2}
-                    totalSteps={5}
-                    title="Low CIBIL? Still Eligible."
-                    subtitle="Your business performance matters more than your past credit score."
+                    totalSteps={TOTAL_STEPS}
+                    title="Open Score, get instant Demand Credit Voucher"
+                    footer="🚀 Your Financial Upgrade Starts Here!"
                     ctaText="Next"
                     onNext={nextStep}
+                    onSkip={skipOnboarding}
                 >
-                    <div className="w-full max-w-[240px] space-y-4">
-                        <div className="h-4 bg-slate-100 rounded-full overflow-hidden relative">
-                            <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 w-full opacity-30" />
-                            <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 to-purple-600 w-2/3 rounded-full animate-[grow-width_1.5s_ease-out_forwards]" />
-                            <div className="absolute top-1/2 left-2/3 -translate-y-1/2 w-6 h-6 bg-white border-4 border-blue-600 rounded-full shadow-lg" />
+                    <div className="w-full space-y-2">
+                        <div className="flex items-center justify-center gap-4 mb-8">
+                            <div className="relative">
+                                <div className="w-32 h-32 bg-white rounded-3xl shadow-xl flex items-center justify-center border-4 border-slate-50 animate-in slide-in-from-bottom-8 duration-700">
+                                    <QrCode className="w-16 h-16 text-slate-800" />
+                                </div>
+                                <div className="absolute -bottom-4 -right-4 w-14 h-14 bg-blue-600 rounded-2xl shadow-lg flex items-center justify-center border-4 border-white animate-bounce pointer-events-none">
+                                    <Smartphone className="w-6 h-6 text-white" />
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <span>Muted</span>
-                            <span>Growth Potential</span>
-                        </div>
+                        <ListItem text="Use via QR Transfer" />
+                        <ListItem text="Transfer open score User" />
+                        <ListItem text="Earn Cashback Daily" />
                     </div>
                 </StepContainer>
             );
@@ -123,52 +147,25 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             return (
                 <StepContainer
                     stepIndex={3}
-                    totalSteps={5}
-                    title="Simple. Transparent. Reliable."
-                    subtitle="Applying for credit has never been this straightforward."
-                    ctaText="Next"
-                    onNext={nextStep}
-                >
-                    <div className="w-full space-y-8 pl-4">
-                        {[
-                            { step: 1, text: "Apply for credit" },
-                            { step: 2, text: "Get approved instantly" },
-                            { step: 3, text: "Spend via Open Score wallet" }
-                        ].map((item, i) => (
-                            <div key={i} className="flex items-center gap-4 relative">
-                                {i < 2 && <div className="absolute top-8 left-4 w-0.5 h-8 bg-slate-100" />}
-                                <div className="w-8 h-8 rounded-full brand-gradient text-white flex items-center justify-center text-xs font-bold shrink-0 animate-in zoom-in duration-300" style={{ animationDelay: `${i * 300}ms` }}>
-                                    {item.step}
-                                </div>
-                                <p className="font-bold text-slate-700">{item.text}</p>
-                            </div>
-                        ))}
-                    </div>
-                </StepContainer>
-            );
-        case 5:
-            return (
-                <StepContainer
-                    stepIndex={4}
-                    totalSteps={5}
-                    title="Designed for MSMEs"
-                    subtitle="Powerful tools to help your business scale without the weight of high debt."
+                    totalSteps={TOTAL_STEPS}
+                    title="🔐 100% Secure | Verified | Transparent"
+                    footer="📲 Smart & Secure Finance for Everyone"
                     ctaText="Get Started"
                     onNext={nextStep}
                     onSkip={skipOnboarding}
                 >
-                    <div className="grid grid-cols-2 gap-4 w-full">
-                        {[
-                            { icon: <ShieldCheck />, text: "No Hidden Charges" },
-                            { icon: <TrendingUp />, text: "No Compound Interest" },
-                            { icon: <Building2 />, text: "Built for Small Biz" },
-                            { icon: <Package />, text: "Secure Wallet" }
-                        ].map((item, i) => (
-                            <div key={i} className="bg-slate-50 p-4 rounded-2xl flex flex-col items-center gap-2 text-center animate-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
-                                <div className="text-blue-600 w-6 h-6">{item.icon}</div>
-                                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight leading-tight">{item.text}</span>
+                    <div className="w-full space-y-2">
+                        <div className="flex items-center justify-center mb-10">
+                            <div className="relative">
+                                <ShieldCheck className="w-32 h-32 text-green-500 drop-shadow-xl animate-[float_3s_ease-in-out_infinite]" strokeWidth={1} />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                                    <Lock className="w-10 h-10 text-yellow-500" />
+                                </div>
                             </div>
-                        ))}
+                        </div>
+                        <ListItem text="Full KYC Protection" />
+                        <ListItem text="Safe Wallet System" />
+                        <ListItem text="Trusted Financial Partners" />
                     </div>
                 </StepContainer>
             );

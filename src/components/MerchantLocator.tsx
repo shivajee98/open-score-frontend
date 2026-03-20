@@ -56,6 +56,12 @@ export default function MerchantLocator() {
     const debouncedCategory = useDebounce(category, 500);
 
     const fetchMerchants = useCallback(async (searchPincode: string, searchCity: string, searchCategory: string) => {
+        if (!searchPincode) {
+            setMerchants([]);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         try {
             // Only update profile if we have valid input
@@ -172,7 +178,17 @@ export default function MerchantLocator() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4">
-                    {loading ? (
+                    {!pincode ? (
+                        <div className="flex flex-col items-center justify-center h-80 text-center px-10">
+                            <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6 border border-blue-200 shadow-inner">
+                                <MapPin size={32} className="text-blue-200 animate-pulse" />
+                            </div>
+                            <h3 className="text-slate-900 font-black text-lg mb-2">Pincode Required</h3>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">
+                                Please enter your pincode above to discover nearby stores and merchants
+                            </p>
+                        </div>
+                    ) : loading ? (
                         <div className="flex flex-col items-center justify-center h-64">
                             <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                             <p className="mt-4 text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Scanning nearby stores...</p>
@@ -266,7 +282,7 @@ export default function MerchantLocator() {
                             </div>
                             <h3 className="text-slate-900 font-black text-lg mb-2">No Merchants Found</h3>
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">
-                                Try adjusting your search or filters to find merchants in your area
+                                No merchants were found for the pincode {pincode}. Try another area or adjust filters.
                             </p>
                         </div>
                     )}

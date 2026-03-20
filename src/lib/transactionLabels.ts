@@ -27,7 +27,12 @@ export function getTransactionLabel(tx: any): string {
     if (srcType === 'PLATFORM_FEE') return 'Platform Fee';
 
     // ── Maintenance Charge ─────────────────────────────────────
-    if (srcType === 'MAINTENANCE_CHARGE') return 'Maintenance Charge';
+    // ── Maintenance Charge ─────────────────────────────────────
+    if (srcType === 'MAINTENANCE_CHARGE') {
+        const match = (tx.description || '').match(/^\[(.*?)\]/);
+        if (match) return match[1];
+        return 'Maintenance Charge';
+    }
 
     // ── Loan Disbursal ─────────────────────────────────────────
     if (desc.includes('disbursement') || (srcType === 'LOAN' && tx.type === 'CREDIT')) {

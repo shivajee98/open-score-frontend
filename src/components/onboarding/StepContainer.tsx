@@ -4,13 +4,14 @@ import { Watermark } from './BrandComponents';
 
 interface StepContainerProps {
     title: string;
-    subtitle: string;
+    subtitle?: string;
     children?: React.ReactNode;
     ctaText: string;
     onNext: () => void;
     onSkip?: () => void;
     stepIndex: number;
     totalSteps: number;
+    footer?: string;
 }
 
 export default function StepContainer({
@@ -21,7 +22,8 @@ export default function StepContainer({
     onNext,
     onSkip,
     stepIndex,
-    totalSteps
+    totalSteps,
+    footer
 }: StepContainerProps) {
     return (
         <div className="fixed inset-0 z-40 bg-white flex flex-col p-6 overflow-hidden animate-in fade-in slide-in-from-right-10 duration-500">
@@ -47,16 +49,26 @@ export default function StepContainer({
             </div>
 
             <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full relative z-10">
-                <h2 className="text-3xl font-black text-primary leading-tight mb-4 transition-brand">
+                <h2 className="text-3xl font-black text-slate-900 leading-tight mb-4">
                     {title}
                 </h2>
-                <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                    {subtitle}
-                </p>
+                {subtitle && (
+                    <p className="text-slate-500 text-lg leading-relaxed mb-8">
+                        {subtitle}
+                    </p>
+                )}
 
                 <div className="flex-1 min-h-[200px] flex items-center justify-center mb-8">
                     {children}
                 </div>
+                
+                {footer && (
+                    <div className="mb-8 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                        <p className="text-blue-600 text-xs font-bold text-center italic">
+                            {footer}
+                        </p>
+                    </div>
+                )}
             </div>
 
             <div className="mt-auto relative z-10">

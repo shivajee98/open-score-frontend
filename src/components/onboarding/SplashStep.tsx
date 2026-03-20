@@ -43,6 +43,10 @@ export default function SplashStep({ onComplete }: { onComplete: () => void }) {
                     from { opacity: 0; transform: translateY(5px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
+                @keyframes draw-line {
+                    from { width: 0; }
+                    to { width: 100%; }
+                }
             `}</style>
         </div>
     );

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -44,6 +44,7 @@ export default function Profile() {
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
     const [isPortalOpen, setIsPortalOpen] = useState(false);
+    const [dynamicButtons, setDynamicButtons] = useState<any[]>([]);
 
     const BUSINESS_STRUCTURE = {
         'Food & Daily Essentials': ['Grocery / Kirana Store', 'Dairy / Milk Booth', 'Fruit & Vegetable Vendor', 'Bakery', 'Sweet Shop / Mithai Shop', 'Fast Food Stall', 'Tea / Coffee Stall', 'Juice Shop', 'Restaurant', 'Dhaba', 'Hotel / Lodge'],
@@ -113,6 +114,20 @@ export default function Profile() {
             }
         }
     }, [user, isEditing]);
+
+    useEffect(() => {
+        if (user?.role) {
+            const fetchDynamicButtons = async () => {
+                try {
+                    const data = await apiFetch(`/dynamic-buttons?role=${user.role}`);
+                    setDynamicButtons(data);
+                } catch (error) {
+                    console.error('Failed to fetch dynamic buttons', error);
+                }
+            };
+            fetchDynamicButtons();
+        }
+    }, [user?.role]);
 
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
@@ -981,6 +996,20 @@ export default function Profile() {
                                     </div>
                                     <span className="text-xs font-medium text-slate-700">Become a Partner</span>
                                 </div>
+
+                                {/* Dynamic Buttons */}
+                                {dynamicButtons.map((btn) => (
+                                    <div 
+                                        key={btn.id} 
+                                        onClick={() => router.push(`/info?slug=${btn.slug}`)} 
+                                        className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                                    >
+                                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm" style={{ backgroundColor: `${btn.text_color}10`, color: btn.text_color }}>
+                                            <Info className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-xs font-medium text-slate-700">{btn.name}</span>
+                                    </div>
+                                ))}
 
                                 {/* Switch to Partner Panel */}
                                 {user?.is_vendor && (

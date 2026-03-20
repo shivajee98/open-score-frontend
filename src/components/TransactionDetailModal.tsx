@@ -81,7 +81,7 @@ export default function TransactionDetailModal({ isOpen, transaction, onClose }:
                         <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden min-h-[60px]">
                             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500/20"></div>
                             <p className="text-slate-900 text-[11px] font-black leading-relaxed tracking-tight break-words">
-                                {transaction.description || 'No notes added for this transaction.'}
+                                {transaction.description?.replace(/^\[.*?\]\s*/, '') || 'No notes added for this transaction.'}
                             </p>
                         </div>
                     </div>
