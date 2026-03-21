@@ -135,6 +135,12 @@ export default function Onboarding() {
                 return;
             }
 
+            // CRITICAL: Update the auth token from the response BEFORE any further API calls.
+            // The onboarding endpoint generates a new session_token, invalidating the old JWT.
+            if (onboardRes.access_token) {
+                localStorage.setItem('token', onboardRes.access_token);
+            }
+
             // On success, update stored user and redirect
             const updatedUser = { ...onboardRes.user, is_onboarded: true };
             localStorage.setItem('user', JSON.stringify(updatedUser));

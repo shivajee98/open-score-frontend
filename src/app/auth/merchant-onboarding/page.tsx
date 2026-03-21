@@ -53,6 +53,8 @@ function MerchantOnboardingForm() {
                 // Pre-fill form if data exists
                 if (user.name) setFormData(prev => ({ ...prev, name: user.name }));
                 if (user.email) setFormData(prev => ({ ...prev, email: user.email }));
+                if (user.mobile_number) setFormData(prev => ({ ...prev, mobile_number: user.mobile_number }));
+                if (user.gender) setFormData(prev => ({ ...prev, gender: user.gender }));
 
                 // Handle step from URL directly here to avoid separate effect race conditions
                 const s = searchParams.get('step');
@@ -71,6 +73,8 @@ function MerchantOnboardingForm() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        mobile_number: '',
+        gender: '',
         business_name: '',
         business_nature: '',
         customer_segment: '',
@@ -195,6 +199,8 @@ function MerchantOnboardingForm() {
             formDataObj.append('business_segment', formData.customer_segment); // Map customer_segment to business_segment if that's the intent, or just add business_segment
             formDataObj.append('daily_turnover', formData.daily_turnover);
             formDataObj.append('date_of_birth', formData.date_of_birth);
+            formDataObj.append('mobile_number', formData.mobile_number);
+            formDataObj.append('gender', formData.gender);
             formDataObj.append('role', 'MERCHANT');
 
             if (imageFile) {
@@ -222,6 +228,12 @@ function MerchantOnboardingForm() {
                 setErrors(apiErrors);
                 setLoading(false);
                 return;
+            }
+
+            // CRITICAL: Update the auth token BEFORE any further API calls.
+            // The onboarding endpoint generates a new session_token, which invalidates the old JWT.
+            if (onboardRes.access_token) {
+                localStorage.setItem('token', onboardRes.access_token);
             }
 
             // Sync user in local storage and store
@@ -340,6 +352,21 @@ function MerchantOnboardingForm() {
                                     <p className="text-[9px] font-bold text-rose-500 mt-1 ml-2 uppercase tracking-wider">{errors.date_of_birth}</p>
                                 )}
                             </div>
+
+                            <div className="relative group">
+                                <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
+                                <select
+                                    className="w-full pl-12 pr-10 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:border-emerald-600 focus:bg-white transition-all outline-none appearance-none"
+                                    value={formData.gender || ''}
+                                    onChange={e => setFormData({ ...formData, gender: e.target.value })}
+                                >
+                                    <option value="" disabled>Select Gender</option>
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                            </div>
                             <div className="relative group">
                                 <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
                                 <input
@@ -422,7 +449,7 @@ function MerchantOnboardingForm() {
                             </div>
                         </div>
                         <button
-                            disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || !formData.date_of_birth || !!errors.date_of_birth || loading}
+                            disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || !formData.date_of_birth || !formData.gender || !!errors.date_of_birth || loading}
                             onClick={() => setStep(2)}
                             className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 group"
                         >

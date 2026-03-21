@@ -861,7 +861,6 @@ function QrHistoryList({ history, loading, onRefresh }: { history: any[], loadin
             case 'pending': return 'bg-slate-50 text-slate-500 border-slate-200';
             case 'agent_approved': return 'bg-blue-50 text-blue-600 border-blue-100';
             case 'payment_confirmed': return 'bg-indigo-50 text-indigo-600 border-indigo-100'; // Payment Approved
-            case 'printed': return 'bg-purple-50 text-purple-600 border-purple-100'; // Printing Complete
             case 'dispatched': return 'bg-blue-50 text-blue-600 border-blue-100'; // Order Dispatched
             case 'delivering': return 'bg-amber-50 text-amber-600 border-amber-100'; // Out for Delivery
             case 'completed': return 'bg-emerald-600 text-white border-emerald-600'; // Delivered
@@ -873,11 +872,10 @@ function QrHistoryList({ history, loading, onRefresh }: { history: any[], loadin
     const getStatusLabel = (status: string) => {
         switch (status) {
             case 'pending': return 'Pending Agent';
-            case 'agent_approved': return 'Agent Verified';
-            case 'payment_confirmed': return 'Payment Approved';
-            case 'printed': return 'Order Printed';
-            case 'dispatched': return 'Order Dispatched';
-            case 'delivering': return 'Out for Delivery';
+            case 'agent_approved': return 'PAYMENT RECEIVED';
+            case 'payment_confirmed': return 'QR BOOKED';
+            case 'dispatched': return 'Dispatched';
+            case 'delivering': return 'IN TRANSIT';
             case 'completed': return 'Delivered';
             case 'rejected': return 'Rejected';
             default: return status.replace('_', ' ').toUpperCase();

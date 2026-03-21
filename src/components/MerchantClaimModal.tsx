@@ -67,6 +67,12 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
                     pincode: formData.pincode
                 })
             });
+
+            // Update token to prevent session expired error
+            if (res.access_token) {
+                localStorage.setItem('token', res.access_token);
+            }
+
             onSuccess(res.user);
         } catch (error: any) {
             alert(error.message); // Simple alert for now, or use toast if available passed in props

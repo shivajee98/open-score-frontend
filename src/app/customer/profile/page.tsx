@@ -925,76 +925,50 @@ export default function Profile() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Profile */}
-                                <div onClick={() => setIsEditing(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div onClick={() => setIsEditing(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
                                     <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
                                         <User className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-medium text-slate-700">Profile</span>
+                                    <span className="text-xs font-medium text-slate-700 truncate">Profile</span>
                                 </div>
-
-                                {/* My Work */}
-                                <div onClick={() => router.push('/customer/my-work')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-8 h-8 bg-violet-50 rounded-xl flex items-center justify-center text-violet-500 shadow-sm">
-                                        <Briefcase className="w-4 h-4" />
-                                    </div>
-                                    <span className="text-xs font-medium text-slate-700">My Work</span>
-                                </div>
-
                                 {/* Tutorial */}
-                                <div onClick={() => setIsTutorialOpen(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div onClick={() => setIsTutorialOpen(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
                                     <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 shadow-sm">
                                         <Lightbulb className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-medium text-slate-700">Tutorial</span>
+                                    <span className="text-xs font-medium text-slate-700 truncate">Tutorial</span>
                                 </div>
 
                                 {/* Help */}
-                                <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
                                     <div className="w-8 h-8 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 shadow-sm">
                                         <HelpCircle className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-medium text-slate-700">Help</span>
+                                    <span className="text-xs font-medium text-slate-700 truncate">Help</span>
                                 </div>
-
-                                {/* T&C */}
-                                <div onClick={() => router.push('/t-and-c')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-8 h-8 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500 shadow-sm">
-                                        <FileText className="w-4 h-4" />
-                                    </div>
-                                    <span className="text-xs font-medium text-slate-700">T&C</span>
-                                </div>
-
-                                {/* Privacy */}
-                                <div onClick={() => router.push('/p-policy')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
-                                        <Shield className="w-4 h-4" />
-                                    </div>
-                                    <span className="text-xs font-medium text-slate-700">Privacy</span>
-                                </div>
-
                                 {/* Share & Earn */}
                                 {!user?.sub_user_id && (
-                                    <div onClick={() => router.push('/customer/referral')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
-                                        <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
-                                            <Trophy className="w-4 h-4" />
+                                        <div onClick={() => router.push('/customer/referral')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
+                                            <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                                <Trophy className="w-4 h-4" />
+                                            </div>
+                                            <span className="text-xs font-medium text-slate-700 truncate">Share & Earn</span>
                                         </div>
-                                        <span className="text-xs font-medium text-slate-700">Share & Earn</span>
-                                    </div>
                                 )}
 
                                 {/* Contact Us */}
-                                <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div onClick={() => router.push('/customer/support')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
                                     <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
                                         <Mail className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-medium text-slate-700">Contact Us</span>
+                                    <span className="text-xs font-medium text-slate-700 truncate">Contact Us</span>
                                 </div>
                                 {/* Become a Partner */}
-                                <div onClick={() => router.push('/customer/partner')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <div onClick={() => router.push('/customer/partner')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
                                     <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
                                         <Plus className="w-4 h-4" />
                                     </div>
-                                    <span className="text-xs font-medium text-slate-700">Become a Partner</span>
+                                    <span className="text-xs font-medium text-slate-700 truncate">Become a Partner</span>
                                 </div>
 
                                 {/* Dynamic Buttons */}
@@ -1002,12 +976,12 @@ export default function Profile() {
                                     <div 
                                         key={btn.id} 
                                         onClick={() => router.push(`/info?slug=${btn.slug}`)} 
-                                        className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                                        className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full"
                                     >
-                                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm" style={{ backgroundColor: `${btn.text_color}10`, color: btn.text_color }}>
+                                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm shrink-0" style={{ backgroundColor: `${btn.text_color}1a`, color: btn.text_color }}>
                                             <Info className="w-4 h-4" />
                                         </div>
-                                        <span className="text-xs font-medium text-slate-700">{btn.name}</span>
+                                        <span className="text-xs font-medium text-slate-700 truncate">{btn.name}</span>
                                     </div>
                                 ))}
 

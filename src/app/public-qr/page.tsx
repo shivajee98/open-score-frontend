@@ -38,6 +38,7 @@ export default function PublicQrPage() {
         mobile: '',
         address: '',
         city: '',
+        state: '',
         pincode: '',
         landmark: '',
         security_amount: '1000'
@@ -52,7 +53,7 @@ export default function PublicQrPage() {
     const [bookingId, setBookingId] = useState<string | null>(null);
 
     const handleNext = () => {
-        if (!form.name || !form.mobile || !form.address || !form.pincode || !form.city) {
+        if (!form.name || !form.mobile || !form.address || !form.pincode || !form.city || !form.state) {
             toast.error('Please fill all required fields');
             return;
         }
@@ -97,6 +98,7 @@ export default function PublicQrPage() {
             formData.append('landmark', form.landmark);
             formData.append('pin_code', form.pincode);
             formData.append('city', form.city);
+            formData.append('state', form.state);
             formData.append('security_amount', form.security_amount);
             formData.append('payment_screenshot', screenshot);
 
@@ -115,7 +117,7 @@ export default function PublicQrPage() {
         }
     };
 
-    const upiUrl = `upi://pay?pa=risexpe@ibl&pn=MS%20RISEX%20PAY&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
+    const upiUrl = `upi://pay?pa=9161168840@uboi&pn=MS%20RISEX%20PAY&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
 
     if (success && bookingId) {
         const trackingUrl = typeof window !== 'undefined' ? `${window.location.origin}/qr-update?id=${bookingId}` : '';
@@ -263,6 +265,16 @@ export default function PublicQrPage() {
                                         />
                                     </div>
                                     <div>
+                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">State</label>
+                                        <input
+                                            type="text"
+                                            value={form.state}
+                                            onChange={(e) => setForm({ ...form, state: e.target.value })}
+                                            placeholder="State Name"
+                                            className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                                        />
+                                    </div>
+                                    <div>
                                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Pincode</label>
                                         <input
                                             type="tel"
@@ -340,10 +352,10 @@ export default function PublicQrPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
-                                    <p className="text-lg font-mono font-black tracking-wider truncate">risexpe@ibl</p>
+                                    <p className="text-lg font-mono font-black tracking-wider truncate">9161168840@uboi</p>
                                     <button 
                                         onClick={() => {
-                                            navigator.clipboard.writeText('risexpe@ibl');
+                                            navigator.clipboard.writeText('9161168840@uboi');
                                             toast.info('Copied!');
                                         }}
                                         className="shrink-0 bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all"

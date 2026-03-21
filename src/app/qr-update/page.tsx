@@ -135,7 +135,7 @@ function QrUpdateContent() {
                             <div>
                                 <p className="text-xs font-bold text-slate-700 leading-relaxed">{booking.address}</p>
                                 <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase">
-                                    {booking.landmark ? `${booking.landmark} • ` : ''}{booking.city} - {booking.pin_code}
+                                    {booking.landmark ? `${booking.landmark} • ` : ''}{booking.city}, {booking.state} - {booking.pin_code}
                                 </p>
                             </div>
                         </div>

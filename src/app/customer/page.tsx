@@ -123,7 +123,7 @@ export default function CustomerHome() {
     const mainBalance = activeWallet?.balance || '0';
     const cashbackBalance = activeWallet?.cashback_balance || '0';
     const balance = mainBalance;
-    
+
     // Prioritize active_locked_balance from user profile (loans), else wallet locked balance
     const lockedBalance = (activeUser?.active_locked_balance || 0) > 0
         ? activeUser.active_locked_balance
@@ -489,9 +489,9 @@ export default function CustomerHome() {
 
             {/* Merchant Loan Milestone Progress Bar */}
             {isMerchant && (
-                <MerchantLoanMilestone 
-                    totalCreditVolume={Number(activeUser?.total_credit_volume || 0)} 
-                    milestonePlan={activeUser?.milestone_plan} 
+                <MerchantLoanMilestone
+                    totalCreditVolume={Number(activeUser?.total_credit_volume || 0)}
+                    milestonePlan={activeUser?.milestone_plan}
                 />
             )}
 

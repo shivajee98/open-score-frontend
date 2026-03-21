@@ -90,7 +90,7 @@ export default function RepaymentDashboard() {
         const transactionNote = `EMI Payment for Loan #${loanId}`;
 
         // Construct the UPI Intent URL
-        const upiUrl = `upi://pay?pa=risexpe@ibl&pn=MS%20RISEX%20PAY&mc=0000&mode=02&purpose=00&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
+        const upiUrl = `upi://pay?pa=9161168840@uboi&pn=OpenScore%20Payment&mc=0000&mode=02&purpose=00&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
 
         // Create a hidden link and click it
         const link = document.createElement('a');
