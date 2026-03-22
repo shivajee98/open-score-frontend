@@ -51,7 +51,7 @@ export default function AddMoneyPage() {
 
     const getUpiUrl = () => {
         const transactionNote = paymentPurpose === 'emi_payment' ? "EMI Payment" : "Wallet Topup";
-        return `upi://pay?pa=9161168840@uboi&pn=OpenScore%20Payment&mc=0000&mode=02&purpose=00&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
+        return `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
     };
 
     const handleStep1Submit = () => {

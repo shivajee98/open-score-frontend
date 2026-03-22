@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function NotificationHandler() {
+    const router = useRouter();
     const hasRegistered = useRef(false);
     const hasNativePushSupport = () => Capacitor.isPluginAvailable('PushNotifications');
 
@@ -88,46 +90,10 @@ export default function NotificationHandler() {
                 console.log('[Notifications] Android channel "payment_alerts" created');
             }
 
-            // Token received
-            PushNotifications.addListener('registration', async (tokenResult) => {
-                console.log('[Notifications] registration event:', tokenResult);
-                if (!tokenResult.value) {
-                    console.warn('[Notifications] FCM token is null! Full event:', tokenResult);
-                    toast.error('Push registration failed: FCM token is null');
-                    return;
-                }
-                console.log('[Notifications] Native FCM token received:', tokenResult.value.substring(0, 20) + '...');
-                localStorage.setItem('fcm_token_temp', tokenResult.value);
-                localStorage.setItem('fcm_token_platform', 'android');
-                syncToken(tokenResult.value, 'android');
-            });
-
-            // Registration error
-            PushNotifications.addListener('registrationError', (error: any) => {
-                console.error('[Notifications] Native registration error:', JSON.stringify(error));
-                toast.error(`Push setup failed: ${error.error || 'Check Google Play Services'}`);
-            });
-
-            // Foreground notification
-            PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                console.log('[Notifications] Foreground push:', JSON.stringify(notification));
-                toast.success(notification.title || 'New Notification', {
-                    description: notification.body
-                });
-            });
-
-            // Notification tapped
-            PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-                console.log('[Notifications] Push action:', JSON.stringify(action));
-                if (action.notification.data?.path) {
-                    window.location.href = action.notification.data.path;
-                }
-            });
-
             // Register with FCM
             await PushNotifications.register();
 
-            console.log('[Notifications] Native push listeners attached and register() called');
+            console.log('[Notifications] Native push registered via registerNativePush()');
         } catch (e) {
             console.error('[Notifications] Native push init error:', e);
         }
@@ -207,8 +173,19 @@ export default function NotificationHandler() {
 
                 PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
                     console.log('[Notifications] Push action:', JSON.stringify(action));
-                    if (action.notification.data?.path) {
-                        window.location.href = action.notification.data.path;
+                    const data = action.notification.data;
+                    const targetPath = data?.path || data?.url || data?.link;
+
+                    if (targetPath) {
+                        console.log('[Notifications] Redirecting to:', targetPath);
+                        if (targetPath.startsWith('/') || targetPath.includes(window.location.host)) {
+                            const pathOnly = targetPath.startsWith('http') 
+                                ? new URL(targetPath).pathname + new URL(targetPath).search 
+                                : targetPath;
+                            router.push(pathOnly);
+                        } else {
+                            window.location.href = targetPath;
+                        }
                     }
                 });
 

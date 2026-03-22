@@ -117,7 +117,7 @@ export default function PublicQrPage() {
         }
     };
 
-    const upiUrl = `upi://pay?pa=9161168840@uboi&pn=MS%20RISEX%20PAY&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
+    const upiUrl = `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
 
     if (success && bookingId) {
         const trackingUrl = typeof window !== 'undefined' ? `${window.location.origin}/qr-update?id=${bookingId}` : '';

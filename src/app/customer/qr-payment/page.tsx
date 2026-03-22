@@ -125,7 +125,7 @@ export default function QrPaymentPage() {
         }
     };
 
-    const upiUrl = `upi://pay?pa=9161168840@uboi&pn=OpenScore%20Payment&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
+    const upiUrl = `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
 
     if (success) {
         return (

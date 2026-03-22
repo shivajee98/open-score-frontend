@@ -237,7 +237,7 @@ export default function LoanStatus() {
                                         loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
                                             (loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED' || loan.status === 'VETTING') ? 'bg-amber-50 border-amber-100 text-amber-600' :
                                                 (loan.status === 'FORM_SUBMITTED' || loan.status === 'KYC_SUBMITTED') ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
-                                                    (loan.status === 'APPLIED' || loan.status === 'PENDING') ? 'bg-blue-50 border-blue-100 text-blue-600' :
+                                                (loan.status === 'APPLIED' || loan.status === 'PENDING' || loan.status === 'PREVIEW') ? 'bg-blue-50 border-blue-100 text-blue-600' :
                                                         'bg-slate-50 border-slate-100 text-slate-600'
                                     }`}>{(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'COMPLETED' : loan.status.replace('_', ' ')}</span>
 
