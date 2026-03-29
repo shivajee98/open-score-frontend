@@ -1,7 +1,9 @@
 'use client';
 
-import { Check, X } from 'lucide-react';
+import { Check, X, Star } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { apiFetch } from '@/lib/api';
+import { toast } from '@/components/ui/Toast';
 
 interface PaymentSuccessModalProps {
     isOpen: boolean;
@@ -11,10 +13,16 @@ interface PaymentSuccessModalProps {
     transactionId: string | number;
     referenceId?: string;
     onClose: () => void;
+    isMerchant?: boolean;
+    merchantId?: number | string;
 }
 
-export default function PaymentSuccessModal({ isOpen, amount, payeeName, date, transactionId, referenceId, onClose }: PaymentSuccessModalProps) {
+export default function PaymentSuccessModal({ isOpen, amount, payeeName, date, transactionId, referenceId, onClose, isMerchant, merchantId }: PaymentSuccessModalProps) {
     const [animate, setAnimate] = useState(false);
+    const [userRating, setUserRating] = useState(0);
+    const [submittingRating, setSubmittingRating] = useState(false);
+    const [comment, setComment] = useState("");
+    const [rated, setRated] = useState(false);
     const audioContextRef = useRef<AudioContext | null>(null);
 
     const playSuccessSound = () => {
@@ -245,6 +253,61 @@ export default function PaymentSuccessModal({ isOpen, amount, payeeName, date, t
                         <span className="text-slate-900 font-black">Elite Credit Value</span>
                     </div>
                 </div>
+
+                {isMerchant && !rated && (
+                    <div className={`w-full bg-amber-50 rounded-3xl p-6 mb-8 border border-amber-100 transition-all duration-700 delay-700 transform ${animate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                        <p className="text-[10px] font-black text-amber-700 text-center uppercase tracking-widest mb-4">Rate your experience with this merchant</p>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-center gap-2">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button 
+                                        key={star}
+                                        onClick={() => setUserRating(star)}
+                                        className={`transition-all duration-300 ${userRating >= star ? 'text-amber-400 scale-125' : 'text-slate-300 hover:text-amber-200'} ${submittingRating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        disabled={submittingRating}
+                                    >
+                                        <Star size={24} fill={userRating >= star ? 'currentColor' : 'none'} strokeWidth={2.5} />
+                                    </button>
+                                ))}
+                            </div>
+                            <textarea 
+                                placeholder="Add a quick feedback (optional)..."
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                disabled={submittingRating}
+                                className="w-full p-3 bg-white border border-amber-100 rounded-xl text-xs focus:ring-2 focus:ring-amber-200 outline-none min-h-[60px] font-bold text-slate-700"
+                            />
+                            <button 
+                                disabled={submittingRating || userRating === 0}
+                                onClick={async () => {
+                                    if (userRating === 0) return;
+                                    setSubmittingRating(true);
+                                    try {
+                                        await apiFetch(`/merchants/${merchantId}/rate`, {
+                                            method: 'POST',
+                                            body: JSON.stringify({ rating: userRating, comment })
+                                        });
+                                        toast.success("Rating submitted successfully!");
+                                        setRated(true);
+                                    } catch (e: any) {
+                                        toast.error(e.message || "Failed to submit rating");
+                                    } finally {
+                                        setSubmittingRating(false);
+                                    }
+                                }}
+                                className={`w-full py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${submittingRating || userRating === 0 ? 'bg-slate-200 text-slate-400' : 'bg-amber-400 text-slate-900 shadow-lg shadow-amber-400/20 active:scale-95'}`}
+                            >
+                                {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {rated && (
+                    <div className="w-full bg-emerald-50 rounded-3xl p-4 mb-4 border border-emerald-100 text-center animate-in zoom-in-95 duration-300">
+                        <p className="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em]">Rating Submitted! Thank You</p>
+                    </div>
+                )}
 
                 <button
                     onClick={onClose}

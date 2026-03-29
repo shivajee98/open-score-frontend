@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Store, Briefcase, Users, TrendingUp, MapPin, ArrowRight, CheckCircle2, Lock, ChevronDown, X } from 'lucide-react';
+import { Store, Briefcase, Users, TrendingUp, MapPin, ArrowRight, CheckCircle2, Lock, ChevronDown, X, Upload } from 'lucide-react';
+import { toast } from '@/components/ui/Toast';
 
 interface MerchantClaimModalProps {
     isOpen: boolean;
@@ -26,6 +27,46 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
         pincode: user?.pincode || ''
     });
 
+    const [panFile, setPanFile] = useState<File | null>(null);
+    const [panPreview, setPanPreview] = useState<string | null>(null);
+    const [aadharFile, setAadharFile] = useState<File | null>(null);
+    const [aadharPreview, setAadharPreview] = useState<string | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'pan' | 'aadhar') => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error('File too large (max 10MB)');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX = 1200;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
+                    else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, w, h);
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const newFile = new File([blob], `${type}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                            if (type === 'pan') { setPanFile(newFile); setPanPreview(URL.createObjectURL(newFile)); }
+                            else { setAadharFile(newFile); setAadharPreview(URL.createObjectURL(newFile)); }
+                        }
+                    }, 'image/jpeg', 0.8);
+                };
+                img.src = event.target?.result as string;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     // Effect to update formData when the user prop changes (e.g. data is loaded later)
     useEffect(() => {
         if (user) {
@@ -44,7 +85,7 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
     if (!isOpen) return null;
 
     const turnoverOptions = [
-        { label: "₹1,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "1k-5k" },
+        { label: "₹2,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "2-5k" },
         { label: "₹5,000 - ₹10,000", sub: "Cashback: ₹50 - ₹200", value: "5k-10k" },
         { label: "₹10,000 - ₹20,000", sub: "Cashback: ₹200 - ₹400", value: "10k-20k" },
         { label: "₹20,000 - ₹50,000", sub: "Cashback: ₹500 - ₹1,000", value: "20k-50k" },
@@ -56,16 +97,20 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
     const handleSubmit = async () => {
         setLoading(true);
         try {
+            const formDataObj = new FormData();
+            formDataObj.append('business_name', formData.business_name);
+            formDataObj.append('business_nature', formData.business_nature);
+            formDataObj.append('customer_segment', formData.customer_segment);
+            formDataObj.append('daily_turnover', formData.daily_turnover);
+            formDataObj.append('business_address', formData.business_address);
+            formDataObj.append('pincode', formData.pincode);
+            
+            if (panFile) formDataObj.append('pan_image', panFile);
+            if (aadharFile) formDataObj.append('aadhar_image', aadharFile);
+
             const res = await apiFetch('/auth/complete-merchant-profile', {
                 method: 'POST',
-                body: JSON.stringify({
-                    business_name: formData.business_name,
-                    business_nature: formData.business_nature,
-                    customer_segment: formData.customer_segment,
-                    daily_turnover: formData.daily_turnover,
-                    business_address: formData.business_address,
-                    pincode: formData.pincode
-                })
+                body: formDataObj
             });
 
             // Update token to prevent session expired error
@@ -205,11 +250,41 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
                                     onChange={e => setFormData({ ...formData, pincode: e.target.value.replace(/\D/g, '') })}
                                 />
                             </div>
+
+                            {/* KYC Uploads */}
+                            <div className="grid grid-cols-2 gap-3 mt-4">
+                                <label className={`flex flex-col items-center justify-center p-3 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${panPreview ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                                    {panPreview ? (
+                                        <div className="relative w-full aspect-video">
+                                            <img src={panPreview} alt="PAN" className="w-full h-full object-cover rounded-lg" />
+                                        </div>
+                                    ) : (
+                                        <div className="text-center">
+                                            <Upload size={16} className="mx-auto mb-1 text-slate-400" />
+                                            <p className="text-[8px] font-black uppercase text-slate-500">PAN Card</p>
+                                        </div>
+                                    )}
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'pan')} />
+                                </label>
+                                <label className={`flex flex-col items-center justify-center p-3 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${aadharPreview ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                                    {aadharPreview ? (
+                                        <div className="relative w-full aspect-video">
+                                            <img src={aadharPreview} alt="Aadhar" className="w-full h-full object-cover rounded-lg" />
+                                        </div>
+                                    ) : (
+                                        <div className="text-center">
+                                            <Upload size={16} className="mx-auto mb-1 text-slate-400" />
+                                            <p className="text-[8px] font-black uppercase text-slate-500">Aadhar Card</p>
+                                        </div>
+                                    )}
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'aadhar')} />
+                                </label>
+                            </div>
                         </div>
                         <div className="flex gap-3 mt-4">
                             <button onClick={() => setStep(1)} className="flex-1 py-3 bg-slate-50 text-slate-500 rounded-xl font-bold text-sm">Back</button>
                             <button
-                                disabled={loading || !formData.daily_turnover || !formData.business_address || formData.pincode.length !== 6}
+                                disabled={loading || !formData.daily_turnover || !formData.business_address || formData.pincode.length !== 6 || !panFile || !aadharFile}
                                 onClick={handleSubmit}
                                 className="flex-[2] py-3 bg-emerald-500 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
                             >

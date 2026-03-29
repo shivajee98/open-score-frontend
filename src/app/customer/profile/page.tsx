@@ -36,7 +36,9 @@ export default function Profile() {
         street_address: '',
         city: '',
         state: '',
-        postal_code: ''
+        postal_code: '',
+        show_phone: true,
+        show_timing: true
     });
     const [newShopImages, setNewShopImages] = useState<File[]>([]);
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -108,7 +110,9 @@ export default function Profile() {
                     street_address: user.business_address || '',
                     city: user.city || '',
                     state: user.state || '',
-                    postal_code: user.pincode || ''
+                    postal_code: user.pincode || '',
+                    show_phone: user.show_phone ?? true,
+                    show_timing: user.show_timing ?? true
                 });
                 initialDataLoaded.current = true;
             }
@@ -212,6 +216,30 @@ export default function Profile() {
             toast.error("Notifications are blocked in browser settings.");
         }
     };
+    
+    const toggleMerchantVisibility = async (field: 'show_phone' | 'show_timing') => {
+        const newValue = !formData[field];
+        
+        // Always update local state for UI feedback
+        setFormData(prev => ({ ...prev, [field]: newValue }));
+        
+        // If not in editing mode, sync with backend immediately
+        if (!isEditing) {
+            try {
+                const res = await apiFetch('/merchant/update-visibility', {
+                    method: 'POST',
+                    body: JSON.stringify({ [field]: newValue })
+                });
+                if (res.error) throw new Error(res.error);
+                toast.success('Visibility updated');
+                await mutateUser();
+            } catch (e: any) {
+                toast.error(e.message || 'Failed to update visibility');
+                // Revert local state on error
+                setFormData(prev => ({ ...prev, [field]: !newValue }));
+            }
+        }
+    };
 
     const [showNameMismatch, setShowNameMismatch] = useState(false);
 
@@ -244,6 +272,8 @@ export default function Profile() {
             uploadData.append('state', formData.state);
             uploadData.append('pincode', formData.postal_code);
             uploadData.append('map_location_url', formData.map_location_url);
+            uploadData.append('show_phone', formData.show_phone ? '1' : '0');
+            uploadData.append('show_timing', formData.show_timing ? '1' : '0');
 
             // Bank details
             if (!user?.account_number) {
@@ -594,29 +624,61 @@ export default function Profile() {
                                     </div>
                                 </div>
 
-                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Daily Turnover</p>
-                                        {isEditing ? (
-                                            <select
-                                                value={formData.daily_turnover}
-                                                onChange={(e) => setFormData({ ...formData, daily_turnover: e.target.value })}
-                                                className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
-                                            >
-                                                <option value="">Select Turnover</option>
-                                                <option value="1k-5k">₹1,000 - ₹5,000</option>
-                                                <option value="5k-10k">₹5,000 - ₹10,000</option>
-                                                <option value="10k-20k">₹10,000 - ₹20,000</option>
-                                                <option value="20k-50k">₹20,000 - ₹50,000</option>
-                                                <option value="50k-1l">₹50,000 - ₹1,00,000</option>
-                                                <option value="1l-2l">₹1,00,000 - ₹2,00,000</option>
-                                                <option value="2l-5l">₹2,00,000 - ₹5,00,000</option>
-                                            </select>
-                                        ) : (
-                                            <p className="text-base font-semibold text-slate-900">{user.daily_turnover || 'Not Set'}</p>
-                                        )}
-                                    </div>
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Daily Turnover</p>
+                                    {isEditing ? (
+                                        <select
+                                            value={formData.daily_turnover}
+                                            onChange={(e) => setFormData({ ...formData, daily_turnover: e.target.value })}
+                                            className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
+                                        >
+                                            <option value="">Select Turnover</option>
+                                            <option value="2-5k">₹2,000 - ₹5,000</option>
+                                            <option value="5k-10k">₹5,000 - ₹10,000</option>
+                                            <option value="10k-20k">₹10,000 - ₹20,000</option>
+                                            <option value="20k-50k">₹20,000 - ₹50,000</option>
+                                            <option value="50k-1l">₹50,000 - ₹1,00,000</option>
+                                            <option value="1l-2l">₹1,00,000 - ₹2,00,000</option>
+                                            <option value="2l-5l">₹2,00,000 - ₹5,00,000</option>
+                                        </select>
+                                    ) : (
+                                        <p className="text-base font-semibold text-slate-900">{user.daily_turnover || 'Not Set'}</p>
+                                    )}
                                 </div>
+                            </div>
+
+                                {isMerchant && (
+                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
+                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Visibility Settings</p>
+                                         
+                                         <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900">Show Phone Number</p>
+                                                <p className="text-[10px] text-slate-400 font-bold">Display contact on locator</p>
+                                            </div>
+                                            <div 
+                                                onClick={() => toggleMerchantVisibility('show_phone')}
+                                                className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer ${formData.show_phone ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                            >
+                                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${formData.show_phone ? 'right-1' : 'left-1'}`}></div>
+                                            </div>
+                                         </div>
+
+                                         <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900">Show Shop Timing</p>
+                                                <p className="text-[10px] text-slate-400 font-bold">Display hours on locator</p>
+                                            </div>
+                                            <div 
+                                                onClick={() => toggleMerchantVisibility('show_timing')}
+                                                className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer ${formData.show_timing ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                            >
+                                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${formData.show_timing ? 'right-1' : 'left-1'}`}></div>
+                                            </div>
+                                         </div>
+                                    </div>
+                                )}
 
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                     <div className="flex-1 min-w-0">
@@ -820,7 +882,7 @@ export default function Profile() {
                                                         </button>
                                                     )}
                                                 </div>
-                                            ));
+                                            ))
                                         })()}
                                     </div>
                                 </div>
@@ -1053,17 +1115,12 @@ export default function Profile() {
                             </button>
                         </div>
                     </div>
-                </div>
 
-                <div className="text-center mt-8 space-y-3">
-                    <p className="text-xs text-slate-300 font-bold uppercase tracking-widest">Member since {new Date(user.created_at).getFullYear()}</p>
+                    <div className="text-center mt-8 space-y-3">
+                        <p className="text-xs text-slate-300 font-bold uppercase tracking-widest">Member since {new Date(user.created_at).getFullYear()}</p>
+                    </div>
                 </div>
             </div>
-
-            <TutorialPlayer
-                isOpen={isTutorialOpen}
-                onClose={() => setIsTutorialOpen(false)}
-            />
 
             {/* Name Mismatch Modal */}
             {showNameMismatch && (

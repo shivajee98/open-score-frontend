@@ -21,6 +21,10 @@ interface Merchant {
     map_location_url?: string;
     business_segment?: string;
     business_nature?: string;
+    average_rating?: number;
+    rating_count?: number;
+    show_phone?: boolean;
+    show_timing?: boolean;
 }
 
 // Simple debounce hook
@@ -231,6 +235,12 @@ export default function MerchantLocator() {
                                                         {merchant.business_nature}
                                                     </span>
                                                 )}
+                                                {merchant.average_rating !== undefined && (
+                                                    <div className="flex items-center gap-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                                                        <span>★</span>
+                                                        <span>{Number(merchant.average_rating).toFixed(1)}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex items-start gap-1.5 text-slate-400 text-[10px] font-bold leading-tight">
                                                 <MapPin size={12} className="shrink-0 text-slate-300" />
@@ -240,7 +250,7 @@ export default function MerchantLocator() {
                                     </div>
 
                                     <div className="flex items-center gap-2 shrink-0 pl-2 border-l border-slate-50">
-                                        {merchant.mobile_number && (
+                                        {(merchant.mobile_number && (merchant.show_phone ?? true)) && (
                                             <>
                                                 <button
                                                     onClick={(e) => {

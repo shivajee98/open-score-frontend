@@ -345,7 +345,9 @@ function CustomerPayPage() {
                 payeeName: payee.name,
                 id: res.id,
                 ref: res.ref,
-                date: res.created_at
+                date: res.created_at,
+                isMerchant: payee.role === 'MERCHANT',
+                merchantId: payee.merchant_id || payee.id
             });
         } catch (err: any) {
             triggerErrorPopup(err.message || 'Payment failed');
@@ -367,6 +369,8 @@ function CustomerPayPage() {
                     date={successData?.date || new Date().toISOString()}
                     transactionId={successData?.id || ''}
                     referenceId={successData?.ref || ''}
+                    isMerchant={successData?.isMerchant}
+                    merchantId={successData?.merchantId}
                     onClose={() => router.push('/customer')}
                 />
 
