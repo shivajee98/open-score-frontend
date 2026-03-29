@@ -11,6 +11,7 @@ import { useAuthProtection } from '@/hooks/useAuthProtection';
 import { useApi } from '@/hooks/useApi';
 import TutorialPlayer from '@/components/TutorialPlayer';
 import BackButton from '@/components/BackButton';
+import ShopTimingModal, { ShopTimingData } from '@/components/ShopTimingModal';
 
 export default function Profile() {
     const { data: user, error: userError, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
@@ -38,9 +39,15 @@ export default function Profile() {
         state: '',
         postal_code: '',
         show_phone: true,
-        show_timing: true
+        show_timing: true,
+        shop_timing: null as any,
+        aadhar_number: '',
+        pan_number: ''
     });
     const [newShopImages, setNewShopImages] = useState<File[]>([]);
+    const [newAadharImage, setNewAadharImage] = useState<File | null>(null);
+    const [newPanImage, setNewPanImage] = useState<File | null>(null);
+    const [isShopTimingModalOpen, setIsShopTimingModalOpen] = useState(false);
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [pinModalMode, setPinModalMode] = useState<'SET' | 'VERIFY'>('VERIFY');
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -112,7 +119,10 @@ export default function Profile() {
                     state: user.state || '',
                     postal_code: user.pincode || '',
                     show_phone: user.show_phone ?? true,
-                    show_timing: user.show_timing ?? true
+                    show_timing: user.show_timing ?? true,
+                    shop_timing: user.shop_timing || null,
+                    aadhar_number: user.aadhar_number || '',
+                    pan_number: user.pan_number || ''
                 });
                 initialDataLoaded.current = true;
             }
@@ -226,7 +236,7 @@ export default function Profile() {
         // If not in editing mode, sync with backend immediately
         if (!isEditing) {
             try {
-                const res = await apiFetch('/merchant/update-visibility', {
+                const res = await apiFetch('/merchant/visibility', {
                     method: 'POST',
                     body: JSON.stringify({ [field]: newValue })
                 });
@@ -274,6 +284,8 @@ export default function Profile() {
             uploadData.append('map_location_url', formData.map_location_url);
             uploadData.append('show_phone', formData.show_phone ? '1' : '0');
             uploadData.append('show_timing', formData.show_timing ? '1' : '0');
+            uploadData.append('aadhar_number', formData.aadhar_number);
+            uploadData.append('pan_number', formData.pan_number);
 
             // Bank details
             if (!user?.account_number) {
@@ -298,6 +310,14 @@ export default function Profile() {
                 uploadData.append('shop_images[]', file);
             });
 
+            if (newAadharImage) {
+                uploadData.append('aadhar_image', newAadharImage);
+            }
+
+            if (newPanImage) {
+                uploadData.append('pan_image', newPanImage);
+            }
+
             const res = await apiFetch('/auth/update-profile', {
                 method: 'POST',
                 body: uploadData
@@ -314,6 +334,8 @@ export default function Profile() {
 
             setIsEditing(false);
             setNewShopImages([]);
+            setNewAadharImage(null);
+            setNewPanImage(null);
             toast.success('Profile updated successfully!');
         } catch (e: any) {
             toast.error(e.message || 'Failed to update profile');
@@ -670,11 +692,21 @@ export default function Profile() {
                                                 <p className="text-sm font-semibold text-slate-900">Show Shop Timing</p>
                                                 <p className="text-[10px] text-slate-400 font-bold">Display hours on locator</p>
                                             </div>
-                                            <div 
-                                                onClick={() => toggleMerchantVisibility('show_timing')}
-                                                className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer ${formData.show_timing ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                                            >
-                                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${formData.show_timing ? 'right-1' : 'left-1'}`}></div>
+                                            <div className="flex items-center gap-3">
+                                                {formData.show_timing && (
+                                                    <button 
+                                                        onClick={() => setIsShopTimingModalOpen(true)}
+                                                        className={`px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors`}
+                                                    >
+                                                        {formData.shop_timing ? 'Edit Hours' : 'Set Hours'}
+                                                    </button>
+                                                )}
+                                                <div 
+                                                    onClick={() => toggleMerchantVisibility('show_timing')}
+                                                    className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer ${formData.show_timing ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                                >
+                                                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${formData.show_timing ? 'right-1' : 'left-1'}`}></div>
+                                                </div>
                                             </div>
                                          </div>
                                     </div>
@@ -885,6 +917,154 @@ export default function Profile() {
                                             ))
                                         })()}
                                     </div>
+                                </div>
+
+                                {/* KYC Documents Section */}
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 mt-6">
+                                    <h3 className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-4 flex items-center gap-2">
+                                        <ShieldCheck size={14} className={`text-${themeColor}-500`} /> 
+                                        KYC Documents
+                                    </h3>
+                                    
+                                    <div className="grid grid-cols-2 gap-4 mb-6">
+                                        <div>
+                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Aadhar Number</p>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={formData.aadhar_number}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
+                                                        setFormData({ ...formData, aadhar_number: val });
+                                                    }}
+                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="12 digit number"
+                                                />
+                                            ) : (
+                                                <p className="text-sm font-medium text-slate-900">{user.aadhar_number || 'Not Set'}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">PAN Number</p>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={formData.pan_number}
+                                                    onChange={(e) => setFormData({ ...formData, pan_number: e.target.value.toUpperCase().slice(0, 10) })}
+                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="ABCDE1234F"
+                                                />
+                                            ) : (
+                                                <p className="text-sm font-medium text-slate-900 uppercase">{user.pan_number || 'Not Set'}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Aadhar Card */}
+                                        <div>
+                                            <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">Aadhar Card</p>
+                                            <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
+                                                {(newAadharImage || user.aadhar_image) ? (
+                                                    <>
+                                                        <img 
+                                                            src={newAadharImage ? URL.createObjectURL(newAadharImage) : user.aadhar_image} 
+                                                            alt="Aadhar" 
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        {isEditing && (
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                                                    Change
+                                                                    <input 
+                                                                        type="file" 
+                                                                        className="hidden" 
+                                                                        accept="image/*" 
+                                                                        onChange={(e) => {
+                                                                            if (e.target.files?.[0]) setNewAadharImage(e.target.files[0]);
+                                                                        }} 
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                                                        <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br/>Aadhar</p>
+                                                        {isEditing && (
+                                                            <label className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}>
+                                                                Upload
+                                                                <input 
+                                                                    type="file" 
+                                                                    className="hidden" 
+                                                                    accept="image/*" 
+                                                                    onChange={(e) => {
+                                                                        if (e.target.files?.[0]) setNewAadharImage(e.target.files[0]);
+                                                                    }} 
+                                                                />
+                                                            </label>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* PAN Card */}
+                                        <div>
+                                            <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">PAN Card</p>
+                                            <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
+                                                {(newPanImage || user.pan_image) ? (
+                                                    <>
+                                                        <img 
+                                                            src={newPanImage ? URL.createObjectURL(newPanImage) : user.pan_image} 
+                                                            alt="PAN" 
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        {isEditing && (
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                                                    Change
+                                                                    <input 
+                                                                        type="file" 
+                                                                        className="hidden" 
+                                                                        accept="image/*" 
+                                                                        onChange={(e) => {
+                                                                            if (e.target.files?.[0]) setNewPanImage(e.target.files[0]);
+                                                                        }} 
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                                                        <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br/>PAN</p>
+                                                        {isEditing && (
+                                                            <label className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}>
+                                                                Upload
+                                                                <input 
+                                                                    type="file" 
+                                                                    className="hidden" 
+                                                                    accept="image/*" 
+                                                                    onChange={(e) => {
+                                                                        if (e.target.files?.[0]) setNewPanImage(e.target.files[0]);
+                                                                    }} 
+                                                                />
+                                                            </label>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {(!user.aadhar_image || !user.pan_image) && (
+                                        <p className="mt-3 text-[10px] font-bold text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100 flex gap-2 items-start">
+                                            <Info size={12} className="shrink-0 mt-0.5" />
+                                            Please edit your profile and upload the pending KYC documents to securely verify your merchant identity.
+                                        </p>
+                                    )}
                                 </div>
                             </>
                         )}
@@ -1188,6 +1368,27 @@ export default function Profile() {
                 onComplete={handlePinComplete}
                 mode={pinModalMode}
                 title={pinModalMode === 'VERIFY' ? 'Enter Current PIN' : 'Set New PIN'}
+            />
+
+            <ShopTimingModal 
+                isOpen={isShopTimingModalOpen}
+                initialData={formData.shop_timing}
+                onClose={() => setIsShopTimingModalOpen(false)}
+                onSave={async (data) => {
+                    setFormData(prev => ({ ...prev, shop_timing: data }));
+                    if (!isEditing) {
+                        try {
+                            await apiFetch('/merchant/visibility', {
+                                method: 'POST',
+                                body: JSON.stringify({ shop_timing: JSON.stringify(data) })
+                            });
+                            toast.success('Shop timing updated successfully');
+                        } catch (e: any) {
+                            toast.error(e.message || 'Failed to update timing');
+                        }
+                    }
+                }}
+                themeColor={themeColor}
             />
         </div>
     );

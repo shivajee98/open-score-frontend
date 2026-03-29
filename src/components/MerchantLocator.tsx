@@ -236,9 +236,12 @@ export default function MerchantLocator() {
                                                     </span>
                                                 )}
                                                 {merchant.average_rating !== undefined && (
-                                                    <div className="flex items-center gap-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                                                        <span>★</span>
+                                                    <div className="flex items-center gap-1 bg-amber-50 text-amber-600 border border-amber-200 text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
                                                         <span>{Number(merchant.average_rating).toFixed(1)}</span>
+                                                        <span className="text-[10px] pb-0.5">★</span>
+                                                        {merchant.rating_count !== undefined && (
+                                                            <span className="opacity-40 font-bold ml-0.5">({merchant.rating_count})</span>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>

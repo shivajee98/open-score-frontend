@@ -174,16 +174,93 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                             )}
 
                             {(merchant.show_timing ?? true) && (
-                                <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                    <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                                        <Store size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Shop Timing</p>
-                                        <p className="font-bold text-slate-900">09:00 AM - 09:00 PM</p>
-                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-1">Open Now</p>
-                                    </div>
-                                </div>
+                                (() => {
+                                    let timingDisplay = "09:00 AM - 09:00 PM";
+                                    let isOpenStatus = "Open Now";
+                                    let isCurrentlyOpen = true;
+
+                                    try {
+                                        if (merchant.shop_timing) {
+                                            const timingData = typeof merchant.shop_timing === 'string' 
+                                                ? JSON.parse(merchant.shop_timing) 
+                                                : merchant.shop_timing;
+
+                                            if (timingData.type === 'daily') {
+                                                const open = timingData.daily?.open || "09:00";
+                                                const close = timingData.daily?.close || "21:00";
+                                                
+                                                // Convert 24h to 12h for display
+                                                const formatTime = (time: string) => {
+                                                    let [h, m] = time.split(':').map(Number);
+                                                    const ampm = h >= 12 ? 'PM' : 'AM';
+                                                    h = h % 12 || 12;
+                                                    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+                                                };
+                                                
+                                                timingDisplay = `${formatTime(open)} - ${formatTime(close)}`;
+                                                
+                                                // Basic Open/Closed Logic
+                                                const now = new Date();
+                                                const currentH = now.getHours();
+                                                const currentM = now.getMinutes();
+                                                const openParts = open.split(':').map(Number);
+                                                const closeParts = close.split(':').map(Number);
+                                                
+                                                const currentMins = currentH * 60 + currentM;
+                                                const openMins = openParts[0] * 60 + openParts[1];
+                                                const closeMins = closeParts[0] * 60 + closeParts[1];
+                                                
+                                                isCurrentlyOpen = currentMins >= openMins && currentMins <= closeMins;
+                                                isOpenStatus = isCurrentlyOpen ? "Open Now" : "Closed";
+                                            } else if (timingData.type === 'weekly') {
+                                                const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                                                const currentDay = days[new Date().getDay()];
+                                                const todayTiming = timingData.weekly?.[currentDay];
+                                                
+                                                if (!todayTiming || !todayTiming.isOpen) {
+                                                    timingDisplay = "Closed Today";
+                                                    isOpenStatus = "Closed";
+                                                    isCurrentlyOpen = false;
+                                                } else {
+                                                    const open = todayTiming.open || "09:00";
+                                                    const close = todayTiming.close || "21:00";
+                                                    const formatTime = (time: string) => {
+                                                        let [h, m] = time.split(':').map(Number);
+                                                        const ampm = h >= 12 ? 'PM' : 'AM';
+                                                        h = h % 12 || 12;
+                                                        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+                                                    };
+                                                    timingDisplay = `${formatTime(open)} - ${formatTime(close)}`;
+                                                    
+                                                    const now = new Date();
+                                                    const currentH = now.getHours();
+                                                    const currentM = now.getMinutes();
+                                                    const currentMins = currentH * 60 + currentM;
+                                                    const openMins = open.split(':').map(Number)[0] * 60 + open.split(':').map(Number)[1];
+                                                    const closeMins = close.split(':').map(Number)[0] * 60 + close.split(':').map(Number)[1];
+                                                    
+                                                    isCurrentlyOpen = currentMins >= openMins && currentMins <= closeMins;
+                                                    isOpenStatus = isCurrentlyOpen ? "Open Now" : "Closed";
+                                                }
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.error('Failed to parse merchant timing', e);
+                                    }
+
+                                    return (
+                                        <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isCurrentlyOpen ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'}`}>
+                                                <Store size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Shop Timing</p>
+                                                <p className="font-bold text-slate-900">{timingDisplay}</p>
+                                                <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${isCurrentlyOpen ? 'text-emerald-600' : 'text-slate-500'}`}>{isOpenStatus}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })()
                             )}
 
                             {(() => {

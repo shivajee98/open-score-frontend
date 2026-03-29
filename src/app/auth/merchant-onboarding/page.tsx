@@ -170,7 +170,7 @@ function MerchantOnboardingForm() {
     };
 
     const turnoverOptions = [
-        { label: "₹2,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "2k-5k" },
+        { label: "₹2,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "2-5k" },
         { label: "₹5,000 - ₹10,000", sub: "Cashback: ₹50 - ₹200", value: "5k-10k" },
         { label: "₹10,000 - ₹20,000", sub: "Cashback: ₹200 - ₹400", value: "10k-20k" },
         { label: "₹20,000 - ₹50,000", sub: "Cashback: ₹500 - ₹1,000", value: "20k-50k" },

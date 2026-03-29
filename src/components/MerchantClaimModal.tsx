@@ -144,6 +144,9 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
                     </div>
                     <h2 className="text-xl font-black text-slate-900">Claim Your Bonus</h2>
                     <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Complete Profile to Unlock ₹{bonusAmount}</p>
+                    <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest mt-2 animate-pulse">
+                        please update your adhar and pan to get this reward
+                    </p>
                 </div>
 
                 {/* Step 1: Business Info */}
