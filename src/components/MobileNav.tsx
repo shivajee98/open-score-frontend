@@ -3,21 +3,25 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, User, Zap, CreditCard, QrCode, History, Landmark } from 'lucide-react';
+import { Zap, User, LayoutDashboard, QrCode, Landmark, History } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 
 export default function MobileNav() {
     const rawPathname = usePathname();
     // Fix: Strip trailing slash so exact comparisons work with trailingSlash: true
     const pathname = rawPathname.endsWith('/') && rawPathname !== '/' ? rawPathname.slice(0, -1) : rawPathname;
-    const [user, setUser] = useState<any>(null);
+    const { data: user, mutate: mutateUser } = useApi('/auth/me');
     const [activeLoanId, setActiveLoanId] = useState<string | null>(null);
     const [hasActiveLoan, setHasActiveLoan] = useState(false);
 
     useEffect(() => {
-        const u = JSON.parse(localStorage.getItem('user') || '{}');
-        setUser(u);
-    }, [rawPathname]);
+        const handleUpdate = () => {
+            mutateUser();
+        };
+        window.addEventListener('userStateUpdate', handleUpdate);
+        return () => window.removeEventListener('userStateUpdate', handleUpdate);
+    }, [mutateUser]);
 
     useEffect(() => {
         if (user?.role === 'CUSTOMER' || user?.role === 'STUDENT') {

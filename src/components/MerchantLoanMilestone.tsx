@@ -37,7 +37,7 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
         <div className="mx-4 mb-0">
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 {/* Main Collapsible Bar */}
-                <div 
+                <div
                     onClick={() => setIsOpen(!isOpen)}
                     className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
                 >
@@ -56,9 +56,9 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
                     </div>
                     <div className="flex items-center gap-2">
                         {!isOpen && !isEligible && (
-                           <div className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full">
-                               {Math.round(progress)}%
-                           </div>
+                            <div className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full">
+                                {Math.round(progress)}%
+                            </div>
                         )}
                         {isOpen ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
                     </div>
@@ -77,7 +77,7 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
                                     </span>
                                 </div>
                                 <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
-                                    <div 
+                                    <div
                                         className={`h-full transition-all duration-1000 ease-out ${isEligible ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,0.3)]'}`}
                                         style={{ width: `${progress}%` }}
                                     />
@@ -90,7 +90,7 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
 
                             {/* Inner Collapsible for Details */}
                             <div className="border-t border-slate-50 pt-3">
-                                <button 
+                                <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setIsDetailsOpen(!isDetailsOpen);
@@ -107,7 +107,7 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
                                 {isDetailsOpen && (
                                     <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-600 leading-relaxed animate-in fade-in slide-in-from-top-1">
                                         Collect & transfer <span className="font-bold text-slate-800">₹{max.toLocaleString()}</span> on Open Score  to unlock <span className="font-bold text-indigo-600 text-[10px]">{milestonePlan.name}</span> Credit 0% No CIBIL You are ₹20,990 away.
-                                        {isEligible 
+                                        {isEligible
                                             ? " Congratulations! You have reached the target and can now apply for this loan."
                                             : ` You need ₹${(max - current).toLocaleString()} more in volume to unlock this loan.`
                                         }

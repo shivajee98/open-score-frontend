@@ -1,8 +1,8 @@
 // Static Export: Always talk directly to backend
 // Static Export: Always talk directly to backend
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 
-    (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-        ? 'http://localhost:8000/api' 
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:8000/api'
         : 'https://api.msmeloan.sbs/api');
 
 // Loop Prevention
@@ -110,14 +110,33 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
                 headers,
             });
 
-            if ((response.status === 401 || response.status === 403) && !skipAuthCheck) {
+            if (response.status === 401 && !skipAuthCheck) {
                 handleUnauthorized();
                 throw new Error('Session expired. Please login again.');
             }
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || errorData.message || (response.status === 401 ? 'Unauthorized' : `API request failed with status ${response.status}`));
+
+                // Handle Global Suspension
+                if (response.status === 403 && errorData.code === 'ACCOUNT_SUSPENDED') {
+                    if (typeof window !== 'undefined') {
+                        const cachedUserStr = localStorage.getItem('user');
+                        if (cachedUserStr) {
+                            try {
+                                const cachedUser = JSON.parse(cachedUserStr);
+                                cachedUser.status = 'SUSPENDED';
+                                localStorage.setItem('user', JSON.stringify(cachedUser));
+                                window.dispatchEvent(new Event('userStateUpdate'));
+                            } catch (e) { }
+                        }
+                    }
+                }
+
+                const error: any = new Error(errorData.error || errorData.message || (response.status === 401 ? 'Unauthorized' : `API request failed with status ${response.status}`));
+                error.status = response.status;
+                error.code = errorData.code;
+                throw error;
             }
 
             return response.json();

@@ -12,5 +12,5 @@
   RewriteRule ^(.*)$ $1.html [L]
 
   # SPA Fallback
-  RewriteRule . /index.html [L]
+  RewriteRule . index.html [L]
 </IfModule>

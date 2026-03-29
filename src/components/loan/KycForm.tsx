@@ -49,8 +49,9 @@ const STEPS = [
 export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false }: KycFormProps) {
     const { user } = useStore();
     const [currentStep, setCurrentStep] = useState(0);
-    const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string }>({});
-    const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean }>({});
+    const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string, referral?: string }>({});
+    const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean, referral?: boolean }>({});
+    const [referrerName, setReferrerName] = useState<string | null>(null);
 
     // Dynamic schema based on role
     const kycSchema = z.object({
@@ -148,6 +149,43 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
     }, [aadharValue]);
 
+    const referralValue = watch('referral_code');
+
+    useEffect(() => {
+        if (referralValue && referralValue.length >= 4) {
+            const timer = setTimeout(() => {
+                checkReferral(referralValue);
+            }, 600);
+            return () => clearTimeout(timer);
+        } else {
+            setUniquenessErrors(prev => ({ ...prev, referral: undefined }));
+            setReferrerName(null);
+        }
+    }, [referralValue]);
+
+    const checkReferral = async (code: string) => {
+        setCheckingUniqueness(prev => ({ ...prev, referral: true }));
+        setUniquenessErrors(prev => ({ ...prev, referral: undefined }));
+        try {
+            const res = await apiFetch('/referral/verify-code', {
+                method: 'POST',
+                body: JSON.stringify({ code: code.toUpperCase() }),
+                skipAuthCheck: true
+            });
+            if (!res.valid) {
+                setUniquenessErrors(prev => ({ ...prev, referral: 'Invalid referral code' }));
+                setReferrerName(null);
+            } else {
+                setReferrerName(res.referrer_name);
+            }
+        } catch (e) {
+            setUniquenessErrors(prev => ({ ...prev, referral: 'Invalid referral code' }));
+            setReferrerName(null);
+        } finally {
+            setCheckingUniqueness(prev => ({ ...prev, referral: false }));
+        }
+    };
+
     useEffect(() => {
         if (panValue && panValue.length === 10) {
             checkUniqueness('pan', panValue);
@@ -179,6 +217,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const nextStep = async () => {
         const fieldsToValidate = getFieldsForStep(currentStep);
         const isStepValid = await trigger(fieldsToValidate as any);
+
+        // Prevent next step if uniqueness check is failing
+        if (currentStep === 0 && referralValue && (checkingUniqueness.referral || uniquenessErrors.referral)) {
+            return;
+        }
 
         // Prevent next step if uniqueness check is failing
         if (currentStep === 2 && (uniquenessErrors.aadhar || uniquenessErrors.pan)) {
@@ -252,11 +295,16 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <input
                                 placeholder="Agent ID or Friend's Code"
                                 {...register('referral_code')}
-                                className={inputClasses}
+                                className={cn(inputClasses, uniquenessErrors.referral && "border-rose-500 ring-rose-50", referrerName && "border-emerald-500 ring-emerald-50")}
                             />
-                            <p className="text-[9px] text-blue-500 font-bold mt-1 ml-2">
-                                Use a friend's code to earn rewards!
-                            </p>
+                            {checkingUniqueness.referral && <p className="text-[9px] text-blue-500 font-bold mt-1 ml-2 animate-pulse uppercase tracking-widest">Verifying Code...</p>}
+                            {uniquenessErrors.referral && <p className={errorClasses}>{uniquenessErrors.referral}</p>}
+                            {referrerName && <p className="text-[9px] text-emerald-600 font-black mt-1 ml-2 uppercase tracking-widest">Referrer: {referrerName}</p>}
+                            {!uniquenessErrors.referral && !referrerName && !checkingUniqueness.referral && (
+                                <p className="text-[9px] text-blue-500 font-bold mt-1 ml-2">
+                                    Use a friend's code to earn rewards!
+                                </p>
+                            )}
                         </div>
                     </div>
                 );

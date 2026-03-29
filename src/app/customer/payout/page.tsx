@@ -13,6 +13,7 @@ export default function PayoutPage() {
     // Data Fetching
     const { data: userData, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
     const { data: walletData, isLoading: walletLoading, mutate: mutateWallet } = useApi('/wallet/balance');
+    const { data: rulesData, isLoading: rulesLoading, mutate: mutateRules } = useApi('/wallet/withdrawal-rule');
     const { data: loans, isLoading: loansLoading } = useApi(userData?.role === 'CUSTOMER' ? '/loans' : null);
 
     // Pagination for withdrawals
@@ -82,6 +83,7 @@ export default function PayoutPage() {
     const [isSuccess, setIsSuccess] = useState(false);
     const [showRestricted, setShowRestricted] = useState(false); // Show restriction screen after attempt
     const [transferStatus, setTransferStatus] = useState<any>(null);
+    const [ruleError, setRuleError] = useState<{ title: string, message: string } | null>(null);
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
@@ -90,15 +92,13 @@ export default function PayoutPage() {
     const balance = walletData?.balance || 0;
     const cashbackBalance = walletData?.cashback_balance || 0;
 
-    // Check restrictions (Logic kept for reference, but not for immediate blocking)
-    const loansList = Array.isArray(loans) ? loans : (loans?.data || []);
-    const isRestricted = userData?.role === 'CUSTOMER' &&
-        !loansList.some((l: any) =>
-            ['ACTIVE', 'DISBURSED', 'APPROVED', 'PROCEEDED'].includes(l.status) &&
-            Number(l.amount) >= 50000
-        );
+    // Dynamic Restrictions from Backend Rules
+    const withdrawalRule = rulesData || null;
+    const isLocked = withdrawalRule?.unlock_status?.has_active_loan && !withdrawalRule?.unlock_status?.is_unlocked;
+    const dailyLimit = withdrawalRule?.daily_limit;
+    const remainingToday = withdrawalRule?.remaining_today;
 
-    const isLoading = userLoading || walletLoading || (userData?.role === 'CUSTOMER' && loansLoading);
+    const isLoading = userLoading || walletLoading || rulesLoading || (userData?.role === 'CUSTOMER' && loansLoading);
 
     // Removed auto-redirect - let users see the payout page and add bank details from there
 
@@ -112,6 +112,30 @@ export default function PayoutPage() {
         if (payoutAmount > balance) {
             toast.error("Insufficient balance");
             return;
+        }
+
+        if (withdrawalRule) {
+            if (withdrawalRule.min_withdrawal > 0 && payoutAmount < withdrawalRule.min_withdrawal) {
+                setRuleError({
+                    title: "Minimum Withdrawal Limit",
+                    message: `You can only withdraw ₹${withdrawalRule.min_withdrawal.toLocaleString()} or more per transaction.`
+                });
+                return;
+            }
+            if (withdrawalRule.max_withdrawal && payoutAmount > withdrawalRule.max_withdrawal) {
+                setRuleError({
+                    title: "Maximum Withdrawal Limit",
+                    message: `You can only withdraw up to ₹${withdrawalRule.max_withdrawal.toLocaleString()} per transaction.`
+                });
+                return;
+            }
+            if (withdrawalRule.remaining_today !== null && payoutAmount > withdrawalRule.remaining_today) {
+                setRuleError({
+                    title: "Daily Limit Exceeded",
+                    message: `Your remaining daily withdrawal limit is ₹${withdrawalRule.remaining_today.toLocaleString()}.`
+                });
+                return;
+            }
         }
 
         setIsSubmitting(true);
@@ -138,7 +162,7 @@ export default function PayoutPage() {
 
             if (apiResult.status === 'fulfilled') {
                 // Success
-                await Promise.all([mutateWallet(), mutateWithdrawals()]); // Refresh balance and history
+                await Promise.all([mutateWallet(), mutateWithdrawals(), mutateRules()]); // Refresh balance, history and rules
                 setIsSuccess(true);
                 toast.success("Cred-out request submitted!");
             } else {
@@ -146,7 +170,7 @@ export default function PayoutPage() {
                 const error = apiResult.reason;
                 const errorMsg = error?.message || "";
 
-                if (isRestricted || errorMsg.toLowerCase().includes('limit') || errorMsg.toLowerCase().includes('unlock')) {
+                if (isLocked || errorMsg.toLowerCase().includes('limit') || errorMsg.toLowerCase().includes('unlock')) {
                     setShowRestricted(true);
                 } else {
                     toast.error(errorMsg || "Failed to submit request");
@@ -165,13 +189,13 @@ export default function PayoutPage() {
     const handleTransferToWallet = () => {
         const threshold = user?.cashback_threshold_amount || 0;
         const currentBalance = parseFloat(cashbackBalance.toString());
-        
+
         if (currentBalance < threshold) {
             const remaining = threshold - currentBalance;
             toast.error(`Earn ₹${remaining.toLocaleString()} more to transfer to wallet.`);
             return;
         }
-        
+
         setTransferAmountValue(cashbackBalance.toString());
         setIsTransferModalOpen(true);
     };
@@ -282,46 +306,77 @@ export default function PayoutPage() {
         );
     }
 
-    if (showRestricted) {
+    if (showRestricted || (isLocked && !isSuccess)) {
+        const unlock = withdrawalRule?.unlock_status;
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center font-sans">
 
-                <div className="space-y-4 mb-12">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight">0% Free Credit Value Unable to Transfer</h2>
-                    <p className="text-slate-400 font-bold text-sm leading-relaxed uppercase tracking-wider">
-                        Loans above ₹50,000 allow Transfer
-                        Amounts below ₹50,000 can be easily used for shopping and merchant payments.
+                <div className="space-y-4 mb-8">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight">
+                        {unlock?.has_active_loan ? 'Unlock Account for Transfers' : 'Withdrawal Restricted'}
+                    </h2>
+                    <p className="text-slate-400 font-bold text-xs leading-relaxed uppercase tracking-wider max-w-xs mx-auto">
+                        {unlock?.has_active_loan
+                            ? `Your current ${unlock.loan_plan} requires specific activity to enable wallet transfers.`
+                            : "Your account is currently ineligible for large transfers. Please check your limits."}
                     </p>
                 </div>
 
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-indigo-900/5 w-full max-w-sm text-left relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-                    <h4 className="font-black text-slate-900 text-sm mb-6 flex items-center gap-2">
-                        <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
-                        How to Transfer?
-                    </h4>
-                    <ul className="space-y-6">
-                        <li className="flex items-start gap-4">
-                            <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shrink-0 mt-0.5">1</div>
-                            <p className="text-slate-500 text-xs font-bold leading-normal">Complete your current loan repayment cycles on time.</p>
-                        </li>
-                        <li className="flex items-start gap-4">
-                            <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 shrink-0 mt-0.5">2</div>
-                            <p className="text-slate-500 text-xs font-bold leading-normal">Apply for a loan of ₹50,000 or above to enable full withdrawal access.</p>
-                        </li>
-                    </ul>
-                </div>
+                {unlock?.has_active_loan && (
+                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-indigo-900/5 w-full max-w-sm text-left relative overflow-hidden mb-6">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                        <h4 className="font-black text-slate-900 text-[10px] uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
+                            How to Unlock?
+                        </h4>
+
+                        <div className="space-y-4">
+                            {unlock.requirements.map((req: any, idx: number) => (
+                                <div key={idx} className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
+                                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tight mb-2">
+                                        <span className={req.current >= req.required ? 'text-emerald-600' : 'text-slate-500'}>
+                                            {req.label} {req.current >= req.required ? '✓' : ''}
+                                        </span>
+                                        <span className="text-slate-400">
+                                            {req.type === 'spend' ? '₹' : ''}{req.current.toLocaleString()} / {req.type === 'spend' ? '₹' : ''}{req.required.toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all duration-1000 ${req.current >= req.required ? 'bg-emerald-500' : (req.type === 'spend' ? 'bg-indigo-600' : 'bg-amber-500')}`}
+                                            style={{ width: `${Math.min(100, (req.current / req.required) * 100)}%` }}
+                                        />
+                                    </div>
+                                    {req.current < req.required && (
+                                        <p className="text-[9px] font-bold text-rose-400 mt-2 uppercase tracking-tighter">
+                                            {req.type === 'spend' ? `Spend ₹${req.remaining.toLocaleString()} more` : `Complete ${req.remaining} more transactions`}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {!unlock?.is_unlocked && (
+                    <div className="w-full max-w-sm bg-amber-50 rounded-2xl p-4 border border-amber-100 mb-8 text-left">
+                        <p className="text-[10px] font-bold text-amber-700 leading-normal flex items-start gap-2">
+                            <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                            <span>Even when locked, you can always withdraw amounts you earned above your loan value: <b>₹{withdrawalRule?.unlock_status?.locked_amount ? Math.max(0, balance - withdrawalRule.unlock_status.locked_amount).toLocaleString() : '0'}</b></span>
+                        </p>
+                    </div>
+                )}
 
                 <button
                     onClick={() => router.push('/customer/loan')}
-                    className="mt-12 w-full max-w-sm py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all active:scale-95 shadow-2xl shadow-indigo-100 flex items-center justify-center gap-3"
+                    className="w-full max-w-sm py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all active:scale-95 shadow-2xl shadow-indigo-100 flex items-center justify-center gap-3"
                 >
                     Upgrade Loan Plan
                     <ArrowRight size={18} />
                 </button>
                 <button
                     onClick={() => setShowRestricted(false)}
-                    className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors"
+                    className="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors"
                 >
                     Back to Wallet
                 </button>
@@ -391,7 +446,7 @@ export default function PayoutPage() {
                                     <div className="bg-white/10 backdrop-blur-md rounded-lg py-1 px-2 border border-white/10 w-fit">
                                         <p className="text-[7px] font-black uppercase tracking-widest text-white/80 leading-tight">Reward Holdings</p>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={handleTransferToWallet}
                                         disabled={isSubmitting}
                                         className="p-1.5 text-white hover:bg-white/10 rounded-xl transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center border border-white/5 shadow-inner"
@@ -402,20 +457,43 @@ export default function PayoutPage() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                            <div className="mb-0">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Transfer Amount</label>
-                                <div className="relative group">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-black text-slate-300 group-focus-within:text-slate-900 transition-colors">₹</span>
-                                    <input
-                                        type="number"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        placeholder="Enter Amount"
-                                        className="w-full bg-slate-50 border-none rounded-xl py-4 pl-10 pr-4 text-xl font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 placeholder:text-slate-200 outline-none transition-all"
-                                    />
-                                </div>
+                        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden">
+                            <div className="flex items-start justify-between mb-2">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Transfer Amount</label>
+                                {withdrawalRule && (
+                                    <div className="flex flex-col items-end gap-2">
+                                        {dailyLimit && (
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Daily Limit</span>
+                                                <span className="text-[10px] font-black text-indigo-600 leading-none">₹{remainingToday?.toLocaleString()} / ₹{dailyLimit.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Allowed Range</span>
+                                            <span className="text-[9px] font-black text-slate-600 leading-none">
+                                                ₹{withdrawalRule.min_withdrawal.toLocaleString()} - {withdrawalRule.max_withdrawal ? `₹${withdrawalRule.max_withdrawal.toLocaleString()}` : '∞'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
+
+                            <div className="relative group">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-black text-slate-300 group-focus-within:text-slate-900 transition-colors">₹</span>
+                                <input
+                                    type="number"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    placeholder="Enter Amount"
+                                    className="w-full bg-slate-50 border-none rounded-xl py-4 pl-10 pr-4 text-xl font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 placeholder:text-slate-200 outline-none transition-all"
+                                />
+                            </div>
+                            {dailyLimit && remainingToday !== null && parseFloat(amount) > remainingToday && (
+                                <p className="text-[9px] font-bold text-rose-500 mt-2 ml-1 flex items-center gap-1 animate-pulse">
+                                    <AlertCircle size={10} />
+                                    Amount exceeds remaining daily limit of ₹{remainingToday.toLocaleString()}
+                                </p>
+                            )}
                         </div>
                     </div>
 
@@ -606,7 +684,7 @@ export default function PayoutPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
-                        
+
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-black text-slate-900 tracking-tight">Transfer Rewards</h3>
                             <button onClick={() => setIsTransferModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
@@ -653,6 +731,28 @@ export default function PayoutPage() {
                 onComplete={handlePinVerification}
                 title="Verify Wallet PIN"
             />
+
+            {/* Rule Error Modal */}
+            {ruleError && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm shadow-2xl" onClick={() => setRuleError(null)}></div>
+                    <div className="relative w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+                        <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-rose-500">
+                            <AlertCircle size={32} />
+                        </div>
+                        <h2 className="text-xl font-black text-slate-900 text-center mb-2">{ruleError.title}</h2>
+                        <p className="text-sm font-bold text-slate-500 text-center mb-8 leading-relaxed">
+                            {ruleError.message}
+                        </p>
+                        <button
+                            onClick={() => setRuleError(null)}
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
+                        >
+                            Understood
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

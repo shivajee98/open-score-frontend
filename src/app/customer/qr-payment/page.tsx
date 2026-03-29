@@ -41,6 +41,7 @@ export default function QrPaymentPage() {
         mobile: user?.mobile || '',
         address: '',
         city: '',
+        state: '',
         pincode: '',
         landmark: '',
         security_amount: '1000'
@@ -60,7 +61,7 @@ export default function QrPaymentPage() {
     }, [user]);
 
     const handleNext = () => {
-        if (!form.name || !form.mobile || !form.address || !form.pincode || !form.city) {
+        if (!form.name || !form.mobile || !form.address || !form.pincode || !form.city || !form.state) {
             toast.error('Please fill all required fields');
             return;
         }
@@ -105,6 +106,7 @@ export default function QrPaymentPage() {
             formData.append('landmark', form.landmark);
             formData.append('pin_code', form.pincode);
             formData.append('city', form.city);
+            formData.append('state', form.state);
             formData.append('security_amount', form.security_amount);
             formData.append('payment_screenshot', screenshot);
 
@@ -244,21 +246,31 @@ export default function QrPaymentPage() {
                                             type="text"
                                             value={form.city}
                                             onChange={(e) => setForm({ ...form, city: e.target.value })}
-                                            placeholder="City Name"
+                                            placeholder="City"
                                             className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Pincode</label>
+                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">State</label>
                                         <input
-                                            type="tel"
-                                            maxLength={6}
-                                            value={form.pincode}
-                                            onChange={(e) => setForm({ ...form, pincode: e.target.value.replace(/\D/g, '') })}
-                                            placeholder="6 Digit PIN"
+                                            type="text"
+                                            value={form.state}
+                                            onChange={(e) => setForm({ ...form, state: e.target.value })}
+                                            placeholder="State"
                                             className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
                                         />
                                     </div>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Pincode</label>
+                                    <input
+                                        type="tel"
+                                        maxLength={6}
+                                        value={form.pincode}
+                                        onChange={(e) => setForm({ ...form, pincode: e.target.value.replace(/\D/g, '') })}
+                                        placeholder="6 Digit PIN"
+                                        className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                                    />
                                 </div>
                                 <div>
                                     <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Landmark</label>

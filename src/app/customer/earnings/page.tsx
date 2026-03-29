@@ -151,7 +151,7 @@ export default function TeamEarningsPage() {
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Onboarding</p>
+                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Mapping</p>
                                 <p className="text-base font-black">₹{(stats?.qr_earning || 0).toLocaleString('en-IN')}</p>
                             </div>
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
@@ -198,7 +198,7 @@ export default function TeamEarningsPage() {
 
                         <div className="grid grid-cols-2 gap-4 mb-8">
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">QR Onboarding Earning</p>
+                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">QR Mapping Earning</p>
                                 <p className="text-lg font-black text-slate-800">₹{stats?.qr_earning?.toLocaleString() || 0}</p>
                             </div>
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -207,15 +207,49 @@ export default function TeamEarningsPage() {
                             </div>
                         </div>
 
+                        {/* QR Mapping Milestone Restriction */}
+                        {stats?.min_qr_onboard_for_transfer > 0 && (
+                            <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-4 transition-all ${
+                                (stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer 
+                                ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
+                                : 'bg-amber-50 border-amber-100 text-amber-700'
+                            }`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                                    (stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer 
+                                    ? 'bg-emerald-500 text-white' 
+                                    : 'bg-amber-500 text-white'
+                                }`}>
+                                    {(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase font-black tracking-widest leading-none mb-1">Mapping Milestone</p>
+                                    <p className="text-xs font-bold">
+                                        {(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer 
+                                            ? `Milestone reached! (${stats.qr_onboard_count}/${stats.min_qr_onboard_for_transfer})`
+                                            : `Complete ${stats.min_qr_onboard_for_transfer} QR mappings to unlock transfers. (${stats.qr_onboard_count} done)`
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         <button
                             onClick={handleTransferClick}
-                            disabled={submitting || (stats?.available || 0) <= 0 || timeLeft.locked}
-                            className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${timeLeft.locked
+                            disabled={submitting || (stats?.available || 0) <= 0 || timeLeft.locked || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)}
+                            className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${
+                                timeLeft.locked || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
                                     ? 'bg-slate-300 cursor-not-allowed shadow-none'
                                     : 'bg-slate-900 hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
-                                }`}
+                            }`}
                         >
-                            {timeLeft.locked ? 'Currently Time Locked' : (stats?.available || 0) <= 0 ? 'No Earnings Available' : 'Transfer to Wallet'}
+                            {timeLeft.locked 
+                                ? 'Currently Time Locked' 
+                                : (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
+                                    ? 'Locked: Milestone Pending'
+                                    : (stats?.available || 0) <= 0 
+                                        ? 'No Earnings Available' 
+                                        : 'Transfer to Wallet'
+                            }
                             <ArrowUpRight size={16} />
                         </button>
 
@@ -253,7 +287,7 @@ export default function TeamEarningsPage() {
                                 <h3 className="font-black text-sm uppercase tracking-wider mb-2">Your Earning Rates</h3>
                                 <div className="flex flex-wrap gap-3">
                                     <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
-                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">QR Onboarding</p>
+                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">QR Mapping</p>
                                         <p className="text-lg font-black">₹{(stats?.my_rates?.qr_onboarding_rate || 0).toLocaleString()}</p>
                                         <p className="text-[8px] text-indigo-200/70 uppercase">Per Merchant</p>
                                     </div>
@@ -268,7 +302,7 @@ export default function TeamEarningsPage() {
                                                 <Trophy size={8} /> Milestone
                                             </p>
                                             <p className="text-lg font-black">₹{(stats?.my_rates?.bonus_milestone_amount || 0).toLocaleString()}</p>
-                                            <p className="text-[8px] text-amber-200/70 uppercase">Target: {stats?.my_rates?.bonus_milestone_count || '-'} Onboards</p>
+                                            <p className="text-[8px] text-amber-200/70 uppercase">Target: {stats?.my_rates?.bonus_milestone_count || '-'} Mappings</p>
                                         </div>
                                     )}
                                 </div>
@@ -306,7 +340,12 @@ export default function TeamEarningsPage() {
                     <div className="space-y-3 p-4">
                         {stats?.history?.length > 0 ? (
                             stats.history.map((friend: any) => (
-                                <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                                <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                                    {!friend.is_onboarded && friend.validation?.message && friend.validation.message !== 'Success' && (
+                                        <div className="absolute top-0 right-0 px-3 py-1 bg-amber-500 text-white text-[8px] font-black uppercase tracking-widest rounded-bl-xl shadow-lg z-20">
+                                            {friend.validation.message}
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <h4 className="text-sm font-black text-slate-900">{friend.name}</h4>
@@ -315,7 +354,7 @@ export default function TeamEarningsPage() {
                                         <div className="flex gap-4 text-right">
                                             <div>
                                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
-                                                <p className="text-xs font-black text-emerald-600">₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                <p className={`text-xs font-black ${friend.is_onboarded ? 'text-emerald-600' : 'text-slate-300'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
                                             </div>
                                             <div>
                                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Disbursed Earn</p>
@@ -327,28 +366,30 @@ export default function TeamEarningsPage() {
                                     {/* Progress Indicator */}
                                     <div className="grid grid-cols-4 gap-1 relative pt-2">
                                         <div className="flex flex-col items-center gap-1.5 z-10">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.type !== 'LOAN' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${(friend.type !== 'LOAN' || friend.is_onboarded) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
                                                 <Users size={12} />
                                             </div>
-                                            <span className="text-[7px] font-black uppercase text-slate-400">Signed Up</span>
+                                            <span className={`text-[7px] font-black uppercase text-center ${(friend.type !== 'LOAN' || friend.is_onboarded) ? 'text-emerald-600' : 'text-slate-400'}`}>Signed Up</span>
                                         </div>
                                         <div className="flex flex-col items-center gap-1.5 z-10">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.is_onboarded ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
-                                                <Trophy size={11} />
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${friend.is_onboarded || friend.type !== 'LOAN' ? 'bg-emerald-500 border-emerald-500 text-white scale-110 shadow-lg shadow-emerald-200' : (friend.validation?.is_onboarded ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-white border-slate-200 text-slate-300')}`}>
+                                                {friend.validation?.is_onboarded && !friend.is_onboarded ? <Clock size={11} className="animate-pulse" /> : <Trophy size={11} />}
                                             </div>
-                                            <span className="text-[7px] font-black uppercase text-slate-400">Earning</span>
+                                            <span className={`text-[7px] font-black uppercase text-center ${friend.is_onboarded || friend.type !== 'LOAN' ? 'text-emerald-600' : (friend.validation?.is_onboarded ? 'text-amber-600 italic' : 'text-slate-400')}`}>
+                                                {friend.is_onboarded || friend.type !== 'LOAN' ? 'Verified' : (friend.validation?.is_onboarded ? 'Validating' : 'QR Mapped')}
+                                            </span>
                                         </div>
                                         <div className="flex flex-col items-center gap-1.5 z-10">
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_applied_loan ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white border-slate-200 text-slate-300'} ${friend.has_applied_loan && !friend.has_received_cashback ? 'animate-pulse' : ''}`}>
                                                 <History size={12} />
                                             </div>
-                                            <span className="text-[7px] font-black uppercase text-slate-400">Loan Applied</span>
+                                            <span className="text-[7px] font-black uppercase text-slate-400 text-center">Loan Linked</span>
                                         </div>
                                         <div className="flex flex-col items-center gap-1.5 z-10">
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_received_cashback ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
                                                 <Trophy size={12} />
                                             </div>
-                                            <span className="text-[7px] font-black uppercase text-slate-400">Earning</span>
+                                            <span className="text-[7px] font-black uppercase text-slate-400 text-center">Earned</span>
                                         </div>
 
                                         {/* Connecting Line Backdrop */}

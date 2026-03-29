@@ -55,7 +55,7 @@ export default function ReferralPage() {
 
     const shareCode = async () => {
         const shareText = `Use my referral code ${referralData?.referral_code} to join OpenScore and get a welcome bonus!`;
-        const shareUrl = referralData?.referral_link || `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`;
+        const shareUrl = referralData?.referral_link || `https://play.google.com/store/apps/details?id=com.openscore.sbs&referrer=referral_code%3D${referralData?.referral_code}`;
 
         const shareData = {
             title: 'Join OpenScore',
@@ -115,7 +115,7 @@ export default function ReferralPage() {
                             {/* Get the properly formatted values */}
                             {(() => {
                                 const shareText = `Use my referral code ${referralData?.referral_code} to join OpenScore and get a welcome bonus!`;
-                                const shareUrl = referralData?.referral_link || `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`;
+                                const shareUrl = referralData?.referral_link || `https://play.google.com/store/apps/details?id=com.openscore.sbs&referrer=referral_code%3D${referralData?.referral_code}`;
 
                                 return (
                                     <>
@@ -199,10 +199,10 @@ export default function ReferralPage() {
 
                         <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3 border border-slate-100">
                             <div className="flex-1 truncate font-mono text-xs text-slate-500">
-                                {referralData?.referral_link || `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`}
+                                {referralData?.referral_link || `https://play.google.com/store/apps/details?id=com.openscore.sbs&referrer=referral_code%3D${referralData?.referral_code}`}
                             </div>
                             <button
-                                onClick={() => handleCopy(referralData?.referral_link || `https://openscore.msmeloan.sbs?ref=${referralData?.referral_code}`)}
+                                onClick={() => handleCopy(referralData?.referral_link || `https://play.google.com/store/apps/details?id=com.openscore.sbs&referrer=referral_code%3D${referralData?.referral_code}`)}
                                 className="text-blue-600 font-black text-xs uppercase tracking-wider hover:text-blue-700"
                             >
                                 {copied ? 'Copied' : 'Copy'}

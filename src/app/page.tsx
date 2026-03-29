@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, Suspense, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap, Lock, ShieldCheck } from 'lucide-react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 
-export default function Home() {
+function HomeContent() {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
@@ -33,9 +33,27 @@ export default function Home() {
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const [hasPin, setHasPin] = useState<boolean | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
+  const [verifyingReferral, setVerifyingReferral] = useState(false);
+  const [referralName, setReferralName] = useState<string | null>(null);
+  const [referralError, setReferralError] = useState<string | null>(null);
 
   const isRegistering = useRef(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Capture referral code from URL
+  useEffect(() => {
+    const ref = searchParams.get('ref') || searchParams.get('referral');
+    if (ref) {
+      const normalizedCode = ref.trim().toUpperCase();
+      if (!normalizedCode.startsWith('SU')) {
+      localStorage.setItem('referral_code', normalizedCode);
+      setReferralCode(normalizedCode);
+      // Dispatch event to sync other tabs/components
+      window.dispatchEvent(new Event('referral_code_updated'));
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -76,7 +94,7 @@ export default function Home() {
           localStorage.removeItem('referral code');
           setReferralCode(null);
         } else {
-          setReferralCode(code);
+        setReferralCode(code);
         }
       }
 
@@ -86,7 +104,7 @@ export default function Home() {
           localStorage.removeItem('temp_referral_code');
           setTempReferralCode('');
         } else {
-          setTempReferralCode(temp);
+        setTempReferralCode(temp);
         }
       }
     };
@@ -117,6 +135,43 @@ export default function Home() {
     }
   }, [flow, role]);
 
+  // Debounced Referral Code Check
+  useEffect(() => {
+    if (tempReferralCode.length >= 4) {
+      setVerifyingReferral(true);
+      setReferralError(null);
+      setReferralName(null);
+
+      const handler = setTimeout(async () => {
+        try {
+          const data = await apiFetch('/referral/verify-code', {
+            method: 'POST',
+            body: JSON.stringify({ code: tempReferralCode.toUpperCase() }),
+            skipAuthCheck: true
+          });
+          if (data.valid) {
+            setReferralName(data.referrer_name);
+            setReferralError(null);
+          } else {
+            setReferralError('Invalid referral code');
+            setReferralName(null);
+          }
+        } catch (e) {
+          setReferralError('Invalid referral code');
+          setReferralName(null);
+        } finally {
+          setVerifyingReferral(false);
+        }
+      }, 600);
+
+      return () => clearTimeout(handler);
+    } else {
+      setVerifyingReferral(false);
+      setReferralError(null);
+      setReferralName(null);
+    }
+  }, [tempReferralCode]);
+
   // Debounced User Existence Check
   useEffect(() => {
     if (mobile.length === 10) {
@@ -126,6 +181,13 @@ export default function Home() {
           const data = await apiFetch(`/auth/check-user/${mobile}`, { skipAuthCheck: true });
           setUserExists(data.exists);
           setHasPin(data.has_pin);
+
+          if (data.exists) {
+            setTempReferralCode('');
+            localStorage.removeItem('temp_referral_code');
+            setReferralError(null);
+            setReferralName(null);
+          }
         } catch (e) {
           setUserExists(null);
           setHasPin(null);
@@ -175,8 +237,8 @@ export default function Home() {
       return;
     }
 
-    if (user.role === 'ADMIN') router.push('/admin');
-    else router.push('/customer');
+    if (user.role === 'ADMIN') window.location.href = '/admin';
+    else window.location.href = '/customer';
   };
 
   const handleSendOtp = async (isReset = false) => {
@@ -197,9 +259,9 @@ export default function Home() {
         setTempReferralCode('');
         setReferralCode(null);
       } else {
-        localStorage.setItem('referral_code', normalizedTempCode);
-        setReferralCode(normalizedTempCode);
-        localStorage.removeItem('temp_referral_code');
+      localStorage.setItem('referral_code', normalizedTempCode);
+      setReferralCode(normalizedTempCode);
+      localStorage.removeItem('temp_referral_code');
       }
     }
 
@@ -501,13 +563,30 @@ export default function Home() {
                       setTempReferralCode(code);
                       localStorage.setItem('temp_referral_code', code);
                     }}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-primary text-lg focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand tracking-widest uppercase"
+                    className={`w-full bg-slate-50 border rounded-2xl p-4 font-bold text-primary text-lg focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand tracking-widest uppercase ${referralError ? 'border-rose-300' : referralName ? 'border-emerald-300' : 'border-slate-100'}`}
                     placeholder="ENTER CODE"
                     maxLength={20}
                   />
-                  <p className="text-xs text-slate-400 mt-2 ml-4">
-                    Have a referral code? Enter it to get bonus rewards!
-                  </p>
+                  {verifyingReferral && (
+                    <p className="text-[10px] text-blue-500 font-bold mt-2 ml-4 animate-pulse uppercase tracking-widest">
+                      Verifying Code...
+                    </p>
+                  )}
+                  {referralError && (
+                    <p className="text-[10px] text-rose-500 font-bold mt-2 ml-4 uppercase tracking-widest">
+                      {referralError}
+                    </p>
+                  )}
+                  {referralName && (
+                    <p className="text-[10px] text-emerald-600 font-black mt-2 ml-4 uppercase tracking-widest">
+                      Referrer: {referralName}
+                    </p>
+                  )}
+                  {!referralError && !referralName && !verifyingReferral && (
+                    <p className="text-xs text-slate-400 mt-2 ml-4">
+                      Have a referral code? Enter it to get bonus rewards!
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -515,13 +594,17 @@ export default function Home() {
               {mobile.length === 10 && !isCheckingUser && userExists !== null && (
                 <button
                   onClick={() => {
+                    // Only block if we are a NEW user and have referral errors
+                    const isNewUser = userExists === false;
+                    if (isNewUser && tempReferralCode && (verifyingReferral || referralError)) return;
+                    
                     if (hasPin) {
                       setFlow('pin_login');
                     } else {
                       handleSendOtp(false);
                     }
                   }}
-                  disabled={loading}
+                  disabled={loading || (userExists === false && (verifyingReferral || (!!tempReferralCode && !!referralError)))}
                   className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group animate-in fade-in slide-in-from-bottom-2"
                 >
                   {loading ? (
@@ -774,5 +857,17 @@ export default function Home() {
         <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Powered by MSME Shakti</p>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="w-12 h-12 border-4 border-slate-900 border-t-transparent rounded-full animate-spin shadow-xl"></div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

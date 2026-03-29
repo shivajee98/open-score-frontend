@@ -10,6 +10,7 @@ import { toast } from '@/components/ui/Toast';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import BackButton from '@/components/BackButton';
+import { useApi } from '@/hooks/useApi';
 
 function CustomerPayPage() {
     const router = useRouter();
@@ -29,7 +30,7 @@ function CustomerPayPage() {
     const [successData, setSuccessData] = useState<any>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [recentPayees, setRecentPayees] = useState<any[]>([]);
-    const [user, setUser] = useState<any>(null);
+    const { data: user, mutate: mutateUser } = useApi('/auth/me');
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
     
     // Error Popup State
@@ -69,9 +70,12 @@ function CustomerPayPage() {
     }, [isPayeeMerchant]);
 
     useEffect(() => {
-        const stored = localStorage.getItem('user');
-        if (stored) setUser(JSON.parse(stored));
-    }, []);
+        const handleUpdate = () => {
+            mutateUser();
+        };
+        window.addEventListener('userStateUpdate', handleUpdate);
+        return () => window.removeEventListener('userStateUpdate', handleUpdate);
+    }, [mutateUser]);
 
     const scannerInitializing = useRef(false);
     const hasScanned = useRef(false);

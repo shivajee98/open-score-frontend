@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Briefcase, FileText, CheckCircle, Clock, XCircle, ShieldCheck, QrCode, UploadCloud, Coins, ArrowRight, Lock, File, IdCard, Wallet, MapPin, ZoomIn, ZoomOut, ShieldAlert, Smartphone, Camera } from 'lucide-react';
+import { ArrowLeft, Briefcase, FileText, CheckCircle, Clock, XCircle, ShieldCheck, QrCode, UploadCloud, Coins, ArrowRight, Lock, File, IdCard, Wallet, MapPin, ZoomIn, ZoomOut, ShieldAlert, Smartphone, Camera, Check } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import QrStatusStepper from '@/components/qr/QrStatusStepper';
@@ -278,7 +278,10 @@ export default function MyWorkDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-lg font-black text-slate-900 leading-tight">{profile.name}</p>
-                                        <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mt-1">{profile.working_location || 'Remote'}</p>
+                                        <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mt-1">
+                                            {profile.working_location || 'Remote'} 
+                                            {user?.kyc_verification?.state && ` • ${user.kyc_verification.state}`}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 mt-6">
@@ -346,6 +349,42 @@ export default function MyWorkDashboard() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Recent Onboards Summary */}
+                        {earnStats?.history?.length > 0 && (
+                            <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Recent Merchant Onboards</h3>
+                                    <button 
+                                        onClick={() => router.push('/customer/earnings')}
+                                        className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline"
+                                    >
+                                        View All
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    {earnStats.history.slice(0, 3).map((friend: any) => (
+                                        <div key={friend.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${friend.is_onboarded ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                                                    {friend.is_onboarded ? <Check size={16} /> : <Clock size={16} className="animate-pulse" />}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-slate-900">{friend.name}</p>
+                                                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                                                        {friend.is_onboarded ? 'Verified' : friend.validation?.message || 'Validating'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-black text-slate-900">₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                <p className="text-[8px] font-bold text-slate-400 uppercase">{new Date(friend.date).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -399,6 +438,57 @@ export default function MyWorkDashboard() {
                                         }}
                                         className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 rounded-xl p-3 outline-none"
                                     />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 mb-2">
+                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">City</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Your City"
+                                            defaultValue={user?.kyc_verification?.city}
+                                            onBlur={async (e) => {
+                                                const val = e.target.value;
+                                                if (!val || val === user?.kyc_verification?.city) return;
+                                                try {
+                                                    await apiFetch('/auth/team/kyc-submit', {
+                                                        method: 'POST',
+                                                        body: JSON.stringify({ city: val }),
+                                                        headers: { 'Content-Type': 'application/json' }
+                                                    });
+                                                    toast.success("City updated");
+                                                    mutate();
+                                                } catch (err) {
+                                                    toast.error("Failed to update city");
+                                                }
+                                            }}
+                                            className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 rounded-xl p-3 outline-none"
+                                        />
+                                    </div>
+                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">State</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Your State"
+                                            defaultValue={user?.kyc_verification?.state}
+                                            onBlur={async (e) => {
+                                                const val = e.target.value;
+                                                if (!val || val === user?.kyc_verification?.state) return;
+                                                try {
+                                                    await apiFetch('/auth/team/kyc-submit', {
+                                                        method: 'POST',
+                                                        body: JSON.stringify({ state: val }),
+                                                        headers: { 'Content-Type': 'application/json' }
+                                                    });
+                                                    toast.success("State updated");
+                                                    mutate();
+                                                } catch (err) {
+                                                    toast.error("Failed to update state");
+                                                }
+                                            }}
+                                            className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 rounded-xl p-3 outline-none"
+                                        />
+                                    </div>
                                 </div>
 
                                 {['aadhar_front', 'aadhar_back', 'pan_card', 'live_selfie', 'qualification_doc'].map((doc) => {

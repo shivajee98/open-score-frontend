@@ -22,8 +22,46 @@ export default function CustomerQR() {
     const [mapCode, setMapCode] = useState('');
     const [agentCode, setAgentCode] = useState('');
     const [mapStatus, setMapStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [verifyingAgent, setVerifyingAgent] = useState(false);
+    const [agentError, setAgentError] = useState('');
+    const [referrerName, setReferrerName] = useState('');
     const [scanning, setScanning] = useState(false);
     const scannerRef = useRef<any>(null);
+
+    // Debounced Agent Check
+    useEffect(() => {
+        if (agentCode.length >= 4) {
+            setVerifyingAgent(true);
+            setAgentError('');
+            setReferrerName('');
+
+            const timer = setTimeout(async () => {
+                try {
+                    const data = await apiFetch('/referral/verify-code', {
+                        method: 'POST',
+                        body: JSON.stringify({ code: agentCode.toUpperCase() }),
+                        skipAuthCheck: true
+                    });
+                    if (data.valid) {
+                        setReferrerName(data.referrer_name);
+                        setAgentError('');
+                    } else {
+                        setAgentError('Invalid agent code');
+                    }
+                } catch (err: any) {
+                    setAgentError('Invalid agent code');
+                } finally {
+                    setVerifyingAgent(false);
+                }
+            }, 600); // 600ms debounce
+
+            return () => clearTimeout(timer);
+        } else {
+            setVerifyingAgent(false);
+            setAgentError('');
+            setReferrerName('');
+        }
+    }, [agentCode]);
 
     useEffect(() => {
         return () => {
@@ -142,6 +180,7 @@ export default function CustomerQR() {
 
     const handleMapQr = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (agentCode && agentError) return;
         setMapStatus('loading');
         try {
             await apiFetch('/merchant/link-qr', {
@@ -395,16 +434,19 @@ export default function CustomerQR() {
                                                 value={agentCode}
                                                 onChange={(e) => setAgentCode(e.target.value)}
                                                 placeholder="Enter Agent's Code"
-                                                className="w-full p-4 bg-slate-50 rounded-xl font-bold text-center text-sm tracking-widest border border-slate-200 focus:border-emerald-500 focus:ring-0 outline-none transition-all uppercase placeholder:text-slate-300"
+                                                className={`w-full p-4 bg-slate-50 rounded-xl font-bold text-center text-sm tracking-widest border focus:ring-0 outline-none transition-all uppercase placeholder:text-slate-300 ${agentError ? 'border-rose-500 bg-rose-50/50' : referrerName ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-200 focus:border-emerald-500'}`}
                                             />
+                                            {verifyingAgent && <p className="text-[9px] text-blue-500 font-bold mt-1 ml-1 animate-pulse uppercase tracking-[0.15em]">Verifying Agent...</p>}
+                                            {agentError && <p className="text-[9px] text-rose-500 font-bold mt-1 ml-1 uppercase tracking-[0.15em]">{agentError}</p>}
+                                            {referrerName && <p className="text-[9px] text-emerald-600 font-black mt-1 ml-1 uppercase tracking-[0.15em]">Agent: {referrerName}</p>}
                                         </div>
                                     )}
 
                                     <button
-                                        disabled={mapStatus === 'loading' || !mapCode}
+                                        disabled={mapStatus === 'loading' || !mapCode || verifyingAgent || (!!agentCode && !!agentError)}
                                         className={`w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest text-white shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${mapStatus === 'success' ? 'bg-emerald-500' :
                                             mapStatus === 'error' ? 'bg-rose-500' :
-                                                'bg-slate-900 hover:bg-slate-800'
+                                                (!!agentCode && !!agentError) ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'
                                             }`}
                                     >
                                         {mapStatus === 'loading' ? 'Verifying...' :

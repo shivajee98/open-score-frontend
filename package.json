@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:mobile": "mv src/app/api src/app/_api && NEXT_PUBLIC_CAPACITOR_BUILD=true next build; mv src/app/_api src/app/api && cp -r out/* ../capacitor_js/www/",
+    "build:mobile": "NEXT_PUBLIC_CAPACITOR_BUILD=true next build && cp -r out/* ../capacitor_js/www/",
     "start": "next start",
     "lint": "eslint"
   },

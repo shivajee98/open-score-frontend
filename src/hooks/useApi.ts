@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import useSWR from 'swr';
 import { apiFetch } from '@/lib/api';
 
@@ -19,16 +20,26 @@ export function useApi<T = any>(endpoint: string | null, options: UseApiOptions 
         endpoint,
         (url: string) => apiFetch(url),
         {
-            revalidateOnFocus: options.revalidateOnFocus ?? false,
+            revalidateOnFocus: options.revalidateOnFocus ?? true,
             revalidateOnReconnect: options.revalidateOnReconnect ?? true,
             refreshInterval: options.refreshInterval ?? 0,
             shouldRetryOnError: options.shouldRetryOnError ?? false,
-            dedupingInterval: 300000, // 5 minutes deduping - very aggressive for performance
-            focusThrottleInterval: 60000,
-            errorRetryInterval: 10000,
+            dedupingInterval: 2000,
+            focusThrottleInterval: 5000,
+            errorRetryInterval: 5000,
             ...options
         }
     );
+
+    // Sync /auth/me with localStorage
+    useEffect(() => {
+        if (endpoint === '/auth/me' && data && !error) {
+            console.log('[useApi] Syncing /auth/me with localStorage');
+            localStorage.setItem('user', JSON.stringify(data));
+            // Trigger storage event for other components in same tab (custom event)
+            window.dispatchEvent(new Event('userStateUpdate'));
+        }
+    }, [data, error, endpoint]);
 
     return {
         data,

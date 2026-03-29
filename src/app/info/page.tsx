@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Info, Loader2, Calendar } from 'lucide-react';
+import { ArrowLeft, Info, Loader2 } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 
 function InfoContent() {
@@ -80,10 +80,6 @@ function InfoContent() {
                             <h1 className="text-2xl font-black text-white tracking-tight truncate">
                                 {firstPart} <span className="text-[oklch(0.7_0.15_160)]">{lastWord}</span>
                             </h1>
-                            <div className="flex items-center gap-2 text-[oklch(0.5_0.02_240)] font-bold text-[9px] uppercase tracking-[0.2em]">
-                                <Calendar className="w-3 h-3 text-[oklch(0.7_0.15_160)]" />
-                                {new Date(button.updated_at || button.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </div>
                         </div>
                     </div>
                 </div>

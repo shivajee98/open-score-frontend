@@ -11,6 +11,7 @@ import AppLockGuard from "@/components/AppLockGuard";
 import MaintenanceGuard from "@/components/MaintenanceGuard";
 import ReferralHandler from "@/components/ReferralHandler";
 import { Suspense } from "react";
+import OfflineOverlay from "@/components/OfflineOverlay";
 
 export default function ClientLayout({
     children,
@@ -41,6 +42,7 @@ export default function ClientLayout({
                 <IncomingCallModal />
                 <MobileNavigationHandler />
                 <ToastContainer />
+                <OfflineOverlay />
                 <AppLockGuard>
                     <Suspense fallback={null}>
                         <ReferralHandler />

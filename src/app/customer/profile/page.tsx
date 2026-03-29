@@ -273,7 +273,15 @@ export default function Profile() {
                 body: uploadData
             });
             if (res.error) throw new Error(res.error);
-            await mutateUser(); // Refresh user data
+            
+            // Immediate sync: update SWR cache and localStorage
+            if (res.user) {
+                localStorage.setItem('user', JSON.stringify(res.user));
+                await mutateUser(res.user, false);
+            } else {
+                await mutateUser(); // Fallback to refetch if user not returned
+            }
+
             setIsEditing(false);
             setNewShopImages([]);
             toast.success('Profile updated successfully!');
@@ -924,6 +932,13 @@ export default function Profile() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
+                                {/* About Us */}
+                                <div onClick={() => router.push('/customer/about')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
+                                    <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
+                                        <Info className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-700 truncate">About Us</span>
+                                </div>
                                 {/* Profile */}
                                 <div onClick={() => setIsEditing(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
                                     <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
@@ -989,7 +1004,7 @@ export default function Profile() {
                                 {user?.is_vendor && (
                                     <div 
                                         onClick={() => setIsPortalOpen(true)} 
-                                        className="bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200 flex items-center gap-3 cursor-pointer hover:bg-indigo-700 transition-all border border-indigo-400/20 group mt-2"
+                                        className="col-span-2 bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200 flex items-center gap-3 cursor-pointer hover:bg-indigo-700 transition-all border border-indigo-400/20 group mt-2"
                                     >
                                         <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
                                             <Briefcase className="w-4 h-4" />

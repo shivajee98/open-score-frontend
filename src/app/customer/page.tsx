@@ -20,7 +20,7 @@ export default function CustomerHome() {
     const router = useRouter();
 
     // Data Fetching with Cache
-    const { data: user, isLoading: userLoading, mutate: mutateUser, isValidating: userValidating } = useApi('/auth/me');
+    const { data: user, error: userError, isLoading: userLoading, mutate: mutateUser, isValidating: userValidating } = useApi('/auth/me');
     const { data: walletData, isLoading: walletLoading, mutate: mutateWallet, isValidating: walletValidating } = useApi('/wallet/balance');
     const { data: loans, isLoading: loansLoading, mutate: mutateLoans, isValidating: loansValidating } = useApi((user?.role === 'CUSTOMER' || user?.role === 'MERCHANT' || user?.role === 'STUDENT') ? '/loans' : null);
 
@@ -153,11 +153,23 @@ export default function CustomerHome() {
         let timer: NodeJS.Timeout;
         if (loading || !user) {
             timer = setTimeout(() => {
-                setShowLogoutHint(true);
-            }, 6000);
+                const reloadCount = parseInt(sessionStorage.getItem('dash_reload_count') || '0');
+                if (reloadCount < 1) {
+                    sessionStorage.setItem('dash_reload_count', '1');
+                    window.location.reload();
+                } else {
+                    setShowLogoutHint(true);
+                }
+            }, 4000);
         }
         return () => clearTimeout(timer);
     }, [loading, user]);
+
+    useEffect(() => {
+        if (user && !loading) {
+            sessionStorage.removeItem('dash_reload_count');
+        }
+    }, [user, loading]);
 
     // Check for Welcome Bonus
     const [showWelcomeBonus, setShowWelcomeBonus] = useState(false);
@@ -214,8 +226,47 @@ export default function CustomerHome() {
             console.error("Failed to sync seen status", e);
         }
     };
+ 
+    if (activeUser?.status === 'SUSPENDED' || (userError as any)?.code === 'ACCOUNT_SUSPENDED') {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-24 h-24 bg-rose-50 rounded-[2.5rem] flex items-center justify-center text-rose-500 mb-10 shadow-2xl shadow-rose-500/10 border border-rose-100/50">
+                    <ShieldCheck size={48} strokeWidth={1.5} />
+                </div>
+                
+                <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-6 uppercase">Access Restricted</h1>
+                
+                <div className="max-w-md bg-slate-50 border border-slate-100 p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 mb-10">
+                    <p className="text-slate-600 font-bold leading-relaxed mb-8 italic">
+                        "Your account has been suspended following a review of your recent onboarding/KYC process."
+                    </p>
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/60 text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] shadow-sm">
+                        Please contact our support team to resolve this issue.
+                    </div>
+                </div>
 
-    if (!user || loading) return (
+                <div className="flex flex-col gap-5 w-full max-w-xs">
+                    <button 
+                        onClick={() => window.location.href = 'https://wa.me/910000000000'}
+                        className="w-full bg-slate-900 text-white font-black text-xs uppercase tracking-[0.25em] py-6 rounded-2xl shadow-2xl hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                        Contact Support Team
+                    </button>
+                    <button 
+                        onClick={async () => {
+                            await clearAuthState();
+                            window.location.replace('/');
+                        }}
+                        className="w-full bg-white text-slate-400 font-bold text-[10px] uppercase tracking-widest py-4 rounded-2xl border border-slate-100 hover:text-rose-500 active:scale-95 transition-all"
+                    >
+                        Logout from Device
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!activeUser || loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
             <div className="flex flex-col items-center gap-3">
                 <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -251,7 +302,7 @@ export default function CustomerHome() {
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} user={activeUser} />
 
             <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-3 items-end">
-                {user?.sub_user_id && (
+                {activeUser?.sub_user_id && (
                     <Link href="/customer/my-work">
                         <button
                             className="relative rounded-full w-12 h-12 shadow-2xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-[0_0_15px_rgba(79,70,229,0.5)] animate-[pulse_2s_ease-in-out_infinite]"
@@ -304,7 +355,7 @@ export default function CustomerHome() {
                     <div>
                         <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'}/90 text-[7px] font-black uppercase tracking-[0.2em] mb-1 opacity-80`}>Welcome Back</p>
                         <h1 className="text-lg font-black tracking-tighter drop-shadow-sm uppercase">
-                            {isMerchant ? (user?.business_name || 'MY STORE') : (user?.name || 'CUSTOMER')}
+                            {isMerchant ? (activeUser?.business_name || 'MY STORE') : (activeUser?.name || 'CUSTOMER')}
                         </h1>
                         {isMerchant && (
                             <div className="flex items-center gap-2 mt-1">
@@ -329,7 +380,7 @@ export default function CustomerHome() {
                             </Link>
                             <Link href="/customer/profile" prefetch={false}>
                                 <div className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-[10px] shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 overflow-hidden">
-                                    {user?.name?.[0] || 'U'}
+                                    {activeUser?.name?.[0] || 'U'}
                                 </div>
                             </Link>
                         </div>
@@ -348,7 +399,7 @@ export default function CustomerHome() {
                                     </div>
                                 </button>
                             </Link>
-                            {!user?.sub_user_id && (
+                            {!activeUser?.sub_user_id && (
                                 <Link href="/customer/referral" prefetch={false}>
                                     <button
                                         className="w-6 h-6 rounded-lg bg-amber-400 border border-amber-300 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-slate-900 hover:bg-amber-500"
@@ -518,7 +569,7 @@ export default function CustomerHome() {
 
             {/* Tie User OTP Alert */}
             {
-                user?.pending_tie_otp && (
+                activeUser?.pending_tie_otp && (
                     <div className="px-4 mb-3">
                         <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 p-5 rounded-3xl shadow-2xl shadow-indigo-900/40 border-[3px] border-indigo-500/30 flex flex-col gap-4 overflow-hidden relative">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
@@ -533,7 +584,7 @@ export default function CustomerHome() {
                             </div>
                             <div className="relative z-10 bg-black/40 backdrop-blur-md rounded-2xl py-3 px-5 border border-indigo-500/20 flex items-center justify-between">
                                 <span className="text-indigo-300 text-[10px] font-black uppercase tracking-widest">Secret Code</span>
-                                <span className="text-white text-3xl font-black tracking-[0.25em]">{user.pending_tie_otp}</span>
+                                <span className="text-white text-3xl font-black tracking-[0.25em]">{activeUser.pending_tie_otp}</span>
                             </div>
                         </div>
                     </div>
@@ -542,7 +593,7 @@ export default function CustomerHome() {
 
             {/* Transfer Verification Alert */}
             {
-                user?.pending_transfer_otp && (
+                activeUser?.pending_transfer_otp && (
                     <div className="px-4 mb-3">
                         <div className="bg-gradient-to-br from-emerald-900 via-slate-900 to-emerald-950 p-5 rounded-3xl shadow-2xl shadow-emerald-900/40 border-[3px] border-emerald-500/30 flex flex-col gap-4 overflow-hidden relative">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
@@ -552,12 +603,12 @@ export default function CustomerHome() {
                                 </div>
                                 <div>
                                     <h3 className="text-white font-black text-sm leading-tight uppercase tracking-tight">Transfer Verification</h3>
-                                    <p className="text-emerald-200/80 text-[10px] font-black leading-tight mt-1 uppercase tracking-widest">Share this code to receive ₹{user.pending_transfer_amount}</p>
+                                    <p className="text-emerald-200/80 text-[10px] font-black leading-tight mt-1 uppercase tracking-widest">Share this code to receive ₹{activeUser.pending_transfer_amount}</p>
                                 </div>
                             </div>
                             <div className="relative z-10 bg-black/40 backdrop-blur-md rounded-2xl py-3 px-5 border border-emerald-500/20 flex items-center justify-between">
                                 <span className="text-emerald-300 text-[10px] font-black uppercase tracking-widest">Verification Code</span>
-                                <span className="text-white text-3xl font-black tracking-[0.25em]">{user.pending_transfer_otp}</span>
+                                <span className="text-white text-3xl font-black tracking-[0.25em]">{activeUser.pending_transfer_otp}</span>
                             </div>
                         </div>
                     </div>
@@ -586,7 +637,7 @@ export default function CustomerHome() {
             }
 
             {
-                isMerchant && !user.pincode && (
+                isMerchant && !activeUser?.pincode && (
                     <div className="px-1 mb-1">
                         <div onClick={() => setShowClaimModal(true)} className="cursor-pointer">
                             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-1 rounded-2xl shadow-xl shadow-purple-900/30 border-2 border-white/20 flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
@@ -606,7 +657,7 @@ export default function CustomerHome() {
 
             {/* Bank Setup Alert - Upfront */}
             {
-                (!user.account_number || !user.ifsc_code) && (
+                (!activeUser?.account_number || !activeUser?.ifsc_code) && (
                     <div className="px-4 mb-4">
                         <Link href="/customer/profile?editBank=true" prefetch={false}>
                             <div className="bg-rose-500 p-2 rounded-3xl shadow-2xl shadow-rose-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">

@@ -12,6 +12,7 @@ import { useStore } from '@/store/useStore';
 import SupportModal from './SupportModal';
 import BackButton from './BackButton';
 import { usePathname } from 'next/navigation';
+import { useApi } from '@/hooks/useApi';
 
 interface NavItem {
     label: string;
@@ -28,7 +29,7 @@ export default function DashboardLayout({
     title: string;
     navItems: NavItem[];
 }) {
-    const [user, setUser] = useState<any>(null);
+    const { data: user, mutate: mutateUser } = useApi('/auth/me');
     const [isAudioEnabled, setIsAudioEnabled] = useState(false);
     const [supportOpen, setSupportOpen] = useState(false);
     const [showLogoutHint, setShowLogoutHint] = useState(false);
@@ -92,40 +93,14 @@ export default function DashboardLayout({
     const [availability, setAvailability] = useState<any>(null);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
+        const handleUpdate = () => {
+            mutateUser();
+        };
+        window.addEventListener('userStateUpdate', handleUpdate);
+        return () => window.removeEventListener('userStateUpdate', handleUpdate);
+    }, [mutateUser]);
 
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-
-        if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            setUser(parsed);
-            
-            // Only hydrate if data is older than 5 minutes
-            const lastUpdated = localStorage.getItem('last_user_update');
-            const now = Date.now();
-            if (lastUpdated && (now - parseInt(lastUpdated) < 300000)) {
-                return;
-            }
-        }
-
-        // Hydrate latest data from server
-        apiFetch('/auth/me')
-            .then(data => {
-                setUser(data);
-                localStorage.setItem('user', JSON.stringify(data));
-                localStorage.setItem('last_user_update', Date.now().toString());
-            })
-            .catch(err => {
-                console.error("Hydration failed", err);
-                const currentStored = localStorage.getItem('user');
-                // If error is session related or no user found currently, redirect
-                if (!currentStored || err.message.includes('Session expired')) {
-                    if (typeof window !== 'undefined') window.location.href = '/';
-                }
-            });
-
+    useEffect(() => {
         // Fetch Support Availability - only on mount
         apiFetch('/support/availability')
             .then(data => setAvailability(data))
@@ -138,7 +113,6 @@ export default function DashboardLayout({
         const loop = async () => {
             if (!isMounted) return;
             await checkNewTransactions();
-            // Consistent 30s polling for everyone
             const pollRate = 30000;
             if (isMounted) {
                 timeoutId = setTimeout(loop, pollRate);
@@ -151,7 +125,7 @@ export default function DashboardLayout({
             isMounted = false;
             clearTimeout(timeoutId);
         };
-    }, [router, user?.role]);
+    }, [router]);
 
     useEffect(() => {
         const handleFirstInteraction = () => {
@@ -286,7 +260,7 @@ export default function DashboardLayout({
 
     const handleLogout = async () => {
         await clearAuthState();
-        setUser(null);
+        mutateUser(null, false);
         if (typeof window !== 'undefined') window.location.href = '/';
     };
 

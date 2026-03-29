@@ -52,6 +52,12 @@ export function getTransactionLabel(tx: any): string {
     if (srcType === 'BANK_TRANSFER') return 'Bulk Paid';
     if (srcType === 'BANK_TRANSFER_REFUND') return 'Reverted';
 
+    if (srcType === 'TEAM_EARNING_TRANSFER') {
+        const match = tx.description?.match(/^\[(.*?)\]/);
+        if (match) return match[1];
+        return 'Self Transfer';
+    }
+
     // ── System / Platform origin ───────────────────────────────
     if (
         tx.counterparty_vpa === 'System' ||
