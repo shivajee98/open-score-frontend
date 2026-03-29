@@ -36,6 +36,7 @@ export default function PublicQrPage() {
     const [form, setForm] = useState({
         name: '',
         mobile: '',
+        alternate_mobile: '',
         address: '',
         city: '',
         state: '',
@@ -53,12 +54,12 @@ export default function PublicQrPage() {
     const [bookingId, setBookingId] = useState<string | null>(null);
 
     const handleNext = () => {
-        if (!form.name || !form.mobile || !form.address || !form.pincode || !form.city || !form.state) {
+        if (!form.name || !form.mobile || !form.alternate_mobile || !form.address || !form.pincode || !form.city || !form.state || !form.landmark) {
             toast.error('Please fill all required fields');
             return;
         }
-        if (form.mobile.length !== 10) {
-            toast.error('Invalid mobile number');
+        if (form.mobile.length !== 10 || form.alternate_mobile.length !== 10) {
+            toast.error('Mobile numbers must be 10 digits');
             return;
         }
         if (form.pincode.length !== 6) {
@@ -94,6 +95,7 @@ export default function PublicQrPage() {
             const formData = new FormData();
             formData.append('full_name', form.name);
             formData.append('mobile_number', form.mobile);
+            formData.append('alternate_mobile', form.alternate_mobile);
             formData.append('address', form.address);
             formData.append('landmark', form.landmark);
             formData.append('pin_code', form.pincode);
@@ -233,13 +235,24 @@ export default function PublicQrPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Mobile Number</label>
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Mobile Number*</label>
                                     <input
                                         type="tel"
                                         maxLength={10}
                                         value={form.mobile}
-                                        onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '') })}
-                                        placeholder="Mobile Number"
+                                        onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '').replace(/^0+/, '') })}
+                                        placeholder="Primary Number"
+                                        className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Alternate Number*</label>
+                                    <input
+                                        type="tel"
+                                        maxLength={10}
+                                        value={form.alternate_mobile}
+                                        onChange={(e) => setForm({ ...form, alternate_mobile: e.target.value.replace(/\D/g, '').replace(/^0+/, '') })}
+                                        placeholder="Emergency/Alternative Number"
                                         className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
                                     />
                                 </div>
@@ -287,12 +300,12 @@ export default function PublicQrPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Landmark</label>
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-1.5 ml-1">Landmark*</label>
                                     <input
                                         type="text"
                                         value={form.landmark}
                                         onChange={(e) => setForm({ ...form, landmark: e.target.value })}
-                                        placeholder="Optional"
+                                        placeholder="Famous place nearby"
                                         className="w-full text-sm font-bold text-slate-900 bg-slate-50 border border-slate-100 rounded-xl p-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-all"
                                     />
                                 </div>

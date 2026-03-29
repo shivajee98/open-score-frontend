@@ -126,7 +126,10 @@ function QrUpdateContent() {
                             <User className="w-4 h-4 text-slate-400 mt-0.5" />
                             <div>
                                 <p className="text-xs font-black text-slate-900">{booking.full_name}</p>
-                                <p className="text-[10px] font-bold text-slate-500">{booking.mobile_number}</p>
+                                <p className="text-[10px] font-bold text-slate-500">
+                                    {booking.mobile_number}
+                                    {booking.alternate_mobile && ` • ${booking.alternate_mobile}`}
+                                </p>
                             </div>
                         </div>
                         
