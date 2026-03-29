@@ -6,6 +6,7 @@ import {
     Loader2, Trash2, Check, Shield, HelpCircle, ChevronLeft, ArrowRight
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { createEcho } from '@/lib/echo';
 import { toast } from '@/components/ui/Toast';
 import { cn } from '@/lib/loanUtils';
 
@@ -147,21 +148,34 @@ export default function DirectSupportChat({ isOpen, onClose }: DirectSupportChat
         }
     };
 
-    // Auto-poll every 1s (matches reference implementation)
+    // Initial fetch and Real-time synchronization
     useEffect(() => {
-        if (!selectedTicket || view !== 'chat' || !isOpen) return;
+        if (!selectedTicket?.id) return;
 
-        // Initial fetch
+        // Fetch messages initially 
         fetchMessages(selectedTicket.id);
 
-        const interval = setInterval(() => {
-            const currentMsgs = messagesRef.current;
-            const lastMsg = currentMsgs.length > 0 ? currentMsgs[currentMsgs.length - 1] : null;
-            const afterId = lastMsg ? lastMsg.id : 0;
-            fetchMessages(selectedTicket.id, afterId);
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [selectedTicket?.id, view, isOpen]);
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const echo = createEcho(token);
+        const channel = echo.private(`support.ticket.${selectedTicket.id}`);
+
+        // Listen for new messages in real-time
+        channel.listen('MessageSent', (data: any) => {
+            const newMessage = data.message;
+            setMessages(prev => {
+                // Ignore if it's already in the list
+                if (prev.find(m => m.id === newMessage.id)) return prev;
+                return [...prev, newMessage];
+            });
+        });
+
+        return () => {
+            channel.stopListening('MessageSent');
+            echo.disconnect();
+        };
+    }, [selectedTicket?.id]);
 
     // Mock typing effect for demonstration
     useEffect(() => {

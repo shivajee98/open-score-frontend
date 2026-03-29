@@ -8,6 +8,7 @@ import ChatWindow from '@/components/support/ChatWindow';
 import CreateTicketModal from '@/components/support/CreateTicketModal';
 import { Home, Plus, ArrowLeft, ScanBarcode, History, User, MessageSquare } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { createEcho } from '@/lib/echo';
 import { toast } from '@/components/ui/Toast';
 
 const navItems = [
@@ -146,13 +147,25 @@ function SupportPageContent() {
         setMessages([]);
 
         fetchMessages(selectedTicket.id);
-        const intervalId = setInterval(() => {
-            const currentMsgs = messagesRef.current;
-            const lastMsg = currentMsgs.length > 0 ? currentMsgs[currentMsgs.length - 1] : null;
-            const afterId = lastMsg ? lastMsg.id : 0;
-            fetchMessages(selectedTicket.id, afterId);
-        }, 1000);
-        return () => clearInterval(intervalId);
+        
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const echo = createEcho(token);
+        const channel = echo.private(`support.ticket.${selectedTicket.id}`);
+
+        channel.listen('MessageSent', (data: any) => {
+            const newMessage = data.message;
+            setMessages(prev => {
+                if (prev.find(m => m.id === newMessage.id)) return prev;
+                return [...prev, newMessage];
+            });
+        });
+
+        return () => {
+            channel.stopListening('MessageSent');
+            echo.disconnect();
+        };
     }, [selectedTicket]);
 
     const handleCreateTicket = async (subject: string, message: string, priority: string, issueType: string) => {

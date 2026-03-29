@@ -68,6 +68,19 @@ export default function DashboardLayout({
     const router = useRouter();
     const lastTxRef = React.useRef<string | null>(null);
     const audioContextRef = React.useRef<AudioContext | null>(null);
+    const { setTransactions } = useStore();
+
+    useEffect(() => {
+        const handleFirstInteraction = () => {
+            initAudio();
+        };
+        window.addEventListener('click', handleFirstInteraction);
+        window.addEventListener('touchstart', handleFirstInteraction);
+        return () => {
+            window.removeEventListener('click', handleFirstInteraction);
+            window.removeEventListener('touchstart', handleFirstInteraction);
+        };
+    }, []);
 
     // Initialize AudioContext on first interaction
     const initAudio = () => {
@@ -91,56 +104,6 @@ export default function DashboardLayout({
     };
 
     const [availability, setAvailability] = useState<any>(null);
-
-    useEffect(() => {
-        const handleUpdate = () => {
-            mutateUser();
-        };
-        window.addEventListener('userStateUpdate', handleUpdate);
-        return () => window.removeEventListener('userStateUpdate', handleUpdate);
-    }, [mutateUser]);
-
-    useEffect(() => {
-        // Fetch Support Availability - only on mount
-        apiFetch('/support/availability')
-            .then(data => setAvailability(data))
-            .catch(err => console.error("Failed to fetch availability", err));
-
-        // Poll for notifications - Reduced frequency to save compute
-        let isMounted = true;
-        let timeoutId: NodeJS.Timeout;
-
-        const loop = async () => {
-            if (!isMounted) return;
-            await checkNewTransactions();
-            const pollRate = 30000;
-            if (isMounted) {
-                timeoutId = setTimeout(loop, pollRate);
-            }
-        };
-
-        loop();
-
-        return () => {
-            isMounted = false;
-            clearTimeout(timeoutId);
-        };
-    }, [router]);
-
-    useEffect(() => {
-        const handleFirstInteraction = () => {
-            initAudio();
-            // We can keep the listener or remove it, but initAudio handles multiple calls safely
-        };
-        window.addEventListener('click', handleFirstInteraction);
-        window.addEventListener('touchstart', handleFirstInteraction);
-        return () => {
-            window.removeEventListener('click', handleFirstInteraction);
-            window.removeEventListener('touchstart', handleFirstInteraction);
-        };
-    }, []);
-
-    const { setTransactions } = useStore();
 
     const checkNewTransactions = async () => {
         try {
@@ -182,6 +145,27 @@ export default function DashboardLayout({
             // silent fail
         }
     };
+
+    useEffect(() => {
+        // Fetch Support Availability - only on mount
+        apiFetch('/support/availability')
+            .then(data => setAvailability(data))
+            .catch(err => console.error("Failed to fetch availability", err));
+
+        // Initial check
+        checkNewTransactions();
+
+        // Listen for real-time wallet updates to refresh transaction history
+        const handleWalletStateUpdate = () => {
+            console.log("[DashboardLayout] Wallet state update received, refreshing transactions");
+            checkNewTransactions();
+        };
+
+        window.addEventListener('walletStateUpdate', handleWalletStateUpdate);
+        return () => {
+            window.removeEventListener('walletStateUpdate', handleWalletStateUpdate);
+        };
+    }, [router]);
 
     const playNotificationSound = (text: string) => {
         if (typeof window === 'undefined') return;

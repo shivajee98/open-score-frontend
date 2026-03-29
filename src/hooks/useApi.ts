@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import { apiFetch } from '@/lib/api';
 
@@ -10,6 +10,7 @@ interface UseApiOptions {
 }
 
 export function useApi<T = any>(endpoint: string | null, options: UseApiOptions = {}) {
+    const lastSyncedRef = useRef<string | null>(null);
     const {
         data,
         error,
@@ -31,15 +32,51 @@ export function useApi<T = any>(endpoint: string | null, options: UseApiOptions 
         }
     );
 
-    // Sync /auth/me with localStorage
+    // Sync /auth/me with localStorage and listen for external state updates
     useEffect(() => {
+        const handleStateUpdate = () => {
+            if (endpoint === '/auth/me') {
+                const userStr = localStorage.getItem('user');
+                if (userStr && userStr !== lastSyncedRef.current) {
+                    try {
+                        const user = JSON.parse(userStr);
+                        lastSyncedRef.current = userStr;
+                        mutate(user as T, false);
+                    } catch (e) {}
+                }
+            }
+        };
+
+        const handleWalletUpdate = () => {
+            if (endpoint?.includes('wallet') || endpoint?.includes('balance')) {
+                mutate(); // Re-fetch from server to get accurate calculated balance
+            }
+        };
+
+        // Sync local changes to localStorage for legacy components
         if (endpoint === '/auth/me' && data && !error) {
-            console.log('[useApi] Syncing /auth/me with localStorage');
-            localStorage.setItem('user', JSON.stringify(data));
-            // Trigger storage event for other components in same tab (custom event)
-            window.dispatchEvent(new Event('userStateUpdate'));
+            const dataStr = JSON.stringify(data);
+            if (dataStr !== lastSyncedRef.current) {
+                console.log('[useApi] Syncing /auth/me to localStorage');
+                lastSyncedRef.current = dataStr;
+                localStorage.setItem('user', dataStr);
+                // SWR handles cross-instance sync automatically
+            }
         }
-    }, [data, error, endpoint]);
+
+        if (endpoint === '/auth/me') {
+            window.addEventListener('userStateUpdate', handleStateUpdate);
+        }
+
+        if (endpoint?.includes('wallet') || endpoint?.includes('balance')) {
+            window.addEventListener('walletStateUpdate', handleWalletUpdate);
+        }
+
+        return () => {
+            window.removeEventListener('userStateUpdate', handleStateUpdate);
+            window.removeEventListener('walletStateUpdate', handleWalletUpdate);
+        };
+    }, [data, error, endpoint, mutate]);
 
     return {
         data,

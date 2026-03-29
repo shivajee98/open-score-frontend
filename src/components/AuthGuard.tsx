@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { apiFetch } from "@/lib/api";
+import { createEcho } from "@/lib/echo";
 import SuspendedScreen from "@/components/SuspendedScreen";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -70,35 +71,48 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         }
     }, [pathname, router]);
 
-    // Background Verification for Reactivation
-    // If we're suspended (cached), keep checking the server occasionally to see if we've been reactivated
+    // Real-time Reactivation & Profile Sync
+    // Connect to WebSocket channel for instant status/profile updates
     useEffect(() => {
-        if (!suspended) return;
+        const token = localStorage.getItem("token");
+        const userStr = localStorage.getItem("user");
+        if (!token || !userStr) return;
 
-        let interval: NodeJS.Timeout;
-        const checkStatus = async () => {
-            try {
-                // We use a raw fetch or apiFetch with skipAuthCheck if available to see the real response
-                const res = await apiFetch('/auth/me', { skipAuthCheck: true });
-                if (res && res.status !== 'SUSPENDED') {
-                    // We are back! Update local storage and state
-                    localStorage.setItem('user', JSON.stringify(res));
-                    setSuspended(false);
-                }
-            } catch (e: any) {
-                // If 403, we are still suspended. Keep waiting.
-                if (e.status !== 403) {
-                    console.error("Reactivation check failed", e);
-                }
-            }
+        let user: any;
+        try {
+            user = JSON.parse(userStr);
+        } catch (e) { return; }
+
+        if (!user.id) return;
+
+        const echo = createEcho(token);
+        const channel = echo.private(`App.Models.User.${user.id}`);
+
+        channel.listen('UserUpdated', (data: any) => {
+            console.log("[AuthGuard] User updated via WebSocket:", data.user);
+            const updatedUser = data.user;
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setSuspended(updatedUser.status === 'SUSPENDED');
+            window.dispatchEvent(new Event('userStateUpdate'));
+        });
+
+        channel.listen('WalletUpdated', (data: any) => {
+            console.log("[AuthGuard] Wallet updated via WebSocket:", data.wallet);
+            window.dispatchEvent(new CustomEvent('walletStateUpdate', { detail: data.wallet }));
+        });
+
+        channel.listen('LoanUpdated', (data: any) => {
+            console.log("[AuthGuard] Loan updated via WebSocket:", data.loan);
+            window.dispatchEvent(new CustomEvent('loanStateUpdate', { detail: data.loan }));
+        });
+
+        return () => {
+            channel.stopListening('UserUpdated');
+            channel.stopListening('WalletUpdated');
+            channel.stopListening('LoanUpdated');
+            echo.disconnect();
         };
-
-        // Check once on load and every 10 seconds
-        checkStatus();
-        interval = setInterval(checkStatus, 10000);
-
-        return () => clearInterval(interval);
-    }, [suspended]);
+    }, []);
 
     // Listen for manual user state updates (e.g., from apiFetch upon 403)
     useEffect(() => {
@@ -107,10 +121,15 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             if (userStr) {
                 try {
                     const user = JSON.parse(userStr);
-                    if (user.status === 'SUSPENDED') setSuspended(true);
+                    if (user.status === 'SUSPENDED') {
+                        setSuspended(true);
+                    } else {
+                        setSuspended(false);
+                    }
                 } catch (e) {}
             }
         };
+        handleStateUpdate(); // Initial check
         window.addEventListener('userStateUpdate', handleStateUpdate);
         return () => window.removeEventListener('userStateUpdate', handleStateUpdate);
     }, []);

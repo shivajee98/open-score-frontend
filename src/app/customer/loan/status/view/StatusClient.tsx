@@ -104,16 +104,22 @@ export default function LoanStatus() {
         fetchUserData();
         fetchTickets();
 
-        // If KYC form is open, we stop polling to prevent form resets and unnecessary background noise
+        // If KYC form is open, we stop refreshing to prevent form resets
         if (showKycForm) return;
 
-        const interval = setInterval(() => {
-            fetchLoan();
-            fetchUserData();
-            fetchTickets();
-        }, 15000); // Poll every 15 seconds instead of 3
+        const handleLoanUpdate = (e: any) => {
+            const updatedLoan = e.detail;
+            // Refresh if either ID matches
+            if (updatedLoan && (updatedLoan.id == loanId || updatedLoan.display_id == loanId || updatedLoan.loan_id == loanId)) {
+                console.log("[StatusClient] Refreshing due to loan update event");
+                fetchLoan();
+                fetchUserData();
+                fetchTickets();
+            }
+        };
 
-        return () => clearInterval(interval);
+        window.addEventListener('loanStateUpdate', handleLoanUpdate);
+        return () => window.removeEventListener('loanStateUpdate', handleLoanUpdate);
     }, [loanId, showKycForm]);
 
     // Prepare initial KYC data from user profile and existing form data
