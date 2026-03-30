@@ -226,7 +226,7 @@ export default function MerchantLocator() {
                                                 <h3 className="font-black text-slate-900 text-sm leading-tight group-hover:text-blue-600 transition-colors truncate">
                                                     {merchant.business_name || merchant.name}
                                                 </h3>
-                                                {merchant.kyc_status === 'FULL_VERIFIED' && (
+                                                {(merchant.kyc_status === 'FULL_VERIFIED' || merchant.kyc_status === 'FIELD_VERIFIED') && (
                                                     <span className="shrink-0 text-emerald-500 bg-emerald-50 p-0.5 rounded-full" title="Verified Merchant">
                                                         <ShieldCheck size={12} strokeWidth={3} />
                                                     </span>

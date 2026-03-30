@@ -58,7 +58,7 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                         </div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-2xl font-black text-white">{merchant.business_name}</h2>
-                            {merchant.kyc_status === 'FULL_VERIFIED' && (
+                            {(merchant.kyc_status === 'FULL_VERIFIED' || merchant.kyc_status === 'FIELD_VERIFIED') && (
                                 <span className="bg-emerald-400 text-white p-1 rounded-full shadow-lg" title="Verified Merchant">
                                     <ShieldCheck size={16} strokeWidth={3} />
                                 </span>
