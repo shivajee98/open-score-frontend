@@ -128,6 +128,11 @@ export default function Profile() {
         if (user) {
             // Populate if not editing, or if editing but we haven't loaded initial data yet
             if (!isEditing || !initialDataLoaded.current) {
+                const ensureNoBlob = (url: string | null | undefined) => {
+                    if (!url || url.includes('blob:')) return '';
+                    return url;
+                };
+
                 setFormData({
                     name: user.name || '',
                     email: user.email || '',
@@ -141,7 +146,10 @@ export default function Profile() {
                     customer_segment: user.customer_segment || '',
                     daily_turnover: user.daily_turnover || '',
                     map_location_url: user.map_location_url || '',
-                    shop_images: Array.isArray(user.shop_images) ? JSON.stringify(user.shop_images) : (user.shop_images || '[]'),
+                    shop_images: (() => {
+                        const items = Array.isArray(user.shop_images) ? user.shop_images : JSON.parse(user.shop_images || '[]');
+                        return JSON.stringify(items.filter((img: string) => img && !img.includes('blob:')));
+                    })(),
                     business_name: user.business_name || '',
                     street_address: user.business_address || '',
                     city: user.city || '',
@@ -389,7 +397,8 @@ export default function Profile() {
                 }
             } catch (e) { currentImages = []; }
 
-            currentImages.forEach((img) => {
+            // Filter out blob preview URLs from retained images to prevent 404s
+            currentImages.filter(img => !img.includes('blob:')).forEach((img) => {
                 uploadData.append('retained_shop_images[]', img);
             });
 
@@ -419,6 +428,14 @@ export default function Profile() {
             if (res.user) {
                 localStorage.setItem('user', JSON.stringify(res.user));
                 await mutateUser(res.user, false);
+                
+                // Clear blob previews from form data by re-parsing from saved user
+                try {
+                    setFormData(prev => ({ 
+                        ...prev, 
+                        shop_images: JSON.stringify(res.user.shop_images || []) 
+                    }));
+                } catch (e) {}
             } else {
                 await mutateUser(); // Fallback to refetch if user not returned
             }
@@ -493,10 +510,14 @@ export default function Profile() {
             return;
         }
 
+        // Add to actual file queue
         setNewShopImages(prev => [...prev, file]);
-        toast.success("Image selected for upload");
+        toast.success("Image added to upload list");
 
-        // Optionally add a temporary local preview to shop_images string
+        // UI Smoothing: Clear file input so it can be used again
+        e.target.value = '';
+
+        // Add local preview to formData for immediate UI feedback
         const previewUrl = URL.createObjectURL(file);
         let currentImages: string[] = [];
         try {
@@ -574,7 +595,7 @@ export default function Profile() {
                                         <p className="text-[10px] font-bold uppercase text-white tracking-widest">Saving...</p>
                                     </div>
                                 )}
-                                {user.profile_image ? (
+                                {user.profile_image && !user.profile_image.includes('blob:') ? (
                                     <img src={user.profile_image} className={`w-full h-full object-cover ${uploadingImages.profile_image ? 'blur-sm' : ''}`} alt={user.name} />
                                 ) : (
                                     <span>{user.name?.[0]}</span>
@@ -1063,7 +1084,7 @@ export default function Profile() {
                                                 {(newAadharImage || user.aadhar_image) ? (
                                                     <>
                                                         <img 
-                                                            src={newAadharImage ? URL.createObjectURL(newAadharImage) : user.aadhar_image} 
+                                                            src={newAadharImage ? URL.createObjectURL(newAadharImage) : (user.aadhar_image?.includes('blob:') ? '' : user.aadhar_image)} 
                                                             alt="Aadhar Front" 
                                                             className={`w-full h-full object-cover ${uploadingImages.aadhar_image ? 'blur-[2px]' : ''}`}
                                                         />
@@ -1114,7 +1135,7 @@ export default function Profile() {
                                                 {(newAadharBackImage || user.aadhar_back_image) ? (
                                                     <>
                                                         <img 
-                                                            src={newAadharBackImage ? URL.createObjectURL(newAadharBackImage) : user.aadhar_back_image} 
+                                                            src={newAadharBackImage ? URL.createObjectURL(newAadharBackImage) : (user.aadhar_back_image?.includes('blob:') ? '' : user.aadhar_back_image)} 
                                                             alt="Aadhar Back" 
                                                             className={`w-full h-full object-cover ${uploadingImages.aadhar_back_image ? 'blur-[2px]' : ''}`}
                                                         />
@@ -1173,7 +1194,7 @@ export default function Profile() {
                                                     {(newPanImage || user.pan_image) ? (
                                                         <>
                                                             <img 
-                                                                src={newPanImage ? URL.createObjectURL(newPanImage) : user.pan_image} 
+                                                                src={newPanImage ? URL.createObjectURL(newPanImage) : (user.pan_image?.includes('blob:') ? '' : user.pan_image)} 
                                                                 alt="PAN Card" 
                                                                 className={`w-full h-full object-cover ${uploadingImages.pan_image ? 'blur-sm' : ''}`}
                                                             />

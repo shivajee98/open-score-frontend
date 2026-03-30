@@ -216,6 +216,8 @@ export default function MerchantLocator() {
                                                     } else {
                                                         imgs = merchant.shop_images ? JSON.parse(merchant.shop_images) : [];
                                                     }
+                                                    // Filter out any stale blob URLs
+                                                    imgs = imgs.filter(img => img && !img.includes('blob:'));
                                                 } catch (e) { }
                                                 if (imgs && imgs.length > 0 && typeof imgs[0] === 'string') return <img src={imgs[0]} className="w-full h-full object-cover" alt="Shop" />;
                                                 return <Store size={24} className="text-slate-300 group-hover:text-blue-500 transition-colors" />;
