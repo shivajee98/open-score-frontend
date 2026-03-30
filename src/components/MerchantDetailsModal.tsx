@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, MapPin, Phone, Building2, User as UserIcon, Store, ExternalLink, Mail, LayoutGrid, Building, Map, Image as ImageIcon } from "lucide-react";
+import { X, MapPin, Phone, Building2, User as UserIcon, Store, ExternalLink, Mail, LayoutGrid, Building, Map, Image as ImageIcon, ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 
@@ -56,7 +56,14 @@ export default function MerchantDetailsModal({ isOpen, onClose, merchant }: Merc
                                 return <Store size={40} />;
                             })()}
                         </div>
-                        <h2 className="text-2xl font-black text-white">{merchant.business_name}</h2>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-2xl font-black text-white">{merchant.business_name}</h2>
+                            {merchant.kyc_status === 'FULL_VERIFIED' && (
+                                <span className="bg-emerald-400 text-white p-1 rounded-full shadow-lg" title="Verified Merchant">
+                                    <ShieldCheck size={16} strokeWidth={3} />
+                                </span>
+                            )}
+                        </div>
                         <div className="flex items-center gap-2 mt-2">
                             {merchant.business_segment && (
                                 <span className="bg-white/20 text-white border border-white/30 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full backdrop-blur-sm">

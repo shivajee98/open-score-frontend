@@ -122,6 +122,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             employer: user?.role === 'STUDENT' ? (user?.student_profile?.school_name || '') : (user?.business_name || ''),
             occupation: user?.role === 'STUDENT' ? (user?.student_profile?.course_name || 'Student') : '',
             street_address: user?.role === 'STUDENT' ? (user?.student_profile?.school_address || '') : '',
+            aadhar_number: user?.aadhar_number || '',
+            pan_number: user?.pan_number || '',
             ...initialData
         }
     });
@@ -142,12 +144,15 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const panValue = watch('pan_number');
 
     useEffect(() => {
-        if (aadharValue && aadharValue.length === 12) {
-            checkUniqueness('aadhar', aadharValue);
+        if (aadharValue && aadharValue.length === 12 && !user?.aadhar_number && user?.kyc_status !== 'FULL_VERIFIED') {
+            const timer = setTimeout(() => {
+                checkUniqueness('aadhar', aadharValue);
+            }, 600);
+            return () => clearTimeout(timer);
         } else {
             setUniquenessErrors(prev => ({ ...prev, aadhar: undefined }));
         }
-    }, [aadharValue]);
+    }, [aadharValue, user?.aadhar_number, user?.kyc_status]);
 
     const referralValue = watch('referral_code');
 
@@ -187,12 +192,15 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     useEffect(() => {
-        if (panValue && panValue.length === 10) {
-            checkUniqueness('pan', panValue);
+        if (panValue && panValue.length === 10 && !user?.pan_number && user?.kyc_status !== 'FULL_VERIFIED') {
+            const timer = setTimeout(() => {
+                checkUniqueness('pan', panValue);
+            }, 600);
+            return () => clearTimeout(timer);
         } else {
             setUniquenessErrors(prev => ({ ...prev, pan: undefined }));
         }
-    }, [panValue]);
+    }, [panValue, user?.pan_number, user?.kyc_status]);
 
     const checkUniqueness = async (type: 'aadhar' | 'pan', value: string) => {
         setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
@@ -369,7 +377,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         target.value = target.value.replace(/\D/g, '').slice(0, 12);
                                     }}
                                     {...register('aadhar_number')}
-                                    className={cn(inputClasses, (errors.aadhar_number || uniquenessErrors.aadhar) && "border-rose-500 ring-rose-50")}
+                                    readOnly={!!user?.aadhar_number || user?.kyc_status === 'FULL_VERIFIED'}
+                                    className={cn(inputClasses, (errors.aadhar_number || uniquenessErrors.aadhar) && "border-rose-500 ring-rose-50", (!!user?.aadhar_number || user?.kyc_status === 'FULL_VERIFIED') && "bg-slate-50 text-slate-500 cursor-not-allowed")}
                                 />
                                 {errors.aadhar_number && <p className={errorClasses}>{errors.aadhar_number.message}</p>}
                                 {uniquenessErrors.aadhar && <p className={errorClasses}>{uniquenessErrors.aadhar}</p>}
@@ -382,10 +391,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     maxLength={10}
                                     {...register('pan_number', {
                                         onChange: (e) => {
+                                            if (user?.pan_number || user?.kyc_status === 'FULL_VERIFIED') return;
                                             e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
                                         }
                                     })}
-                                    className={cn(inputClasses, "uppercase tracking-widest", (errors.pan_number || uniquenessErrors.pan) && "border-rose-500 ring-rose-50")}
+                                    readOnly={!!user?.pan_number || user?.kyc_status === 'FULL_VERIFIED'}
+                                    className={cn(inputClasses, "uppercase tracking-widest", (errors.pan_number || uniquenessErrors.pan) && "border-rose-500 ring-rose-50", (!!user?.pan_number || user?.kyc_status === 'FULL_VERIFIED') && "bg-slate-50 text-slate-500 cursor-not-allowed")}
                                 />
                                 {errors.pan_number && <p className={errorClasses}>{errors.pan_number.message}</p>}
                                 {uniquenessErrors.pan && <p className={errorClasses}>{uniquenessErrors.pan}</p>}

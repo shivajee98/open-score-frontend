@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Search, X, Store, Navigation, Phone, MessageCircle, SlidersHorizontal } from "lucide-react";
+import { MapPin, Search, X, Store, Navigation, Phone, MessageCircle, SlidersHorizontal, ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/components/ui/Toast";
 import MerchantDetailsModal from "./MerchantDetailsModal";
@@ -25,6 +25,7 @@ interface Merchant {
     rating_count?: number;
     show_phone?: boolean;
     show_timing?: boolean;
+    kyc_status?: 'PENDING' | 'FIELD_VERIFIED' | 'FULL_VERIFIED';
 }
 
 // Simple debounce hook
@@ -225,6 +226,11 @@ export default function MerchantLocator() {
                                                 <h3 className="font-black text-slate-900 text-sm leading-tight group-hover:text-blue-600 transition-colors truncate">
                                                     {merchant.business_name || merchant.name}
                                                 </h3>
+                                                {merchant.kyc_status === 'FULL_VERIFIED' && (
+                                                    <span className="shrink-0 text-emerald-500 bg-emerald-50 p-0.5 rounded-full" title="Verified Merchant">
+                                                        <ShieldCheck size={12} strokeWidth={3} />
+                                                    </span>
+                                                )}
                                                 {merchant.business_segment && (
                                                     <span className="shrink-0 bg-blue-600 text-white text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg shadow-blue-600/20">
                                                         {merchant.business_segment}

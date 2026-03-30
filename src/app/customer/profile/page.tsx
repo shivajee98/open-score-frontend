@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info, Check, X } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -18,6 +18,7 @@ export default function Profile() {
     const { data: pinData, mutate: mutatePin } = useApi('/wallet/check-pin');
 
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const initialDataLoaded = useRef(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -46,6 +47,7 @@ export default function Profile() {
     });
     const [newShopImages, setNewShopImages] = useState<File[]>([]);
     const [newAadharImage, setNewAadharImage] = useState<File | null>(null);
+    const [newAadharBackImage, setNewAadharBackImage] = useState<File | null>(null);
     const [newPanImage, setNewPanImage] = useState<File | null>(null);
     const [isShopTimingModalOpen, setIsShopTimingModalOpen] = useState(false);
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -54,6 +56,28 @@ export default function Profile() {
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
     const [isPortalOpen, setIsPortalOpen] = useState(false);
     const [dynamicButtons, setDynamicButtons] = useState<any[]>([]);
+    const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string }>({});
+    const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean }>({});
+
+    const checkUniqueness = async (type: 'aadhar' | 'pan', value: string) => {
+        setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
+        try {
+            const res = await apiFetch('/loans/check-kyc-uniqueness', {
+                method: 'POST',
+                body: JSON.stringify({ type, value })
+            });
+
+            if (!res.unique) {
+                setUniquenessErrors(prev => ({ ...prev, [type]: res.message }));
+            } else {
+                setUniquenessErrors(prev => ({ ...prev, [type]: undefined }));
+            }
+        } catch (e) {
+            console.error('Failed to check uniqueness', e);
+        } finally {
+            setCheckingUniqueness(prev => ({ ...prev, [type]: false }));
+        }
+    };
 
     const BUSINESS_STRUCTURE = {
         'Food & Daily Essentials': ['Grocery / Kirana Store', 'Dairy / Milk Booth', 'Fruit & Vegetable Vendor', 'Bakery', 'Sweet Shop / Mithai Shop', 'Fast Food Stall', 'Tea / Coffee Stall', 'Juice Shop', 'Restaurant', 'Dhaba', 'Hotel / Lodge'],
@@ -82,6 +106,10 @@ export default function Profile() {
 
     useEffect(() => {
         if (typeof window !== 'undefined' && window.location.search.includes('editBank=true')) {
+            if (user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED') {
+                 toast.error("Verified profile cannot be edited.");
+                 return;
+            }
             setIsEditing(true);
             setTimeout(() => {
                 const element = document.getElementById('bank-details-section');
@@ -142,6 +170,29 @@ export default function Profile() {
             fetchDynamicButtons();
         }
     }, [user?.role]);
+
+    useEffect(() => {
+        if (isEditing && formData.aadhar_number.length === 12 && formData.aadhar_number !== user?.aadhar_number) {
+            const timer = setTimeout(() => {
+                checkUniqueness('aadhar', formData.aadhar_number);
+            }, 600);
+            return () => clearTimeout(timer);
+        } else {
+            setUniquenessErrors(prev => ({ ...prev, aadhar: undefined }));
+        }
+    }, [formData.aadhar_number, isEditing, user?.aadhar_number]);
+
+    useEffect(() => {
+        const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i;
+        if (isEditing && formData.pan_number.length === 10 && panRegex.test(formData.pan_number) && formData.pan_number !== user?.pan_number) {
+            const timer = setTimeout(() => {
+                checkUniqueness('pan', formData.pan_number);
+            }, 600);
+            return () => clearTimeout(timer);
+        } else {
+            setUniquenessErrors(prev => ({ ...prev, pan: undefined }));
+        }
+    }, [formData.pan_number, isEditing, user?.pan_number]);
 
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
@@ -268,6 +319,12 @@ export default function Profile() {
             return;
         }
 
+        if (uniquenessErrors.aadhar || uniquenessErrors.pan) {
+            toast.error("Please resolve Aadhaar/PAN uniqueness issues before saving.");
+            return;
+        }
+
+        setIsSaving(true);
         try {
             const uploadData = new FormData();
             uploadData.append('name', formData.name);
@@ -314,6 +371,10 @@ export default function Profile() {
                 uploadData.append('aadhar_image', newAadharImage);
             }
 
+            if (newAadharBackImage) {
+                uploadData.append('aadhar_back_image', newAadharBackImage);
+            }
+
             if (newPanImage) {
                 uploadData.append('pan_image', newPanImage);
             }
@@ -335,10 +396,13 @@ export default function Profile() {
             setIsEditing(false);
             setNewShopImages([]);
             setNewAadharImage(null);
+            setNewAadharBackImage(null);
             setNewPanImage(null);
             toast.success('Profile updated successfully!');
         } catch (e: any) {
             toast.error(e.message || 'Failed to update profile');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -930,16 +994,21 @@ export default function Profile() {
                                         <div>
                                             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Aadhar Number</p>
                                             {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={formData.aadhar_number}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
-                                                        setFormData({ ...formData, aadhar_number: val });
-                                                    }}
-                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                    placeholder="12 digit number"
-                                                />
+                                                <>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.aadhar_number}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
+                                                            setFormData({ ...formData, aadhar_number: val });
+                                                        }}
+                                                        disabled={user?.kyc_status === 'FULL_VERIFIED'}
+                                                        className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 ${uniquenessErrors.aadhar ? 'border-red-500' : 'border-slate-200'} focus:border-${themeColor}-500 focus:outline-none w-full ${user?.kyc_status === 'FULL_VERIFIED' ? 'opacity-60 grayscale' : ''}`}
+                                                        placeholder="12 digit number"
+                                                    />
+                                                    {uniquenessErrors.aadhar && <p className="text-[9px] text-red-500 mt-1 font-bold animate-in fade-in transition-all">{uniquenessErrors.aadhar}</p>}
+                                                    {checkingUniqueness.aadhar && <p className="text-[9px] text-blue-500 mt-1 font-bold animate-pulse">Verifying...</p>}
+                                                </>
                                             ) : (
                                                 <p className="text-sm font-medium text-slate-900">{user.aadhar_number || 'Not Set'}</p>
                                             )}
@@ -947,13 +1016,18 @@ export default function Profile() {
                                         <div>
                                             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">PAN Number</p>
                                             {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={formData.pan_number}
-                                                    onChange={(e) => setFormData({ ...formData, pan_number: e.target.value.toUpperCase().slice(0, 10) })}
-                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                    placeholder="ABCDE1234F"
-                                                />
+                                                <>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.pan_number}
+                                                        onChange={(e) => setFormData({ ...formData, pan_number: e.target.value.toUpperCase().slice(0, 10) })}
+                                                        disabled={user?.kyc_status === 'FULL_VERIFIED'}
+                                                        className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 ${uniquenessErrors.pan ? 'border-red-500' : 'border-slate-200'} focus:border-${themeColor}-500 focus:outline-none w-full ${user?.kyc_status === 'FULL_VERIFIED' ? 'opacity-60 grayscale' : ''}`}
+                                                        placeholder="ABCDE1234F"
+                                                    />
+                                                    {uniquenessErrors.pan && <p className="text-[9px] text-red-500 mt-1 font-bold animate-in fade-in transition-all">{uniquenessErrors.pan}</p>}
+                                                    {checkingUniqueness.pan && <p className="text-[9px] text-blue-500 mt-1 font-bold animate-pulse">Verifying...</p>}
+                                                </>
                                             ) : (
                                                 <p className="text-sm font-medium text-slate-900 uppercase">{user.pan_number || 'Not Set'}</p>
                                             )}
@@ -961,15 +1035,15 @@ export default function Profile() {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        {/* Aadhar Card */}
+                                        {/* Aadhar Card Front */}
                                         <div>
-                                            <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">Aadhar Card</p>
+                                            <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">Aadhar Front</p>
                                             <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
                                                 {(newAadharImage || user.aadhar_image) ? (
                                                     <>
                                                         <img 
                                                             src={newAadharImage ? URL.createObjectURL(newAadharImage) : user.aadhar_image} 
-                                                            alt="Aadhar" 
+                                                            alt="Aadhar Front" 
                                                             className="w-full h-full object-cover"
                                                         />
                                                         {isEditing && (
@@ -991,7 +1065,7 @@ export default function Profile() {
                                                 ) : (
                                                     <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
                                                         <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
-                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br/>Aadhar</p>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br/>Front</p>
                                                         {isEditing && (
                                                             <label className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}>
                                                                 Upload
@@ -1010,8 +1084,57 @@ export default function Profile() {
                                             </div>
                                         </div>
 
-                                        {/* PAN Card */}
+                                        {/* Aadhar Card Back */}
                                         <div>
+                                            <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">Aadhar Back</p>
+                                            <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
+                                                {(newAadharBackImage || user.aadhar_back_image) ? (
+                                                    <>
+                                                        <img 
+                                                            src={newAadharBackImage ? URL.createObjectURL(newAadharBackImage) : user.aadhar_back_image} 
+                                                            alt="Aadhar Back" 
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        {isEditing && (
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                                                    Change
+                                                                    <input 
+                                                                        type="file" 
+                                                                        className="hidden" 
+                                                                        accept="image/*" 
+                                                                        onChange={(e) => {
+                                                                            if (e.target.files?.[0]) setNewAadharBackImage(e.target.files[0]);
+                                                                        }} 
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                                                        <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br/>Back</p>
+                                                        {isEditing && (
+                                                            <label className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}>
+                                                                Upload
+                                                                <input 
+                                                                    type="file" 
+                                                                    className="hidden" 
+                                                                    accept="image/*" 
+                                                                    onChange={(e) => {
+                                                                        if (e.target.files?.[0]) setNewAadharBackImage(e.target.files[0]);
+                                                                    }} 
+                                                                />
+                                                            </label>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* PAN Card */}
+                                        <div className="col-span-2">
                                             <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">PAN Card</p>
                                             <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
                                                 {(newPanImage || user.pan_image) ? (
@@ -1182,7 +1305,16 @@ export default function Profile() {
                                     <span className="text-xs font-medium text-slate-700 truncate">About Us</span>
                                 </div>
                                 {/* Profile */}
-                                <div onClick={() => setIsEditing(true)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
+                                <div 
+                                    onClick={() => {
+                                        if (user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED') {
+                                            toast.error("Verified profiles cannot be edited.");
+                                            return;
+                                        }
+                                        setIsEditing(true);
+                                    }} 
+                                    className={`bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full ${user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED' ? 'opacity-60 grayscale' : ''}`}
+                                >
                                     <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
                                         <User className="w-4 h-4" />
                                     </div>
@@ -1278,20 +1410,49 @@ export default function Profile() {
                         <div className="flex gap-3 mt-8">
                             {isEditing ? (
                                 <>
-                                    <button onClick={handleUpdateProfile} className="flex-1 bg-black text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors">
-                                        Save Changes
+                                    <button 
+                                        onClick={handleUpdateProfile} 
+                                        disabled={isSaving}
+                                        className={`flex-1 bg-gradient-to-r from-${themeColor}-600 to-${themeColor}-500 text-white py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:shadow-lg transition-all flex items-center justify-center gap-1.5 shadow-xl shadow-${themeColor}-500/20 text-[11px] uppercase tracking-wider`}
+                                    >
+                                        {isSaving ? (
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            <>
+                                                <Check className="w-4 h-4" /> 
+                                                <span>Save Changes</span>
+                                            </>
+                                        )}
                                     </button>
-                                    <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-200 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-300 transition-colors">
-                                        Cancel
+                                    <button 
+                                        onClick={() => setIsEditing(false)} 
+                                        disabled={isSaving}
+                                        className="flex-1 bg-slate-100 text-slate-600 py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wider"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                        <span>Cancel</span>
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={() => setIsEditing(true)} className="flex-1 bg-white border border-slate-200 text-slate-900 py-3 rounded-xl font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-                                    <Edit2 className="w-4 h-4" /> Edit Profile
-                                </button>
+                                <>
+                                    {user && user.role === 'MERCHANT' && user.kyc_status === 'FULL_VERIFIED' ? (
+                                        <div className="flex-1 bg-emerald-50 text-emerald-600 py-3 rounded-xl font-bold border border-emerald-200 shadow-sm flex items-center justify-center gap-2 animate-in zoom-in duration-300">
+                                            <ShieldCheck className="w-4 h-4" /> 
+                                            <span className="text-[11px] font-black uppercase tracking-widest">Verified Merchant</span>
+                                        </div>
+                                    ) : (
+                                        <button 
+                                            onClick={() => setIsEditing(true)} 
+                                            className={`flex-1 bg-white border border-slate-200 text-slate-900 py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-sm text-[11px] uppercase tracking-wider`}
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5" /> 
+                                            <span>Edit Profile</span>
+                                        </button>
+                                    )}
+                                </>
                             )}
-                            <button onClick={handleChangePinClick} className={`flex-1 bg-${themeColor}-500 text-white py-3 rounded-xl font-bold hover:bg-${themeColor}-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-${themeColor}-500/20`}>
-                                <Lock className="w-4 h-4" /> Change PIN
+                            <button onClick={handleChangePinClick} className={`flex-1 bg-${themeColor}-500 text-white py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:bg-${themeColor}-600 transition-colors flex items-center justify-center gap-1.5 shadow-lg shadow-${themeColor}-500/20 text-[11px] uppercase tracking-wider`}>
+                                <Lock className="w-3.5 h-3.5" /> Change PIN
                             </button>
                         </div>
                     </div>
