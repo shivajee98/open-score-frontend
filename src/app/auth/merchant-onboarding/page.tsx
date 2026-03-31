@@ -92,14 +92,8 @@ function MerchantOnboardingForm() {
     // Image Upload State
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [panFile, setPanFile] = useState<File | null>(null);
-    const [panPreview, setPanPreview] = useState<string | null>(null);
-    const [aadharFile, setAadharFile] = useState<File | null>(null);
-    const [aadharPreview, setAadharPreview] = useState<string | null>(null);
-    const [aadharBackFile, setAadharBackFile] = useState<File | null>(null);
-    const [aadharBackPreview, setAadharBackPreview] = useState<string | null>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'pan' | 'aadhar' | 'aadhar_back') => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile') => {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 10 * 1024 * 1024) { // 10MB limit
@@ -144,15 +138,6 @@ function MerchantOnboardingForm() {
                             if (type === 'profile') {
                                 setImageFile(newFile);
                                 setImagePreview(URL.createObjectURL(newFile));
-                            } else if (type === 'pan') {
-                                setPanFile(newFile);
-                                setPanPreview(URL.createObjectURL(newFile));
-                            } else if (type === 'aadhar') {
-                                setAadharFile(newFile);
-                                setAadharPreview(URL.createObjectURL(newFile));
-                            } else if (type === 'aadhar_back') {
-                                setAadharBackFile(newFile);
-                                setAadharBackPreview(URL.createObjectURL(newFile));
                             }
                         }
                     }, 'image/jpeg', 0.8);
@@ -221,15 +206,6 @@ function MerchantOnboardingForm() {
 
             if (imageFile) {
                 formDataObj.append('profile_image', imageFile, imageFile.name);
-            }
-            if (panFile) {
-                formDataObj.append('pan_image', panFile, panFile.name);
-            }
-            if (aadharFile) {
-                formDataObj.append('aadhar_image', aadharFile, aadharFile.name);
-            }
-            if (aadharBackFile) {
-                formDataObj.append('aadhar_back_image', aadharBackFile, aadharBackFile.name);
             }
 
             formDataObj.append('app_pin', formData.app_pin);
@@ -473,54 +449,9 @@ function MerchantOnboardingForm() {
                                 </label>
                             </div>
 
-                            {/* KYC Uploads */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <label className={`flex flex-col items-center justify-center p-3 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${panPreview ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
-                                    {panPreview ? (
-                                        <div className="relative w-full aspect-video">
-                                            <img src={panPreview} alt="PAN" className="w-full h-full object-cover rounded-lg" />
-                                        </div>
-                                    ) : (
-                                        <div className="text-center">
-                                            <Upload size={16} className="mx-auto mb-1 text-slate-400" />
-                                            <p className="text-[8px] font-black uppercase text-slate-500">PAN Card</p>
-                                        </div>
-                                    )}
-                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'pan')} />
-                                </label>
-                                <label className={`flex flex-col items-center justify-center p-3 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${aadharPreview ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
-                                    {aadharPreview ? (
-                                        <div className="relative w-full aspect-video">
-                                            <img src={aadharPreview} alt="Aadhar" className="w-full h-full object-cover rounded-lg" />
-                                        </div>
-                                    ) : (
-                                        <div className="text-center">
-                                            <Upload size={16} className="mx-auto mb-1 text-slate-400" />
-                                            <p className="text-[8px] font-black uppercase text-slate-500">Aadhar Front</p>
-                                        </div>
-                                    )}
-                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'aadhar')} />
-                                </label>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3">
-                                <label className={`flex flex-col items-center justify-center p-3 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${aadharBackPreview ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
-                                    {aadharBackPreview ? (
-                                        <div className="relative w-full aspect-video">
-                                            <img src={aadharBackPreview} alt="Aadhar Back" className="w-full h-full object-cover rounded-lg" />
-                                        </div>
-                                    ) : (
-                                        <div className="text-center">
-                                            <Upload size={16} className="mx-auto mb-1 text-slate-400" />
-                                            <p className="text-[8px] font-black uppercase text-slate-500">Aadhar Back</p>
-                                        </div>
-                                    )}
-                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'aadhar_back')} />
-                                </label>
-                            </div>
                         </div>
                         <button
-                            disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || !formData.date_of_birth || !formData.gender || !!errors.date_of_birth || !panFile || !aadharFile || !aadharBackFile || loading}
+                            disabled={!formData.name || !formData.email.includes('@') || !formData.business_name || !formData.date_of_birth || !formData.gender || !!errors.date_of_birth || loading}
                             onClick={() => setStep(2)}
                             className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/10 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2 group"
                         >
