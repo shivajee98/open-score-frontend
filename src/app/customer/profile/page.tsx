@@ -106,22 +106,34 @@ export default function Profile() {
     };
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.location.search.includes('editBank=true')) {
-            if (user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED') {
-                 toast.error("Verified profile cannot be edited.");
-                 return;
-            }
-            setIsEditing(true);
-            setTimeout(() => {
-                const element = document.getElementById('bank-details-section');
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    element.classList.add('ring-4', 'ring-indigo-500', 'ring-offset-4', 'transition-all');
-                    setTimeout(() => element.classList.remove('ring-4', 'ring-indigo-500', 'ring-offset-4', 'transition-all'), 3000);
+        if (typeof window !== 'undefined') {
+            const searchParams = new URLSearchParams(window.location.search);
+            const isEdit = searchParams.get('edit') === 'true';
+            const editBank = searchParams.get('editBank') === 'true';
+            const section = searchParams.get('section');
+
+            if (isEdit || editBank) {
+                if (user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED') {
+                    toast.error("Verified profile cannot be edited.");
+                    return;
                 }
-            }, 500);
+                setIsEditing(true);
+                
+                const targetId = editBank ? 'bank-details-section' : (section ? `${section}-section` : null);
+                
+                if (targetId) {
+                    setTimeout(() => {
+                        const element = document.getElementById(targetId);
+                        if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            element.classList.add('ring-4', 'ring-indigo-500', 'ring-offset-4', 'transition-all');
+                            setTimeout(() => element.classList.remove('ring-4', 'ring-indigo-500', 'ring-offset-4', 'transition-all'), 3000);
+                        }
+                    }, 500);
+                }
+            }
         }
-    }, []);
+    }, [user?.role, user?.kyc_status]);
 
     // Synchronize form data with user data when it arrives
     useEffect(() => {
@@ -845,7 +857,7 @@ export default function Profile() {
                                 </div>
 
                                 {/* Address Section */}
-                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
+                                <div id="address-section" className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
                                     <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Business Address</p>
 
                                     <div>

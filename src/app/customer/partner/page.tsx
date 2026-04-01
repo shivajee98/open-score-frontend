@@ -218,7 +218,7 @@ const Partner = () => {
                                     <div className="mt-2 p-3 bg-emerald-100 rounded-xl">
                                         <p className="text-xs font-bold text-emerald-800 text-center">
                                             {partnerRequest?.type === 'vendor'
-                                                ? '🎉 You are now a vendor! Login to the Agent app to access your dashboard.'
+                                                ? '🎉 You are now a vendor! Login to the Vendor app to access your dashboard.'
                                                 : '🎉 You are now linked as an agent! Your vendor will configure your commission settings.'}
                                         </p>
                                     </div>

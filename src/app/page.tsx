@@ -740,44 +740,60 @@ function HomeContent() {
         )}
 
         {flow === 'otp_verify' && (
-          <div className="space-y-8 text-center">
-            <div>
-              <h2 className="text-2xl font-black mb-2">Verify Identity</h2>
-              <p className="text-slate-500 text-sm">Pick Up The call to listen the Otp sent to +91 {mobile}</p>
-            </div>
+          <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/5 relative overflow-hidden animate-in slide-in-from-right-8 duration-500 border border-slate-100/50">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-600 to-blue-600"></div>
+            
+            <div className="text-center space-y-8">
+              <div>
+                <h2 className="text-2xl font-black mb-2 tracking-tight text-slate-900">Verify Identity</h2>
+                <div className="p-3 bg-blue-50 text-blue-700/70 rounded-2xl text-[10px] font-black uppercase tracking-widest leading-relaxed border border-blue-100">
+                  Pick Up The call to listen to the OTP sent to 
+                  <span className="block mt-1 text-blue-700 text-xs font-black tracking-widest">+91 {mobile}</span>
+                </div>
+              </div>
 
-            <input
-              type="tel"
-              autoFocus
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
-              className="w-full text-center bg-slate-50 border border-slate-100 rounded-2xl p-5 font-black text-2xl tracking-[0.5em] text-primary focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand"
-              placeholder="••••••"
-            />
+              <input
+                type="tel"
+                autoFocus
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                className="w-full text-center bg-slate-50 border border-slate-100 rounded-2xl p-5 font-black text-2xl tracking-[0.6em] text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all shadow-inner"
+                placeholder="••••••"
+              />
 
-            <div className="space-y-4">
-              <button
-                onClick={handleVerifyOtp}
-                disabled={loading || otp.length < 6}
-                className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
-              >
-                {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Verify Code'}
-              </button>
-
-              <div className="flex flex-col items-center gap-4">
-                <button onClick={() => setFlow('mobile_entry')} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Change Number</button>
-
-                <div className="pt-2">
-                  {resendTimer > 0 ? (
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resend OTP in <span className="text-slate-900">{resendTimer}s</span></p>
+              <div className="space-y-4 pt-4">
+                <button
+                  onClick={handleVerifyOtp}
+                  disabled={loading || otp.length < 6}
+                  className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group"
+                >
+                  {loading ? (
+                    <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
                   ) : (
-                    <button
-                      onClick={() => handleSendOtp(isResettingPin)}
-                      className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 active:scale-95 transition-all"
-                    >
-                      Resend OTP
-                    </button>
+                    <>
+                      <span>Verify and Continue</span>
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </>
                   )}
+                </button>
+
+                <div className="flex flex-col items-center gap-4 pt-4 border-t border-slate-100">
+                  <button onClick={() => setFlow('mobile_entry')} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Change Number</button>
+
+                  <div className="pt-0">
+                    {resendTimer > 0 ? (
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 py-2 bg-slate-50 rounded-full border border-slate-100">
+                        Resend OTP in <span className="text-slate-900 text-xs font-black ml-1">{resendTimer}s</span>
+                      </p>
+                    ) : (
+                      <button
+                        onClick={() => handleSendOtp(isResettingPin)}
+                        className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:bg-blue-50 px-4 py-2 rounded-full border border-blue-100 transition-all active:scale-95 shadow-sm"
+                      >
+                        Resend Code
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

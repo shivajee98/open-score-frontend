@@ -591,29 +591,7 @@ export default function CustomerHome() {
                 )
             }
 
-            {/* Transfer Verification Alert */}
-            {
-                activeUser?.pending_transfer_otp && (
-                    <div className="px-4 mb-3">
-                        <div className="bg-gradient-to-br from-emerald-900 via-slate-900 to-emerald-950 p-5 rounded-3xl shadow-2xl shadow-emerald-900/40 border-[3px] border-emerald-500/30 flex flex-col gap-4 overflow-hidden relative">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center shadow-inner border border-emerald-400/30">
-                                    <Check size={24} strokeWidth={2.5} />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-black text-sm leading-tight uppercase tracking-tight">Transfer Verification</h3>
-                                    <p className="text-emerald-200/80 text-[10px] font-black leading-tight mt-1 uppercase tracking-widest">Share this code to receive ₹{activeUser.pending_transfer_amount}</p>
-                                </div>
-                            </div>
-                            <div className="relative z-10 bg-black/40 backdrop-blur-md rounded-2xl py-3 px-5 border border-emerald-500/20 flex items-center justify-between">
-                                <span className="text-emerald-300 text-[10px] font-black uppercase tracking-widest">Verification Code</span>
-                                <span className="text-white text-3xl font-black tracking-[0.25em]">{activeUser.pending_transfer_otp}</span>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+
 
             {/* KYC Alert (If any) */}
             {

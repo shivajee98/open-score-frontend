@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronRight, Zap, Clock, ShieldCheck, Lock, Check } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Zap, Clock, ShieldCheck, Lock, Check, MapPin, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
@@ -323,6 +323,25 @@ export default function LoanList() {
                         <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Demand Voucher</h3>
                         <span className="text-[10px] font-bold text-slate-400">Fixed Tenure</span>
                     </div>
+
+                    {/* PIN Code Prompt */}
+                    {!user?.pincode && (
+                        <div className="mb-6 px-2">
+                            <div 
+                                onClick={() => router.push('/customer/profile?edit=true&section=address')}
+                                className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:bg-amber-100/50 transition-all group"
+                            >
+                                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-200 shrink-0">
+                                    <MapPin size={20} />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="text-amber-900 font-black text-xs uppercase tracking-tight">Set Your Area PIN Code</h4>
+                                    <p className="text-amber-700/70 text-[10px] font-bold uppercase tracking-widest leading-tight mt-0.5">Update your profile with a valid PIN code to unlock exclusive loan plans available in your region.</p>
+                                </div>
+                                <ArrowRight className="text-amber-400 group-hover:translate-x-1 transition-transform" size={18} />
+                            </div>
+                        </div>
+                    )}
                     <div className="flex flex-col gap-2.5 mb-8">
                         {loanPlans.filter((p: any) => p.amount > 10000).map((plan: any) => {
                             const isLocked = plan.is_locked;
