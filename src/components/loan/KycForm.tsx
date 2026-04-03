@@ -157,20 +157,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     const aadharValue = watch('aadhar_number');
     const panValue = watch('pan_number');
-    const isPermanentSame = watch('is_permanent_same');
     const streetAddress = watch('street_address');
     const city = watch('city');
     const state = watch('state');
     const postalCode = watch('postal_code');
-
-    useEffect(() => {
-        if (isPermanentSame) {
-            setValue('permanent_street_address', streetAddress);
-            setValue('permanent_city', city);
-            setValue('permanent_state', state);
-            setValue('permanent_postal_code', postalCode);
-        }
-    }, [isPermanentSame, streetAddress, city, state, postalCode, setValue]);
 
     useEffect(() => {
         if (aadharValue && aadharValue.length === 12 && !user?.aadhar_number && user?.kyc_status !== 'FULL_VERIFIED') {
@@ -531,22 +521,9 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-100">
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                                <div className="relative">
-                                    <input 
-                                        type="checkbox" 
-                                        {...register('is_permanent_same')}
-                                        className="peer sr-only"
-                                    />
-                                    <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-blue-600 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-                                </div>
-                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Permanent address is same as current address</span>
-                            </label>
-                        </div>
 
-                        {!isPermanentSame && (
-                            <div className="space-y-6 animate-in slide-in-from-top-4 duration-300 mt-6">
+
+                        <div className="space-y-6 mt-6">
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="h-[1px] flex-1 bg-slate-100"></div>
                                     <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">Permanent Address Details</span>
@@ -637,9 +614,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         />
                                         {errors.permanent_postal_code && <p className={errorClasses}>{errors.permanent_postal_code.message}</p>}
                                     </div>
-                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 );
 

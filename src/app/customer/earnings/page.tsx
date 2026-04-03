@@ -173,15 +173,23 @@ export default function TeamEarningsPage() {
                             <div>
                                 <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Available for Transfer</p>
                                 <h2 className="text-4xl font-black text-slate-900 tracking-tighter">₹{stats?.available?.toLocaleString() || 0}</h2>
-                                {timeLeft.locked && (
+                                {stats?.unverified_held > 0 && (
                                     <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-amber-200">
-                                        <Clock size={12} className="animate-pulse" />
-                                        <span>Apply in: {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <Clock size={12} className="animate-pulse" />
+                                            <span>Held (Unverified): ₹{stats.unverified_held.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {timeLeft.locked && (
+                                    <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200">
+                                        <Clock size={12} />
+                                        <span>Withdraw in: {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m</span>
                                     </div>
                                 )}
                             </div>
-                            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-inner">
-                                <Coins size={24} />
+                            <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center shadow-inner shrink-0 ml-4">
+                                <TrendingUp size={24} />
                             </div>
                         </div>
 
@@ -245,7 +253,7 @@ export default function TeamEarningsPage() {
                             {timeLeft.locked 
                                 ? 'Currently Time Locked' 
                                 : (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
-                                    ? 'Locked: Milestone Pending'
+                                    ? 'Locked: Milestone '
                                     : (stats?.available || 0) <= 0 
                                         ? 'No Earnings Available' 
                                         : 'Transfer to Wallet'
@@ -341,11 +349,6 @@ export default function TeamEarningsPage() {
                         {stats?.history?.length > 0 ? (
                             stats.history.map((friend: any) => (
                                 <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
-                                    {!friend.is_onboarded && friend.validation?.message && friend.validation.message !== 'Success' && (
-                                        <div className="absolute top-0 right-0 px-3 py-1 bg-amber-500 text-white text-[8px] font-black uppercase tracking-widest rounded-bl-xl shadow-lg z-20">
-                                            {friend.validation.message}
-                                        </div>
-                                    )}
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <h4 className="text-sm font-black text-slate-900">{friend.name}</h4>
@@ -354,11 +357,11 @@ export default function TeamEarningsPage() {
                                         <div className="flex gap-4 text-right">
                                             <div>
                                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
-                                                <p className={`text-xs font-black ${friend.is_onboarded ? 'text-emerald-600' : 'text-slate-300'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-slate-300'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
                                             </div>
                                             <div>
                                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Disbursed Earn</p>
-                                                <p className="text-xs font-black text-indigo-600">₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                                <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-300'}`}>₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -372,11 +375,11 @@ export default function TeamEarningsPage() {
                                             <span className={`text-[7px] font-black uppercase text-center ${(friend.type !== 'LOAN' || friend.is_onboarded) ? 'text-emerald-600' : 'text-slate-400'}`}>Signed Up</span>
                                         </div>
                                         <div className="flex flex-col items-center gap-1.5 z-10">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${friend.is_onboarded || friend.type !== 'LOAN' ? 'bg-emerald-500 border-emerald-500 text-white scale-110 shadow-lg shadow-emerald-200' : (friend.validation?.is_onboarded ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-white border-slate-200 text-slate-300')}`}>
-                                                {friend.validation?.is_onboarded && !friend.is_onboarded ? <Clock size={11} className="animate-pulse" /> : <Trophy size={11} />}
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${friend.is_onboarded ? 'bg-emerald-500 border-emerald-500 text-white scale-110 shadow-lg shadow-emerald-200' : (friend.is_field_verified ? 'bg-indigo-500 border-indigo-500 text-white' : (friend.validation?.is_onboarded ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-white border-slate-200 text-slate-300'))}`}>
+                                                {friend.is_onboarded ? <CheckCircle size={11} /> : (friend.validation?.is_onboarded && !friend.is_field_verified ? <Clock size={11} className="animate-pulse" /> : <Trophy size={11} />)}
                                             </div>
-                                            <span className={`text-[7px] font-black uppercase text-center ${friend.is_onboarded || friend.type !== 'LOAN' ? 'text-emerald-600' : (friend.validation?.is_onboarded ? 'text-amber-600 italic' : 'text-slate-400')}`}>
-                                                {friend.is_onboarded || friend.type !== 'LOAN' ? 'Verified' : (friend.validation?.is_onboarded ? 'Validating' : 'QR Mapped')}
+                                            <span className={`text-[7px] font-black uppercase text-center ${friend.is_onboarded ? 'text-emerald-600' : (friend.validation?.is_onboarded && !friend.is_field_verified ? 'text-amber-600 italic' : 'text-slate-400')}`}>
+                                                {friend.is_onboarded ? 'Verified' : (friend.validation?.is_onboarded && !friend.is_field_verified ? 'Field KYC Pending' : 'QR Mapped')}
                                             </span>
                                         </div>
                                         <div className="flex flex-col items-center gap-1.5 z-10">
