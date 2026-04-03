@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info, Check, X } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info, Check, X, Clock } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -59,6 +59,21 @@ export default function Profile() {
     const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string }>({});
     const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean }>({});
     const [uploadingImages, setUploadingImages] = useState<Record<string, boolean>>({});
+    const [isAppPinMissing, setIsAppPinMissing] = useState(false);
+    const hasPromptedPin = useRef(false);
+
+    useEffect(() => {
+        if (pinData && !pinData.has_pin) {
+            setIsAppPinMissing(true);
+            if (!hasPromptedPin.current) {
+                setPinModalMode('SET');
+                setIsPinModalOpen(true);
+                hasPromptedPin.current = true;
+            }
+        } else {
+            setIsAppPinMissing(false);
+        }
+    }, [pinData]);
 
     const checkUniqueness = async (type: 'aadhar' | 'pan', value: string) => {
         setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
@@ -134,6 +149,26 @@ export default function Profile() {
             }
         }
     }, [user?.role, user?.kyc_status]);
+
+    const isPinMissing = user && !user.pincode;
+
+    // Force edit mode if PIN is missing
+    useEffect(() => {
+        if (isPinMissing && !isEditing && initialDataLoaded.current) {
+            setIsEditing(true);
+            toast.info("Please set your 6-digit PIN code to unlock loan plans.");
+            
+            // Focus on address section
+            setTimeout(() => {
+                const element = document.getElementById('address-section');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    element.classList.add('ring-4', 'ring-amber-500', 'ring-offset-4', 'transition-all');
+                    setTimeout(() => element.classList.remove('ring-4', 'ring-amber-500', 'ring-offset-4', 'transition-all'), 3000);
+                }
+            }, 800);
+        }
+    }, [isPinMissing, isEditing, initialDataLoaded.current]);
 
     // Synchronize form data with user data when it arrives
     useEffect(() => {
@@ -324,8 +359,43 @@ export default function Profile() {
     };
 
     const [showNameMismatch, setShowNameMismatch] = useState(false);
+    const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const [isAddressLocked, setIsAddressLocked] = useState(false);
+
+    useEffect(() => {
+        const updateTimeStr = user?.address_updated_at;
+        if (updateTimeStr) {
+            // Ensure we handle UTC/Local correctly by parsing
+            const updateTime = new Date(updateTimeStr).getTime();
+            
+            const calculateTime = () => {
+                const now = new Date().getTime();
+                const diff = (updateTime + 3 * 60 * 1000) - now;
+                if (diff <= 0) {
+                    setTimeLeft(0);
+                    setIsAddressLocked(true);
+                } else {
+                    setTimeLeft(Math.floor(diff / 1000));
+                    setIsAddressLocked(false);
+                }
+            };
+
+            calculateTime();
+            const timer = setInterval(calculateTime, 1000);
+            return () => clearInterval(timer);
+        } else {
+            setIsAddressLocked(false);
+            setTimeLeft(null);
+        }
+    }, [user?.address_updated_at]);
 
     const handleBack = () => {
+        if (isPinMissing && !formData.postal_code) {
+            toast.error("PIN Code is required to unlock your regional features.");
+            const element = document.getElementById('address-section');
+            if (element) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
         if (user?.role === 'ADMIN') router.push('/admin');
         else router.push('/customer'); // Unified dashboard
     };
@@ -371,6 +441,17 @@ export default function Profile() {
 
         if (uniquenessErrors.aadhar || uniquenessErrors.pan) {
             toast.error("Please resolve Aadhaar/PAN uniqueness issues before saving.");
+            return;
+        }
+
+        if (!formData.postal_code || formData.postal_code.length !== 6) {
+            toast.error("Valid 6-digit PIN Code is required.");
+            const element = document.getElementById('address-section');
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                element.classList.add('ring-4', 'ring-amber-500', 'ring-offset-4');
+                setTimeout(() => element.classList.remove('ring-4', 'ring-amber-500', 'ring-offset-4'), 3000);
+            }
             return;
         }
 
@@ -595,6 +676,28 @@ export default function Profile() {
             </div>
 
             <div className="max-w-2xl mx-auto px-4 -mt-12 relative z-20">
+                {isAppPinMissing && (
+                    <div className="mb-6 bg-rose-50 border-2 border-rose-100 rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-6 animate-in slide-in-from-top-4 duration-500 shadow-xl shadow-rose-100/50">
+                        <div className="w-16 h-16 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-600 shrink-0 border-2 border-rose-200/50">
+                            <Shield size={32} />
+                        </div>
+                        <div className="flex-1 text-center sm:text-left">
+                            <p className="text-[11px] font-black text-rose-400 uppercase tracking-widest leading-none mb-2">Unsecured Account</p>
+                            <h3 className="text-lg font-black text-slate-800 leading-tight mb-1">Set Your Security PIN</h3>
+                            <p className="text-xs font-bold text-slate-500 leading-relaxed">Protect your withdrawals and sensitive data with a 6-digit transaction PIN.</p>
+                        </div>
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setPinModalMode('SET');
+                                setIsPinModalOpen(true);
+                            }}
+                            className="w-full sm:w-auto bg-rose-600 text-white text-[11px] font-black uppercase tracking-[0.15em] px-8 py-4 rounded-2xl shadow-xl shadow-rose-600/20 active:scale-95 hover:bg-rose-700 transition-all"
+                        >
+                            Configure Now
+                        </button>
+                    </div>
+                )}
                 <div className="bg-white rounded-[3rem] p-6 md:p-8 shadow-2xl shadow-slate-300/50 border border-slate-100 relative overflow-hidden">
                     <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-500/10' : 'bg-blue-500/10'} rounded-full blur-3xl -mr-16 -mt-16`}></div>
 
@@ -857,106 +960,7 @@ export default function Profile() {
                                 </div>
 
                                 {/* Address Section */}
-                                <div id="address-section" className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
-                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Business Address</p>
 
-                                    <div>
-                                        <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">Street Address</p>
-                                        {isEditing ? (
-                                            <textarea
-                                                value={formData.street_address}
-                                                onChange={(e) => setFormData({ ...formData, street_address: e.target.value })}
-                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full min-h-[60px] resize-none`}
-                                                placeholder="Building, Street, Area"
-                                            />
-                                        ) : (
-                                            <p className="text-sm font-semibold text-slate-900">{user.address || 'Not Set'}</p>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">City</p>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={formData.city}
-                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                    placeholder="City"
-                                                />
-                                            ) : (
-                                                <p className="text-sm font-semibold text-slate-900">{user.city || 'Not Set'}</p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">State</p>
-                                            {isEditing ? (
-                                                <select
-                                                    value={formData.state}
-                                                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                >
-                                                    <option value="">Select State</option>
-                                                    <option value="Andhra Pradesh">Andhra Pradesh</option>
-                                                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                                                    <option value="Assam">Assam</option>
-                                                    <option value="Bihar">Bihar</option>
-                                                    <option value="Chhattisgarh">Chhattisgarh</option>
-                                                    <option value="Goa">Goa</option>
-                                                    <option value="Gujarat">Gujarat</option>
-                                                    <option value="Haryana">Haryana</option>
-                                                    <option value="Himachal Pradesh">Himachal Pradesh</option>
-                                                    <option value="Jharkhand">Jharkhand</option>
-                                                    <option value="Karnataka">Karnataka</option>
-                                                    <option value="Kerala">Kerala</option>
-                                                    <option value="Madhya Pradesh">Madhya Pradesh</option>
-                                                    <option value="Maharashtra">Maharashtra</option>
-                                                    <option value="Manipur">Manipur</option>
-                                                    <option value="Meghalaya">Meghalaya</option>
-                                                    <option value="Mizoram">Mizoram</option>
-                                                    <option value="Nagaland">Nagaland</option>
-                                                    <option value="Odisha">Odisha</option>
-                                                    <option value="Punjab">Punjab</option>
-                                                    <option value="Rajasthan">Rajasthan</option>
-                                                    <option value="Sikkim">Sikkim</option>
-                                                    <option value="Tamil Nadu">Tamil Nadu</option>
-                                                    <option value="Telangana">Telangana</option>
-                                                    <option value="Tripura">Tripura</option>
-                                                    <option value="Uttar Pradesh">Uttar Pradesh</option>
-                                                    <option value="Uttarakhand">Uttarakhand</option>
-                                                    <option value="West Bengal">West Bengal</option>
-                                                    <option value="Andaman and Nicobar Islands">Andaman & Nicobar</option>
-                                                    <option value="Chandigarh">Chandigarh</option>
-                                                    <option value="Dadra and Nagar Haveli and Daman and Diu">DNH & DD</option>
-                                                    <option value="Delhi">Delhi</option>
-                                                    <option value="Jammu and Kashmir">J&K</option>
-                                                    <option value="Ladakh">Ladakh</option>
-                                                    <option value="Lakshadweep">Lakshadweep</option>
-                                                    <option value="Puducherry">Puducherry</option>
-                                                </select>
-                                            ) : (
-                                                <p className="text-sm font-semibold text-slate-900">{user.state || 'Not Set'}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">PIN Code</p>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                maxLength={6}
-                                                value={formData.postal_code}
-                                                onChange={(e) => setFormData({ ...formData, postal_code: e.target.value.replace(/\D/g, '') })}
-                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                placeholder="6 digits"
-                                            />
-                                        ) : (
-                                            <p className="text-sm font-semibold text-slate-900">{user.pincode || 'Not Set'}</p>
-                                        )}
-                                    </div>
-                                </div>
 
                                 {/* Shop Images Section */}
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
@@ -1255,7 +1259,137 @@ export default function Profile() {
                             </>
                         )}
 
-                        <div id="bank-details-section" className="mt-8 mb-4 rounded-3xl p-2 transition-all duration-500">
+                                <div id="address-section" className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex flex-col gap-1">
+                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Location & Address</p>
+                                            {isAddressLocked ? (
+                                                <span className="flex items-center gap-1 text-[8px] font-black text-emerald-600 uppercase tracking-tighter bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                                    <ShieldCheck size={8} /> Verified & Locked
+                                                </span>
+                                            ) : timeLeft !== null && (
+                                                <span className="flex items-center gap-1 text-[8px] font-black text-amber-600 uppercase tracking-tighter bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">
+                                                    <Clock size={8} /> Edit window: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="text-[8px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">Required for Loans</span>
+                                    </div>
+
+                                    {!isAddressLocked && timeLeft !== null && isEditing && (
+                                        <div className="bg-amber-50 border border-amber-100 p-2 rounded-lg mb-2">
+                                            <p className="text-[9px] font-bold text-amber-800 leading-tight">
+                                                ⚠️ You have {Math.floor(timeLeft / 60)} minutes to correct any mistakes. After this, address details will be locked for security.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">Street Address</p>
+                                        {isEditing && !isAddressLocked ? (
+                                            <textarea
+                                                value={formData.street_address}
+                                                onChange={(e) => setFormData({ ...formData, street_address: e.target.value })}
+                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full min-h-[60px] resize-none`}
+                                                placeholder="Building, Street, Area"
+                                            />
+                                        ) : (
+                                            <p className="text-sm font-semibold text-slate-900">{user?.business_address || user?.address || 'Not Set'}</p>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">City</p>
+                                            {isEditing && !isAddressLocked ? (
+                                                <input
+                                                    type="text"
+                                                    value={formData.city}
+                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="City"
+                                                />
+                                            ) : (
+                                                <p className="text-sm font-semibold text-slate-900">{user?.city || 'Not Set'}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">State</p>
+                                            {isEditing && !isAddressLocked ? (
+                                                <select
+                                                    value={formData.state}
+                                                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                >
+                                                    <option value="">Select State</option>
+                                                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                                    <option value="Assam">Assam</option>
+                                                    <option value="Bihar">Bihar</option>
+                                                    <option value="Chhattisgarh">Chhattisgarh</option>
+                                                    <option value="Goa">Goa</option>
+                                                    <option value="Gujarat">Gujarat</option>
+                                                    <option value="Haryana">Haryana</option>
+                                                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                                    <option value="Jharkhand">Jharkhand</option>
+                                                    <option value="Karnataka">Karnataka</option>
+                                                    <option value="Kerala">Kerala</option>
+                                                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                                    <option value="Maharashtra">Maharashtra</option>
+                                                    <option value="Manipur">Manipur</option>
+                                                    <option value="Meghalaya">Meghalaya</option>
+                                                    <option value="Mizoram">Mizoram</option>
+                                                    <option value="Nagaland">Nagaland</option>
+                                                    <option value="Odisha">Odisha</option>
+                                                    <option value="Punjab">Punjab</option>
+                                                    <option value="Rajasthan">Rajasthan</option>
+                                                    <option value="Sikkim">Sikkim</option>
+                                                    <option value="Tamil Nadu">Tamil Nadu</option>
+                                                    <option value="Telangana">Telangana</option>
+                                                    <option value="Tripura">Tripura</option>
+                                                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                                    <option value="Uttarakhand">Uttarakhand</option>
+                                                    <option value="West Bengal">West Bengal</option>
+                                                    <option value="Andaman and Nicobar Islands">Andaman & Nicobar</option>
+                                                    <option value="Chandigarh">Chandigarh</option>
+                                                    <option value="Dadra and Nagar Haveli and Daman and Diu">DNH & DD</option>
+                                                    <option value="Delhi">Delhi</option>
+                                                    <option value="Jammu and Kashmir">J&K</option>
+                                                    <option value="Ladakh">Ladakh</option>
+                                                    <option value="Lakshadweep">Lakshadweep</option>
+                                                    <option value="Puducherry">Puducherry</option>
+                                                </select>
+                                            ) : (
+                                                <p className="text-sm font-semibold text-slate-900">{user?.state || 'Not Set'}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className={`p-4 rounded-2xl border-2 transition-all ${!formData.postal_code ? 'bg-amber-50 border-amber-200' : isAddressLocked ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-100/50 border-slate-100'}`}>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Regional PIN Code</p>
+                                            {!formData.postal_code && <span className="text-[8px] font-black text-amber-600 animate-pulse uppercase">Mandatory ⚠️</span>}
+                                            {isAddressLocked && <span className="text-[8px] font-black text-emerald-600 uppercase">Securely Locked ✅</span>}
+                                        </div>
+                                        {isEditing && !isAddressLocked ? (
+                                            <input
+                                                type="text"
+                                                maxLength={6}
+                                                value={formData.postal_code}
+                                                onChange={(e) => setFormData({ ...formData, postal_code: e.target.value.replace(/\D/g, '') })}
+                                                className={`text-lg font-black text-slate-900 bg-transparent border-b-2 border-slate-300 focus:border-amber-500 focus:outline-none w-full tracking-[0.2em]`}
+                                                placeholder="000000"
+                                            />
+                                        ) : (
+                                            <p className="text-lg font-black text-slate-900 tracking-[0.2em]">{user?.pincode || 'NOT SET'}</p>
+                                        )}
+                                        <p className="text-[8px] text-slate-400 font-bold mt-2 uppercase">
+                                            {isAddressLocked ? 'Address verified for regional compliance.' : 'Used to verify your area with regional loan policies.'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div id="bank-details-section" className="mt-8 mb-4 rounded-3xl p-2 transition-all duration-500">
                             <h3 className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Bank Details (For Payouts)</h3>
                             {user.account_number && (
                                 <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl mb-4 flex items-center gap-2">

@@ -118,10 +118,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             first_name: user?.name?.split(' ')[0] || '',
             last_name: user?.name?.split(' ').slice(1).join(' ') || '',
             email: user?.email || '',
-            birth_date: user?.date_of_birth || '',
+            phone: user?.mobile_number || '',
+            birth_date: user?.date_of_birth ? user.date_of_birth.split('T')[0] : '',
             employer: user?.role === 'STUDENT' ? (user?.student_profile?.school_name || '') : (user?.business_name || ''),
             occupation: user?.role === 'STUDENT' ? (user?.student_profile?.course_name || 'Student') : '',
-            street_address: user?.role === 'STUDENT' ? (user?.student_profile?.school_address || '') : '',
+            street_address: user?.business_address || (user?.role === 'STUDENT' ? (user?.student_profile?.school_address || '') : ''),
+            city: user?.city || '',
+            state: user?.state || '',
+            postal_code: user?.pincode || '',
             aadhar_number: user?.aadhar_number || '',
             pan_number: user?.pan_number || '',
             ...initialData
@@ -355,7 +359,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <label className={labelClasses}>Mobile Number</label>
                             <div className="relative">
                                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
-                                <input type="tel" maxLength={10} placeholder="9876543210" {...register('phone')} className={`${inputClasses} pl-11`} />
+                                <input 
+                                    type="tel" 
+                                    maxLength={10} 
+                                    placeholder="9876543210" 
+                                    {...register('phone')} 
+                                    readOnly={!!user?.mobile_number}
+                                    className={cn(inputClasses, "pl-11", !!user?.mobile_number && "bg-slate-50 text-slate-500 cursor-not-allowed")} 
+                                />
                             </div>
                             {errors.phone && <p className={errorClasses}>{errors.phone.message}</p>}
                         </div>
@@ -408,7 +419,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <label className={labelClasses}>Street Address</label>
                             <div className="relative">
                                 <MapPin className="absolute left-4 top-4 text-slate-300 w-5 h-5" />
-                                <textarea placeholder="House No, Area, Landmark" {...register('street_address')} className={`${inputClasses} pl-11 min-h-[80px]`} />
+                                <textarea 
+                                    placeholder="House No, Area, Landmark" 
+                                    {...register('street_address')} 
+                                    readOnly={!!user?.business_address}
+                                    className={cn(inputClasses, "pl-11 min-h-[80px]", !!user?.business_address && "bg-slate-50 text-slate-500 cursor-not-allowed")} 
+                                />
                             </div>
                             {errors.street_address && <p className={errorClasses}>{errors.street_address.message}</p>}
                         </div>
@@ -416,12 +432,21 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="grid grid-cols-3 gap-2">
                             <div>
                                 <label className={labelClasses}>City</label>
-                                <input placeholder="City" {...register('city')} className={inputClasses} />
+                                <input 
+                                    placeholder="City" 
+                                    {...register('city')} 
+                                    readOnly={!!user?.city}
+                                    className={cn(inputClasses, !!user?.city && "bg-slate-50 text-slate-500 cursor-not-allowed")} 
+                                />
                                 {errors.city && <p className={errorClasses}>{errors.city.message}</p>}
                             </div>
                             <div>
                                 <label className={labelClasses}>State</label>
-                                <select {...register('state')} className={inputClasses}>
+                                <select 
+                                    {...register('state')} 
+                                    disabled={!!user?.state}
+                                    className={cn(inputClasses, !!user?.state && "bg-slate-50 text-slate-500 cursor-not-allowed border-none opacity-100")}
+                                >
                                     <option value="">Select State</option>
                                     <option value="Andhra Pradesh">Andhra Pradesh</option>
                                     <option value="Arunachal Pradesh">Arunachal Pradesh</option>
@@ -470,10 +495,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     placeholder="6 digits"
                                     onInput={(e) => {
                                         const target = e.target as HTMLInputElement;
+                                        if (!!user?.pincode) return;
                                         target.value = target.value.replace(/\D/g, '').slice(0, 6);
                                     }}
                                     {...register('postal_code')}
-                                    className={inputClasses}
+                                    readOnly={!!user?.pincode}
+                                    className={cn(inputClasses, !!user?.pincode && "bg-slate-50 text-slate-500 cursor-not-allowed")}
                                 />
                                 {errors.postal_code && <p className={errorClasses}>{errors.postal_code.message}</p>}
                             </div>

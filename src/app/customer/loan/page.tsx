@@ -16,11 +16,52 @@ export default function LoanList() {
     const [activeLoan, setActiveLoan] = useState<any>(null);
     const [cooldown, setCooldown] = useState({ active: false, daysRemaining: 0 });
     const [closedAmounts, setClosedAmounts] = useState<Set<number>>(new Set());
+    const [isAddressVerified, setIsAddressVerified] = useState(false);
+    const [addressWaitTime, setAddressWaitTime] = useState<number | null>(null);
 
     useEffect(() => {
         const u = localStorage.getItem('user');
-        if (u) setUser(JSON.parse(u));
+        if (u) {
+            const parsedUser = JSON.parse(u);
+            setUser(parsedUser);
+            
+            // Initial check for address verification
+            if (parsedUser.address_updated_at) {
+                const updateTime = new Date(parsedUser.address_updated_at).getTime();
+                const now = new Date().getTime();
+                const diff = (updateTime + 3 * 60 * 1000) - now;
+                
+                if (diff <= 0) {
+                    setIsAddressVerified(true);
+                } else {
+                    setIsAddressVerified(false);
+                    setAddressWaitTime(Math.floor(diff / 1000));
+                }
+            } else {
+                // If no address saved, it counts as not verified
+                setIsAddressVerified(false);
+            }
+        }
     }, []);
+
+    useEffect(() => {
+        if (user?.address_updated_at && !isAddressVerified) {
+            const timer = setInterval(() => {
+                const updateTime = new Date(user.address_updated_at).getTime();
+                const now = new Date().getTime();
+                const diff = (updateTime + 3 * 60 * 1000) - now;
+                
+                if (diff <= 0) {
+                    setIsAddressVerified(true);
+                    setAddressWaitTime(null);
+                    clearInterval(timer);
+                } else {
+                    setAddressWaitTime(Math.floor(diff / 1000));
+                }
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [user, isAddressVerified]);
 
     const isMerchant = user?.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'blue';
@@ -153,6 +194,49 @@ export default function LoanList() {
             </div>
 
             <div className="max-w-2xl mx-auto px-4 -mt-10 relative z-20">
+                {!isAddressVerified && (
+                    <div className="mb-8 animate-in fade-in zoom-in duration-500">
+                        <div className="bg-white rounded-3xl p-8 shadow-2xl border border-amber-100 text-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-16 -mt-16 blur-2xl opacity-50"></div>
+                            
+                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border-2 border-amber-100">
+                                <Clock className="w-8 h-8 text-amber-600 animate-pulse" />
+                            </div>
+
+                            <h3 className="text-xl font-black text-slate-900 mb-2">Address Verification in Progress</h3>
+                            
+                            {addressWaitTime !== null ? (
+                                <>
+                                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                                        For your security, we are finalising your profile details. Loan applications will be available in 
+                                        <span className="font-black text-slate-900 mx-1">
+                                            {Math.floor(addressWaitTime / 60)}:{(addressWaitTime % 60).toString().padStart(2, '0')}
+                                        </span>
+                                        minutes.
+                                    </p>
+                                    <div className="w-full bg-slate-100 h-1.5 rounded-full mb-8 overflow-hidden">
+                                        <div 
+                                            className="h-full bg-amber-500 transition-all duration-1000 ease-linear" 
+                                            style={{ width: `${(1 - (addressWaitTime / 180)) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </>
+                            ) : (
+                                <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+                                    Please complete your profile details and save your address to unlock loan applications.
+                                </p>
+                            )}
+
+                            <button
+                                onClick={() => router.push('/customer/profile')}
+                                className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-900/10 hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                            >
+                                {addressWaitTime !== null ? 'Check Profile Status' : 'Complete Profile Now'}
+                                <ArrowRight size={18} />
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Recent Activity / History Highlight - MOVED TO TOP */}
                 {recentLoan && (
@@ -274,6 +358,10 @@ export default function LoanList() {
                         <div
                             key={plan.id}
                             onClick={() => {
+                                if (!isAddressVerified) {
+                                    alert("Profile Finalising: Your address details are currently being processed for security. Please wait for the 3-minute verification window to complete (see countdown above).");
+                                    return;
+                                }
                                 if (activeLoan) {
                                     alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
                                     return;
@@ -318,30 +406,12 @@ export default function LoanList() {
                 </div>
 
                 {/* Loan Plans List Section */}
-                <div>
+                <div className={cn("relative transition-all duration-700", (!user?.pincode || !isAddressVerified) && "blur-xl grayscale pointer-events-none")}>
                     <div className="flex justify-between items-end mb-4 px-2">
                         <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Demand Voucher</h3>
                         <span className="text-[10px] font-bold text-slate-400">Fixed Tenure</span>
                     </div>
 
-                    {/* PIN Code Prompt */}
-                    {!user?.pincode && (
-                        <div className="mb-6 px-2">
-                            <div 
-                                onClick={() => router.push('/customer/profile?edit=true&section=address')}
-                                className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:bg-amber-100/50 transition-all group"
-                            >
-                                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-200 shrink-0">
-                                    <MapPin size={20} />
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className="text-amber-900 font-black text-xs uppercase tracking-tight">Set Your Area PIN Code</h4>
-                                    <p className="text-amber-700/70 text-[10px] font-bold uppercase tracking-widest leading-tight mt-0.5">Update your profile with a valid PIN code to unlock exclusive loan plans available in your region.</p>
-                                </div>
-                                <ArrowRight className="text-amber-400 group-hover:translate-x-1 transition-transform" size={18} />
-                            </div>
-                        </div>
-                    )}
                     <div className="flex flex-col gap-2.5 mb-8">
                         {loanPlans.filter((p: any) => p.amount > 10000).map((plan: any) => {
                             const isLocked = plan.is_locked;
@@ -481,6 +551,29 @@ export default function LoanList() {
                     </div>
                 </div>
             </div>
+
+            {/* Force PIN Overlay - Mandatory Regional Setup */}
+            {!user?.pincode && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-500">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"></div>
+                    <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full relative z-10 shadow-2xl border border-white/20 text-center animate-in zoom-in-95 slide-in-from-bottom-10 duration-700 delay-300">
+                        <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-600 rounded-3xl flex items-center justify-center mx-auto mb-6 text-white shadow-xl shadow-orange-200 animate-bounce">
+                            <MapPin size={40} strokeWidth={2.5} />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Regional Setup Required</h2>
+                        <p className="text-slate-500 font-bold text-xs uppercase tracking-widest leading-loose mb-8">
+                            We use your area PIN code to show exclusive loan plans available in your region. Please set it to proceed.
+                        </p>
+                        <button
+                            onClick={() => router.push('/customer/profile?edit=true&section=address')}
+                            className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 group"
+                        >
+                            <span>Set Area PIN</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
