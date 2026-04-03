@@ -98,6 +98,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         employer: z.string().min(2, 'Employer name is required'),
         occupation: z.string().min(2, 'Occupation is required'),
 
+        permanent_street_address: z.string().min(5, 'Permanent address is too short'),
+        permanent_city: z.string().min(2, 'City is required'),
+        permanent_state: z.string().min(2, 'State is required'),
+        permanent_postal_code: z.string().regex(/^\d{6}$/, 'PIN code must be exactly 6 digits'),
+        is_permanent_same: z.boolean().default(false),
+
         referral_code: z.string().optional(),
         consent: z.boolean().refine(val => val === true, 'You must agree to the terms'),
     });
@@ -126,6 +132,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             city: user?.city || '',
             state: user?.state || '',
             postal_code: user?.pincode || '',
+            permanent_street_address: user?.permanent_street_address || '',
+            permanent_city: user?.permanent_city || '',
+            permanent_state: user?.permanent_state || '',
+            permanent_postal_code: user?.permanent_pincode || '',
+            is_permanent_same: user?.is_permanent_same || false,
             aadhar_number: user?.aadhar_number || '',
             pan_number: user?.pan_number || '',
             ...initialData
@@ -146,6 +157,20 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     const aadharValue = watch('aadhar_number');
     const panValue = watch('pan_number');
+    const isPermanentSame = watch('is_permanent_same');
+    const streetAddress = watch('street_address');
+    const city = watch('city');
+    const state = watch('state');
+    const postalCode = watch('postal_code');
+
+    useEffect(() => {
+        if (isPermanentSame) {
+            setValue('permanent_street_address', streetAddress);
+            setValue('permanent_city', city);
+            setValue('permanent_state', state);
+            setValue('permanent_postal_code', postalCode);
+        }
+    }, [isPermanentSame, streetAddress, city, state, postalCode, setValue]);
 
     useEffect(() => {
         if (aadharValue && aadharValue.length === 12 && !user?.aadhar_number && user?.kyc_status !== 'FULL_VERIFIED') {
@@ -253,7 +278,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         switch (step) {
             case 0: return ['annual_income', 'loan_usage', 'referral_code'];
             case 1: return ['first_name', 'last_name', 'email', 'phone', 'birth_date'];
-            case 2: return ['aadhar_number', 'pan_number', 'street_address', 'city', 'state', 'postal_code'];
+            case 2: return ['aadhar_number', 'pan_number', 'street_address', 'city', 'state', 'postal_code', 'permanent_street_address', 'permanent_city', 'permanent_state', 'permanent_postal_code', 'is_permanent_same'];
             case 3: return ['employer', 'occupation'];
             case 4: return ['consent'];
             default: return [];
@@ -505,6 +530,116 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 {errors.postal_code && <p className={errorClasses}>{errors.postal_code.message}</p>}
                             </div>
                         </div>
+
+                        <div className="pt-4 border-t border-slate-100">
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative">
+                                    <input 
+                                        type="checkbox" 
+                                        {...register('is_permanent_same')}
+                                        className="peer sr-only"
+                                    />
+                                    <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-blue-600 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                                </div>
+                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-700 transition-colors">Permanent address is same as current address</span>
+                            </label>
+                        </div>
+
+                        {!isPermanentSame && (
+                            <div className="space-y-6 animate-in slide-in-from-top-4 duration-300 mt-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="h-[1px] flex-1 bg-slate-100"></div>
+                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">Permanent Address Details</span>
+                                    <div className="h-[1px] flex-1 bg-slate-100"></div>
+                                </div>
+
+                                <div>
+                                    <label className={labelClasses}>Permanent Street Address</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-4 top-4 text-slate-300 w-5 h-5" />
+                                        <textarea 
+                                            placeholder="House No, Area, Landmark" 
+                                            {...register('permanent_street_address')} 
+                                            className={cn(inputClasses, "pl-11 min-h-[80px]")} 
+                                        />
+                                    </div>
+                                    {errors.permanent_street_address && <p className={errorClasses}>{errors.permanent_street_address.message}</p>}
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label className={labelClasses}>City</label>
+                                        <input 
+                                            placeholder="City" 
+                                            {...register('permanent_city')} 
+                                            className={inputClasses} 
+                                        />
+                                        {errors.permanent_city && <p className={errorClasses}>{errors.permanent_city.message}</p>}
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>State</label>
+                                        <select 
+                                            {...register('permanent_state')} 
+                                            className={inputClasses}
+                                        >
+                                            <option value="">Select State</option>
+                                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                            <option value="Assam">Assam</option>
+                                            <option value="Bihar">Bihar</option>
+                                            <option value="Chhattisgarh">Chhattisgarh</option>
+                                            <option value="Goa">Goa</option>
+                                            <option value="Gujarat">Gujarat</option>
+                                            <option value="Haryana">Haryana</option>
+                                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                            <option value="Jharkhand">Jharkhand</option>
+                                            <option value="Karnataka">Karnataka</option>
+                                            <option value="Kerala">Kerala</option>
+                                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                            <option value="Maharashtra">Maharashtra</option>
+                                            <option value="Manipur">Manipur</option>
+                                            <option value="Meghalaya">Meghalaya</option>
+                                            <option value="Mizoram">Mizoram</option>
+                                            <option value="Nagaland">Nagaland</option>
+                                            <option value="Odisha">Odisha</option>
+                                            <option value="Punjab">Punjab</option>
+                                            <option value="Rajasthan">Rajasthan</option>
+                                            <option value="Sikkim">Sikkim</option>
+                                            <option value="Tamil Nadu">Tamil Nadu</option>
+                                            <option value="Telangana">Telangana</option>
+                                            <option value="Tripura">Tripura</option>
+                                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                            <option value="Uttarakhand">Uttarakhand</option>
+                                            <option value="West Bengal">West Bengal</option>
+                                            <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                                            <option value="Chandigarh">Chandigarh</option>
+                                            <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+                                            <option value="Delhi">Delhi</option>
+                                            <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                                            <option value="Ladakh">Ladakh</option>
+                                            <option value="Lakshadweep">Lakshadweep</option>
+                                            <option value="Puducherry">Puducherry</option>
+                                        </select>
+                                        {errors.permanent_state && <p className={errorClasses}>{errors.permanent_state.message}</p>}
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>PIN Code</label>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            placeholder="6 digits"
+                                            onInput={(e) => {
+                                                const target = e.target as HTMLInputElement;
+                                                target.value = target.value.replace(/\D/g, '').slice(0, 6);
+                                            }}
+                                            {...register('permanent_postal_code')}
+                                            className={inputClasses}
+                                        />
+                                        {errors.permanent_postal_code && <p className={errorClasses}>{errors.permanent_postal_code.message}</p>}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
 
