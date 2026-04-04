@@ -28,6 +28,7 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
 
             const userStr = localStorage.getItem("user");
             if (!userStr) {
+                setIsLocked(false);
                 setInitialized(true);
                 return;
             }
@@ -55,7 +56,14 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
 
         checkLockStatus();
         window.addEventListener('auth-login', checkLockStatus);
-        return () => window.removeEventListener('auth-login', checkLockStatus);
+        window.addEventListener('auth-logout', checkLockStatus);
+        window.addEventListener('userStateUpdate', checkLockStatus);
+        
+        return () => {
+            window.removeEventListener('auth-login', checkLockStatus);
+            window.removeEventListener('auth-logout', checkLockStatus);
+            window.removeEventListener('userStateUpdate', checkLockStatus);
+        };
     }, []);
 
     const handleVerify = async () => {

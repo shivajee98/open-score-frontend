@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import { useStore } from '@/store/useStore';
@@ -151,7 +151,7 @@ export default function TeamEarningsPage() {
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Mapping</p>
+                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Mapping</p>
                                 <p className="text-base font-black">₹{(stats?.qr_earning || 0).toLocaleString('en-IN')}</p>
                             </div>
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
@@ -217,22 +217,20 @@ export default function TeamEarningsPage() {
 
                         {/* QR Mapping Milestone Restriction */}
                         {stats?.min_qr_onboard_for_transfer > 0 && (
-                            <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-4 transition-all ${
-                                (stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer 
-                                ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
-                                : 'bg-amber-50 border-amber-100 text-amber-700'
-                            }`}>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                                    (stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer 
-                                    ? 'bg-emerald-500 text-white' 
-                                    : 'bg-amber-500 text-white'
+                            <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-4 transition-all ${(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer
+                                    ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                                    : 'bg-amber-50 border-amber-100 text-amber-700'
                                 }`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer
+                                        ? 'bg-emerald-500 text-white'
+                                        : 'bg-amber-500 text-white'
+                                    }`}>
                                     {(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
                                 </div>
                                 <div>
                                     <p className="text-[10px] uppercase font-black tracking-widest leading-none mb-1">Mapping Milestone</p>
                                     <p className="text-xs font-bold">
-                                        {(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer 
+                                        {(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer
                                             ? `Milestone reached! (${stats.qr_onboard_count}/${stats.min_qr_onboard_for_transfer})`
                                             : `Complete ${stats.min_qr_onboard_for_transfer} QR mappings to unlock transfers. (${stats.qr_onboard_count} done)`
                                         }
@@ -244,18 +242,17 @@ export default function TeamEarningsPage() {
                         <button
                             onClick={handleTransferClick}
                             disabled={submitting || (stats?.available || 0) <= 0 || timeLeft.locked || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)}
-                            className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${
-                                timeLeft.locked || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
+                            className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${timeLeft.locked || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
                                     ? 'bg-slate-300 cursor-not-allowed shadow-none'
                                     : 'bg-slate-900 hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
-                            }`}
+                                }`}
                         >
-                            {timeLeft.locked 
-                                ? 'Currently Time Locked' 
+                            {timeLeft.locked
+                                ? 'Currently Time Locked'
                                 : (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
                                     ? 'Locked: Milestone '
-                                    : (stats?.available || 0) <= 0 
-                                        ? 'No Earnings Available' 
+                                    : (stats?.available || 0) <= 0
+                                        ? 'No Earnings Available'
                                         : 'Transfer to Wallet'
                             }
                             <ArrowUpRight size={16} />
@@ -274,7 +271,7 @@ export default function TeamEarningsPage() {
                         <p className="text-xs text-slate-500 font-bold uppercase tracking-widest leading-relaxed max-w-[240px]">
                             Please complete your KYC to enable earnings withdrawal and transfer.
                         </p>
-                        <button 
+                        <button
                             onClick={() => router.push('/customer/my-work')}
                             className="mt-6 px-8 py-3 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-200"
                         >
@@ -367,36 +364,55 @@ export default function TeamEarningsPage() {
                                     </div>
 
                                     {/* Progress Indicator */}
-                                    <div className="grid grid-cols-4 gap-1 relative pt-2">
-                                        <div className="flex flex-col items-center gap-1.5 z-10">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${(friend.type !== 'LOAN' || friend.is_onboarded) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
+                                    <div className="grid grid-cols-4 gap-1 relative pt-2 mb-2">
+                                        {/* Step 1: Joined */}
+                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100`}>
                                                 <Users size={12} />
                                             </div>
-                                            <span className={`text-[7px] font-black uppercase text-center ${(friend.type !== 'LOAN' || friend.is_onboarded) ? 'text-emerald-600' : 'text-slate-400'}`}>Signed Up</span>
+                                            <span className="text-[7px] font-black uppercase text-emerald-500">Joined</span>
                                         </div>
-                                        <div className="flex flex-col items-center gap-1.5 z-10">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${friend.is_onboarded ? 'bg-emerald-500 border-emerald-500 text-white scale-110 shadow-lg shadow-emerald-200' : (friend.is_field_verified ? 'bg-indigo-500 border-indigo-500 text-white' : (friend.validation?.is_onboarded ? 'bg-amber-100 border-amber-400 text-amber-600' : 'bg-white border-slate-200 text-slate-300'))}`}>
-                                                {friend.is_onboarded ? <CheckCircle size={11} /> : (friend.validation?.is_onboarded && !friend.is_field_verified ? <Clock size={11} className="animate-pulse" /> : <Trophy size={11} />)}
+
+                                        {/* Step 2: Action (Mapped/Applied) */}
+                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                                (friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN')
+                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
+                                                : 'bg-white border-slate-200 text-slate-300'
+                                            }`}>
+                                                {friend.type === 'LOAN' ? <History size={11} /> : <QrCode size={11} />}
                                             </div>
-                                            <span className={`text-[7px] font-black uppercase text-center ${friend.is_onboarded ? 'text-emerald-600' : (friend.validation?.is_onboarded && !friend.is_field_verified ? 'text-amber-600 italic' : 'text-slate-400')}`}>
-                                                {friend.is_onboarded ? 'Verified' : (friend.validation?.is_onboarded && !friend.is_field_verified ? 'Field KYC Pending' : 'QR Mapped')}
+                                            <span className={`text-[7px] font-black uppercase ${(friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN') ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                                {friend.type === 'LOAN' ? 'Applied' : 'Mapped'}
                                             </span>
                                         </div>
-                                        <div className="flex flex-col items-center gap-1.5 z-10">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_applied_loan ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white border-slate-200 text-slate-300'} ${friend.has_applied_loan && !friend.has_received_cashback ? 'animate-pulse' : ''}`}>
-                                                <History size={12} />
+
+                                        {/* Step 3: Verified */}
+                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                                friend.is_field_verified 
+                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
+                                                : 'bg-white border-amber-300 text-amber-500 animate-pulse'
+                                            }`}>
+                                                {friend.is_field_verified ? <Check size={11} /> : <Clock size={11} />}
                                             </div>
-                                            <span className="text-[7px] font-black uppercase text-slate-400 text-center">Loan Linked</span>
+                                            <span className={`text-[7px] font-black uppercase ${friend.is_field_verified ? 'text-emerald-500' : 'text-amber-500'}`}>Verified</span>
                                         </div>
-                                        <div className="flex flex-col items-center gap-1.5 z-10">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${friend.has_received_cashback ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-300'}`}>
-                                                <Trophy size={12} />
+
+                                        {/* Step 4: Paid */}
+                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                                friend.is_field_verified 
+                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                                                : 'bg-white border-slate-200 text-slate-300'
+                                            }`}>
+                                                <Trophy size={11} />
                                             </div>
-                                            <span className="text-[7px] font-black uppercase text-slate-400 text-center">Earned</span>
+                                            <span className={`text-[7px] font-black uppercase ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-400'}`}>Paid</span>
                                         </div>
 
                                         {/* Connecting Line Backdrop */}
-                                        <div className="absolute top-5 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-slate-100 -z-0"></div>
+                                        <div className="absolute top-[21px] left-[15%] right-[15%] h-[1.5px] bg-slate-100 -z-0"></div>
                                     </div>
                                 </div>
                             ))

@@ -24,6 +24,10 @@ export const clearAuthState = async () => {
         // Reset failure count
         authFailureCount = 0;
 
+        // Dispatch events to notify other components
+        window.dispatchEvent(new Event('auth-logout'));
+        window.dispatchEvent(new Event('userStateUpdate'));
+
         // Notify Native WebView
         if ((window as any).ReactNativeWebView) {
             (window as any).ReactNativeWebView.postMessage(JSON.stringify({

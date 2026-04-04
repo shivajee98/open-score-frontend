@@ -110,12 +110,19 @@ function HomeContent() {
     };
     checkReferral();
 
+    const handleLogout = () => {
+      setFlow('onboarding');
+      setCheckingSession(false);
+    };
+
+    window.addEventListener('auth-logout', handleLogout);
     window.addEventListener('storage', checkReferral);
     const customListener = () => checkReferral();
     window.addEventListener('referral_code_updated', customListener);
 
     return () => {
       clearTimeout(timer);
+      window.removeEventListener('auth-logout', handleLogout);
       window.removeEventListener('storage', checkReferral);
       window.removeEventListener('referral_code_updated', customListener);
     };
