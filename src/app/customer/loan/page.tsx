@@ -5,11 +5,13 @@ import { ArrowLeft, ChevronRight, Zap, Clock, ShieldCheck, Lock, Check, MapPin, 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 import { LOAN_PLANS, cn } from '@/lib/loanUtils';
 
 export default function LoanList() {
     const router = useRouter();
 
+    const { data: userData } = useApi('/auth/me');
     const [user, setUser] = useState<any>(null);
     const [recentLoan, setRecentLoan] = useState<any>(null);
     const [kycLoan, setKycLoan] = useState<any>(null);
@@ -20,29 +22,33 @@ export default function LoanList() {
     const [addressWaitTime, setAddressWaitTime] = useState<number | null>(null);
 
     useEffect(() => {
+        // Fallback to localStorage immediately for better UX
         const u = localStorage.getItem('user');
-        if (u) {
-            const parsedUser = JSON.parse(u);
-            setUser(parsedUser);
+        if (u) setUser(JSON.parse(u));
+    }, []);
+
+    useEffect(() => {
+        if (userData) {
+            setUser(userData);
             
             // Initial check for address verification
-            if (parsedUser.address_updated_at) {
-                const updateTime = new Date(parsedUser.address_updated_at).getTime();
+            if (userData.address_updated_at) {
+                const updateTime = new Date(userData.address_updated_at).getTime();
                 const now = new Date().getTime();
                 const diff = (updateTime + 3 * 60 * 1000) - now;
                 
                 if (diff <= 0) {
                     setIsAddressVerified(true);
+                    setAddressWaitTime(null);
                 } else {
                     setIsAddressVerified(false);
                     setAddressWaitTime(Math.floor(diff / 1000));
                 }
             } else {
-                // If no address saved, it counts as not verified
                 setIsAddressVerified(false);
             }
         }
-    }, []);
+    }, [userData]);
 
     useEffect(() => {
         if (user?.address_updated_at && !isAddressVerified) {
@@ -61,7 +67,7 @@ export default function LoanList() {
             }, 1000);
             return () => clearInterval(timer);
         }
-    }, [user, isAddressVerified]);
+    }, [user?.address_updated_at, isAddressVerified]);
 
     const isMerchant = user?.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'blue';
