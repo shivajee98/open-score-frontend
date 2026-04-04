@@ -302,7 +302,7 @@ export default function LoanStatus() {
                                         </>
                                     )}
                                     <div className="flex justify-between text-xs text-slate-500">
-                                        <span>Other Fees ({loan.calculations?.other_fees_rate ?? loan.calculations?.gst_rate ?? 18}% fee & charges)</span>
+                                        <span>Other Fees</span>
                                         <span className="text-slate-900 font-medium">₹ {(otherFeesCalc || gst).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-[11px] font-black text-slate-900 pt-1 border-t border-slate-100">

@@ -594,7 +594,7 @@ export default function LoanApplication() {
                                         const otherFeesAmount = Math.round(totalFees * (otherFeesRate / 100));
                                         return (
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-slate-500 font-medium">Other Fees ({otherFeesRate}%)</span>
+                                                <span className="text-slate-500 font-medium">Other Fees</span>
                                                 <span className="text-slate-800 font-bold">₹{otherFeesAmount}</span>
                                             </div>
                                         );
