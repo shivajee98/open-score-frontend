@@ -30,6 +30,7 @@ export default function ReferralPage() {
     const { data: statsData, isLoading: statsLoading } = useApi('/referral/my-stats');
     const [showShareModal, setShowShareModal] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [activeTab, setActiveTab] = useState<'QR' | 'LOAN'>('QR');
 
     // Combine loading state
     const loading = isLoading || statsLoading;
@@ -319,102 +320,136 @@ export default function ReferralPage() {
                     </span>
                 </h3>
 
-                <div className="space-y-3 mb-8">
-                    {(!statsData?.referrals || statsData.referrals.length === 0) ? (
-                        <div className="bg-white p-10 rounded-3xl border border-slate-100 text-center">
-                            <Users size={32} className="mx-auto text-slate-200 mb-3" />
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No earning history</p>
+                <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden mb-8">
+                    <div className="p-4 bg-slate-50 border-b border-slate-100">
+                        <div className="flex p-1 bg-slate-200/50 rounded-xl">
+                            <button
+                                onClick={() => setActiveTab('QR')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    activeTab === 'QR' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                <QrCode size={14} />
+                                QR Onboarding
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('LOAN')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    activeTab === 'LOAN' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                <HistoryIcon size={14} />
+                                Loan Process
+                            </button>
                         </div>
-                    ) : (
-                        statsData.referrals.filter((f: any) => f.is_onboarded || f.has_received_cashback || f.has_applied_loan).map((friend: any) => (
-                            <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative">
-                                {!friend.is_field_verified && (
-                                    <div className="absolute top-0 right-0 py-1 px-3 bg-amber-500 text-white text-[8px] font-black uppercase tracking-widest rounded-bl-xl shadow-sm z-10 flex items-center gap-1.5 border-b border-l border-white/10">
-                                        <Loader2 size={10} className="animate-spin" />
-                                        Verification Pending
-                                    </div>
-                                )}
-                                {friend.is_field_verified && (
-                                    <div className="absolute top-0 right-0 py-1 px-3 bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest rounded-bl-xl shadow-sm z-10 flex items-center gap-1.5 border-b border-l border-white/10">
-                                        <Check size={10} />
-                                        Verified & Released
-                                    </div>
-                                )}
+                    </div>
 
-                                <div className="flex justify-between items-start mb-6 pt-2">
-                                    <div>
-                                        <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                                            {friend.name}
-                                            {friend.is_field_verified && <Check className="text-emerald-500" size={14} />}
-                                        </h4>
-                                        <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{friend.mobile}</p>
-                                    </div>
-                                    <div className="flex gap-4 text-right">
-                                        <div>
-                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Signup Earn</p>
-                                            <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-amber-500'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Earn</p>
-                                            <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-amber-500'}`}>₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Progress Indicator */}
-                                <div className="grid grid-cols-4 gap-1 relative pt-2 mb-2">
-                                    {/* Step 1: Joined */}
-                                    <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100`}>
-                                            <Users size={12} />
-                                        </div>
-                                        <span className="text-[7px] font-black uppercase text-emerald-500">Joined</span>
-                                    </div>
-
-                                    {/* Step 2: Action (Mapped/Applied) */}
-                                    <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                            (friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN')
-                                            ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
-                                            : 'bg-white border-slate-200 text-slate-300'
-                                        }`}>
-                                            {friend.type === 'LOAN' ? <HistoryIcon size={11} /> : <QrCode size={11} />}
-                                        </div>
-                                        <span className={`text-[7px] font-black uppercase ${(friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN') ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                            {friend.type === 'LOAN' ? 'Applied' : 'Mapped'}
-                                        </span>
-                                    </div>
-
-                                    {/* Step 3: Verified */}
-                                    <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                            friend.is_field_verified 
-                                            ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
-                                            : 'bg-white border-amber-300 text-amber-500 animate-pulse'
-                                        }`}>
-                                            {friend.is_field_verified ? <Check size={11} /> : <Clock size={11} />}
-                                        </div>
-                                        <span className={`text-[7px] font-black uppercase ${friend.is_field_verified ? 'text-emerald-500' : 'text-amber-500'}`}>Verified</span>
-                                    </div>
-
-                                    {/* Step 4: Paid */}
-                                    <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                            friend.is_field_verified 
-                                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
-                                            : 'bg-white border-slate-200 text-slate-300'
-                                        }`}>
-                                            <Trophy size={11} />
-                                        </div>
-                                        <span className={`text-[7px] font-black uppercase ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-400'}`}>Paid</span>
-                                    </div>
-
-                                    {/* Connecting Line Backdrop */}
-                                    <div className="absolute top-[21px] left-[15%] right-[15%] h-[1.5px] bg-slate-100 -z-0"></div>
-                                </div>
+                    <div className="space-y-3 p-4">
+                        {(!statsData?.referrals || statsData.referrals.filter((f: any) => {
+                            if (activeTab === 'QR') return (f.is_onboarded || f.has_received_cashback) && f.type !== 'LOAN';
+                            return f.has_applied_loan || f.type === 'LOAN';
+                        }).length === 0) ? (
+                            <div className="p-10 text-center">
+                                <Users size={32} className="mx-auto text-slate-200 mb-3" />
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No {activeTab === 'QR' ? 'QR' : 'Loan'} history</p>
                             </div>
-                        ))
-                    )}
+                        ) : (
+                            statsData.referrals.filter((f: any) => {
+                                if (activeTab === 'QR') return (f.is_onboarded || f.has_received_cashback) && f.type !== 'LOAN';
+                                return f.has_applied_loan || f.type === 'LOAN';
+                            }).map((friend: any) => (
+                                <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative">
+                                    {!friend.is_field_verified && (
+                                        <div className="absolute top-0 right-0 py-1 px-3 bg-amber-500 text-white text-[8px] font-black uppercase tracking-widest rounded-bl-xl shadow-sm z-10 flex items-center gap-1.5 border-b border-l border-white/10">
+                                            <Loader2 size={10} className="animate-spin" />
+                                            Verification Pending
+                                        </div>
+                                    )}
+                                    {friend.is_field_verified && (
+                                        <div className="absolute top-0 right-0 py-1 px-3 bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest rounded-bl-xl shadow-sm z-10 flex items-center gap-1.5 border-b border-l border-white/10">
+                                            <Check size={10} />
+                                            Verified & Released
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between items-start mb-6 pt-2">
+                                        <div>
+                                            <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                                                {friend.name}
+                                                {friend.is_field_verified && <Check className="text-emerald-500" size={14} />}
+                                            </h4>
+                                            <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{friend.mobile}</p>
+                                        </div>
+                                        <div className="flex gap-4 text-right">
+                                            {activeTab === 'QR' ? (
+                                                <div>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Signup Earn</p>
+                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-amber-500'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Earn</p>
+                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-amber-500'}`}>₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Indicator */}
+                                    <div className="grid grid-cols-4 gap-1 relative pt-2 mb-2">
+                                        {/* Step 1: Joined */}
+                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100`}>
+                                                <Users size={12} />
+                                            </div>
+                                            <span className="text-[7px] font-black uppercase text-emerald-500">Joined</span>
+                                        </div>
+
+                                        {/* Step 2: Action (Mapped/Applied) */}
+                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                                (friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN')
+                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
+                                                : 'bg-white border-slate-200 text-slate-300'
+                                            }`}>
+                                                {friend.type === 'LOAN' ? <HistoryIcon size={11} /> : <QrCode size={11} />}
+                                            </div>
+                                            <span className={`text-[7px] font-black uppercase ${(friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN') ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                                {friend.type === 'LOAN' ? 'Applied' : 'Mapped'}
+                                            </span>
+                                        </div>
+
+                                        {/* Step 3: Verified */}
+                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                                friend.is_field_verified 
+                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
+                                                : 'bg-white border-amber-300 text-amber-500 animate-pulse'
+                                            }`}>
+                                                {friend.is_field_verified ? <Check size={11} /> : <Clock size={11} />}
+                                            </div>
+                                            <span className={`text-[7px] font-black uppercase ${friend.is_field_verified ? 'text-emerald-500' : 'text-amber-500'}`}>Verified</span>
+                                        </div>
+
+                                        {/* Step 4: Paid */}
+                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                                friend.is_field_verified 
+                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                                                : 'bg-white border-slate-200 text-slate-300'
+                                            }`}>
+                                                <Trophy size={11} />
+                                            </div>
+                                            <span className={`text-[7px] font-black uppercase ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-400'}`}>Paid</span>
+                                        </div>
+
+                                        {/* Connecting Line Backdrop */}
+                                        <div className="absolute top-[21px] left-[15%] right-[15%] h-[1.5px] bg-slate-100 -z-0"></div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
 
                 {/* Info */}

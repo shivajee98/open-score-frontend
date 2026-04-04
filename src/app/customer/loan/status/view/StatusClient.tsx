@@ -59,12 +59,12 @@ export default function LoanStatus() {
                         created_at: new Date().toISOString(),
                         calculations: {
                             principal: 30000,
-                            gst: 270, // 18% of 1500 (processing fee)
-                            gst_rate: 18,
+                            other_fees: 270, // 18% of 1500 (processing fee)
+                            other_fees_rate: 18,
                             processing_fee: 1500,
                             login_fee: 250,
                             field_kyc_fee: 500,
-                            other_fees: 0,
+                            misc_fees: 0,
                             interest_rate: 2.5,
                             total_interest: 2250,
                             total_deductions: 2520, // 270+1500+250+500
@@ -207,7 +207,8 @@ export default function LoanStatus() {
 
     const {
         principal = Number(loan.amount),
-        gst = 0,
+        other_fees: otherFeesCalc = 0,
+        gst = 0, // Legacy support
         processing_fee: processingFee = 0,
         login_fee: loginFee = 0,
         field_kyc_fee: fieldKycFee = 0,
@@ -301,8 +302,8 @@ export default function LoanStatus() {
                                         </>
                                     )}
                                     <div className="flex justify-between text-xs text-slate-500">
-                                        <span>GST (18% fee & charges)</span>
-                                        <span className="text-slate-900 font-medium">₹ {gst.toLocaleString()}</span>
+                                        <span>Other Fees ({loan.calculations?.other_fees_rate ?? loan.calculations?.gst_rate ?? 18}% fee & charges)</span>
+                                        <span className="text-slate-900 font-medium">₹ {(otherFeesCalc || gst).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-[11px] font-black text-slate-900 pt-1 border-t border-slate-100">
                                         <span>Total fee & Charges pay</span>

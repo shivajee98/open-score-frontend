@@ -590,12 +590,12 @@ export default function LoanApplication() {
                                     ))}
                                     {(() => {
                                         const totalFees = selectedTenureConfig.fees?.reduce((acc: number, f: any) => acc + (Number(f.amount) || 0), 0) || 0;
-                                        const gstRate = selectedTenureConfig.gst_rate ?? 18;
-                                        const gstAmount = Math.round(totalFees * (gstRate / 100));
+                                        const otherFeesRate = selectedTenureConfig.other_fees_rate ?? (selectedTenureConfig.gst_rate ?? 18);
+                                        const otherFeesAmount = Math.round(totalFees * (otherFeesRate / 100));
                                         return (
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-slate-500 font-medium">GST ({gstRate}%)</span>
-                                                <span className="text-slate-800 font-bold">₹{gstAmount}</span>
+                                                <span className="text-slate-500 font-medium">Other Fees ({otherFeesRate}%)</span>
+                                                <span className="text-slate-800 font-bold">₹{otherFeesAmount}</span>
                                             </div>
                                         );
                                     })()}

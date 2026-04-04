@@ -102,7 +102,7 @@ export default function EarningsCard({
                         <span>₹{estInterest.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-slate-400 text-xs">
-                        <span>Process Fees (+GST)</span>
+                        <span>Process Fees (+Other Fees)</span>
                         <span>₹{estFees.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-emerald-400 text-sm font-bold pt-2 border-t border-white/5">

@@ -20,6 +20,7 @@ export default function TeamEarningsPage() {
     const [copied, setCopied] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [transferAmount, setTransferAmount] = useState('');
+    const [activeTab, setActiveTab] = useState<'QR' | 'LOAN'>('QR');
 
     // Timer State
     const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, locked: boolean }>({ d: 0, h: 0, m: 0, locked: false });
@@ -334,17 +335,38 @@ export default function TeamEarningsPage() {
 
                 {/* Earnings List */}
                 <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                    <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-slate-900">
-                            <History size={18} />
-                            <h3 className="font-black text-sm uppercase tracking-widest">My Work Earnings</h3>
+                    <div className="p-4 bg-slate-50 border-b border-slate-100">
+                        <div className="flex p-1 bg-slate-200/50 rounded-xl">
+                            <button
+                                onClick={() => setActiveTab('QR')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    activeTab === 'QR' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                <QrCode size={14} />
+                                QR Onboarding
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('LOAN')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    activeTab === 'LOAN' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                <History size={14} />
+                                Loan Process
+                            </button>
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Since {new Date(stats?.joined_date).toLocaleDateString()}</p>
                     </div>
 
                     <div className="space-y-3 p-4">
-                        {stats?.history?.length > 0 ? (
-                            stats.history.map((friend: any) => (
+                        {stats?.history?.filter((f: any) => {
+                            if (activeTab === 'QR') return Number(f.signup_bonus) > 0 || f.type === 'QR';
+                            return Number(f.loan_bonus) > 0 || f.type === 'LOAN';
+                        }).length > 0 ? (
+                            stats.history.filter((f: any) => {
+                                if (activeTab === 'QR') return Number(f.signup_bonus) > 0 || f.type === 'QR';
+                                return Number(f.loan_bonus) > 0 || f.type === 'LOAN';
+                            }).map((friend: any) => (
                                 <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
@@ -352,14 +374,17 @@ export default function TeamEarningsPage() {
                                             <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{friend.mobile}</p>
                                         </div>
                                         <div className="flex gap-4 text-right">
-                                            <div>
-                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
-                                                <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-slate-300'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Disbursed Earn</p>
-                                                <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-300'}`}>₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
-                                            </div>
+                                            {activeTab === 'QR' ? (
+                                                <div>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
+                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-slate-300'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Disbursed Earn</p>
+                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-300'}`}>₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
