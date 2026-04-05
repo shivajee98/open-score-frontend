@@ -463,13 +463,12 @@ export default function PayoutPage() {
                             </div>
 
                             <div className="relative group">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-black text-slate-300 group-focus-within:text-slate-900 transition-colors"></span>
                                 <input
                                     type="number"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     placeholder="Enter Amount"
-                                    className="w-full bg-slate-50 border-none rounded-xl py-4 pl-10 pr-4 text-xl font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 placeholder:text-slate-200 outline-none transition-all"
+                                    className="w-full bg-slate-50 border-none rounded-xl py-4 px-4 text-xl font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 placeholder:text-slate-200 outline-none transition-all"
                                 />
                             </div>
                             {withdrawalRule && (
@@ -494,6 +493,14 @@ export default function PayoutPage() {
 
             {/* Bank Side */}
             <div className="space-y-4">
+                {dailyTxnLimit && (
+                    <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100/50">
+                        <p className="text-[10px] font-bold text-indigo-700 leading-relaxed flex items-center gap-2">
+                            <Clock size={12} className="shrink-0" />
+                            <span>Daily Withdrawal Rule: You can submit up to <b>{dailyTxnLimit} requests</b> per day. You have <b>{remainingTxnsToday} requests</b> remaining for today.</span>
+                        </p>
+                    </div>
+                )}
                 {user?.bank_name && user?.account_number ? (
                     <>
                         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
@@ -735,8 +742,8 @@ export default function PayoutPage() {
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
                 <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm shadow-2xl" onClick={() => setRuleError(null)}></div>
                 <div className="relative w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
-                    <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-rose-500">
-                        <AlertCircle size={32} />
+                    <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-500">
+                        <Clock size={32} />
                     </div>
                     <h2 className="text-xl font-black text-slate-900 text-center mb-2">{ruleError.title}</h2>
                     <p className="text-sm font-bold text-slate-500 text-center mb-8 leading-relaxed">

@@ -214,7 +214,7 @@ export default function LoanList() {
                             {addressWaitTime !== null ? (
                                 <>
                                     <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-                                        For your security, we are finalising your profile details. Loan applications will be available in 
+                                        For your security, we are finalising your profile details. Credit applications will be available in 
                                         <span className="font-black text-slate-900 mx-1">
                                             {Math.floor(addressWaitTime / 60)}:{(addressWaitTime % 60).toString().padStart(2, '0')}
                                         </span>
@@ -229,7 +229,7 @@ export default function LoanList() {
                                 </>
                             ) : (
                                 <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-                                    Please complete your profile details and save your address to unlock loan applications.
+                                    Please complete your profile details and save your address to unlock credit applications.
                                 </p>
                             )}
 
@@ -267,14 +267,14 @@ export default function LoanList() {
                                             <Clock className={isMerchant ? "text-emerald-400 w-4 h-4" : "text-blue-400 w-4 h-4"} />
                                         )}
                                         <span className={`text-[10px] font-bold ${isMerchant ? 'text-emerald-200' : 'text-blue-200'} uppercase tracking-widest`}>
-                                            {recentLoan.status === 'CLOSED' ? 'Loan Successfully Repaid' :
-                                                recentLoan.status === 'DISBURSED' ? 'Your loan score is open on this disbursal' :
+                                            {recentLoan.status === 'CLOSED' ? 'Virtual Credit Repaid' :
+                                                recentLoan.status === 'DISBURSED' ? 'Your credit score is open on this disbursal' :
                                                     recentLoan.status === 'CANCELLED' ? 'Cancelled Application' :
                                                         recentLoan.status === 'REJECTED' ? 'Rejected Application' :
                                                             'Last Application'}
                                         </span>
                                     </div>
-                                    <h3 className="text-lg font-black mb-1"> {recentLoan.amount.toLocaleString()} Loan</h3>
+                                    <h3 className="text-lg font-black mb-1"> {recentLoan.amount.toLocaleString()} Credit</h3>
                                     <p className="text-xs font-medium text-slate-400">
                                         Applied on {new Date(recentLoan.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} •
                                         <span className={`ml-1 ${recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount))
@@ -311,12 +311,12 @@ export default function LoanList() {
                                     <div className="p-2 bg-emerald-500/20 rounded-lg border border-emerald-500/20">
                                         <Clock size={20} className="text-emerald-400" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Loan In Progress</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Virtual Credit In Progress</span>
                                 </div>
 
                                 <h2 className="text-xl font-black mb-2 leading-none">Application Active</h2>
                                 <p className="text-slate-400 text-xs font-medium leading-relaxed mb-6 max-w-[280px]">
-                                    You have a loan of <span className="text-white font-bold">{activeLoan.amount.toLocaleString()}</span> currently in the <span className="text-emerald-400 font-bold uppercase">{activeLoan.status.replace('_', ' ')}</span> stage.
+                                    You have a virtual credit of <span className="text-white font-bold">{activeLoan.amount.toLocaleString()}</span> currently in the <span className="text-emerald-400 font-bold uppercase">{activeLoan.status.replace('_', ' ')}</span> stage.
                                 </p>
 
                                 <div className="flex gap-2">
@@ -350,7 +350,7 @@ export default function LoanList() {
                                 </div>
                                 <div>
                                     <h4 className="font-black text-indigo-900 text-sm uppercase tracking-tight">Important Action Needed</h4>
-                                    <p className="text-indigo-600 text-[10px] font-bold uppercase tracking-widest leading-tight mt-0.5 opacity-80">Please complete KYC for your existing Loan #{kycLoan.id} before applying for a new one.</p>
+                                    <p className="text-indigo-600 text-[10px] font-bold uppercase tracking-widest leading-tight mt-0.5 opacity-80">Please complete KYC for your existing Credit #{kycLoan.id} before applying for a new one.</p>
                                 </div>
                                 <ChevronRight className="ml-auto text-indigo-400" size={20} />
                             </div>
@@ -369,11 +369,11 @@ export default function LoanList() {
                                     return;
                                 }
                                 if (activeLoan) {
-                                    alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
+                                    alert("Application Under Process: You already have a virtual credit application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
                                     return;
                                 }
                                 if (cooldown.active) {
-                                    alert(`Cool-down Period: You can apply for a new loan in ${cooldown.daysRemaining} days. We require a 15-day interval between loans.`);
+                                    alert(`Cool-down Period: You can apply for new credit in ${cooldown.daysRemaining} days. We require a 15-day interval between applications.`);
                                     return;
                                 }
                                 router.push(`/customer/loan/plan?amount=${plan.amount}&planId=${plan.id}`);
@@ -470,15 +470,15 @@ export default function LoanList() {
                                     key={plan.id}
                                     onClick={() => {
                                         if (activeLoan) {
-                                            alert("Application Under Process: You already have a loan application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
+                                            alert("Application Under Process: You already have a virtual credit application in progress. Please revoke (cancel) your current application if you wish to apply for a new one.");
                                             return;
                                         }
                                         if (cooldown.active) {
-                                            alert(`Cool-down Period: You can apply for a new loan in ${cooldown.daysRemaining} days. We require a 15-day interval between loans.`);
+                                            alert(`Cool-down Period: You can apply for new credit in ${cooldown.daysRemaining} days. We require a 15-day interval between applications.`);
                                             return;
                                         }
                                         if (isLocked) {
-                                            alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} loan. Please build your eligibility by successfully repaying your previous ${prevPlan?.amount.toLocaleString()} loan.`);
+                                            alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} credit. Please build your eligibility by successfully repaying your previous ${prevPlan?.amount.toLocaleString()} loan.`);
                                             return;
                                         }
                                         router.push(`/customer/loan/plan?amount=${plan.amount}&planId=${plan.id}`);
@@ -537,7 +537,7 @@ export default function LoanList() {
                             <div className="flex items-center gap-3">
                                 <div className="text-2xl grayscale">💼</div>
                                 <div>
-                                    <h4 className="font-black text-slate-900 text-sm">Business Loan</h4>
+                                    <h4 className="font-black text-slate-900 text-sm">Business Credit</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">For heavy inventory</p>
                                 </div>
                             </div>
@@ -548,7 +548,7 @@ export default function LoanList() {
                             <div className="flex items-center gap-3">
                                 <div className="text-2xl grayscale">🏠</div>
                                 <div>
-                                    <h4 className="font-black text-slate-900 text-sm">Personal Loan</h4>
+                                    <h4 className="font-black text-slate-900 text-sm">Personal Credit</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">For personal use</p>
                                 </div>
                             </div>
@@ -568,7 +568,7 @@ export default function LoanList() {
                         </div>
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Regional Setup Required</h2>
                         <p className="text-slate-500 font-bold text-xs uppercase tracking-widest leading-loose mb-8">
-                            We use your area PIN code to show exclusive loan plans available in your region. Please set it to proceed.
+                            We use your area PIN code to show exclusive credit plans available in your region. Please set it to proceed.
                         </p>
                         <button
                             onClick={() => router.push('/customer/profile?edit=true&section=address')}

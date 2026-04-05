@@ -298,9 +298,9 @@ export default function TeamEarningsPage() {
                                         <p className="text-[8px] text-indigo-200/70 uppercase">Per Merchant</p>
                                     </div>
                                     <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
-                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Loan Disbursement</p>
+                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Virtual Credit Disbursement</p>
                                         <p className="text-lg font-black">{(stats?.my_rates?.loan_disbursement_rate || 0).toLocaleString()}</p>
-                                        <p className="text-[8px] text-indigo-200/70 uppercase">Per Loan</p>
+                                        <p className="text-[8px] text-indigo-200/70 uppercase">Per Disbursement</p>
                                     </div>
                                     {(stats?.my_rates?.bonus_milestone_count > 0 || (user?.sub_user_id && stats?.my_rates?.bonus_milestone_amount === 0)) && (
                                         <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl px-4 py-2 backdrop-blur-md">
@@ -327,7 +327,7 @@ export default function TeamEarningsPage() {
                             </div>
                             <div>
                                 <h3 className="font-black text-sm uppercase tracking-wider">Referring Profit</h3>
-                                <p className="text-xs text-indigo-100 font-medium">Earn per signup & per loan disbursement from your direct refers.</p>
+                                <p className="text-xs text-indigo-100 font-medium">Earn per signup & per virtual credit disbursement from your direct refers.</p>
                             </div>
                         </div>
                     </div>
@@ -353,7 +353,7 @@ export default function TeamEarningsPage() {
                                 }`}
                             >
                                 <History size={14} />
-                                Loan Process
+                                Virtual Credit Process
                             </button>
                         </div>
                     </div>
@@ -381,7 +381,7 @@ export default function TeamEarningsPage() {
                                                 </div>
                                             ) : (
                                                 <div>
-                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Disbursed Earn</p>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Credit Disbursed Earn</p>
                                                     <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-300'}`}>{Number(friend.loan_bonus || 0).toFixed(0)}</p>
                                                 </div>
                                             )}

@@ -156,7 +156,7 @@ export default function Profile() {
     useEffect(() => {
         if (isPinMissing && !isEditing && initialDataLoaded.current) {
             setIsEditing(true);
-            toast.info("Please set your 6-digit PIN code to unlock loan plans.");
+            toast.info("Please set your 6-digit PIN code to unlock virtual credit plans.");
             
             // Focus on address section
             setTimeout(() => {
@@ -465,11 +465,13 @@ export default function Profile() {
             uploadData.append('business_segment', formData.business_segment);
             uploadData.append('customer_segment', formData.customer_segment);
             uploadData.append('daily_turnover', formData.daily_turnover);
-            uploadData.append('business_address', formData.street_address);
-            uploadData.append('city', formData.city);
-            uploadData.append('state', formData.state);
-            uploadData.append('pincode', formData.postal_code);
-            uploadData.append('map_location_url', formData.map_location_url);
+            if (!isAddressLocked) {
+                uploadData.append('business_address', formData.street_address);
+                uploadData.append('city', formData.city);
+                uploadData.append('state', formData.state);
+                uploadData.append('pincode', formData.postal_code);
+                uploadData.append('map_location_url', formData.map_location_url);
+            }
             uploadData.append('show_phone', formData.show_phone ? '1' : '0');
             uploadData.append('show_timing', formData.show_timing ? '1' : '0');
             uploadData.append('aadhar_number', formData.aadhar_number);
@@ -1273,7 +1275,7 @@ export default function Profile() {
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="text-[8px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">Required for Loans</span>
+                                        <span className="text-[8px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">Required for Virtual Credit</span>
                                     </div>
 
                                     {!isAddressLocked && timeLeft !== null && isEditing && (
@@ -1384,7 +1386,7 @@ export default function Profile() {
                                             <p className="text-lg font-black text-slate-900 tracking-[0.2em]">{user?.pincode || 'NOT SET'}</p>
                                         )}
                                         <p className="text-[8px] text-slate-400 font-bold mt-2 uppercase">
-                                            {isAddressLocked ? 'Address verified for regional compliance.' : 'Used to verify your area with regional loan policies.'}
+                                            {isAddressLocked ? 'Address verified for regional compliance.' : 'Used to verify your area with regional virtual credit policies.'}
                                         </p>
                                     </div>
                                 </div>

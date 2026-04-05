@@ -24,7 +24,7 @@ import QRCode from 'react-qr-code';
 const QUICK_AMOUNTS = [100, 500, 1000, 2000, 5000, 10000];
 
 const PAYMENT_PURPOSES = [
-    { value: 'emi_payment', label: 'EMI Payment', icon: <ReceiptText className="w-5 h-5" />, desc: 'Pay your loan installments' },
+    { value: 'emi_payment', label: 'EMI Payment', icon: <ReceiptText className="w-5 h-5" />, desc: 'Pay your virtual credit installments' },
     { value: 'wallet_topup', label: 'Wallet Top-up', icon: <Coins className="w-5 h-5" />, desc: 'Add balance to your wallet' },
     { value: 'services', label: 'Services', icon: <Sparkles className="w-5 h-5" />, desc: 'Payment for other services' },
 ];

@@ -30,7 +30,7 @@ export default function ReferralPage() {
     const { data: statsData, isLoading: statsLoading } = useApi('/referral/my-stats');
     const [showShareModal, setShowShareModal] = useState(false);
     const [copied, setCopied] = useState(false);
-    const [activeTab, setActiveTab] = useState<'QR' | 'LOAN'>('QR');
+    const [activeTab, setActiveTab] = useState<'QR' | 'CREDIT'>('QR');
 
     // Combine loading state
     const loading = isLoading || statsLoading;
@@ -333,13 +333,13 @@ export default function ReferralPage() {
                                 QR Onboarding
                             </button>
                             <button
-                                onClick={() => setActiveTab('LOAN')}
+                                onClick={() => setActiveTab('CREDIT')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    activeTab === 'LOAN' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                    activeTab === 'CREDIT' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                                 }`}
                             >
                                 <HistoryIcon size={14} />
-                                Loan Process
+                                Virtual Credit
                             </button>
                         </div>
                     </div>
@@ -351,7 +351,7 @@ export default function ReferralPage() {
                         }).length === 0) ? (
                             <div className="p-10 text-center">
                                 <Users size={32} className="mx-auto text-slate-200 mb-3" />
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No {activeTab === 'QR' ? 'QR' : 'Loan'} history</p>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No {activeTab === 'QR' ? 'QR' : 'Virtual Credit'} history</p>
                             </div>
                         ) : (
                             statsData.referrals.filter((f: any) => {
@@ -388,7 +388,7 @@ export default function ReferralPage() {
                                                 </div>
                                             ) : (
                                                 <div>
-                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Earn</p>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Credit Earn</p>
                                                     <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-amber-500'}`}>{Number(friend.loan_bonus || 0).toFixed(0)}</p>
                                                 </div>
                                             )}

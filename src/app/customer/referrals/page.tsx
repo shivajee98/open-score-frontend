@@ -253,7 +253,7 @@ export default function ReferralPage() {
                             <p className="text-lg font-black">{stats.total_signup_bonus.toLocaleString('en-IN')}</p>
                         </div>
                         <div>
-                            <p className="text-white/60 text-xs mb-1">Loan Bonus</p>
+                            <p className="text-white/60 text-xs mb-1">Credit Bonus</p>
                             <p className="text-lg font-black">{stats.total_loan_bonus.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
@@ -316,9 +316,9 @@ export default function ReferralPage() {
                                 3
                             </div>
                             <div>
-                                <h4 className="font-bold text-slate-900 text-sm mb-1">They Get a Loan</h4>
+                                <h4 className="font-bold text-slate-900 text-sm mb-1">They Get Virtual Credit</h4>
                                 <p className="text-slate-500 text-xs">
-                                    When their loan is disbursed, you earn <span className="font-bold text-purple-600">{settings.loan_disbursement_bonus}</span>
+                                    When their virtual credit is disbursed, you earn <span className="font-bold text-purple-600">{settings.loan_disbursement_bonus}</span>
                                 </p>
                             </div>
                         </div>
@@ -356,7 +356,7 @@ export default function ReferralPage() {
                                             +{Number(referral.signup_bonus || 0) + Number(referral.loan_bonus || 0)}
                                         </p>
                                         <p className="text-slate-400 text-xs">
-                                            {referral.type === 'LOAN' ? (referral.has_received_cashback ? 'Loan Disbursed' : 'Loan Applied') : (referral.is_onboarded ? 'Signed Up' : 'Joined')}
+                                            {referral.type === 'LOAN' ? (referral.has_received_cashback ? 'Credit Disbursed' : 'Credit Applied') : (referral.is_onboarded ? 'Signed Up' : 'Joined')}
                                         </p>
                                     </div>
                                 </div>

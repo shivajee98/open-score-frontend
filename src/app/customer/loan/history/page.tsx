@@ -77,12 +77,12 @@ export default function LoanHistory() {
                 <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/20' : 'bg-blue-600/20'} rounded-full blur-[80px] -mr-32 -mt-32 animate-pulse`}></div>
                 <div className="relative z-10">
                     <button onClick={() => router.push('/customer/loan')} className="mb-6 flex items-center gap-2 text-white/50 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
-                        <ArrowLeft className="w-4 h-4" /> Back to Loans
+                        <ArrowLeft className="w-4 h-4" /> Back to Virtual Credit
                     </button>
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-black text-white tracking-tight">Loan History</h1>
+                            <h1 className="text-2xl font-black text-white tracking-tight">Virtual Credit History</h1>
                             <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Application Lifecycle</p>
                         </div>
                         <div className={`w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center text-white`}>
@@ -163,7 +163,7 @@ export default function LoanHistory() {
                             <Receipt className="w-10 h-10 text-slate-300" />
                         </div>
                         <h3 className="text-slate-900 font-black text-lg">No history found</h3>
-                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Your loan applications will appear here.</p>
+                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Your virtual credit applications will appear here.</p>
                         <button
                             onClick={() => router.push('/customer/loan')}
                             className="mt-8 px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95"
@@ -175,7 +175,7 @@ export default function LoanHistory() {
 
                 {!hasMore && loans.length > 0 && (
                     <div className="text-center py-12">
-                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">End of loan history</p>
+                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">End of virtual credit history</p>
                     </div>
                 )}
             </div>

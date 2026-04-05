@@ -34,9 +34,9 @@ export function getTransactionLabel(tx: any): string {
         return 'Maintenance Charge';
     }
 
-    // ── Loan Disbursal ─────────────────────────────────────────
+    // ── Virtual Credit Disbursal ───────────────────────────────
     if (desc.includes('disbursement') || (srcType === 'LOAN' && tx.type === 'CREDIT')) {
-        return 'Loan Disbursed';
+        return 'Virtual Credit Disbursed';
     }
 
     // ── Wallet Recharge ────────────────────────────────────────

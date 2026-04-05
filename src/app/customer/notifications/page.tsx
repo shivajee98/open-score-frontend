@@ -165,11 +165,6 @@ export default function NotificationsPage() {
                             </div>
                         </div>
 
-                        <div className="mt-6 flex gap-3">
-                            <button className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-                                <Receipt size={16} /> Share Receipt
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}

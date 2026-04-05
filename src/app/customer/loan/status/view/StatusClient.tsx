@@ -203,7 +203,7 @@ export default function LoanStatus() {
     };
 
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-8 h-8 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div></div>;
-    if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Loan not found</div>;
+    if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Virtual Credit not found</div>;
 
     const {
         principal = Number(loan.amount),
@@ -225,10 +225,10 @@ export default function LoanStatus() {
             {/* Header */}
             <div className="bg-slate-900 p-4 pt-8 pb-16 rounded-b-xl shadow-xl relative z-10">
                 <button onClick={() => router.push('/customer/loan')} className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-white transition-colors mb-6">
-                    <ArrowLeft className="w-4 h-4" /> Back to Loans
+                    <ArrowLeft className="w-4 h-4" /> Back to Virtual Credit
                 </button>
-                <h1 className="text-xl font-black text-white mb-2">Application Status</h1>
-                <p className="text-slate-400 font-medium text-sm">Track your loan application #{loan.display_id || loanId}</p>
+                <h1 className="text-xl font-black text-white mb-2">Status Overview</h1>
+                <p className="text-slate-400 font-medium text-sm">Track your virtual credit application #{loan.display_id || loanId}</p>
             </div>
 
             <div className="px-4 -mt-10 relative z-20 space-y-4">
@@ -238,7 +238,7 @@ export default function LoanStatus() {
                     <div className="p-4 border-b border-slate-100">
                         <div className="flex justify-between items-start mb-8">
                             <div>
-                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-2">Loan ID</p>
+                                <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-2">Virtual Credit ID</p>
                                 <span className={`text-[10px] font-black px-2 py-0.5 border rounded-full uppercase tracking-widest ${(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'bg-slate-50 border-slate-200 text-slate-700' :
                                     (loan.status === 'DISBURSED' || loan.status === 'APPROVED') ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
                                         loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
@@ -268,7 +268,7 @@ export default function LoanStatus() {
                             <div className="space-y-3 pt-2 border-t border-slate-50">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Sanction summary</p>
                                 <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Loan Amount</span>
+                                    <span>Virtual Credit Amount</span>
                                     <span className="text-slate-900 font-bold"> {principal.toLocaleString()}</span>
                                 </div>
                                 <div className="pt-2 border-t border-dashed border-slate-100 space-y-3">
@@ -475,7 +475,7 @@ export default function LoanStatus() {
                             onClick={() => router.push(`/customer/loan/status/repayment?id=${loanId}`)}
                             className="w-full py-4 bg-emerald-500 text-white rounded-xl font-black text-sm hover:bg-emerald-600 transition-all uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95"
                         >
-                            Track My Loan
+                            Track My Virtual Credit
                         </button>
                     </div>
                 )}
@@ -500,7 +500,7 @@ export default function LoanStatus() {
                             <IndianRupee className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="text-base font-black uppercase tracking-tight">Loan Approved!</h3>
+                            <h3 className="text-base font-black uppercase tracking-tight">Virtual Credit Approved!</h3>
                             <p className="font-medium text-xs mt-1">Tap here to contact support and request fund release to your account.</p>
                         </div>
                         <div className="w-full py-2 bg-emerald-600 text-white rounded-lg font-bold text-xs uppercase tracking-widest">
@@ -517,7 +517,7 @@ export default function LoanStatus() {
                         </div>
                         <div>
                             <h3 className="text-base font-black uppercase tracking-tight">Repayment Option</h3>
-                            <p className="text-slate-400 text-xs font-medium mt-1">Manage your loan repayments and EMIs.</p>
+                            <p className="text-slate-400 text-xs font-medium mt-1">Manage your virtual credit repayments and EMIs.</p>
                         </div>
                         <button
                             onClick={() => router.push(`/customer/loan/status/repayment?id=${loanId}`)}
@@ -535,8 +535,8 @@ export default function LoanStatus() {
                             <History className="w-6 h-6 text-emerald-600" />
                         </div>
                         <div>
-                            <h3 className="text-base font-black uppercase tracking-tight">Loan History</h3>
-                            <p className="text-emerald-600/80 text-xs font-medium mt-1">View the repayment timeline for this loan.</p>
+                            <h3 className="text-base font-black uppercase tracking-tight">Virtual Credit History</h3>
+                            <p className="text-emerald-600/80 text-xs font-medium mt-1">View the repayment timeline for this virtual credit.</p>
                         </div>
                         <button
                             onClick={() => router.push(`/customer/loan/status/repayment?id=${loanId}`)}

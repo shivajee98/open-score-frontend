@@ -1,8 +1,6 @@
 'use client';
 
 import { X, CheckCircle, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
-import { toast } from '@/components/ui/Toast';
-import { apiFetch } from '@/lib/api';
 
 interface TransactionDetailModalProps {
     isOpen: boolean;
@@ -12,17 +10,6 @@ interface TransactionDetailModalProps {
 
 export default function TransactionDetailModal({ isOpen, transaction, onClose }: TransactionDetailModalProps) {
     if (!isOpen || !transaction) return null;
-
-    const handleShareReceipt = async () => {
-        try {
-            const data = await apiFetch(`/wallet/transactions/${transaction.id}/share`, {
-                method: 'POST'
-            });
-            toast.success(data.message || 'Receipt sent to your email');
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to send receipt to email');
-        }
-    };
 
     return (
         <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in duration-200" onClick={onClose}>
@@ -87,16 +74,10 @@ export default function TransactionDetailModal({ isOpen, transaction, onClose }:
                     </div>
                 </div>
 
-                <div className="mt-8 grid grid-cols-2 gap-4">
-                    <button
-                        onClick={handleShareReceipt}
-                        className="py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
-                    >
-                        Share Receipt
-                    </button>
+                <div className="mt-8">
                     <button
                         onClick={() => window.open(`mailto:support@msmeloan.sbs?subject=Help regarding TxID ${transaction.id}&body=I have an issue with this transaction: ${transaction.id}`)}
-                        className="py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95"
+                        className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95"
                     >
                         Need Help?
                     </button>
