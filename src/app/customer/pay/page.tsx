@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import PaymentSuccessModal from '@/components/PaymentSuccessModal';
 import PinModal from '@/components/PinModal';
-import { Scan, X, ArrowRight, ArrowLeft, Smartphone, Search, Home, QrCode, Receipt, Lock, Landmark, History } from 'lucide-react';
+import { Scan, X, ArrowRight, ArrowLeft, Smartphone, Search, Home, QrCode, Receipt, Lock, Landmark, History, Clock, ChevronDown } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -384,14 +384,54 @@ function CustomerPayPage() {
                 {showErrorPopup && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
                         <div className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100">
-                            <div className="p-8 text-center bg-gradient-to-b from-rose-50/50 to-white">
-                                <div className="w-20 h-20 bg-rose-100 rounded-3xl flex items-center justify-center text-rose-500 mx-auto mb-6 shadow-inner ring-8 ring-rose-50/50">
-                                    <X size={40} strokeWidth={2.5} />
-                                </div>
-                                <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-3 uppercase">Payment Error</h3>
-                                <p className="text-slate-500 font-bold text-sm leading-relaxed mb-8 px-2">
-                                    {popupErrorMessage}
-                                </p>
+                            <div className="p-8 text-center bg-gradient-to-b from-slate-50/50 to-white">
+                                {(() => {
+                                    const isSpentLimit = popupErrorMessage.includes('Spent today');
+                                    const isLimitError = isSpentLimit || popupErrorMessage.toLowerCase().includes('limit reached');
+                                    const statusColor = isLimitError ? 'amber' : 'rose';
+                                    
+                                    return (
+                                        <>
+                                            <div className={`w-20 h-20 bg-${statusColor}-100 text-${statusColor}-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner ring-8 ring-${statusColor}-50/50`}>
+                                                {isLimitError ? <Clock size={40} strokeWidth={2.5} /> : <X size={40} strokeWidth={2.5} />}
+                                            </div>
+                                            <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-3 uppercase">
+                                                {isLimitError ? 'Limit Reached' : 'Payment Error'}
+                                            </h3>
+                                            
+                                            {isSpentLimit ? (
+                                                <div className="space-y-4 mb-8">
+                                                    <p className="text-slate-600 font-bold text-sm leading-relaxed px-2">
+                                                        {popupErrorMessage.split('\n\n')[0]}
+                                                    </p>
+                                                    
+                                                    <details className="group overflow-hidden border border-emerald-100 rounded-2xl bg-emerald-50/50 transition-all">
+                                                        <summary className="flex items-center justify-between p-4 cursor-pointer list-none select-none">
+                                                            <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">
+                                                                How to increase limit?
+                                                            </span>
+                                                            <ChevronDown size={14} className="text-emerald-500 group-open:rotate-180 transition-transform duration-300" />
+                                                        </summary>
+                                                        <div className="px-4 pb-4 space-y-3">
+                                                            <p className="text-[11px] font-bold text-emerald-800/80 leading-relaxed text-left">
+                                                                We suggest 10–12 transfers of just under ₹1,000 each to build your history.
+                                                            </p>
+                                                            <div className="pt-3 border-t border-emerald-100/50">
+                                                                <p className="text-[10px] font-black text-rose-600 uppercase tracking-wider text-left">
+                                                                    Note: Single transfer limit will not increase.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </details>
+                                                </div>
+                                            ) : (
+                                                <p className="text-slate-500 font-bold text-sm leading-relaxed mb-8 px-2 whitespace-pre-line">
+                                                    {popupErrorMessage}
+                                                </p>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                                 <button
                                     onClick={() => setShowErrorPopup(false)}
                                     className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95"

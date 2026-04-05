@@ -11,7 +11,7 @@ export default function SupportModal({ isOpen, onClose }: SupportModalProps) {
 
     // Generate random phone number and support info for demo purposes
     const randomPhone = `+91 ${Math.floor(9000000000 + Math.random() * 900000000)}`;
-    const supportEmail = "support@openscore.com";
+    const supportEmail = "support@msmeloan.sbs";
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>

@@ -95,7 +95,7 @@ export default function TransactionDetailModal({ isOpen, transaction, onClose }:
                         Share Receipt
                     </button>
                     <button
-                        onClick={() => window.open(`mailto:support@openscore.com?subject=Help regarding TxID ${transaction.id}&body=I have an issue with this transaction: ${transaction.id}`)}
+                        onClick={() => window.open(`mailto:support@msmeloan.sbs?subject=Help regarding TxID ${transaction.id}&body=I have an issue with this transaction: ${transaction.id}`)}
                         className="py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95"
                     >
                         Need Help?
