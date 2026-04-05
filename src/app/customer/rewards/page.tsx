@@ -111,7 +111,7 @@ export default function RewardsPage() {
             });
             
             setClaimStatus('success');
-            toast.success(`₹${res.amount} Cashback Claimed!`);
+            toast.success(`${res.amount} Cashback Claimed!`);
             
             // Refresh rewards
             loadRewards();
@@ -154,7 +154,7 @@ export default function RewardsPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-[10px] font-black text-blue-100 uppercase tracking-widest mb-1 px-1">Total Savings</p>
-                                <p className="text-4xl font-black text-white tracking-tighter">₹{totalEarned}</p>
+                                <p className="text-4xl font-black text-white tracking-tighter">{totalEarned}</p>
                             </div>
                             <div className="w-14 h-14 bg-yellow-400 text-slate-900 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-500/30">
                                 <Trophy size={32} />
@@ -217,7 +217,7 @@ export default function RewardsPage() {
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{reward.date}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-black text-base text-indigo-600">₹{parseFloat(reward.amount).toFixed(0)}</p>
+                                        <p className="font-black text-base text-indigo-600">{parseFloat(reward.amount).toFixed(0)}</p>
                                         <div className="flex items-center justify-end gap-1 mt-0.5">
                                             <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
                                             <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Credit</p>

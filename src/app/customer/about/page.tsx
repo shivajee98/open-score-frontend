@@ -55,7 +55,7 @@ export default function AboutUsPage() {
             title: "Unique Financial Model",
             icon: <CreditCard className="text-blue-600" />,
             subtitle: "Demand Credit Voucher System",
-            content: "Our system allows users to access credit value ranging from ₹15,000 to ₹50,000 via a wallet-based ecosystem (Elite Wallet) with flexible short-term EMI options.",
+            content: "Our system allows users to access credit value ranging from 15,000 to 50,000 via a wallet-based ecosystem (Elite Wallet) with flexible short-term EMI options.",
             advantages: [
                 "Initial access without strict dependency on CIBIL score",
                 "Zero-interest for short tenure (1–7 days)",

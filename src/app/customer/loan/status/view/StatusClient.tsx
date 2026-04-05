@@ -269,45 +269,45 @@ export default function LoanStatus() {
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Sanction summary</p>
                                 <div className="flex justify-between text-xs text-slate-500">
                                     <span>Loan Amount</span>
-                                    <span className="text-slate-900 font-bold">₹ {principal.toLocaleString()}</span>
+                                    <span className="text-slate-900 font-bold"> {principal.toLocaleString()}</span>
                                 </div>
                                 <div className="pt-2 border-t border-dashed border-slate-100 space-y-3">
                                     {loan.calculations?.fee_structure && loan.calculations.fee_structure.length > 0 ? (
                                         loan.calculations.fee_structure.map((fee: any, idx: number) => (
                                             <div key={idx} className="flex justify-between text-xs text-slate-500">
                                                 <span>{fee.name === 'Login Fee' ? 'Membership Open Score' : fee.name}</span>
-                                                <span className="text-slate-900 font-medium">₹ {Number(fee.amount).toLocaleString()}</span>
+                                                <span className="text-slate-900 font-medium"> {Number(fee.amount).toLocaleString()}</span>
                                             </div>
                                         ))
                                     ) : (
                                         <>
                                             <div className="flex justify-between text-xs text-slate-500">
                                                 <span>Membership Open Score</span>
-                                                <span className="text-slate-900 font-medium">₹ {loginFee.toLocaleString()}</span>
+                                                <span className="text-slate-900 font-medium"> {loginFee.toLocaleString()}</span>
                                             </div>
                                             <div className="flex justify-between text-xs text-slate-500">
                                                 <span>Processing Fee</span>
-                                                <span className="text-slate-900 font-medium">₹ {processingFee.toLocaleString()}</span>
+                                                <span className="text-slate-900 font-medium"> {processingFee.toLocaleString()}</span>
                                             </div>
                                             <div className="flex justify-between text-xs text-slate-500">
                                                 <span>Field KYC Fee</span>
-                                                <span className="text-slate-900 font-medium">₹ {fieldKycFee.toLocaleString()}</span>
+                                                <span className="text-slate-900 font-medium"> {fieldKycFee.toLocaleString()}</span>
                                             </div>
                                             {otherFees > 0 && (
                                                 <div className="flex justify-between text-xs text-slate-500">
                                                     <span>Other Fees</span>
-                                                    <span className="text-slate-900 font-medium">₹ {otherFees.toLocaleString()}</span>
+                                                    <span className="text-slate-900 font-medium"> {otherFees.toLocaleString()}</span>
                                                 </div>
                                             )}
                                         </>
                                     )}
                                     <div className="flex justify-between text-xs text-slate-500">
                                         <span>Other Fees</span>
-                                        <span className="text-slate-900 font-medium">₹ {(otherFeesCalc || gst).toLocaleString()}</span>
+                                        <span className="text-slate-900 font-medium"> {(otherFeesCalc || gst).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-[11px] font-black text-slate-900 pt-1 border-t border-slate-100">
                                         <span>Total fee & Charges pay</span>
-                                        <span>₹ {totalDeductions.toLocaleString()}</span>
+                                        <span> {totalDeductions.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -315,15 +315,15 @@ export default function LoanStatus() {
                             <div className="pt-4 border-t border-slate-100 space-y-3">
                                 <div className="flex justify-between text-xs font-bold text-slate-900">
                                     <span>Disbursal Amount</span>
-                                    <span className="text-blue-600">₹ {disbursalAmount.toLocaleString()}</span>
+                                    <span className="text-blue-600"> {disbursalAmount.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500">
                                     <span>Interest ({interestRate}%)</span>
-                                    <span className="text-slate-900 font-medium">₹ {totalInterest.toLocaleString()}</span>
+                                    <span className="text-slate-900 font-medium"> {totalInterest.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t-2 border-slate-100">
                                     <span>Total Net Pay</span>
-                                    <span className="text-indigo-700">₹ {(disbursalAmount + totalInterest).toLocaleString()}</span>
+                                    <span className="text-indigo-700"> {(disbursalAmount + totalInterest).toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -345,7 +345,7 @@ export default function LoanStatus() {
                                         prefill: true,
                                         autoSubmit: true,
                                         subject: `Fast Disbursal Request - Loan #${loan.display_id || loan.id}`,
-                                        message: `I have applied for Loan #${loan.display_id || loan.id} for ₹${Number(loan.amount).toLocaleString()} and my current status is ${loan.status}. Please proceed with my fast disbursal.`,
+                                        message: `I have applied for Loan #${loan.display_id || loan.id} for ${Number(loan.amount).toLocaleString()} and my current status is ${loan.status}. Please proceed with my fast disbursal.`,
                                         category: 'loan_kyc_other'
                                     }));
                                     router.push(`/customer/support?ticket=${ticketData}`);

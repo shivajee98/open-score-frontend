@@ -53,7 +53,7 @@ export default function CustomerHome() {
             sub: "First Users Only!",
             color: "bg-gradient-to-br from-slate-900 to-blue-900",
             accent: "bg-blue-600",
-            amount: "₹5,00,000",
+            amount: "5,00,000",
             label: "Limit Up to"
         },
         {
@@ -364,7 +364,7 @@ export default function CustomerHome() {
                                     <span className="text-[9px] font-black uppercase tracking-wider">Incremental Value</span>
                                 </div>
                                 <span className="text-sm font-black text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
-                                    ₹ {showBalance ? Number(activeWallet?.cashback_balance || 0).toLocaleString() : '••••••'}
+                                     {showBalance ? Number(activeWallet?.cashback_balance || 0).toLocaleString() : '••••••'}
                                 </span>
                             </div>
                         )}
@@ -452,7 +452,7 @@ export default function CustomerHome() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <p className="text-[18px] font-black text-white tracking-tighter drop-shadow-sm">
-                                        ₹ {showBalance ? Number(balance).toLocaleString() : '••••••'}
+                                         {showBalance ? Number(balance).toLocaleString() : '••••••'}
                                     </p>
                                     {Number(lockedBalance) > 0 && showBalance && (
                                         <div
@@ -460,7 +460,7 @@ export default function CustomerHome() {
                                             className="flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10 cursor-pointer hover:bg-black/30 transition-colors active:scale-95"
                                         >
                                             <Lock size={10} className="text-yellow-400" />
-                                            <span className="text-[10px] font-black text-white tracking-tight">₹{Number(lockedBalance).toLocaleString()}</span>
+                                            <span className="text-[10px] font-black text-white tracking-tight">{Number(lockedBalance).toLocaleString()}</span>
                                         </div>
                                     )}
                                 </div>
@@ -485,7 +485,7 @@ export default function CustomerHome() {
                                 <p className="text-sm font-black text-white tracking-tight">Verification Code (OTP)</p>
                             </div>
                             <div className="ml-auto text-right">
-                                <p className="text-[11px] font-black text-emerald-400 uppercase tracking-widest leading-none mb-1">₹{Number(activeUser.pending_transfer_amount).toLocaleString()}</p>
+                                <p className="text-[11px] font-black text-emerald-400 uppercase tracking-widest leading-none mb-1">{Number(activeUser.pending_transfer_amount).toLocaleString()}</p>
                                 <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">Pending</p>
                             </div>
                         </div>
@@ -624,7 +624,7 @@ export default function CustomerHome() {
                                         <Zap size={24} className="fill-white" />
                                     </div>
                                     <div>
-                                        <h4 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim ₹{merchantBonus} Cashback</h4>
+                                        <h4 className="text-white font-black text-base leading-tight uppercase tracking-tight">Claim {merchantBonus} Cashback</h4>
                                     </div>
                                 </div>
                             </div>

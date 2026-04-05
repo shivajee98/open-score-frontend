@@ -132,7 +132,7 @@ export default function PublicQrPage() {
                     </div>
                     <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Request Sent!</h2>
                     <p className="text-slate-500 text-sm font-bold leading-relaxed">
-                        Your QR booking request for ₹{form.security_amount} has been received. Our team will verify the payment and ship your cards soon.
+                        Your QR booking request for {form.security_amount} has been received. Our team will verify the payment and ship your cards soon.
                     </p>
                     
                     <div className="pt-4 space-y-4">
@@ -334,7 +334,7 @@ export default function PublicQrPage() {
                                         className={`p-4 rounded-2xl border-2 flex items-center justify-between transition-all ${form.security_amount === amt.value ? 'bg-indigo-50 border-indigo-600 shadow-md' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
                                     >
                                         <div className="text-left">
-                                            <p className={`text-sm font-black ${form.security_amount === amt.value ? 'text-indigo-900' : 'text-slate-700'}`}>₹{Number(amt.value).toLocaleString()}</p>
+                                            <p className={`text-sm font-black ${form.security_amount === amt.value ? 'text-indigo-900' : 'text-slate-700'}`}>{Number(amt.value).toLocaleString()}</p>
                                             <p className={`text-[9px] font-bold uppercase tracking-widest ${form.security_amount === amt.value ? 'text-indigo-400' : 'text-slate-400'}`}>{amt.desc}</p>
                                         </div>
                                         {form.security_amount === amt.value && <CheckCircle2 size={18} className="text-indigo-600" />}
@@ -387,7 +387,7 @@ export default function PublicQrPage() {
                                 }}
                                 className="w-full py-4 bg-white text-indigo-900 font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 mb-4"
                             >
-                                <QrIcon size={16} /> Open UPI App & Pay ₹{form.security_amount}
+                                <QrIcon size={16} /> Open UPI App & Pay {form.security_amount}
                             </button>
 
                             <p className="text-[9px] text-indigo-200/60 font-medium text-center italic">

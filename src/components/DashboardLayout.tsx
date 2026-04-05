@@ -129,13 +129,13 @@ export default function DashboardLayout({
                         const sender = newCredits[0].counterparty_name || 'Customer';
                         const formattedAmount = Math.floor(totalAmount); // Remove decimals for cleaner speech
 
-                        console.log(`New payment detected: ₹${totalAmount}`);
+                        console.log(`New payment detected: ${totalAmount}`);
 
                         if (isAudioEnabled) {
                             playNotificationSound(`Rupees ${formattedAmount} received on Open Score`);
                         }
 
-                        toast.success(`Received ₹${totalAmount} from ${sender}`);
+                        toast.success(`Received ${totalAmount} from ${sender}`);
                     }
                 }
 

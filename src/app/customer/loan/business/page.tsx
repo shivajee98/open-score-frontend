@@ -27,7 +27,7 @@ export default function BusinessLoanPage() {
 
                     <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Limit Up To</p>
-                        <h2 className="text-4xl font-black text-slate-900 tracking-tight">₹10,00,000</h2>
+                        <h2 className="text-4xl font-black text-slate-900 tracking-tight">10,00,000</h2>
                     </div>
 
                     <div className="flex flex-col gap-3">

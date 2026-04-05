@@ -66,7 +66,7 @@ export default function TransferPage() {
 
         const total = calcTotal(recipientList);
         if (total > balance) {
-            toast.error(`Insufficient balance. Need ₹${total.toLocaleString('en-IN')} but have ₹${balance.toLocaleString('en-IN')}`);
+            toast.error(`Insufficient balance. Need ${total.toLocaleString('en-IN')} but have ${balance.toLocaleString('en-IN')}`);
             return;
         }
 
@@ -88,7 +88,7 @@ export default function TransferPage() {
             setLastBatchId(result.batch_id);
             setTotalAmount(result.total_amount);
             setSuccess(true);
-            toast.success(`${result.count} recipient(s) submitted! ₹${result.total_amount} deducted.`);
+            toast.success(`${result.count} recipient(s) submitted! ${result.total_amount} deducted.`);
         } catch (e: any) {
             toast.error(e.message || 'Failed to submit transfer');
         } finally {
@@ -175,7 +175,7 @@ export default function TransferPage() {
                     </div>
                     <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Request Under Process</h2>
                     <p className="text-xs font-bold text-slate-400 mb-1">Batch: <span className="font-mono text-slate-600">{lastBatchId}</span></p>
-                    <p className="text-sm font-bold text-slate-500 mb-2">₹{totalAmount.toLocaleString('en-IN')} deducted from wallet</p>
+                    <p className="text-sm font-bold text-slate-500 mb-2">{totalAmount.toLocaleString('en-IN')} deducted from wallet</p>
                     <p className="text-xs font-medium text-slate-400 mb-6 max-w-xs mx-auto leading-relaxed">
                         Your transfer request has been submitted and is under review. You will be notified once admin approves or rejects it.
                     </p>
@@ -212,7 +212,7 @@ export default function TransferPage() {
                             <ArrowRightLeft className="w-5 h-5 text-violet-600" />
                             Bank Transfer
                         </h1>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Balance: ₹{balance.toLocaleString('en-IN')}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Balance: {balance.toLocaleString('en-IN')}</p>
                     </div>
                 </div>
 
@@ -282,7 +282,7 @@ export default function TransferPage() {
                                         className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:ring-1 focus:ring-violet-200 outline-none font-mono uppercase" />
                                 </div>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-300">₹</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-black text-slate-300"></span>
                                     <input type="number" placeholder="Amount" value={r.amount}
                                         onChange={(e) => updateRecipient(idx, 'amount', e.target.value)}
                                         className="w-full bg-slate-50 border-none rounded-xl py-3 pl-8 pr-4 text-sm font-black text-slate-900 placeholder:text-slate-300 focus:ring-1 focus:ring-violet-200 outline-none" />
@@ -298,7 +298,7 @@ export default function TransferPage() {
                         {/* Total */}
                         <div className="bg-violet-50 rounded-2xl p-4 flex items-center justify-between">
                             <span className="text-xs font-black text-violet-600 uppercase tracking-widest">Total Amount</span>
-                            <span className="text-lg font-black text-violet-900">₹{calcTotal(recipients).toLocaleString('en-IN')}</span>
+                            <span className="text-lg font-black text-violet-900">{calcTotal(recipients).toLocaleString('en-IN')}</span>
                         </div>
 
                         <button onClick={() => handleSubmit(recipients)} disabled={saving}
@@ -337,7 +337,7 @@ export default function TransferPage() {
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-2">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{bulkRecipients.length} Recipients Parsed</span>
-                                    <span className="text-xs font-black text-emerald-600">₹{calcTotal(bulkRecipients).toLocaleString('en-IN')}</span>
+                                    <span className="text-xs font-black text-emerald-600">{calcTotal(bulkRecipients).toLocaleString('en-IN')}</span>
                                 </div>
 
                                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -348,7 +348,7 @@ export default function TransferPage() {
                                                     <p className="text-xs font-black text-slate-900">{r.recipient_name}</p>
                                                     <p className="text-[10px] font-bold text-slate-400">{r.bank_name} • {r.account_number} • {r.ifsc_code}</p>
                                                 </div>
-                                                <span className="text-sm font-black text-slate-900">₹{parseFloat(r.amount || '0').toLocaleString('en-IN')}</span>
+                                                <span className="text-sm font-black text-slate-900">{parseFloat(r.amount || '0').toLocaleString('en-IN')}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -357,7 +357,7 @@ export default function TransferPage() {
                                 {calcTotal(bulkRecipients) > balance && (
                                     <div className="bg-rose-50 rounded-xl p-3 flex items-center gap-2 text-rose-600">
                                         <AlertCircle className="w-4 h-4" />
-                                        <span className="text-xs font-bold">Insufficient balance! Need ₹{calcTotal(bulkRecipients).toLocaleString('en-IN')} but have ₹{balance.toLocaleString('en-IN')}</span>
+                                        <span className="text-xs font-bold">Insufficient balance! Need {calcTotal(bulkRecipients).toLocaleString('en-IN')} but have {balance.toLocaleString('en-IN')}</span>
                                     </div>
                                 )}
 

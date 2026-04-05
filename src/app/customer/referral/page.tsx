@@ -267,7 +267,7 @@ export default function ReferralPage() {
                     {statsData?.unverified_held > 0 && (
                         <span className="flex items-center gap-1 text-[8px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full border border-amber-100">
                             <Loader2 size={8} className="animate-spin" />
-                            ₹{statsData.unverified_held.toLocaleString()} Pending Verification
+                            {statsData.unverified_held.toLocaleString()} Pending Verification
                         </span>
                     )}
                 </h3>
@@ -278,11 +278,11 @@ export default function ReferralPage() {
                         <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-3 relative z-10">
                             <Banknote size={20} />
                         </div>
-                        <span className="text-2xl font-black text-slate-900 tracking-tight">₹{statsData?.available?.toLocaleString() || 0}</span>
+                        <span className="text-2xl font-black text-slate-900 tracking-tight">{statsData?.available?.toLocaleString() || 0}</span>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Available Earn</span>
                         {statsData?.unverified_held > 0 && (
                             <div className="mt-2 text-[8px] font-black text-amber-500 flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-md">
-                                <Check size={8} /> ₹{statsData.total_earnings?.toLocaleString()} Total Recorded
+                                <Check size={8} /> {statsData.total_earnings?.toLocaleString()} Total Recorded
                             </div>
                         )}
                     </div>
@@ -384,12 +384,12 @@ export default function ReferralPage() {
                                             {activeTab === 'QR' ? (
                                                 <div>
                                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Signup Earn</p>
-                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-amber-500'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-amber-500'}`}>{Number(friend.signup_bonus || 0).toFixed(0)}</p>
                                                 </div>
                                             ) : (
                                                 <div>
                                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Earn</p>
-                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-amber-500'}`}>₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-amber-500'}`}>{Number(friend.loan_bonus || 0).toFixed(0)}</p>
                                                 </div>
                                             )}
                                         </div>

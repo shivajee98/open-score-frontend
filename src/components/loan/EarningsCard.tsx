@@ -50,7 +50,7 @@ export default function EarningsCard({
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Loan Amount</p>
-                    <h2 className="text-xl font-bold whitespace-nowrap">₹ {plan.amount.toLocaleString('en-IN')}</h2>
+                    <h2 className="text-xl font-bold whitespace-nowrap"> {plan.amount.toLocaleString('en-IN')}</h2>
                 </div>
                 <div className={`p-3 rounded-lg bg-gradient-to-br ${plan.color} shadow-lg`}>
                     <TrendingUp className="w-6 h-6 text-white" />
@@ -78,13 +78,13 @@ export default function EarningsCard({
                 <div className="flex justify-between items-center gap-2">
                     <div className="shrink-0">
                         <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1">To Pay</p>
-                        <p className="text-lg font-bold text-emerald-400 whitespace-nowrap">₹ {total.toLocaleString('en-IN')}</p>
+                        <p className="text-lg font-bold text-emerald-400 whitespace-nowrap"> {total.toLocaleString('en-IN')}</p>
                     </div>
                     <div className="text-right flex flex-col items-end gap-1 overflow-hidden">
                         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-400/10 px-2 py-1 rounded truncate max-w-full italic">{breakdown}</span>
                         {payout?.cashback && count > 0 && (
                             <span className="text-[9px] font-black text-emerald-300 uppercase tracking-tighter bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 whitespace-nowrap">
-                                Cashback upto ₹{(payout.cashback * count).toLocaleString()}
+                                Cashback upto {(payout.cashback * count).toLocaleString()}
                             </span>
                         )}
                     </div>
@@ -95,19 +95,19 @@ export default function EarningsCard({
                 <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
                     <div className="flex justify-between text-slate-400 text-xs">
                         <span>Principal Amount</span>
-                        <span>₹{principal.toLocaleString()}</span>
+                        <span>{principal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-slate-400 text-xs">
                         <span>Interest</span>
-                        <span>₹{estInterest.toLocaleString()}</span>
+                        <span>{estInterest.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-slate-400 text-xs">
                         <span>Process Fees (+Other Fees)</span>
-                        <span>₹{estFees.toLocaleString()}</span>
+                        <span>{estFees.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-emerald-400 text-sm font-bold pt-2 border-t border-white/5">
                         <span>Total Payable</span>
-                        <span>₹{total.toLocaleString()}</span>
+                        <span>{total.toLocaleString()}</span>
                     </div>
                 </div>
             )}

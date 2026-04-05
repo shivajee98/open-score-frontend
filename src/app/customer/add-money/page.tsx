@@ -56,7 +56,7 @@ export default function AddMoneyPage() {
 
     const handleStep1Submit = () => {
         if (!amount || Number(amount) < 1) {
-            toast.error('Minimum amount is ₹1');
+            toast.error('Minimum amount is 1');
             return;
         }
 
@@ -102,11 +102,11 @@ export default function AddMoneyPage() {
         setUploading(true);
         try {
             const purposeLabel = PAYMENT_PURPOSES.find(p => p.value === paymentPurpose)?.label || paymentPurpose;
-            const ticketSubject = `Payment Done - ${purposeLabel} - ₹${Number(amount).toLocaleString()}`;
+            const ticketSubject = `Payment Done - ${purposeLabel} - ${Number(amount).toLocaleString()}`;
             const ticketMessage = [
                 `Payment Confirmation`,
                 ``,
-                `Amount: ₹${Number(amount).toLocaleString()}`,
+                `Amount: ${Number(amount).toLocaleString()}`,
                 `Purpose: ${purposeLabel}`,
                 transactionId ? `Transaction ID: ${transactionId}` : '',
                 ``,
@@ -198,7 +198,7 @@ export default function AddMoneyPage() {
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-4">How much will you pay?</label>
 
                             <div className="relative mb-6">
-                                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-3xl">₹</span>
+                                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-3xl"></span>
                                 <input
                                     type="number"
                                     value={amount}
@@ -218,7 +218,7 @@ export default function AddMoneyPage() {
                                             : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'
                                             }`}
                                     >
-                                        ₹{amt.toLocaleString()}
+                                        {amt.toLocaleString()}
                                     </button>
                                 ))}
                             </div>
@@ -392,7 +392,7 @@ export default function AddMoneyPage() {
                                 <IndianRupee className="w-4 h-4 text-emerald-600" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black text-emerald-900 uppercase tracking-widest mt-0.5">Payment for ₹{Number(amount).toLocaleString()}</p>
+                                <p className="text-[10px] font-black text-emerald-900 uppercase tracking-widest mt-0.5">Payment for {Number(amount).toLocaleString()}</p>
                                 <p className="text-[10px] font-bold text-emerald-600/60 leading-relaxed mt-0.5">Please select the correct purpose so we can process it correctly.</p>
                             </div>
                         </div>
@@ -467,7 +467,7 @@ export default function AddMoneyPage() {
                                 <QrIcon className="text-emerald-600 w-10 h-10 -rotate-6" />
                             </div>
                             <h3 className="text-2xl font-black text-white tracking-tight uppercase">Pay with QR</h3>
-                            <p className="text-emerald-100 text-[10px] font-black uppercase tracking-[0.2em] mt-2 opacity-80">Scanning for ₹{Number(amount).toLocaleString()}</p>
+                            <p className="text-emerald-100 text-[10px] font-black uppercase tracking-[0.2em] mt-2 opacity-80">Scanning for {Number(amount).toLocaleString()}</p>
                         </div>
 
                         <div className="p-10 flex flex-col items-center bg-white">

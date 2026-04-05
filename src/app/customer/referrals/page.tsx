@@ -82,7 +82,7 @@ export default function ReferralPage() {
     const handleShare = async () => {
         const shareData = {
             title: 'Join OpenScore!',
-            text: `Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!`,
+            text: `Use my referral code ${referralCode} and get ${settings.signup_bonus} bonus!`,
             url: referralLink
         };
 
@@ -137,7 +137,7 @@ export default function ReferralPage() {
 
                         <div className="grid grid-cols-4 gap-y-6 gap-x-2 justify-items-center mb-8">
                             <div className="flex flex-col items-center gap-2 group">
-                                <WhatsappShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!`} separator="\n">
+                                <WhatsappShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ${settings.signup_bonus} bonus!`} separator="\n">
                                     <div className="hover:scale-110 transition-transform active:scale-95">
                                         <WhatsappIcon size={56} round />
                                     </div>
@@ -146,7 +146,7 @@ export default function ReferralPage() {
                             </div>
 
                             <div className="flex flex-col items-center gap-2 group">
-                                <TelegramShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!`}>
+                                <TelegramShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ${settings.signup_bonus} bonus!`}>
                                     <div className="hover:scale-110 transition-transform active:scale-95">
                                         <TelegramIcon size={56} round />
                                     </div>
@@ -164,7 +164,7 @@ export default function ReferralPage() {
                             </div>
 
                             <div className="flex flex-col items-center gap-2 group">
-                                <TwitterShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!`}>
+                                <TwitterShareButton url={referralLink} title={`Use my referral code ${referralCode} and get ${settings.signup_bonus} bonus!`}>
                                     <div className="hover:scale-110 transition-transform active:scale-95">
                                         <TwitterIcon size={56} round />
                                     </div>
@@ -183,7 +183,7 @@ export default function ReferralPage() {
 
                             <div className="flex flex-col items-center gap-2 group">
                                 <button
-                                    onClick={() => window.open(`sms:?body=Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus! ${referralLink}`)}
+                                    onClick={() => window.open(`sms:?body=Use my referral code ${referralCode} and get ${settings.signup_bonus} bonus! ${referralLink}`)}
                                     className="w-[56px] h-[56px] bg-green-500 text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform active:scale-95 shadow-md flex-shrink-0"
                                 >
                                     <MessageCircle className="w-7 h-7" />
@@ -192,7 +192,7 @@ export default function ReferralPage() {
                             </div>
 
                             <div className="flex flex-col items-center gap-2 group">
-                                <EmailShareButton url={referralLink} subject={`Join OpenScore!`} body={`Use my referral code ${referralCode} and get ₹${settings.signup_bonus} bonus!\n${referralLink}`}>
+                                <EmailShareButton url={referralLink} subject={`Join OpenScore!`} body={`Use my referral code ${referralCode} and get ${settings.signup_bonus} bonus!\n${referralLink}`}>
                                     <div className="hover:scale-110 transition-transform active:scale-95">
                                         <EmailIcon size={56} round />
                                     </div>
@@ -243,18 +243,18 @@ export default function ReferralPage() {
                         </div>
                         <div>
                             <p className="text-white/80 text-xs font-bold uppercase tracking-wider">Total Earnings</p>
-                            <h2 className="text-3xl font-black">₹{stats.total_earnings.toLocaleString('en-IN')}</h2>
+                            <h2 className="text-3xl font-black">{stats.total_earnings.toLocaleString('en-IN')}</h2>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/20">
                         <div>
                             <p className="text-white/60 text-xs mb-1">Signup Bonus</p>
-                            <p className="text-lg font-black">₹{stats.total_signup_bonus.toLocaleString('en-IN')}</p>
+                            <p className="text-lg font-black">{stats.total_signup_bonus.toLocaleString('en-IN')}</p>
                         </div>
                         <div>
                             <p className="text-white/60 text-xs mb-1">Loan Bonus</p>
-                            <p className="text-lg font-black">₹{stats.total_loan_bonus.toLocaleString('en-IN')}</p>
+                            <p className="text-lg font-black">{stats.total_loan_bonus.toLocaleString('en-IN')}</p>
                         </div>
                     </div>
                 </div>
@@ -306,7 +306,7 @@ export default function ReferralPage() {
                             <div>
                                 <h4 className="font-bold text-slate-900 text-sm mb-1">They Sign Up</h4>
                                 <p className="text-slate-500 text-xs">
-                                    When they register, you earn <span className="font-bold text-green-600">₹{settings.signup_bonus}</span>
+                                    When they register, you earn <span className="font-bold text-green-600">{settings.signup_bonus}</span>
                                 </p>
                             </div>
                         </div>
@@ -318,7 +318,7 @@ export default function ReferralPage() {
                             <div>
                                 <h4 className="font-bold text-slate-900 text-sm mb-1">They Get a Loan</h4>
                                 <p className="text-slate-500 text-xs">
-                                    When their loan is disbursed, you earn <span className="font-bold text-purple-600">₹{settings.loan_disbursement_bonus}</span>
+                                    When their loan is disbursed, you earn <span className="font-bold text-purple-600">{settings.loan_disbursement_bonus}</span>
                                 </p>
                             </div>
                         </div>
@@ -353,7 +353,7 @@ export default function ReferralPage() {
                                     </div>
                                     <div className="text-right">
                                         <p className="font-black text-green-600 text-sm">
-                                            +₹{Number(referral.signup_bonus || 0) + Number(referral.loan_bonus || 0)}
+                                            +{Number(referral.signup_bonus || 0) + Number(referral.loan_bonus || 0)}
                                         </p>
                                         <p className="text-slate-400 text-xs">
                                             {referral.type === 'LOAN' ? (referral.has_received_cashback ? 'Loan Disbursed' : 'Loan Applied') : (referral.is_onboarded ? 'Signed Up' : 'Joined')}

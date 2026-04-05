@@ -377,7 +377,7 @@ export default function MyWorkDashboard() {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[10px] font-black text-slate-900">₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                <p className="text-[10px] font-black text-slate-900">{Number(friend.signup_bonus || 0).toFixed(0)}</p>
                                                 <p className="text-[8px] font-bold text-slate-400 uppercase">{new Date(friend.date).toLocaleDateString()}</p>
                                             </div>
                                         </div>
@@ -597,7 +597,7 @@ export default function MyWorkDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Security Deposit</p>
-                                    <p className="text-lg font-black text-slate-900">₹1,000</p>
+                                    <p className="text-lg font-black text-slate-900">1,000</p>
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery</p>
@@ -836,19 +836,19 @@ export default function MyWorkDashboard() {
                                             <tr className="border-b border-slate-100">
                                                 <td className="p-4">Merchant QR Onboarding</td>
                                                 <td className="p-4 text-indigo-900 flex items-center gap-1">
-                                                    ₹<input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableOnboardingAmount} onChange={(e) => setEditableOnboardingAmount(e.target.value)} />  successful Onboarding
+                                                    <input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableOnboardingAmount} onChange={(e) => setEditableOnboardingAmount(e.target.value)} />  successful Onboarding
                                                 </td>
                                             </tr>
                                             <tr className="border-b border-slate-100">
                                                 <td className="p-4">Loan Successfully Processed through App</td>
                                                 <td className="p-4 text-indigo-900 border-t-transparent flex items-center gap-1">
-                                                    ₹<input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableLoanAmount} onChange={(e) => setEditableLoanAmount(e.target.value)} />  successful loan
+                                                    <input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableLoanAmount} onChange={(e) => setEditableLoanAmount(e.target.value)} />  successful loan
                                                 </td>
                                             </tr>
                                             <tr className="bg-amber-50/30">
                                                 <td className="p-4 text-indigo-950 italic">Onboarding Bonus Milestone</td>
                                                 <td className="p-4 text-indigo-900 flex items-center gap-1">
-                                                    ₹<input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneAmount} onChange={(e) => setEditableBonusMilestoneAmount(e.target.value)} /> on <input type="text" className="w-10 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneCount} onChange={(e) => setEditableBonusMilestoneCount(e.target.value)} /> Onboardings
+                                                    <input type="text" className="w-15 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneAmount} onChange={(e) => setEditableBonusMilestoneAmount(e.target.value)} /> on <input type="text" className="w-10 bg-transparent border-b border-dashed border-indigo-300 focus:border-indigo-600 focus:outline-none text-center font-bold px-0 mx-0.5" value={editableBonusMilestoneCount} onChange={(e) => setEditableBonusMilestoneCount(e.target.value)} /> Onboardings
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -984,7 +984,7 @@ function QrHistoryList({ history, loading, onRefresh }: { history: any[], loadin
                             </div>
                             <div>
                                 <h4 className="text-sm font-black text-slate-900 leading-none">QR Bunch</h4>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">#{item.id} • ₹{item.security_amount}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">#{item.id} • {item.security_amount}</p>
                             </div>
                         </div>
                         <div className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${getStatusStyles(item.status)}`}>

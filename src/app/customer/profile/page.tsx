@@ -871,13 +871,13 @@ export default function Profile() {
                                             className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
                                         >
                                             <option value="">Select Turnover</option>
-                                            <option value="2-5k">₹2,000 - ₹5,000</option>
-                                            <option value="5k-10k">₹5,000 - ₹10,000</option>
-                                            <option value="10k-20k">₹10,000 - ₹20,000</option>
-                                            <option value="20k-50k">₹20,000 - ₹50,000</option>
-                                            <option value="50k-1l">₹50,000 - ₹1,00,000</option>
-                                            <option value="1l-2l">₹1,00,000 - ₹2,00,000</option>
-                                            <option value="2l-5l">₹2,00,000 - ₹5,00,000</option>
+                                            <option value="2-5k">2,000 - 5,000</option>
+                                            <option value="5k-10k">5,000 - 10,000</option>
+                                            <option value="10k-20k">10,000 - 20,000</option>
+                                            <option value="20k-50k">20,000 - 50,000</option>
+                                            <option value="50k-1l">50,000 - 1,00,000</option>
+                                            <option value="1l-2l">1,00,000 - 2,00,000</option>
+                                            <option value="2l-5l">2,00,000 - 5,00,000</option>
                                         </select>
                                     ) : (
                                         <p className="text-base font-semibold text-slate-900">{user.daily_turnover || 'Not Set'}</p>

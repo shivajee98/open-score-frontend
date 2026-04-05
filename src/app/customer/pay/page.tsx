@@ -268,7 +268,7 @@ function CustomerPayPage() {
                     method: 'POST',
                     body: JSON.stringify({ code: id })
                 });
-                toast.success(`Coupon Claimed: ₹${res.amount} Cashback!`);
+                toast.success(`Coupon Claimed: ${res.amount} Cashback!`);
                 router.push('/customer/rewards');
                 return;
             } catch (couponErr: any) {
@@ -376,7 +376,7 @@ function CustomerPayPage() {
 
                 <PinModal
                     isOpen={pinModalOpen}
-                    title={`Pay ₹${amount}`}
+                    title={`Pay ${amount}`}
                     onComplete={handlePay}
                     onClose={() => setPinModalOpen(false)}
                 />
@@ -414,7 +414,7 @@ function CustomerPayPage() {
                                                         </summary>
                                                         <div className="px-4 pb-4 space-y-3">
                                                             <p className="text-[11px] font-bold text-emerald-800/80 leading-relaxed text-left">
-                                                                We suggest 10–12 transfers of just under ₹1,000 each to build your history.
+                                                                We suggest 10–12 transfers of just under 1,000 each to build your history.
                                                             </p>
                                                             <div className="pt-3 border-t border-emerald-100/50">
                                                                 <p className="text-[10px] font-black text-rose-600 uppercase tracking-wider text-left">
@@ -600,7 +600,7 @@ function CustomerPayPage() {
                         <div className="space-y-4 px-2">
                             <div className="relative group">
                                 <div className="border border-blue-600 rounded-xl px-4 py-3 flex items-center justify-center bg-blue-50/20 active-focus-within:ring-2 ring-blue-100 transition-all">
-                                    <span className="text-2xl font-bold text-slate-800 mr-1">₹</span>
+                                    <span className="text-2xl font-bold text-slate-800 mr-1"></span>
                                     <input
                                         type="number"
                                         autoFocus
@@ -648,7 +648,7 @@ function CustomerPayPage() {
                                         <div className="space-y-1.5 pt-1 border-t border-emerald-100/50">
                                             <div className="flex justify-between items-center text-[10px]">
                                                 <span className="text-emerald-700/60 font-bold uppercase tracking-tighter">Your Current Cashback</span>
-                                                <span className="text-emerald-900 font-black">₹{Number(cashbackBalance).toLocaleString()}</span>
+                                                <span className="text-emerald-900 font-black">{Number(cashbackBalance).toLocaleString()}</span>
                                             </div>
                                             
                                             {cashbackBalance >= (user?.cashback_threshold_amount || 0) ? (
@@ -656,7 +656,7 @@ function CustomerPayPage() {
                                                     <div className="flex justify-between items-center text-[11px]">
                                                         <span className="text-emerald-700 font-bold">Contribution ({user.cashback_usage_percentage}%)</span>
                                                         <span className="text-emerald-600 font-black">
-                                                            - ₹{Math.min(
+                                                            - {Math.min(
                                                                 parseFloat(amount) * (user.cashback_usage_percentage / 100),
                                                                 cashbackBalance
                                                             ).toFixed(2)}
@@ -664,14 +664,14 @@ function CustomerPayPage() {
                                                     </div>
                                                     <div className="flex justify-between items-center text-[11px] pt-1 mt-1 border-t border-emerald-100 italic">
                                                         <span className="text-slate-600 font-black uppercase tracking-widest text-[8px]">Net Wallet Debit</span>
-                                                        <span className="text-slate-900 font-black">₹{(parseFloat(amount) - Math.min(parseFloat(amount) * (user.cashback_usage_percentage / 100), cashbackBalance)).toFixed(2)}</span>
+                                                        <span className="text-slate-900 font-black">{(parseFloat(amount) - Math.min(parseFloat(amount) * (user.cashback_usage_percentage / 100), cashbackBalance)).toFixed(2)}</span>
                                                     </div>
                                                 </>
                                             ) : (
                                                 <div className="p-2 bg-amber-50 rounded-lg border border-amber-100 flex items-start gap-2">
                                                     <div className="text-amber-600 mt-0.5"><Lock size={10} /></div>
                                                     <p className="text-[8px] font-bold text-amber-700 leading-tight uppercase tracking-tight">
-                                                        Cashback below ₹{user.cashback_threshold_amount}. Full amount will be debited from Main Wallet.
+                                                        Cashback below {user.cashback_threshold_amount}. Full amount will be debited from Main Wallet.
                                                     </p>
                                                 </div>
                                             )}
@@ -682,14 +682,14 @@ function CustomerPayPage() {
 
                             <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-100">
                                 <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Available Balance</span>
-                                <span className="text-sm font-black text-slate-900">₹{balance.toLocaleString('en-IN')}</span>
+                                <span className="text-sm font-black text-slate-900">{balance.toLocaleString('en-IN')}</span>
                             </div>
                             {lockedBalance > 0 && (
                                 <div className="flex justify-between items-center px-4 pt-1 pb-2">
                                     <span className="text-[9px] font-bold uppercase text-amber-500 flex items-center gap-1">
                                         <Lock size={10} /> Locked
                                     </span>
-                                    <span className="text-xs font-bold text-slate-400">₹{lockedBalance.toLocaleString('en-IN')}</span>
+                                    <span className="text-xs font-bold text-slate-400">{lockedBalance.toLocaleString('en-IN')}</span>
                                 </div>
                             )}
 

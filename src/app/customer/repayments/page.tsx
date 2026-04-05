@@ -249,14 +249,14 @@ export default function RepaymentsPage() {
                             <IndianRupee size={14} />
                         </div>
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Outstanding</p>
-                        <h3 className="text-base font-black text-white tracking-tight">₹{totalActiveDebt.toLocaleString()}</h3>
+                        <h3 className="text-base font-black text-white tracking-tight">{totalActiveDebt.toLocaleString()}</h3>
                     </div>
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3.5 group">
                         <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2 group-hover:scale-110 transition-transform">
                             <Coins size={14} />
                         </div>
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Repayment Bonus</p>
-                        <h3 className="text-base font-black text-emerald-400 tracking-tight">₹{totalCashback.toLocaleString()}</h3>
+                        <h3 className="text-base font-black text-emerald-400 tracking-tight">{totalCashback.toLocaleString()}</h3>
                     </div>
                 </div>
             </div>
@@ -356,7 +356,7 @@ export default function RepaymentsPage() {
                                                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Application #{loan.display_id || loan.id}</span>
                                                     <Sparkles size={8} className="text-amber-500 animate-pulse" />
                                                 </div>
-                                                <h3 className="text-xl font-black tracking-tighter text-slate-900">₹{parseFloat(loan.amount).toLocaleString()}</h3>
+                                                <h3 className="text-xl font-black tracking-tighter text-slate-900">{parseFloat(loan.amount).toLocaleString()}</h3>
                                             </div>
                                         </div>
                                         <div className="text-right">
@@ -369,11 +369,11 @@ export default function RepaymentsPage() {
                                         <div className="flex gap-4 flex-1 min-w-0">
                                             <div className="min-w-0">
                                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Paid</p>
-                                                <p className="text-xs font-black text-slate-900 truncate">₹{parseFloat(loan.paid_amount || 0).toLocaleString()}</p>
+                                                <p className="text-xs font-black text-slate-900 truncate">{parseFloat(loan.paid_amount || 0).toLocaleString()}</p>
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Balance</p>
-                                                <p className="text-xs font-black text-slate-900 truncate">₹{(loan.amount - (loan.paid_amount || 0)).toLocaleString()}</p>
+                                                <p className="text-xs font-black text-slate-900 truncate">{(loan.amount - (loan.paid_amount || 0)).toLocaleString()}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest group-hover:bg-blue-600 transition-colors shadow-lg shadow-slate-900/10">
@@ -409,7 +409,7 @@ export default function RepaymentsPage() {
                                             <CheckCircle2 size={24} />
                                         </div>
                                         <div>
-                                            <h4 className="font-black text-base text-slate-900 tracking-tight">₹{parseFloat(loan.amount).toLocaleString()} Loan</h4>
+                                            <h4 className="font-black text-base text-slate-900 tracking-tight">{parseFloat(loan.amount).toLocaleString()} Loan</h4>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: #{loan.display_id || loan.id}</p>
                                                 <span className="text-slate-200">|</span>
@@ -441,7 +441,7 @@ export default function RepaymentsPage() {
                             <h3 className="text-lg font-black tracking-tight">Credit Boost Info</h3>
                         </div>
                         <p className="text-sm font-medium text-blue-50 leading-relaxed mb-6">
-                            Consistent on-time repayments can increase your future borrowing limit by up to <span className="font-black">₹50,000</span> and improve your approval speed.
+                            Consistent on-time repayments can increase your future borrowing limit by up to <span className="font-black">50,000</span> and improve your approval speed.
                         </p>
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-xl text-[10px] font-black uppercase tracking-widest">
                             Current Tier: Elite <ShieldCheck size={14} />
@@ -469,7 +469,7 @@ export default function RepaymentsPage() {
                                             <div className="flex items-center gap-4">
                                                 <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-black">{idx + 1}</div>
                                                 <div>
-                                                    <p className="font-black text-sm text-slate-900">₹{parseFloat(rep.amount).toLocaleString()}</p>
+                                                    <p className="font-black text-sm text-slate-900">{parseFloat(rep.amount).toLocaleString()}</p>
                                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Paid: {new Date(rep.paid_at || '').toLocaleDateString()}</p>
                                                 </div>
                                             </div>
@@ -484,7 +484,7 @@ export default function RepaymentsPage() {
                             <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex items-center justify-between">
                                 <div>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Repaid</p>
-                                    <p className="text-xl font-black text-slate-900">₹{parseFloat(selectedLoan.amount).toLocaleString()}</p>
+                                    <p className="text-xl font-black text-slate-900">{parseFloat(selectedLoan.amount).toLocaleString()}</p>
                                 </div>
                                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-sm"><IndianRupee size={24} /></div>
                             </div>

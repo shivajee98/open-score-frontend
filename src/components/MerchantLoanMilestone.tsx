@@ -50,7 +50,7 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
                                 {isEligible ? 'Loan Eligibility Unlocked!' : 'Unlock Loan Upto'}
                             </h4>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                {milestonePlan.name} • ₹{Number(milestonePlan.amount).toLocaleString()}
+                                {milestonePlan.name} • {Number(milestonePlan.amount).toLocaleString()}
                             </p>
                         </div>
                     </div>
@@ -73,7 +73,7 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
                                 <div className="flex justify-between items-end">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Wallet Usage</span>
                                     <span className="text-xs font-bold text-indigo-600">
-                                        ₹{current.toLocaleString()} / ₹{max.toLocaleString()}
+                                        {current.toLocaleString()} / {max.toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
@@ -83,8 +83,8 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
                                     />
                                 </div>
                                 <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase">
-                                    <span>Goal: ₹{min.toLocaleString()}</span>
-                                    <span>Target: ₹{max.toLocaleString()}</span>
+                                    <span>Goal: {min.toLocaleString()}</span>
+                                    <span>Target: {max.toLocaleString()}</span>
                                 </div>
                             </div>
 
@@ -99,17 +99,17 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
                                 >
                                     <div className="flex items-center gap-1.5">
                                         <Info size={14} />
-                                        <span>How to unlock ₹{Number(milestonePlan.amount).toLocaleString()}?</span>
+                                        <span>How to unlock {Number(milestonePlan.amount).toLocaleString()}?</span>
                                     </div>
                                     {isDetailsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                 </button>
 
                                 {isDetailsOpen && (
                                     <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-600 leading-relaxed animate-in fade-in slide-in-from-top-1">
-                                        Collect & transfer <span className="font-bold text-slate-800">₹{max.toLocaleString()}</span> on Open Score  to unlock <span className="font-bold text-indigo-600 text-[10px]">{milestonePlan.name}</span> Credit 0% No CIBIL You are ₹20,990 away.
+                                        Collect & transfer <span className="font-bold text-slate-800">{max.toLocaleString()}</span> on Open Score  to unlock <span className="font-bold text-indigo-600 text-[10px]">{milestonePlan.name}</span> Credit 0% No CIBIL You are 20,990 away.
                                         {isEligible
                                             ? " Congratulations! You have reached the target and can now apply for this loan."
-                                            : ` You need ₹${(max - current).toLocaleString()} more in volume to unlock this loan.`
+                                            : ` You need ${(max - current).toLocaleString()} more in volume to unlock this loan.`
                                         }
                                     </div>
                                 )}

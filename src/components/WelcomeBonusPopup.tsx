@@ -127,7 +127,7 @@ export default function WelcomeBonusPopup({ isOpen, onClose, amount = 0 }: Welco
                             <div className="w-full py-6 relative flex items-center justify-center">
                                 {/* Glowing Text Amount */}
                                 <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-yellow-200 to-amber-500 drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] scale-110 group-hover:scale-125 transition-transform duration-300">
-                                    ₹{amount}
+                                    {amount}
                                 </span>
                                 <div className="absolute inset-0 bg-amber-500/10 blur-3xl rounded-full"></div>
                             </div>

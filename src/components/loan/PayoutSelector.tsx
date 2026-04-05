@@ -61,7 +61,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                             )}
                                             {option.cashback && (
                                                 <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">
-                                                    ₹{option.cashback} Cashback
+                                                    {option.cashback} Cashback
                                                 </p>
                                             )}
                                         </div>
@@ -70,7 +70,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
 
                                 <div className="text-right shrink-0">
                                     <p className={cn("text-xl font-black tracking-tighter leading-none mb-1", isSelected ? "text-emerald-600" : "text-slate-900")}>
-                                        ₹ {emi.toLocaleString()}
+                                         {emi.toLocaleString()}
                                     </p>
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em]">Per EMI</p>
                                 </div>
@@ -91,7 +91,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                         <div className="grid grid-cols-2 gap-x-8 gap-y-4 px-1">
                                             <div>
                                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Principal</p>
-                                                <p className="text-sm font-black text-slate-900">₹{planAmount.toLocaleString()}</p>
+                                                <p className="text-sm font-black text-slate-900">{planAmount.toLocaleString()}</p>
                                             </div>
                                             <div>
                                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Schedule</p>
@@ -99,12 +99,12 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                             </div>
                                             <div>
                                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Net EMI</p>
-                                                <p className="text-sm font-black text-slate-900">₹{emi.toLocaleString()}</p>
+                                                <p className="text-sm font-black text-slate-900">{emi.toLocaleString()}</p>
                                             </div>
                                             {option.cashback && (
                                                 <div>
                                                     <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">Cashback</p>
-                                                    <p className="text-sm font-black text-emerald-600">₹{option.cashback}/EMI</p>
+                                                    <p className="text-sm font-black text-emerald-600">{option.cashback}/EMI</p>
                                                 </div>
                                             )}
                                         </div>
@@ -112,12 +112,12 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                         <div className="bg-slate-900 rounded-xl p-3 text-white flex justify-between items-center shadow-lg shadow-slate-900/10">
                                             <div>
                                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total EMI Pay</p>
-                                                <p className="text-lg font-black">₹{total.toLocaleString()}</p>
+                                                <p className="text-lg font-black">{total.toLocaleString()}</p>
                                             </div>
                                             {((option.cashback || 0) * count) > 0 && (
                                                 <div className="text-right">
                                                     <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">You Save</p>
-                                                    <p className="text-base font-black text-emerald-400">₹{((option.cashback || 0) * count).toLocaleString()}</p>
+                                                    <p className="text-base font-black text-emerald-400">{((option.cashback || 0) * count).toLocaleString()}</p>
                                                 </div>
                                             )}
                                         </div>

@@ -125,7 +125,7 @@ export default function LoanHistory() {
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <h3 className="text-xl font-black text-slate-900 tracking-tight">₹ {parseFloat(loan.amount).toLocaleString('en-IN')}</h3>
+                                        <h3 className="text-xl font-black text-slate-900 tracking-tight"> {parseFloat(loan.amount).toLocaleString('en-IN')}</h3>
                                         {loan.status === 'APPROVED' && <RefreshCw size={16} className="text-blue-500 animate-spin" />}
                                     </div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">

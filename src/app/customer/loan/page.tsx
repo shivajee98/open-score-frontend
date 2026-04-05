@@ -274,7 +274,7 @@ export default function LoanList() {
                                                             'Last Application'}
                                         </span>
                                     </div>
-                                    <h3 className="text-lg font-black mb-1">₹ {recentLoan.amount.toLocaleString()} Loan</h3>
+                                    <h3 className="text-lg font-black mb-1"> {recentLoan.amount.toLocaleString()} Loan</h3>
                                     <p className="text-xs font-medium text-slate-400">
                                         Applied on {new Date(recentLoan.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} •
                                         <span className={`ml-1 ${recentLoan.status === 'CLOSED' || (recentLoan.status === 'DISBURSED' && Number(recentLoan.paid_amount || 0) >= Number(recentLoan.amount))
@@ -316,7 +316,7 @@ export default function LoanList() {
 
                                 <h2 className="text-xl font-black mb-2 leading-none">Application Active</h2>
                                 <p className="text-slate-400 text-xs font-medium leading-relaxed mb-6 max-w-[280px]">
-                                    You have a loan of <span className="text-white font-bold">₹{activeLoan.amount.toLocaleString()}</span> currently in the <span className="text-emerald-400 font-bold uppercase">{activeLoan.status.replace('_', ' ')}</span> stage.
+                                    You have a loan of <span className="text-white font-bold">{activeLoan.amount.toLocaleString()}</span> currently in the <span className="text-emerald-400 font-bold uppercase">{activeLoan.status.replace('_', ' ')}</span> stage.
                                 </p>
 
                                 <div className="flex gap-2">
@@ -395,7 +395,7 @@ export default function LoanList() {
 
                                 <h2 className="text-lg font-black text-white leading-none">Virtual Credit</h2>
                                 <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-2xl font-black text-white tracking-tighter leading-none">₹10,000</span>
+                                    <span className="text-2xl font-black text-white tracking-tighter leading-none">10,000</span>
                                     <div className="bg-white/5 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10">
                                         <span className={`text-[8px] font-black ${isMerchant ? 'text-emerald-300' : 'text-[#8e94f2]'} uppercase tracking-widest`}>Instant</span>
                                     </div>
@@ -478,7 +478,7 @@ export default function LoanList() {
                                             return;
                                         }
                                         if (isLocked) {
-                                            alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} loan. Please build your eligibility by successfully repaying your previous ₹${prevPlan?.amount.toLocaleString()} loan.`);
+                                            alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} loan. Please build your eligibility by successfully repaying your previous ${prevPlan?.amount.toLocaleString()} loan.`);
                                             return;
                                         }
                                         router.push(`/customer/loan/plan?amount=${plan.amount}&planId=${plan.id}`);
@@ -509,7 +509,7 @@ export default function LoanList() {
                                                 {isLocked && <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Locked</span>}
                                             </div>
                                             <h3 className="text-[18px] font-black text-slate-900 tracking-tighter leading-none">
-                                                ₹{plan.amount.toLocaleString()}
+                                                {plan.amount.toLocaleString()}
                                             </h3>
                                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-1">
                                                 {isLocked ? 'Building Eligibility...' : plan.description}

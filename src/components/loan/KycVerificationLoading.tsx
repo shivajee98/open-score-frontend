@@ -89,7 +89,7 @@ export default function KycVerificationLoading({ loanAmount, onComplete }: KycVe
                         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 opacity-50"></div>
                         <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-2 relative z-10">Approved Loan Amount</p>
                         <p className={`font-black text-white drop-shadow-[0_0_12px_rgba(16,185,129,0.6)] relative z-10 tracking-tight break-all ${loanAmount.toLocaleString().length > 7 ? 'text-3xl' : 'text-4xl'
-                            }`}>₹{loanAmount.toLocaleString()}</p>
+                            }`}>{loanAmount.toLocaleString()}</p>
                     </div>
 
                     <button

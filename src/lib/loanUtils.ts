@@ -181,7 +181,7 @@ export function calculateRepayment(amount: number, tenureValue: number, option: 
         const total = count * option.fixedAmount;
         return {
             total,
-            breakdown: `₹${option.fixedAmount.toLocaleString()} x ${count}`,
+            breakdown: `${option.fixedAmount.toLocaleString()} x ${count}`,
             count,
             emi: option.fixedAmount
         };
@@ -216,7 +216,7 @@ export function calculateRepayment(amount: number, tenureValue: number, option: 
             parts.push(`${option.interestRate}% Interest`);
         }
 
-        const breakdownText = `${parts.join(" • ")} • ₹${emi.toLocaleString()} / EMI`;
+        const breakdownText = `${parts.join(" • ")} • ${emi.toLocaleString()} / EMI`;
 
         return {
             total,

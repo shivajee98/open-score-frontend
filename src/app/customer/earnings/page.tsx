@@ -77,7 +77,7 @@ export default function TeamEarningsPage() {
         if (!amountNum || isNaN(amountNum) || amountNum <= 0) return;
         if (amountNum > available) return toast.error("Amount exceeds available balance");
         if (stats?.transfer_min_amount > 0 && amountNum < stats.transfer_min_amount) {
-            return toast.error(`Minimum allowed amount is ₹${stats.transfer_min_amount}`);
+            return toast.error(`Minimum allowed amount is ${stats.transfer_min_amount}`);
         }
 
         setSubmitting(true);
@@ -142,7 +142,7 @@ export default function TeamEarningsPage() {
                             <div>
                                 <p className="text-[9px] font-black text-violet-200 uppercase tracking-widest">Earn Wallet</p>
                                 <h3 className="text-3xl font-black mt-1">
-                                    ₹{((stats?.qr_earning || 0) + (stats?.loan_earning || 0) + (stats?.bonus_earned || 0)).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                                    {((stats?.qr_earning || 0) + (stats?.loan_earning || 0) + (stats?.bonus_earned || 0)).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
                                 </h3>
                                 <p className="text-[10px] text-violet-200 font-medium mt-1">Total Earnings</p>
                             </div>
@@ -153,15 +153,15 @@ export default function TeamEarningsPage() {
                         <div className="grid grid-cols-3 gap-2">
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Mapping</p>
-                                <p className="text-base font-black">₹{(stats?.qr_earning || 0).toLocaleString('en-IN')}</p>
+                                <p className="text-base font-black">{(stats?.qr_earning || 0).toLocaleString('en-IN')}</p>
                             </div>
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Loan Bonus</p>
-                                <p className="text-base font-black">₹{(stats?.loan_earning || 0).toLocaleString('en-IN')}</p>
+                                <p className="text-base font-black">{(stats?.loan_earning || 0).toLocaleString('en-IN')}</p>
                             </div>
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Milestone</p>
-                                <p className="text-base font-black">₹{(stats?.bonus_earned || 0).toLocaleString('en-IN')}</p>
+                                <p className="text-base font-black">{(stats?.bonus_earned || 0).toLocaleString('en-IN')}</p>
                             </div>
                         </div>
                     </div>
@@ -173,12 +173,12 @@ export default function TeamEarningsPage() {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Available for Transfer</p>
-                                <h2 className="text-4xl font-black text-slate-900 tracking-tighter">₹{stats?.available?.toLocaleString() || 0}</h2>
+                                <h2 className="text-4xl font-black text-slate-900 tracking-tighter">{stats?.available?.toLocaleString() || 0}</h2>
                                 {stats?.unverified_held > 0 && (
                                     <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-amber-200">
                                         <div className="flex items-center gap-1.5">
                                             <Clock size={12} className="animate-pulse" />
-                                            <span>Held (Unverified): ₹{stats.unverified_held.toLocaleString()}</span>
+                                            <span>Held (Unverified): {stats.unverified_held.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 )}
@@ -197,22 +197,22 @@ export default function TeamEarningsPage() {
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Total Earned</p>
-                                <p className="text-lg font-black text-slate-800">₹{stats?.total_earned?.toLocaleString() || 0}</p>
+                                <p className="text-lg font-black text-slate-800">{stats?.total_earned?.toLocaleString() || 0}</p>
                             </div>
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Pending/Transferred</p>
-                                <p className="text-lg font-black text-slate-800">₹{stats?.transferred?.toLocaleString() || 0}</p>
+                                <p className="text-lg font-black text-slate-800">{stats?.transferred?.toLocaleString() || 0}</p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 mb-8">
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">QR Mapping Earning</p>
-                                <p className="text-lg font-black text-slate-800">₹{stats?.qr_earning?.toLocaleString() || 0}</p>
+                                <p className="text-lg font-black text-slate-800">{stats?.qr_earning?.toLocaleString() || 0}</p>
                             </div>
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Loan Earning</p>
-                                <p className="text-lg font-black text-slate-800">₹{stats?.loan_earning?.toLocaleString() || 0}</p>
+                                <p className="text-lg font-black text-slate-800">{stats?.loan_earning?.toLocaleString() || 0}</p>
                             </div>
                         </div>
 
@@ -294,12 +294,12 @@ export default function TeamEarningsPage() {
                                 <div className="flex flex-wrap gap-3">
                                     <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
                                         <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">QR Mapping</p>
-                                        <p className="text-lg font-black">₹{(stats?.my_rates?.qr_onboarding_rate || 0).toLocaleString()}</p>
+                                        <p className="text-lg font-black">{(stats?.my_rates?.qr_onboarding_rate || 0).toLocaleString()}</p>
                                         <p className="text-[8px] text-indigo-200/70 uppercase">Per Merchant</p>
                                     </div>
                                     <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
                                         <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Loan Disbursement</p>
-                                        <p className="text-lg font-black">₹{(stats?.my_rates?.loan_disbursement_rate || 0).toLocaleString()}</p>
+                                        <p className="text-lg font-black">{(stats?.my_rates?.loan_disbursement_rate || 0).toLocaleString()}</p>
                                         <p className="text-[8px] text-indigo-200/70 uppercase">Per Loan</p>
                                     </div>
                                     {(stats?.my_rates?.bonus_milestone_count > 0 || (user?.sub_user_id && stats?.my_rates?.bonus_milestone_amount === 0)) && (
@@ -307,7 +307,7 @@ export default function TeamEarningsPage() {
                                             <p className="text-[9px] text-amber-200 uppercase tracking-widest font-bold flex items-center gap-1">
                                                 <Trophy size={8} /> Milestone
                                             </p>
-                                            <p className="text-lg font-black">₹{(stats?.my_rates?.bonus_milestone_amount || 0).toLocaleString()}</p>
+                                            <p className="text-lg font-black">{(stats?.my_rates?.bonus_milestone_amount || 0).toLocaleString()}</p>
                                             <p className="text-[8px] text-amber-200/70 uppercase">Target: {stats?.my_rates?.bonus_milestone_count || '-'} Mappings</p>
                                         </div>
                                     )}
@@ -377,12 +377,12 @@ export default function TeamEarningsPage() {
                                             {activeTab === 'QR' ? (
                                                 <div>
                                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
-                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-slate-300'}`}>₹{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-slate-300'}`}>{Number(friend.signup_bonus || 0).toFixed(0)}</p>
                                                 </div>
                                             ) : (
                                                 <div>
                                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Loan Disbursed Earn</p>
-                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-300'}`}>₹{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-300'}`}>{Number(friend.loan_bonus || 0).toFixed(0)}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -471,16 +471,16 @@ export default function TeamEarningsPage() {
                         {stats?.transfer_min_amount > 0 && (
                             <div className="bg-amber-50 text-amber-700 p-3 rounded-xl text-xs font-bold flex items-start gap-2 mb-6 border border-amber-200/50">
                                 <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                                <span>Minimum allowed withdraw amount is ₹{stats.transfer_min_amount.toLocaleString()}.</span>
+                                <span>Minimum allowed withdraw amount is {stats.transfer_min_amount.toLocaleString()}.</span>
                             </div>
                         )}
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available to withdraw: ₹{stats?.available?.toLocaleString()}</label>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available to withdraw: {stats?.available?.toLocaleString()}</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <span className="text-slate-400 font-bold text-lg">₹</span>
+                                        <span className="text-slate-400 font-bold text-lg"></span>
                                     </div>
                                     <input
                                         type="number"

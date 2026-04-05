@@ -108,7 +108,7 @@ export default function NotificationsPage() {
                                                 ID: #{notif.id} • {notif.status}
                                             </p>
                                             <span className={`text-xs font-black ${notif.type === 'CREDIT' ? (isMerchant ? 'text-emerald-600' : 'text-emerald-600') : 'text-slate-900'}`}>
-                                                {notif.type === 'CREDIT' ? '+' : '-'} ₹{notif.amount}
+                                                {notif.type === 'CREDIT' ? '+' : '-'} {notif.amount}
                                             </span>
                                         </div>
                                     </div>
@@ -135,7 +135,7 @@ export default function NotificationsPage() {
                                 {getIcon(selectedNotif.type, selectedNotif.status)}
                             </div>
                             <h3 className="text-3xl font-black text-slate-900 tracking-tight">
-                                {selectedNotif.type === 'CREDIT' ? '+' : '-'} ₹{selectedNotif.amount}
+                                {selectedNotif.type === 'CREDIT' ? '+' : '-'} {selectedNotif.amount}
                             </h3>
                             <p className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mt-2 ${selectedNotif.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
                                 selectedNotif.status === 'FAILED' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'

@@ -215,7 +215,7 @@ export default function PaymentSuccessModal({ isOpen, amount, payeeName, date, t
 
                 <div className={`text-center space-y-2 mb-8 transition-all duration-700 delay-500 transform ${animate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                     <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase">Transfer Successful</h3>
-                    <div className="text-4xl font-black text-slate-900 tracking-tighter">₹{parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                    <div className="text-4xl font-black text-slate-900 tracking-tighter">{parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
                 </div>
 
                 <div className={`w-full bg-slate-50 rounded-3xl p-6 mb-8 space-y-4 border border-slate-100 transition-all duration-700 delay-600 transform ${animate ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>

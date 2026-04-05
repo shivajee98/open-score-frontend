@@ -287,7 +287,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-center justify-between shadow-inner">
                             <div>
                                 <p className={labelClasses}>Loan Amount</p>
-                                <p className="text-3xl font-black text-blue-600 tracking-tighter">₹{loanAmount.toLocaleString()}</p>
+                                <p className="text-3xl font-black text-blue-600 tracking-tighter">{loanAmount.toLocaleString()}</p>
                             </div>
                             <IndianRupee size={32} className="text-blue-200" />
                         </div>
@@ -668,7 +668,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="space-y-4 max-h-[35vh] overflow-y-auto pr-2 scrollbar-hide py-2">
                             <ReviewItem label="Name" value={`${watch('first_name')} ${watch('last_name')}`} icon={User} />
                             <ReviewItem label="Phone" value={watch('phone')} icon={Phone} />
-                            <ReviewItem label="Income" value={`₹${watch('annual_income')}`} icon={IndianRupee} />
+                            <ReviewItem label="Income" value={`${watch('annual_income')}`} icon={IndianRupee} />
                             <ReviewItem label="Address" value={`${watch('street_address')}, ${watch('city')} - ${watch('postal_code')}`} icon={MapPin} />
                             {/* Simplified review to avoid too much height */}
                         </div>

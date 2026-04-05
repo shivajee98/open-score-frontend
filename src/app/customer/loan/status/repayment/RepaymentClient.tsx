@@ -269,7 +269,7 @@ export default function RepaymentDashboard() {
 
                     <div className="mb-2">
                         <span className="block text-[11px] font-black text-slate-600/90 uppercase tracking-[0.05em] mb-1">Total Amount Due</span>
-                        <span className="text-[40px] leading-none font-black text-slate-800 tracking-tighter">₹{totalPayable.toLocaleString()}</span>
+                        <span className="text-[40px] leading-none font-black text-slate-800 tracking-tighter">{totalPayable.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
@@ -300,10 +300,10 @@ export default function RepaymentDashboard() {
                             )}
                         </div>
                         <div className="text-right flex flex-col items-end">
-                            <p className="text-xl font-black text-slate-800 tracking-tight mb-2">₹{Number(serviceFeeEmi.amount).toLocaleString()}</p>
+                            <p className="text-xl font-black text-slate-800 tracking-tight mb-2">{Number(serviceFeeEmi.amount).toLocaleString()}</p>
                             {Number(serviceFeeEmi.emi_number) !== 0 && (
                                 <span className="inline-flex items-center px-1.5 py-0.5 bg-[#E6F8EF] text-emerald-600 rounded text-[9px] font-bold">
-                                    +₹{(Number(serviceFeeEmi.amount) * cashbackRate).toFixed(0)} cashback
+                                    +{(Number(serviceFeeEmi.amount) * cashbackRate).toFixed(0)} cashback
                                 </span>
                             )}
                         </div>
@@ -322,7 +322,7 @@ export default function RepaymentDashboard() {
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">
                                     {Number(pendingEmi.emi_number) === 0 ? "Fee Amount" : "Installment Amount"}
                                 </h4>
-                                <p className="text-3xl font-black text-slate-800 tracking-tighter">₹{Number(pendingEmi.amount).toLocaleString()}</p>
+                                <p className="text-3xl font-black text-slate-800 tracking-tighter">{Number(pendingEmi.amount).toLocaleString()}</p>
                             </div>
                         </div>
 
@@ -419,7 +419,7 @@ export default function RepaymentDashboard() {
                                         </div>
                                     </div>
                                     <div className="text-right flex flex-col items-end">
-                                        <p className="text-[15px] font-black text-slate-800 tracking-tight mb-0.5">₹{Number(emi.amount).toLocaleString()}</p>
+                                        <p className="text-[15px] font-black text-slate-800 tracking-tight mb-0.5">{Number(emi.amount).toLocaleString()}</p>
                                         <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.05em]">Installment {index + 1} of {regularEmis.length}</p>
                                     </div>
                                 </div>

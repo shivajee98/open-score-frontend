@@ -85,13 +85,13 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
     if (!isOpen) return null;
 
     const turnoverOptions = [
-        { label: "₹2,000 - ₹5,000", sub: "Cashback: ₹10 - ₹50", value: "2-5k" },
-        { label: "₹5,000 - ₹10,000", sub: "Cashback: ₹50 - ₹200", value: "5k-10k" },
-        { label: "₹10,000 - ₹20,000", sub: "Cashback: ₹200 - ₹400", value: "10k-20k" },
-        { label: "₹20,000 - ₹50,000", sub: "Cashback: ₹500 - ₹1,000", value: "20k-50k" },
-        { label: "₹50,000 - ₹1,00,000", sub: "Cashback: ₹1,000 - ₹2,000", value: "50k-1l" },
-        { label: "₹1,00,000 - ₹2,00,000", sub: "Cashback: ₹2,000 - ₹4,000", value: "1l-2l" },
-        { label: "₹2,00,000 - ₹5,00,000", sub: "Cashback: ₹3,000 - ₹5,000", value: "2l-5l" },
+        { label: "2,000 - 5,000", sub: "Cashback: 10 - 50", value: "2-5k" },
+        { label: "5,000 - 10,000", sub: "Cashback: 50 - 200", value: "5k-10k" },
+        { label: "10,000 - 20,000", sub: "Cashback: 200 - 400", value: "10k-20k" },
+        { label: "20,000 - 50,000", sub: "Cashback: 500 - 1,000", value: "20k-50k" },
+        { label: "50,000 - 1,00,000", sub: "Cashback: 1,000 - 2,000", value: "50k-1l" },
+        { label: "1,00,000 - 2,00,000", sub: "Cashback: 2,000 - 4,000", value: "1l-2l" },
+        { label: "2,00,000 - 5,00,000", sub: "Cashback: 3,000 - 5,000", value: "2l-5l" },
     ];
 
     const handleSubmit = async () => {
@@ -143,7 +143,7 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
                         <TrendingUp size={24} />
                     </div>
                     <h2 className="text-xl font-black text-slate-900">Claim Your Bonus</h2>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Complete Profile to Unlock ₹{bonusAmount}</p>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Complete Profile to Unlock {bonusAmount}</p>
                     <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest mt-2 animate-pulse">
                         please update your adhar and pan to get this reward
                     </p>
@@ -291,7 +291,7 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
                                 onClick={handleSubmit}
                                 className="flex-[2] py-3 bg-emerald-500 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
                             >
-                                {loading ? 'Processing...' : `Claim ₹${bonusAmount}`}
+                                {loading ? 'Processing...' : `Claim ${bonusAmount}`}
                             </button>
                         </div>
                     </div>

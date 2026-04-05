@@ -68,7 +68,7 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <StepContainer
                     stepIndex={0}
                     totalSteps={TOTAL_STEPS}
-                    title="💳 Unlock ₹10K–₹50K Instantly"
+                    title="💳 Unlock 10K–50K Instantly"
                     subtitle="No Credit Score Needed!"
                     footer="🚀 Start with Open Score Today"
                     ctaText="Next"

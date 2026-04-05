@@ -158,7 +158,7 @@ export default function LoanApplication() {
                     id: p.id,
                     name: p.name,
                     rawAmount: Number(p.amount),
-                    amount: `₹${parseFloat(p.amount).toLocaleString('en-IN')}`,
+                    amount: `${parseFloat(p.amount).toLocaleString('en-IN')}`,
                     type: 'Credit',
                     // V2 Configuration Data
                     configurations: p.configurations || [],
@@ -231,8 +231,8 @@ export default function LoanApplication() {
                 const ticketData = {
                     prefill: true,
                     autoSubmit: true,
-                    subject: "Instant Disbursal: ₹10,000 Loan",
-                    message: "I have just applied for a ₹10,000 instant loan and it is pre-approved. Please release the funds to my account.",
+                    subject: "Instant Disbursal: 10,000 Loan",
+                    message: "I have just applied for a 10,000 instant loan and it is pre-approved. Please release the funds to my account.",
                     category: "Loan Disbursal"
                 };
                 router.push(`/customer/support?ticket=${encodeURIComponent(JSON.stringify(ticketData))}`);
@@ -472,7 +472,7 @@ export default function LoanApplication() {
 
                             <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10 mb-8">
                                 <p className="text-slate-300 text-xs font-bold uppercase tracking-widest mb-1">Credit Limit Unlocked</p>
-                                <p className="text-3xl font-black text-white">₹ 50,000</p>
+                                <p className="text-3xl font-black text-white"> 50,000</p>
                             </div>
 
                             <button
@@ -558,7 +558,7 @@ export default function LoanApplication() {
                                                 >
                                                     <span className="uppercase tracking-wider">{freq.replace('_', ' ')}</span>
                                                     <span className={`text-[10px] ${selectedFrequency === freq ? 'text-slate-300' : 'text-slate-800'}`}>
-                                                        {isLoadingPreview ? 'Calculating...' : `₹${emi.toLocaleString('en-IN')} PER EMI`}
+                                                        {isLoadingPreview ? 'Calculating...' : `${emi.toLocaleString('en-IN')} PER EMI`}
                                                     </span>
                                                     {preview && !isLoadingPreview && (
                                                         <span className="text-[9px] opacity-75">
@@ -568,7 +568,7 @@ export default function LoanApplication() {
 
                                                     {selectedTenureConfig.cashback && selectedTenureConfig.cashback[freq] > 0 && (
                                                         <span className="absolute top-0 right-0 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-bl-lg rounded-tr-xl font-bold tracking-wider">
-                                                            ₹{selectedTenureConfig.cashback[freq]} CB
+                                                            {selectedTenureConfig.cashback[freq]} CB
                                                         </span>
                                                     )}
                                                 </button>
@@ -585,7 +585,7 @@ export default function LoanApplication() {
                                     {selectedTenureConfig.fees && selectedTenureConfig.fees.map((fee: any, idx: number) => (
                                         <div key={idx} className="flex justify-between text-xs">
                                             <span className="text-slate-500 font-medium">{fee.name}</span>
-                                            <span className="text-slate-800 font-bold">₹{fee.amount}</span>
+                                            <span className="text-slate-800 font-bold">{fee.amount}</span>
                                         </div>
                                     ))}
                                     {(() => {
@@ -595,7 +595,7 @@ export default function LoanApplication() {
                                         return (
                                             <div className="flex justify-between text-xs">
                                                 <span className="text-slate-500 font-medium">Other Fees</span>
-                                                <span className="text-slate-800 font-bold">₹{otherFeesAmount}</span>
+                                                <span className="text-slate-800 font-bold">{otherFeesAmount}</span>
                                             </div>
                                         );
                                     })()}

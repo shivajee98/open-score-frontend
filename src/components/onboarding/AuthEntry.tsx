@@ -21,7 +21,7 @@ export default function AuthEntry({ onMobileLogin, onEmailLogin }: AuthEntryProp
                     ⚡ Instant Voucher Power
                 </h2>
                 <p className="text-blue-600 font-bold mb-8">
-                    from ₹10,000 to ₹50,000
+                    from 10,000 to 50,000
                 </p>
 
                 <div className="bg-green-50 border border-green-100 rounded-2xl p-4 mb-10 w-full max-w-sm">
