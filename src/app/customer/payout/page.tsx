@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee, MessageSquare } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 import PinModal from '@/components/PinModal';
@@ -83,7 +83,20 @@ export default function PayoutPage() {
     const [isSuccess, setIsSuccess] = useState(false);
     const [showRestricted, setShowRestricted] = useState(false); // Show restriction screen after attempt
     const [transferStatus, setTransferStatus] = useState<any>(null);
+    const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+    const [showWithdrawalLimits, setShowWithdrawalLimits] = useState(false);
     const [ruleError, setRuleError] = useState<{ title: string, message: string } | null>(null);
+    const [lastRequestTime, setLastRequestTime] = useState<number | null>(null);
+    
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('last_merchant_verification_request');
+            if (stored) setLastRequestTime(parseInt(stored));
+        }
+    }, []);
+
+    const canRequestVerification = !lastRequestTime || (Date.now() - lastRequestTime > 24 * 60 * 60 * 1000);
+
     const router = useRouter();
     const isAuthenticated = useAuthProtection();
 
@@ -96,11 +109,30 @@ export default function PayoutPage() {
     const withdrawalRule = rulesData || null;
     const isLocked = withdrawalRule?.unlock_status?.has_active_loan && !withdrawalRule?.unlock_status?.is_unlocked;
     const dailyTxnLimit = withdrawalRule?.daily_txn_limit;
-    const remainingTxnsToday = withdrawalRule?.remaining_txns_today;
+    const usedTxnsToday = withdrawalRule?.remaining_txns_today; // Backend sends used count
 
     const isLoading = userLoading || walletLoading || rulesLoading || (userData?.role === 'CUSTOMER' && loansLoading);
 
-    // Removed auto-redirect - let users see the payout page and add bank details from there
+    // Merchant Verification Logic
+    const isMerchant = user?.role === 'MERCHANT';
+    const isMerchantUnverified = isMerchant && (user?.is_qr_mapped === false || user?.kyc_status !== 'FULL_VERIFIED');
+
+    const handleRequestVerification = () => {
+        if (!canRequestVerification) return;
+
+        const now = Date.now();
+        localStorage.setItem('last_merchant_verification_request', now.toString());
+        setLastRequestTime(now);
+
+        const ticketData = encodeURIComponent(JSON.stringify({
+            prefill: true,
+            autoSubmit: true,
+            subject: `Merchant Payout Activation - Business Verification Request`,
+            message: `Hi, I am a merchant (${user?.name}, Mobile: ${user?.mobile_number}). My QR mapping and KYC verification are pending. Please verify my business (${user?.business_name || 'N/A'}) so I can start withdrawing funds to my bank account. Thank you.`,
+            category: 'merchant_verification'
+        }));
+        router.push(`/customer/support?ticket=${ticketData}`);
+    };
 
     const handlePayout = async () => {
         const payoutAmount = parseFloat(amount);
@@ -114,30 +146,61 @@ export default function PayoutPage() {
             return;
         }
 
+        setShowWithdrawalLimits(true);
+
+        // 1. Withdrawal Rule Verification (Pre-check)
         if (withdrawalRule) {
-            if (withdrawalRule.remaining_txns_today !== null && withdrawalRule.remaining_txns_today <= 0) {
-                setRuleError({
-                    title: "Daily Request Limit",
-                    message: `You have reached your daily limit of ${withdrawalRule.daily_txn_limit} withdrawal requests.`
-                });
-                return;
-            }
+            // Check minimum withdrawal
             if (withdrawalRule.min_withdrawal > 0 && payoutAmount < withdrawalRule.min_withdrawal) {
                 setRuleError({
-                    title: "Minimum Withdrawal Limit",
-                    message: `You can only withdraw ${withdrawalRule.min_withdrawal.toLocaleString()} or more per transaction.`
+                    title: "Required Value for Transfer",
+                    message: `Minimum Transfer Required is ₹${withdrawalRule.min_withdrawal.toLocaleString()}.`
                 });
                 return;
             }
+            // Check maximum withdrawal
             if (withdrawalRule.max_withdrawal && payoutAmount > withdrawalRule.max_withdrawal) {
                 setRuleError({
-                    title: "Maximum Withdrawal Limit",
-                    message: `You can only withdraw up to ${withdrawalRule.max_withdrawal.toLocaleString()} per transaction.`
+                    title: "Required Value for Transfer",
+                    message: `Maximum allowed Transfer is ₹${withdrawalRule.max_withdrawal.toLocaleString()}.`
                 });
+                return;
+            }
+            // Check daily limits
+            if (dailyTxnLimit && usedTxnsToday !== null && usedTxnsToday >= dailyTxnLimit) {
+                setRuleError({
+                    title: "Daily Limit Reached",
+                    message: `You have reached your daily limit of ${dailyTxnLimit} withdrawal requests. Try again tomorrow or increase your daily volume.`
+                });
+                return;
+            }
+            // Check Locked status
+            if (isLocked) {
+                setShowRestricted(true);
                 return;
             }
         }
 
+        // 2. Fetch latest user data to check verification status
+        setIsSubmitting(true);
+        let currentMerchantUnverified = isMerchantUnverified;
+        try {
+            const freshUser = await mutateUser();
+            if (freshUser) {
+                currentMerchantUnverified = freshUser.role === 'MERCHANT' && (freshUser.is_qr_mapped === false || freshUser.kyc_status !== 'FULL_VERIFIED');
+            }
+        } catch (e) {
+            console.error("Failed to refresh user status", e);
+        }
+
+        // 3. Verification Pending check
+        if (currentMerchantUnverified) {
+            setIsSubmitting(false);
+            setIsVerificationModalOpen(true);
+            return;
+        }
+
+        // 4. API Request Execution
         setIsSubmitting(true);
         setIsProcessing(true); // Start simulated processing UI
 
@@ -236,7 +299,6 @@ export default function PayoutPage() {
         }
     };
 
-    const isMerchant = user?.role === 'MERCHANT';
     const themeColor = isMerchant ? 'emerald' : 'indigo';
     const transferEnabled = user?.transfer_enabled;
 
@@ -305,6 +367,9 @@ export default function PayoutPage() {
             </div>
         );
     }
+
+    // The full-screen restriction is removed to retain users on the page
+    // if (isMerchantUnverified) { ... }
 
     if (showRestricted || (isLocked && !isSuccess)) {
         const unlock = withdrawalRule?.unlock_status;
@@ -472,35 +537,32 @@ export default function PayoutPage() {
                                 />
                             </div>
                             {withdrawalRule && (
-                                <p className={`text-[9px] font-bold mt-2 ml-1 flex items-center gap-1 ${
-                                    (parseFloat(amount) > 0 && ((parseFloat(amount) < withdrawalRule.min_withdrawal) || (withdrawalRule.max_withdrawal && parseFloat(amount) > withdrawalRule.max_withdrawal)))
-                                    ? 'text-rose-500 animate-pulse' : 'text-slate-400'
-                                }`}>
-                                    <AlertCircle size={10} />
-                                    Bank Transfer {withdrawalRule.min_withdrawal.toLocaleString()} - {withdrawalRule.max_withdrawal ? `${withdrawalRule.max_withdrawal.toLocaleString()}` : '∞'} 
-                                    {dailyTxnLimit && (
-                                        <>
-                                            <span className="mx-1 opacity-40">•</span>
-                                            <span className={remainingTxnsToday <= 0 ? 'text-rose-600' : 'text-indigo-600/60'}>
-                                                Requests: {remainingTxnsToday}/{dailyTxnLimit} Left Today
-                                            </span>
-                                        </>
+                                <div className="mt-2 ml-1">
+                                    {showWithdrawalLimits && (
+                                        <p className={`text-[9px] font-bold flex items-center gap-1 ${
+                                            (parseFloat(amount) > 0 && ((parseFloat(amount) < withdrawalRule.min_withdrawal) || (withdrawalRule.max_withdrawal && parseFloat(amount) > withdrawalRule.max_withdrawal)))
+                                            ? 'text-rose-500 animate-pulse' : 'text-slate-400'
+                                        }`}>
+                                            <AlertCircle size={10} />
+                                            Bank Transfer Minimum {withdrawalRule.min_withdrawal.toLocaleString()} - {withdrawalRule.max_withdrawal ? `${withdrawalRule.max_withdrawal.toLocaleString()}` : '∞'} 
+                                        </p>
                                     )}
-                                </p>
+                                    
+                                    {dailyTxnLimit && showWithdrawalLimits && (
+                                        <div className="mt-4 bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50 animate-in slide-in-from-top-2 duration-500">
+                                            <p className="text-[10px] font-bold text-emerald-700 leading-relaxed flex items-center gap-2">
+                                                <Clock size={12} className="shrink-0" />
+                                                <span>Daily Withdrawal Rule: You can submit up to <b>{dailyTxnLimit} requests</b> per day. You have used <b>{usedTxnsToday}</b> out of <b>{dailyTxnLimit}</b> requests for today.</span>
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
 
             {/* Bank Side */}
             <div className="space-y-4">
-                {dailyTxnLimit && (
-                    <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100/50">
-                        <p className="text-[10px] font-bold text-indigo-700 leading-relaxed flex items-center gap-2">
-                            <Clock size={12} className="shrink-0" />
-                            <span>Daily Withdrawal Rule: You can submit up to <b>{dailyTxnLimit} requests</b> per day. You have <b>{remainingTxnsToday} requests</b> remaining for today.</span>
-                        </p>
-                    </div>
-                )}
                 {user?.bank_name && user?.account_number ? (
                     <>
                         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
@@ -759,6 +821,61 @@ export default function PayoutPage() {
             </div>
         )
     }
-        </div >
+        {/* Merchant Verification Modal */}
+        {isVerificationModalOpen && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-center">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+                    
+                    <button 
+                        onClick={() => setIsVerificationModalOpen(false)}
+                        className="absolute top-6 right-6 p-2 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors"
+                    >
+                        <XCircle className="w-5 h-5 text-slate-400" />
+                    </button>
+
+                    <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-inner">
+                        <Lock className="w-8 h-8 text-amber-500" />
+                    </div>
+
+                    <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tighter leading-tight">Verification Pending</h3>
+                    <p className="text-slate-400 font-bold text-[10px] leading-relaxed uppercase tracking-widest mb-8">
+                        Your merchant profile is under review. Field verification is required to enable bank settlements.
+                    </p>
+
+                    <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center gap-4 mb-8 text-left">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${user?.is_qr_mapped ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
+                            {user?.is_qr_mapped ? '✓' : ''}
+                        </div>
+                        <div>
+                            <p className="text-[11px] font-black text-slate-900 tracking-tight">QR Mapping Verification</p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase">Pending Field KYC</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <button
+                            onClick={handleRequestVerification}
+                            disabled={!canRequestVerification}
+                            className={`w-full py-4 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center gap-3 ${
+                                canRequestVerification 
+                                ? 'bg-slate-900 text-white hover:bg-slate-800' 
+                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            }`}
+                        >
+                            {canRequestVerification ? 'Request Fast Verification' : 'Request Already Sent'}
+                            <MessageSquare className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setIsVerificationModalOpen(false)}
+                            className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                        >
+                            Not Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </div>
     );
 }

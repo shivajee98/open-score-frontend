@@ -252,11 +252,22 @@ export default function MyWorkDashboard() {
 
                             {!isKycApproved && (
                                 <button
-                                    onClick={() => setActiveTab('kyc')}
-                                    className="mt-6 w-full py-4 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl hover:bg-slate-800 transition-all active:scale-95"
+                                    onClick={() => {
+                                        if (user?.latest_loan?.reupload_fields?.length > 0) {
+                                            window.open(user.latest_loan.kyc_url, '_blank');
+                                        } else {
+                                            setActiveTab('kyc');
+                                        }
+                                    }}
+                                    className={`mt-6 w-full py-4 font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all active:scale-95 ${user?.latest_loan?.reupload_fields?.length > 0 ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
                                 >
-                                    Complete KYC Now
+                                    {user?.latest_loan?.reupload_fields?.length > 0 ? 'Update Your Details' : 'Complete KYC Now'}
                                 </button>
+                            )}
+                            {user?.latest_loan?.reupload_fields?.length > 0 && (
+                                <p className="mt-4 text-[10px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
+                                    Admin requested re-upload for: {user.latest_loan.reupload_fields.map((f: string) => f.replace(/_/g, ' ')).join(', ')}
+                                </p>
                             )}
                         </div>
 

@@ -181,8 +181,31 @@ export default function CustomerQR() {
     const handleMapQr = async (e: React.FormEvent) => {
         e.preventDefault();
         if (agentCode && agentError) return;
+        
+        const isPincodeInvalid = !user?.pincode || user?.pincode === '000000' || user?.pincode === 'N/A';
+        const pincodeToSubmit = isPincodeInvalid ? (e.currentTarget as any).pincode?.value : user?.pincode;
+
+        if (isPincodeInvalid && (!pincodeToSubmit || pincodeToSubmit.length !== 6)) {
+            setMapStatus('error');
+            setTimeout(() => setMapStatus('idle'), 3000);
+            return;
+        }
+
         setMapStatus('loading');
         try {
+            // 1. If pincode needs update, do it first
+            if (isPincodeInvalid) {
+                await apiFetch('/auth/update-profile', {
+                    method: 'POST',
+                    body: JSON.stringify({ pincode: pincodeToSubmit })
+                });
+                // Update local user state
+                const updatedUser = { ...user, pincode: pincodeToSubmit };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+            }
+
+            // 2. Link QR
             await apiFetch('/merchant/link-qr', {
                 method: 'POST',
                 body: JSON.stringify({ 
@@ -426,6 +449,22 @@ export default function CustomerQR() {
                                             required
                                         />
                                     </div>
+                                    
+                                    {(!user?.pincode || user?.pincode === '000000' || user?.pincode === 'N/A') && (
+                                        <div className="bg-rose-50 p-4 rounded-2xl border border-rose-100">
+                                            <label className="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-2 block ml-1">Update Shop Pincode (Mandatory)</label>
+                                            <input
+                                                name="pincode"
+                                                type="tel"
+                                                placeholder="6 Digit Shop Pincode"
+                                                className="w-full p-4 bg-white rounded-xl font-black text-center text-lg tracking-widest border border-rose-200 focus:border-rose-500 focus:ring-0 outline-none transition-all"
+                                                required
+                                                maxLength={6}
+                                                pattern="\d{6}"
+                                            />
+                                            <p className="text-[8px] text-rose-500 font-bold mt-2 uppercase tracking-tight text-center">Your pincode is required for Field KYC verification.</p>
+                                        </div>
+                                    )}
                                     
                                     {!hasMappedWithAgent && (
                                         <div>
