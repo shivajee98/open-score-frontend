@@ -133,9 +133,9 @@ export default function Profile() {
                     return;
                 }
                 setIsEditing(true);
-                
+
                 const targetId = editBank ? 'bank-details-section' : (section ? `${section}-section` : null);
-                
+
                 if (targetId) {
                     setTimeout(() => {
                         const element = document.getElementById(targetId);
@@ -157,7 +157,7 @@ export default function Profile() {
         if (isPinMissing && !isEditing && initialDataLoaded.current) {
             setIsEditing(true);
             toast.info("Please set your 6-digit PIN code to unlock virtual credit plans.");
-            
+
             // Focus on address section
             setTimeout(() => {
                 const element = document.getElementById('address-section');
@@ -333,13 +333,13 @@ export default function Profile() {
             toast.error("Notifications are blocked in browser settings.");
         }
     };
-    
+
     const toggleMerchantVisibility = async (field: 'show_phone' | 'show_timing') => {
         const newValue = !formData[field];
-        
+
         // Always update local state for UI feedback
         setFormData(prev => ({ ...prev, [field]: newValue }));
-        
+
         // If not in editing mode, sync with backend immediately
         if (!isEditing) {
             try {
@@ -367,7 +367,7 @@ export default function Profile() {
         if (updateTimeStr) {
             // Ensure we handle UTC/Local correctly by parsing
             const updateTime = new Date(updateTimeStr).getTime();
-            
+
             const calculateTime = () => {
                 const now = new Date().getTime();
                 const diff = (updateTime + 3 * 60 * 1000) - now;
@@ -405,14 +405,14 @@ export default function Profile() {
         try {
             const uploadData = new FormData();
             uploadData.append(field, file);
-            
+
             const res = await apiFetch('/auth/update-profile', {
                 method: 'POST',
                 body: uploadData
             });
-            
+
             if (res.error) throw new Error(res.error);
-            
+
             toast.success(`${field.replace(/_/g, ' ').toUpperCase()} updated successfully!`);
             await mutateUser();
         } catch (e: any) {
@@ -518,19 +518,19 @@ export default function Profile() {
                 body: uploadData
             });
             if (res.error) throw new Error(res.error);
-            
+
             // Immediate sync: update SWR cache and localStorage
             if (res.user) {
                 localStorage.setItem('user', JSON.stringify(res.user));
                 await mutateUser(res.user, false);
-                
+
                 // Clear blob previews from form data by re-parsing from saved user
                 try {
-                    setFormData(prev => ({ 
-                        ...prev, 
-                        shop_images: JSON.stringify(res.user.shop_images || []) 
+                    setFormData(prev => ({
+                        ...prev,
+                        shop_images: JSON.stringify(res.user.shop_images || [])
                     }));
-                } catch (e) {}
+                } catch (e) { }
             } else {
                 await mutateUser(); // Fallback to refetch if user not returned
             }
@@ -688,7 +688,7 @@ export default function Profile() {
                             <h3 className="text-lg font-black text-slate-800 leading-tight mb-1">Set Your Security PIN</h3>
                             <p className="text-xs font-bold text-slate-500 leading-relaxed">Protect your withdrawals and sensitive data with a 6-digit transaction PIN.</p>
                         </div>
-                        <button 
+                        <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setPinModalMode('SET');
@@ -705,7 +705,7 @@ export default function Profile() {
 
                     <div className="relative text-center mb-12">
                         <label htmlFor="profile-photo-upload" className="cursor-pointer block">
-                             <div className="w-32 h-32 mx-auto bg-slate-900 border-4 border-white text-white rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-2xl mb-6 overflow-hidden relative group">
+                            <div className="w-32 h-32 mx-auto bg-slate-900 border-4 border-white text-white rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-2xl mb-6 overflow-hidden relative group">
                                 {uploadingImages.profile_image && (
                                     <div className="absolute inset-0 z-10 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center">
                                         <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
@@ -863,69 +863,69 @@ export default function Profile() {
                                     </div>
                                 </div>
 
-                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Daily Turnover</p>
-                                    {isEditing ? (
-                                        <select
-                                            value={formData.daily_turnover}
-                                            onChange={(e) => setFormData({ ...formData, daily_turnover: e.target.value })}
-                                            className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
-                                        >
-                                            <option value="">Select Turnover</option>
-                                            <option value="2-5k">2,000 - 5,000</option>
-                                            <option value="5k-10k">5,000 - 10,000</option>
-                                            <option value="10k-20k">10,000 - 20,000</option>
-                                            <option value="20k-50k">20,000 - 50,000</option>
-                                            <option value="50k-1l">50,000 - 1,00,000</option>
-                                            <option value="1l-2l">1,00,000 - 2,00,000</option>
-                                            <option value="2l-5l">2,00,000 - 5,00,000</option>
-                                        </select>
-                                    ) : (
-                                        <p className="text-base font-semibold text-slate-900">{user.daily_turnover || 'Not Set'}</p>
-                                    )}
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Daily Turnover</p>
+                                        {isEditing ? (
+                                            <select
+                                                value={formData.daily_turnover}
+                                                onChange={(e) => setFormData({ ...formData, daily_turnover: e.target.value })}
+                                                className={`text-sm font-semibold text-slate-900 bg-white border border-slate-200 rounded-lg p-2 w-full focus:border-${themeColor}-500 focus:outline-none`}
+                                            >
+                                                <option value="">Select Turnover</option>
+                                                <option value="2-5k">2,000 - 5,000</option>
+                                                <option value="5k-10k">5,000 - 10,000</option>
+                                                <option value="10k-20k">10,000 - 20,000</option>
+                                                <option value="20k-50k">20,000 - 50,000</option>
+                                                <option value="50k-1l">50,000 - 1,00,000</option>
+                                                <option value="1l-2l">1,00,000 - 2,00,000</option>
+                                                <option value="2l-5l">2,00,000 - 5,00,000</option>
+                                            </select>
+                                        ) : (
+                                            <p className="text-base font-semibold text-slate-900">{user.daily_turnover || 'Not Set'}</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
 
                                 {isMerchant && (
                                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
-                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Visibility Settings</p>
-                                         
-                                         <div className="flex items-center justify-between">
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Visibility Settings</p>
+
+                                        <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-sm font-semibold text-slate-900">Show Phone Number</p>
                                                 <p className="text-[10px] text-slate-400 font-bold">Display contact on locator</p>
                                             </div>
-                                            <div 
+                                            <div
                                                 onClick={() => toggleMerchantVisibility('show_phone')}
                                                 className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer ${formData.show_phone ? 'bg-emerald-500' : 'bg-slate-300'}`}
                                             >
                                                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${formData.show_phone ? 'right-1' : 'left-1'}`}></div>
                                             </div>
-                                         </div>
+                                        </div>
 
-                                         <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-sm font-semibold text-slate-900">Show Shop Timing</p>
                                                 <p className="text-[10px] text-slate-400 font-bold">Display hours on locator</p>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 {formData.show_timing && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => setIsShopTimingModalOpen(true)}
                                                         className={`px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors`}
                                                     >
                                                         {formData.shop_timing ? 'Edit Hours' : 'Set Hours'}
                                                     </button>
                                                 )}
-                                                <div 
+                                                <div
                                                     onClick={() => toggleMerchantVisibility('show_timing')}
                                                     className={`w-10 h-5 rounded-full relative transition-colors cursor-pointer ${formData.show_timing ? 'bg-emerald-500' : 'bg-slate-300'}`}
                                                 >
                                                     <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${formData.show_timing ? 'right-1' : 'left-1'}`}></div>
                                                 </div>
                                             </div>
-                                         </div>
+                                        </div>
                                     </div>
                                 )}
 
@@ -1040,10 +1040,10 @@ export default function Profile() {
                                 {/* KYC Documents Section */}
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 mt-6">
                                     <h3 className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-4 flex items-center gap-2">
-                                        <ShieldCheck size={14} className={`text-${themeColor}-500`} /> 
+                                        <ShieldCheck size={14} className={`text-${themeColor}-500`} />
                                         KYC Documents
                                     </h3>
-                                    
+
                                     <div className="grid grid-cols-2 gap-4 mb-6">
                                         <div>
                                             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Aadhar Number</p>
@@ -1101,20 +1101,20 @@ export default function Profile() {
                                                 )}
                                                 {(newAadharImage || user.aadhar_image) ? (
                                                     <>
-                                                        <img 
-                                                            src={newAadharImage ? URL.createObjectURL(newAadharImage) : (user.aadhar_image?.includes('blob:') ? '' : user.aadhar_image)} 
-                                                            alt="Aadhar Front" 
+                                                        <img
+                                                            src={newAadharImage ? URL.createObjectURL(newAadharImage) : (user.aadhar_image?.includes('blob:') ? '' : user.aadhar_image)}
+                                                            alt="Aadhar Front"
                                                             className={`w-full h-full object-cover ${uploadingImages.aadhar_image ? 'blur-[2px]' : ''}`}
                                                         />
                                                         {isEditing && (
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                                 <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
                                                                     Change
-                                                                    <input 
-                                                                        type="file" 
-                                                                        className="hidden" 
-                                                                        accept="image/*" 
-                                                                        onChange={(e) => handleFileChangeAutoSave(e, 'aadhar_image')} 
+                                                                    <input
+                                                                        type="file"
+                                                                        className="hidden"
+                                                                        accept="image/*"
+                                                                        onChange={(e) => handleFileChangeAutoSave(e, 'aadhar_image')}
                                                                     />
                                                                 </label>
                                                             </div>
@@ -1123,15 +1123,15 @@ export default function Profile() {
                                                 ) : (
                                                     <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
                                                         <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
-                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br/>Front</p>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br />Front</p>
                                                         {isEditing && (
                                                             <label className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}>
                                                                 Upload
-                                                                <input 
-                                                                    type="file" 
-                                                                    className="hidden" 
-                                                                    accept="image/*" 
-                                                                    onChange={(e) => handleFileChangeAutoSave(e, 'aadhar_image')} 
+                                                                <input
+                                                                    type="file"
+                                                                    className="hidden"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => handleFileChangeAutoSave(e, 'aadhar_image')}
                                                                 />
                                                             </label>
                                                         )}
@@ -1152,20 +1152,20 @@ export default function Profile() {
                                                 )}
                                                 {(newAadharBackImage || user.aadhar_back_image) ? (
                                                     <>
-                                                        <img 
-                                                            src={newAadharBackImage ? URL.createObjectURL(newAadharBackImage) : (user.aadhar_back_image?.includes('blob:') ? '' : user.aadhar_back_image)} 
-                                                            alt="Aadhar Back" 
+                                                        <img
+                                                            src={newAadharBackImage ? URL.createObjectURL(newAadharBackImage) : (user.aadhar_back_image?.includes('blob:') ? '' : user.aadhar_back_image)}
+                                                            alt="Aadhar Back"
                                                             className={`w-full h-full object-cover ${uploadingImages.aadhar_back_image ? 'blur-[2px]' : ''}`}
                                                         />
                                                         {isEditing && (
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                                 <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
                                                                     Change
-                                                                    <input 
-                                                                        type="file" 
-                                                                        className="hidden" 
-                                                                        accept="image/*" 
-                                                                        onChange={(e) => handleFileChangeAutoSave(e, 'aadhar_back_image')} 
+                                                                    <input
+                                                                        type="file"
+                                                                        className="hidden"
+                                                                        accept="image/*"
+                                                                        onChange={(e) => handleFileChangeAutoSave(e, 'aadhar_back_image')}
                                                                     />
                                                                 </label>
                                                             </div>
@@ -1174,15 +1174,15 @@ export default function Profile() {
                                                 ) : (
                                                     <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
                                                         <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
-                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br/>Back</p>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">Missing<br />Back</p>
                                                         {isEditing && (
                                                             <label className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}>
                                                                 Upload
-                                                                <input 
-                                                                    type="file" 
-                                                                    className="hidden" 
-                                                                    accept="image/*" 
-                                                                    onChange={(e) => handleFileChangeAutoSave(e, 'aadhar_back_image')} 
+                                                                <input
+                                                                    type="file"
+                                                                    className="hidden"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => handleFileChangeAutoSave(e, 'aadhar_back_image')}
                                                                 />
                                                             </label>
                                                         )}
@@ -1211,20 +1211,20 @@ export default function Profile() {
                                                 <div className="aspect-video rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 overflow-hidden relative group/img flex items-center justify-center">
                                                     {(newPanImage || user.pan_image) ? (
                                                         <>
-                                                            <img 
-                                                                src={newPanImage ? URL.createObjectURL(newPanImage) : (user.pan_image?.includes('blob:') ? '' : user.pan_image)} 
-                                                                alt="PAN Card" 
+                                                            <img
+                                                                src={newPanImage ? URL.createObjectURL(newPanImage) : (user.pan_image?.includes('blob:') ? '' : user.pan_image)}
+                                                                alt="PAN Card"
                                                                 className={`w-full h-full object-cover ${uploadingImages.pan_image ? 'blur-sm' : ''}`}
                                                             />
                                                             {isEditing && (
                                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                                                                     <label className="cursor-pointer bg-white text-slate-900 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl">
                                                                         Change Image
-                                                                        <input 
-                                                                            type="file" 
-                                                                            className="hidden" 
-                                                                            accept="image/*" 
-                                                                            onChange={(e) => handleFileChangeAutoSave(e, 'pan_image')} 
+                                                                        <input
+                                                                            type="file"
+                                                                            className="hidden"
+                                                                            accept="image/*"
+                                                                            onChange={(e) => handleFileChangeAutoSave(e, 'pan_image')}
                                                                         />
                                                                     </label>
                                                                 </div>
@@ -1237,11 +1237,11 @@ export default function Profile() {
                                                             {isEditing && (
                                                                 <label className={`cursor-pointer mt-3 text-[10px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-4 py-2 rounded-xl inline-block border border-${themeColor}-100`}>
                                                                     Upload Now
-                                                                    <input 
-                                                                        type="file" 
-                                                                        className="hidden" 
-                                                                        accept="image/*" 
-                                                                        onChange={(e) => handleFileChangeAutoSave(e, 'pan_image')} 
+                                                                    <input
+                                                                        type="file"
+                                                                        className="hidden"
+                                                                        accept="image/*"
+                                                                        onChange={(e) => handleFileChangeAutoSave(e, 'pan_image')}
                                                                     />
                                                                 </label>
                                                             )}
@@ -1261,137 +1261,137 @@ export default function Profile() {
                             </>
                         )}
 
-                                <div id="address-section" className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex flex-col gap-1">
-                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Location & Address</p>
-                                            {isAddressLocked ? (
-                                                <span className="flex items-center gap-1 text-[8px] font-black text-emerald-600 uppercase tracking-tighter bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                                    <ShieldCheck size={8} /> Verified & Locked
-                                                </span>
-                                            ) : timeLeft !== null && (
-                                                <span className="flex items-center gap-1 text-[8px] font-black text-amber-600 uppercase tracking-tighter bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">
-                                                    <Clock size={8} /> Edit window: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <span className="text-[8px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">Required for Virtual Credit</span>
-                                    </div>
-
-                                    {!isAddressLocked && timeLeft !== null && isEditing && (
-                                        <div className="bg-amber-50 border border-amber-100 p-2 rounded-lg mb-2">
-                                            <p className="text-[9px] font-bold text-amber-800 leading-tight">
-                                                ⚠️ You have {Math.floor(timeLeft / 60)} minutes to correct any mistakes. After this, address details will be locked for security.
-                                            </p>
-                                        </div>
+                        <div id="address-section" className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Location & Address</p>
+                                    {isAddressLocked ? (
+                                        <span className="flex items-center gap-1 text-[8px] font-black text-emerald-600 uppercase tracking-tighter bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                            <ShieldCheck size={8} /> Verified & Locked
+                                        </span>
+                                    ) : timeLeft !== null && (
+                                        <span className="flex items-center gap-1 text-[8px] font-black text-amber-600 uppercase tracking-tighter bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 animate-pulse">
+                                            <Clock size={8} /> Edit window: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                                        </span>
                                     )}
-
-                                    <div>
-                                        <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">Street Address</p>
-                                        {isEditing && !isAddressLocked ? (
-                                            <textarea
-                                                value={formData.street_address}
-                                                onChange={(e) => setFormData({ ...formData, street_address: e.target.value })}
-                                                className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full min-h-[60px] resize-none`}
-                                                placeholder="Building, Street, Area"
-                                            />
-                                        ) : (
-                                            <p className="text-sm font-semibold text-slate-900">{user?.business_address || user?.address || 'Not Set'}</p>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">City</p>
-                                            {isEditing && !isAddressLocked ? (
-                                                <input
-                                                    type="text"
-                                                    value={formData.city}
-                                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                    placeholder="City"
-                                                />
-                                            ) : (
-                                                <p className="text-sm font-semibold text-slate-900">{user?.city || 'Not Set'}</p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">State</p>
-                                            {isEditing && !isAddressLocked ? (
-                                                <select
-                                                    value={formData.state}
-                                                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                                    className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                >
-                                                    <option value="">Select State</option>
-                                                    <option value="Andhra Pradesh">Andhra Pradesh</option>
-                                                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                                                    <option value="Assam">Assam</option>
-                                                    <option value="Bihar">Bihar</option>
-                                                    <option value="Chhattisgarh">Chhattisgarh</option>
-                                                    <option value="Goa">Goa</option>
-                                                    <option value="Gujarat">Gujarat</option>
-                                                    <option value="Haryana">Haryana</option>
-                                                    <option value="Himachal Pradesh">Himachal Pradesh</option>
-                                                    <option value="Jharkhand">Jharkhand</option>
-                                                    <option value="Karnataka">Karnataka</option>
-                                                    <option value="Kerala">Kerala</option>
-                                                    <option value="Madhya Pradesh">Madhya Pradesh</option>
-                                                    <option value="Maharashtra">Maharashtra</option>
-                                                    <option value="Manipur">Manipur</option>
-                                                    <option value="Meghalaya">Meghalaya</option>
-                                                    <option value="Mizoram">Mizoram</option>
-                                                    <option value="Nagaland">Nagaland</option>
-                                                    <option value="Odisha">Odisha</option>
-                                                    <option value="Punjab">Punjab</option>
-                                                    <option value="Rajasthan">Rajasthan</option>
-                                                    <option value="Sikkim">Sikkim</option>
-                                                    <option value="Tamil Nadu">Tamil Nadu</option>
-                                                    <option value="Telangana">Telangana</option>
-                                                    <option value="Tripura">Tripura</option>
-                                                    <option value="Uttar Pradesh">Uttar Pradesh</option>
-                                                    <option value="Uttarakhand">Uttarakhand</option>
-                                                    <option value="West Bengal">West Bengal</option>
-                                                    <option value="Andaman and Nicobar Islands">Andaman & Nicobar</option>
-                                                    <option value="Chandigarh">Chandigarh</option>
-                                                    <option value="Dadra and Nagar Haveli and Daman and Diu">DNH & DD</option>
-                                                    <option value="Delhi">Delhi</option>
-                                                    <option value="Jammu and Kashmir">J&K</option>
-                                                    <option value="Ladakh">Ladakh</option>
-                                                    <option value="Lakshadweep">Lakshadweep</option>
-                                                    <option value="Puducherry">Puducherry</option>
-                                                </select>
-                                            ) : (
-                                                <p className="text-sm font-semibold text-slate-900">{user?.state || 'Not Set'}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className={`p-4 rounded-2xl border-2 transition-all ${!formData.postal_code ? 'bg-amber-50 border-amber-200' : isAddressLocked ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-100/50 border-slate-100'}`}>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <p className="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Regional PIN Code</p>
-                                            {!formData.postal_code && <span className="text-[8px] font-black text-amber-600 animate-pulse uppercase">Mandatory ⚠️</span>}
-                                            {isAddressLocked && <span className="text-[8px] font-black text-emerald-600 uppercase">Securely Locked ✅</span>}
-                                        </div>
-                                        {isEditing && !isAddressLocked ? (
-                                            <input
-                                                type="text"
-                                                maxLength={6}
-                                                value={formData.postal_code}
-                                                onChange={(e) => setFormData({ ...formData, postal_code: e.target.value.replace(/\D/g, '') })}
-                                                className={`text-lg font-black text-slate-900 bg-transparent border-b-2 border-slate-300 focus:border-amber-500 focus:outline-none w-full tracking-[0.2em]`}
-                                                placeholder="000000"
-                                            />
-                                        ) : (
-                                            <p className="text-lg font-black text-slate-900 tracking-[0.2em]">{user?.pincode || 'NOT SET'}</p>
-                                        )}
-                                        <p className="text-[8px] text-slate-400 font-bold mt-2 uppercase">
-                                            {isAddressLocked ? 'Address verified for regional compliance.' : 'Used to verify your area with regional virtual credit policies.'}
-                                        </p>
-                                    </div>
                                 </div>
+                                <span className="text-[8px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full uppercase tracking-tighter">Required for Virtual Credit</span>
+                            </div>
 
-                                <div id="bank-details-section" className="mt-8 mb-4 rounded-3xl p-2 transition-all duration-500">
+                            {!isAddressLocked && timeLeft !== null && isEditing && (
+                                <div className="bg-amber-50 border border-amber-100 p-2 rounded-lg mb-2">
+                                    <p className="text-[9px] font-bold text-amber-800 leading-tight">
+                                        ⚠️ You have {Math.floor(timeLeft / 60)} minutes to correct any mistakes. After this, address details will be locked for security.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div>
+                                <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">Street Address</p>
+                                {isEditing && !isAddressLocked ? (
+                                    <textarea
+                                        value={formData.street_address}
+                                        onChange={(e) => setFormData({ ...formData, street_address: e.target.value })}
+                                        className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full min-h-[60px] resize-none`}
+                                        placeholder="Building, Street, Area"
+                                    />
+                                ) : (
+                                    <p className="text-sm font-semibold text-slate-900">{user?.business_address || user?.address || 'Not Set'}</p>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">City</p>
+                                    {isEditing && !isAddressLocked ? (
+                                        <input
+                                            type="text"
+                                            value={formData.city}
+                                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                            className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                            placeholder="City"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-semibold text-slate-900">{user?.city || 'Not Set'}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-[9px] uppercase font-bold text-slate-300 tracking-widest mb-1">State</p>
+                                    {isEditing && !isAddressLocked ? (
+                                        <select
+                                            value={formData.state}
+                                            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                            className={`text-sm font-semibold text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                        >
+                                            <option value="">Select State</option>
+                                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                            <option value="Assam">Assam</option>
+                                            <option value="Bihar">Bihar</option>
+                                            <option value="Chhattisgarh">Chhattisgarh</option>
+                                            <option value="Goa">Goa</option>
+                                            <option value="Gujarat">Gujarat</option>
+                                            <option value="Haryana">Haryana</option>
+                                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                            <option value="Jharkhand">Jharkhand</option>
+                                            <option value="Karnataka">Karnataka</option>
+                                            <option value="Kerala">Kerala</option>
+                                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                            <option value="Maharashtra">Maharashtra</option>
+                                            <option value="Manipur">Manipur</option>
+                                            <option value="Meghalaya">Meghalaya</option>
+                                            <option value="Mizoram">Mizoram</option>
+                                            <option value="Nagaland">Nagaland</option>
+                                            <option value="Odisha">Odisha</option>
+                                            <option value="Punjab">Punjab</option>
+                                            <option value="Rajasthan">Rajasthan</option>
+                                            <option value="Sikkim">Sikkim</option>
+                                            <option value="Tamil Nadu">Tamil Nadu</option>
+                                            <option value="Telangana">Telangana</option>
+                                            <option value="Tripura">Tripura</option>
+                                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                            <option value="Uttarakhand">Uttarakhand</option>
+                                            <option value="West Bengal">West Bengal</option>
+                                            <option value="Andaman and Nicobar Islands">Andaman & Nicobar</option>
+                                            <option value="Chandigarh">Chandigarh</option>
+                                            <option value="Dadra and Nagar Haveli and Daman and Diu">DNH & DD</option>
+                                            <option value="Delhi">Delhi</option>
+                                            <option value="Jammu and Kashmir">J&K</option>
+                                            <option value="Ladakh">Ladakh</option>
+                                            <option value="Lakshadweep">Lakshadweep</option>
+                                            <option value="Puducherry">Puducherry</option>
+                                        </select>
+                                    ) : (
+                                        <p className="text-sm font-semibold text-slate-900">{user?.state || 'Not Set'}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className={`p-4 rounded-2xl border-2 transition-all ${!formData.postal_code ? 'bg-amber-50 border-amber-200' : isAddressLocked ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-100/50 border-slate-100'}`}>
+                                <div className="flex items-center justify-between mb-2">
+                                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Regional PIN Code</p>
+                                    {!formData.postal_code && <span className="text-[8px] font-black text-amber-600 animate-pulse uppercase">Mandatory ⚠️</span>}
+                                    {isAddressLocked && <span className="text-[8px] font-black text-emerald-600 uppercase">Securely Locked ✅</span>}
+                                </div>
+                                {isEditing && !isAddressLocked ? (
+                                    <input
+                                        type="text"
+                                        maxLength={6}
+                                        value={formData.postal_code}
+                                        onChange={(e) => setFormData({ ...formData, postal_code: e.target.value.replace(/\D/g, '') })}
+                                        className={`text-lg font-black text-slate-900 bg-transparent border-b-2 border-slate-300 focus:border-amber-500 focus:outline-none w-full tracking-[0.2em]`}
+                                        placeholder="000000"
+                                    />
+                                ) : (
+                                    <p className="text-lg font-black text-slate-900 tracking-[0.2em]">{user?.pincode || 'NOT SET'}</p>
+                                )}
+                                <p className="text-[8px] text-slate-400 font-bold mt-2 uppercase">
+                                    {isAddressLocked ? 'Address verified for regional compliance.' : 'Used to verify your area with regional virtual credit policies.'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="bank-details-section" className="mt-8 mb-4 rounded-3xl p-2 transition-all duration-500">
                             <h3 className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Bank Details (For Payouts)</h3>
                             {user.account_number && (
                                 <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl mb-4 flex items-center gap-2">
@@ -1504,14 +1504,14 @@ export default function Profile() {
                                     <span className="text-xs font-medium text-slate-700 truncate">About Us</span>
                                 </div>
                                 {/* Profile */}
-                                <div 
+                                <div
                                     onClick={() => {
                                         if (user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED') {
                                             toast.error("Verified profiles cannot be edited.");
                                             return;
                                         }
                                         setIsEditing(true);
-                                    }} 
+                                    }}
                                     className={`bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full ${user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED' ? 'opacity-60 grayscale' : ''}`}
                                 >
                                     <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 shadow-sm">
@@ -1536,12 +1536,12 @@ export default function Profile() {
                                 </div>
                                 {/* Share & Earn */}
                                 {!user?.sub_user_id && (
-                                        <div onClick={() => router.push('/customer/referral')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
-                                            <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
-                                                <Trophy className="w-4 h-4" />
-                                            </div>
-                                            <span className="text-xs font-medium text-slate-700 truncate">Share & Earn</span>
+                                    <div onClick={() => router.push('/customer/referral')} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full">
+                                        <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                            <Trophy className="w-4 h-4" />
                                         </div>
+                                        <span className="text-xs font-medium text-slate-700 truncate">Share & Earn</span>
+                                    </div>
                                 )}
 
                                 {/* Contact Us */}
@@ -1561,9 +1561,9 @@ export default function Profile() {
 
                                 {/* Dynamic Buttons */}
                                 {dynamicButtons.map((btn) => (
-                                    <div 
-                                        key={btn.id} 
-                                        onClick={() => router.push(`/info?slug=${btn.slug}`)} 
+                                    <div
+                                        key={btn.id}
+                                        onClick={() => router.push(`/info?slug=${btn.slug}`)}
                                         className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition-colors w-full"
                                     >
                                         <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm shrink-0" style={{ backgroundColor: `${btn.text_color}1a`, color: btn.text_color }}>
@@ -1575,8 +1575,8 @@ export default function Profile() {
 
                                 {/* Switch to Partner Panel */}
                                 {user?.is_vendor && (
-                                    <div 
-                                        onClick={() => setIsPortalOpen(true)} 
+                                    <div
+                                        onClick={() => setIsPortalOpen(true)}
                                         className="col-span-2 bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200 flex items-center gap-3 cursor-pointer hover:bg-indigo-700 transition-all border border-indigo-400/20 group mt-2"
                                     >
                                         <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
@@ -1609,8 +1609,8 @@ export default function Profile() {
                         <div className="flex gap-3 mt-8">
                             {isEditing ? (
                                 <>
-                                    <button 
-                                        onClick={handleUpdateProfile} 
+                                    <button
+                                        onClick={handleUpdateProfile}
                                         disabled={isSaving}
                                         className={`flex-1 bg-gradient-to-r from-${themeColor}-600 to-${themeColor}-500 text-white py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:shadow-lg transition-all flex items-center justify-center gap-1.5 shadow-xl shadow-${themeColor}-500/20 text-[11px] uppercase tracking-wider`}
                                     >
@@ -1618,13 +1618,13 @@ export default function Profile() {
                                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                         ) : (
                                             <>
-                                                <Check className="w-4 h-4" /> 
+                                                <Check className="w-4 h-4" />
                                                 <span>Save Changes</span>
                                             </>
                                         )}
                                     </button>
-                                    <button 
-                                        onClick={() => setIsEditing(false)} 
+                                    <button
+                                        onClick={() => setIsEditing(false)}
                                         disabled={isSaving}
                                         className="flex-1 bg-slate-100 text-slate-600 py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wider"
                                     >
@@ -1636,15 +1636,15 @@ export default function Profile() {
                                 <>
                                     {user && user.role === 'MERCHANT' && (user.kyc_status === 'FULL_VERIFIED' || user.kyc_status === 'FIELD_VERIFIED') ? (
                                         <div className="flex-1 bg-emerald-50 text-emerald-600 py-3 rounded-xl font-bold border border-emerald-200 shadow-sm flex items-center justify-center gap-2 animate-in zoom-in duration-300">
-                                            <ShieldCheck className="w-4 h-4" /> 
+                                            <ShieldCheck className="w-4 h-4" />
                                             <span className="text-[11px] font-black uppercase tracking-widest">Verified Merchant</span>
                                         </div>
                                     ) : (
-                                        <button 
-                                            onClick={() => setIsEditing(true)} 
+                                        <button
+                                            onClick={() => setIsEditing(true)}
                                             className={`flex-1 bg-white border border-slate-200 text-slate-900 py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-sm text-[11px] uppercase tracking-wider`}
                                         >
-                                            <Edit2 className="w-3.5 h-3.5" /> 
+                                            <Edit2 className="w-3.5 h-3.5" />
                                             <span>Edit Profile</span>
                                         </button>
                                     )}
@@ -1700,7 +1700,7 @@ export default function Profile() {
                             </div>
                             <span className="font-bold text-sm tracking-tight">Partner Panel</span>
                         </div>
-                        <button 
+                        <button
                             onClick={() => setIsPortalOpen(false)}
                             className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border border-rose-500/20"
                         >
@@ -1708,8 +1708,8 @@ export default function Profile() {
                         </button>
                     </div>
                     <div className="flex-1 w-full h-full relative">
-                        <iframe 
-                            src="https://agent.msmeloan.sbs" 
+                        <iframe
+                            src="https://agent.msmeloan.sbs"
                             className="w-full h-full border-none"
                             title="Partner Panel"
                         />
@@ -1721,7 +1721,7 @@ export default function Profile() {
                 isOpen={isTutorialOpen}
                 onClose={() => setIsTutorialOpen(false)}
             />
-            
+
             <PinModal
                 isOpen={isPinModalOpen}
                 onClose={() => setIsPinModalOpen(false)}
@@ -1730,7 +1730,7 @@ export default function Profile() {
                 title={pinModalMode === 'VERIFY' ? 'Enter Current PIN' : 'Set New PIN'}
             />
 
-            <ShopTimingModal 
+            <ShopTimingModal
                 isOpen={isShopTimingModalOpen}
                 initialData={formData.shop_timing}
                 onClose={() => setIsShopTimingModalOpen(false)}

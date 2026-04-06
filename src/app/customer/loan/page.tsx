@@ -32,7 +32,13 @@ export default function LoanList() {
             setUser(userData);
             
             // Initial check for address verification
-            if (userData.address_updated_at) {
+            // Skip wait timer if already fully verified by agent or admin
+            const isKycVerified = ['FIELD_VERIFIED', 'FULL_VERIFIED'].includes(userData.kyc_status);
+            
+            if (isKycVerified) {
+                setIsAddressVerified(true);
+                setAddressWaitTime(null);
+            } else if (userData.address_updated_at) {
                 const updateTime = new Date(userData.address_updated_at).getTime();
                 const now = new Date().getTime();
                 const diff = (updateTime + 3 * 60 * 1000) - now;
@@ -52,6 +58,13 @@ export default function LoanList() {
 
     useEffect(() => {
         if (user?.address_updated_at && !isAddressVerified) {
+            // Already checked kyc_status in userData useEffect, but redundancy doesn't hurt
+            if (['FIELD_VERIFIED', 'FULL_VERIFIED'].includes(user.kyc_status)) {
+                setIsAddressVerified(true);
+                setAddressWaitTime(null);
+                return;
+            }
+
             const timer = setInterval(() => {
                 const updateTime = new Date(user.address_updated_at).getTime();
                 const now = new Date().getTime();
