@@ -141,6 +141,27 @@ const Partner = () => {
     const hasPendingRequest = partnerRequest?.status === 'pending';
     const hasApprovedRequest = partnerRequest?.status === 'approved';
     const hasRejectedRequest = partnerRequest?.status === 'rejected';
+    const isUnlinked = partnerRequest?.status === 'unlinked';
+
+    const handleRejoin = async () => {
+        if (!partnerRequest?.vendor_code) return;
+        setSubmitting(true);
+        try {
+            await apiFetch('/partner/request', {
+                method: 'POST',
+                body: JSON.stringify({
+                    vendor_code: partnerRequest.vendor_code,
+                    type: partnerRequest.type,
+                }),
+            });
+            toast.success('Rejoin request submitted! Your vendor will review it shortly.');
+            mutateStatus();
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to submit rejoin request');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 relative pb-24 font-sans">
@@ -170,8 +191,9 @@ const Partner = () => {
                     <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-500/5' : 'bg-blue-500/5'} rounded-full blur-3xl -mr-16 -mt-16`}></div>
 
                     {/* === STATUS DISPLAY: Pending/Approved/Rejected === */}
+                    {/* === STATUS DISPLAY: Pending/Approved/Rejected/Unlinked === */}
                     {(hasPendingRequest || hasApprovedRequest) && (
-                        <div className="relative">
+                        <div className="relative mb-6">
                             <div className={`p-6 rounded-2xl border-2 ${hasPendingRequest ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${hasPendingRequest ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
@@ -250,8 +272,60 @@ const Partner = () => {
                         </div>
                     )}
 
-                    {/* === STEP: CHOOSE ROLE === */}
-                    {!hasPendingRequest && !hasApprovedRequest && step === 'choose' && (
+                    {/* Unlinked status - show Rejoin button ONLY for the previous vendor */}
+                    {isUnlinked && !hasPendingRequest && !hasApprovedRequest && step === 'choose' && (
+                        <div className="mb-6 p-6 rounded-[2.5rem] border-2 border-slate-200 bg-white text-center shadow-xl shadow-slate-200/50 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                            
+                            <div className="w-20 h-20 mx-auto rounded-3xl bg-slate-100 flex items-center justify-center text-slate-400 mb-6 relative">
+                                <AlertTriangle className="w-10 h-10 text-amber-500" />
+                                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-white border-4 border-slate-50 rounded-full flex items-center justify-center">
+                                    <X className="w-4 h-4 text-rose-500" />
+                                </div>
+                            </div>
+                            
+                            <h3 className="text-2xl font-black text-slate-900 mb-2">Partnership Disconnected</h3>
+                            <p className="text-xs text-slate-500 font-medium mb-8 px-4 leading-relaxed">
+                                Your account is currently unlinked. To resume your activities, you must request to <span className="font-bold text-slate-900">restore your partnership</span> with your previous vendor, <span className="font-black text-indigo-600">{partnerRequest?.vendor_name}</span>.
+                            </p>
+                            
+                            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 mb-8 flex items-center justify-between">
+                                <div className="text-left">
+                                    <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Previous Vendor</p>
+                                    <p className="text-sm font-black text-slate-900">{partnerRequest?.vendor_name}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Role</p>
+                                    <p className="text-sm font-black text-indigo-600 capitalize">{partnerRequest?.type}</p>
+                                </div>
+                            </div>
+                            
+                            <button
+                                onClick={handleRejoin}
+                                disabled={submitting}
+                                className="w-full py-5 rounded-2xl bg-slate-900 text-white font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-400/20 disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-3"
+                            >
+                                {submitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Processing...
+                                    </>
+                                ) : (
+                                    <>
+                                        Request to Restore Relationship
+                                        <ChevronRight size={18} />
+                                    </>
+                                )}
+                            </button>
+                            
+                            <p className="mt-6 text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                                Please contact {partnerRequest?.vendor_name} for more information.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* === STEP: CHOOSE ROLE (Only for non-unlinked users) === */}
+                    {!isUnlinked && !hasPendingRequest && !hasApprovedRequest && step === 'choose' && (
                         <div className="relative space-y-4">
                             <div className="text-center mb-6">
                                 <h2 className="text-xl font-black text-slate-900 mb-1">How do you want to join?</h2>

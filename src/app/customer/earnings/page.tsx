@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode } from 'lucide-react';
+import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode, Search } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import { useStore } from '@/store/useStore';
@@ -21,6 +21,7 @@ export default function TeamEarningsPage() {
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [transferAmount, setTransferAmount] = useState('');
     const [activeTab, setActiveTab] = useState<'QR' | 'LOAN'>('QR');
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Timer State
     const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, locked: boolean }>({ d: 0, h: 0, m: 0, locked: false });
@@ -336,7 +337,7 @@ export default function TeamEarningsPage() {
                 {/* Earnings List */}
                 <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
                     <div className="p-4 bg-slate-50 border-b border-slate-100">
-                        <div className="flex p-1 bg-slate-200/50 rounded-xl">
+                        <div className="flex p-1 bg-slate-200/50 rounded-xl mb-4">
                             <button
                                 onClick={() => setActiveTab('QR')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -356,17 +357,52 @@ export default function TeamEarningsPage() {
                                 Virtual Credit Process
                             </button>
                         </div>
+                        
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                {activeTab === 'QR' ? 'Mappings' : 'Referrals'} ({stats?.history?.filter((f: any) => {
+                                    if (activeTab === 'QR') return Number(f.signup_bonus) > 0 || f.type === 'QR' || f.type === 'SIGNUP';
+                                    return Number(f.loan_bonus) > 0 || f.type === 'LOAN';
+                                }).length || 0})
+                            </p>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search size={14} className="text-slate-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search name/mobile..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs w-44 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm placeholder:text-slate-300 font-medium"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className="space-y-3 p-4">
                         {stats?.history?.filter((f: any) => {
-                            if (activeTab === 'QR') return Number(f.signup_bonus) > 0 || f.type === 'QR';
-                            return Number(f.loan_bonus) > 0 || f.type === 'LOAN';
+                            const matchTab = activeTab === 'QR' ? (Number(f.signup_bonus) > 0 || f.type === 'QR' || f.type === 'SIGNUP') : (Number(f.loan_bonus) > 0 || f.type === 'LOAN');
+                            const matchSearch = (() => {
+                                if (!searchQuery) return true;
+                                const q = searchQuery.toLowerCase();
+                                return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
+                            })();
+                            return matchTab && matchSearch;
                         }).length > 0 ? (
                             stats.history.filter((f: any) => {
-                                if (activeTab === 'QR') return Number(f.signup_bonus) > 0 || f.type === 'QR';
-                                return Number(f.loan_bonus) > 0 || f.type === 'LOAN';
-                            }).map((friend: any) => (
+                                const matchTab = activeTab === 'QR' ? (Number(f.signup_bonus) > 0 || f.type === 'QR' || f.type === 'SIGNUP') : (Number(f.loan_bonus) > 0 || f.type === 'LOAN');
+                                const matchSearch = (() => {
+                                    if (!searchQuery) return true;
+                                    const q = searchQuery.toLowerCase();
+                                    return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
+                                })();
+                                return matchTab && matchSearch;
+                            }).map((friend: any) => {
+                                const isVerified = friend.type === 'LOAN' ? friend.is_field_verified : friend.transactions_met;
+                                const verifiedText = friend.type === 'LOAN' ? 'Verified' : 'Txn Complete';
+                                
+                                return (
                                 <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
@@ -377,12 +413,12 @@ export default function TeamEarningsPage() {
                                             {activeTab === 'QR' ? (
                                                 <div>
                                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
-                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-emerald-600' : 'text-slate-300'}`}>{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+                                                    <p className={`text-xs font-black ${isVerified ? 'text-emerald-600' : 'text-slate-300'}`}>{Number(friend.signup_bonus || 0).toFixed(0)}</p>
                                                 </div>
                                             ) : (
                                                 <div>
                                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Credit Disbursed Earn</p>
-                                                    <p className={`text-xs font-black ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-300'}`}>{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                                    <p className={`text-xs font-black ${isVerified ? 'text-indigo-600' : 'text-slate-300'}`}>{Number(friend.loan_bonus || 0).toFixed(0)}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -412,35 +448,36 @@ export default function TeamEarningsPage() {
                                             </span>
                                         </div>
 
-                                        {/* Step 3: Verified */}
+                                        {/* Step 3: Verified / Txn Complete */}
                                         <div className="flex flex-col items-center gap-1 z-10 text-center">
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                                friend.is_field_verified 
+                                                isVerified 
                                                 ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
                                                 : 'bg-white border-amber-300 text-amber-500 animate-pulse'
                                             }`}>
-                                                {friend.is_field_verified ? <Check size={11} /> : <Clock size={11} />}
+                                                {isVerified ? <Check size={11} /> : <Clock size={11} />}
                                             </div>
-                                            <span className={`text-[7px] font-black uppercase ${friend.is_field_verified ? 'text-emerald-500' : 'text-amber-500'}`}>Verified</span>
+                                            <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-emerald-500' : 'text-amber-500'}`}>{verifiedText}</span>
                                         </div>
 
                                         {/* Step 4: Paid */}
                                         <div className="flex flex-col items-center gap-1 z-10 text-center">
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                                friend.is_field_verified 
+                                                isVerified 
                                                 ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
                                                 : 'bg-white border-slate-200 text-slate-300'
                                             }`}>
                                                 <Trophy size={11} />
                                             </div>
-                                            <span className={`text-[7px] font-black uppercase ${friend.is_field_verified ? 'text-indigo-600' : 'text-slate-400'}`}>Paid</span>
+                                            <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-indigo-600' : 'text-slate-400'}`}>Paid</span>
                                         </div>
 
                                         {/* Connecting Line Backdrop */}
                                         <div className="absolute top-[21px] left-[15%] right-[15%] h-[1.5px] bg-slate-100 -z-0"></div>
                                     </div>
                                 </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <div className="p-12 text-center">
                                 <TrendingUp className="w-12 h-12 text-slate-100 mx-auto mb-4" />
