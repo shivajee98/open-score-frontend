@@ -145,8 +145,17 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
 
             return response.json();
         } catch (error: any) {
-            if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
-                throw new Error('Network error. Please check your connection.');
+            if (error.message === 'Failed to fetch' || error.message.includes('NetworkError') || error.name === 'TypeError') {
+                const browserContext = typeof window !== 'undefined' ? ` on ${window.location.hostname}` : '';
+                const detailedMsg = `Network error (${error.name}: ${error.message})${browserContext}. Please check your connection.`;
+                console.error('[apiFetch Failure]', {
+                    url,
+                    method,
+                    errorName: error.name,
+                    errorMessage: error.message,
+                    errorStack: error.stack
+                });
+                throw new Error(detailedMsg);
             }
             throw error;
         } finally {

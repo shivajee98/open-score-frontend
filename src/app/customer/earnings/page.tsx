@@ -400,7 +400,7 @@ export default function TeamEarningsPage() {
                                 return matchTab && matchSearch;
                             }).map((friend: any) => {
                                 const isVerified = friend.type === 'LOAN' ? friend.is_field_verified : friend.transactions_met;
-                                const verifiedText = friend.type === 'LOAN' ? 'Verified' : 'Txn Complete';
+                                const verifiedText = friend.type === 'LOAN' ? 'Disbursed' : 'Txn Complete';
                                 
                                 return (
                                 <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
