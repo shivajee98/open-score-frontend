@@ -3,6 +3,8 @@ import { Send, Paperclip, X, Image as ImageIcon, Loader2, ExternalLink, Briefcas
 import { cn } from '@/lib/loanUtils';
 import { format } from 'date-fns';
 import { API_BASE_URL } from '@/lib/api';
+import { convertHeicToJpeg } from '@/lib/heic-utils';
+import { toast } from 'sonner';
 
 const getStorageUrl = (path: string) => {
     if (!path) return '';
@@ -262,9 +264,26 @@ export default function ChatWindow({ messages, currentUserId, onSendMessage, isL
                                     ref={fileInputRef}
                                     className="hidden"
                                     accept="image/*,.pdf"
-                                    onChange={(e) => {
+                                    onChange={async (e) => {
                                         if (e.target.files?.[0]) {
-                                            setAttachment(e.target.files[0]);
+                                            let fileToUpload = e.target.files[0];
+                                            
+                                            fileToUpload = await convertHeicToJpeg(fileToUpload);
+
+                                            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+                                            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
+                                            const isValid = fileToUpload && (allowedTypes.includes(fileToUpload.type) || allowedExtensions.some(ext => fileToUpload.name.toLowerCase().endsWith(ext)));
+
+                                            if (!isValid) {
+                                                toast.error("Format not supported. Use JPEG, PNG, HEIC, WebP, or PDF.");
+                                                return;
+                                            }
+
+                                            if (fileToUpload.size > 10 * 1024 * 1024) {
+                                                toast.error("File size too large. Max 10MB allowed.");
+                                                return;
+                                            }
+                                            setAttachment(fileToUpload);
                                         }
                                     }}
                                 />

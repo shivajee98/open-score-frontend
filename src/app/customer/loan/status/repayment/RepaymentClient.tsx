@@ -34,6 +34,7 @@ import {
     X,
     Menu
 } from 'lucide-react';
+import { convertHeicToJpeg } from '@/lib/heic-utils';
 
 export default function RepaymentDashboard() {
     const router = useRouter();
@@ -101,15 +102,27 @@ export default function RepaymentDashboard() {
         setShowManualPay(true);
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            if (file.size > 10 * 1024 * 1024) {
-                toast.error("File too large. Max 10MB allows.");
+
+            const processedFile = await convertHeicToJpeg(file);
+
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+            const isImage = allowedTypes.includes(processedFile.type) || allowedExtensions.some(ext => processedFile.name.toLowerCase().endsWith(ext));
+
+            if (!isImage) {
+                toast.error("Format not supported. Use JPEG, PNG, HEIC, or WebP.");
                 return;
             }
-            setProofFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
+
+            if (processedFile.size > 10 * 1024 * 1024) {
+                toast.error("File too large. Max 10MB allowed.");
+                return;
+            }
+            setProofFile(processedFile);
+            setPreviewUrl(URL.createObjectURL(processedFile));
         }
     };
 
@@ -372,7 +385,7 @@ export default function RepaymentDashboard() {
                                                 <p className="text-[9px] text-slate-400 mt-1">Upload transaction screenshot to verify your payment</p>
                                             </>
                                         )}
-                                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                                        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/jpeg,image/png,image/heic,image/heif,image/webp" className="hidden" />
                                     </div>
 
                                     <div className="space-y-2">
@@ -445,6 +458,6 @@ export default function RepaymentDashboard() {
                     Auto-Debit Active via Wallet
                 </div>
             </div>
-        </div >
+        </div>
     );
 }

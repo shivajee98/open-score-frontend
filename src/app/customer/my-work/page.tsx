@@ -13,6 +13,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import SupportTicketScreen from '@/components/support/SupportTicketScreen';
 import DirectSupportChat from '@/components/support/DirectSupportChat';
 import FloatingHelpButton from '@/components/FloatingHelpButton';
+import { convertHeicToJpeg } from '@/lib/heic-utils';
 
 const navItems = [
     { label: 'Home', href: '/customer', icon: <Home size={20} /> },
@@ -361,41 +362,7 @@ export default function MyWorkDashboard() {
                             </div>
                         )}
 
-                        {/* Recent Onboards Summary */}
-                        {earnStats?.history?.length > 0 && (
-                            <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Recent Merchant Onboards</h3>
-                                    <button 
-                                        onClick={() => router.push('/customer/earnings')}
-                                        className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:underline"
-                                    >
-                                        View All
-                                    </button>
-                                </div>
-                                <div className="space-y-3">
-                                    {earnStats.history.slice(0, 3).map((friend: any) => (
-                                        <div key={friend.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${friend.is_onboarded ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
-                                                    {friend.is_onboarded ? <Check size={16} /> : <Clock size={16} className="animate-pulse" />}
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black text-slate-900">{friend.name}</p>
-                                                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                                                        {friend.is_onboarded ? 'Verified' : friend.validation?.message || 'Validating'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[10px] font-black text-slate-900">{Number(friend.signup_bonus || 0).toFixed(0)}</p>
-                                                <p className="text-[8px] font-bold text-slate-400 uppercase">{new Date(friend.date).toLocaleDateString()}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+
                     </div>
                 )}
 
@@ -510,12 +477,23 @@ export default function MyWorkDashboard() {
                                     const handleUploadDoc = async (e: any) => {
                                         const file = e.target.files?.[0];
                                         if (!file) return;
-                                        if (file.size > 5 * 1024 * 1024) { return toast.error("Image too large (max 5MB)"); }
+
+                                        const processedFile = await convertHeicToJpeg(file);
+
+                                        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                                        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+                                        const isImage = allowedTypes.includes(processedFile.type) || allowedExtensions.some(ext => processedFile.name.toLowerCase().endsWith(ext));
+
+                                        if (!isImage) {
+                                            return toast.error("Format not supported. Use JPEG, PNG, HEIC, or WebP.");
+                                        }
+
+                                        if (processedFile.size > 5 * 1024 * 1024) { return toast.error("Image too large (max 5MB)"); }
 
                                         setUploadingDoc(doc);
                                         try {
                                             const fd = new FormData();
-                                            fd.append(doc, file);
+                                            fd.append(doc, processedFile);
                                             const res = await apiFetch('/auth/team/kyc-submit', {
                                                 method: 'POST',
                                                 body: fd,
@@ -550,11 +528,11 @@ export default function MyWorkDashboard() {
                                                         <div className="flex flex-col gap-1">
                                                             <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest cursor-pointer hover:underline flex items-center gap-1">
                                                                 <Camera size={10} /> Cam
-                                                                <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleUploadDoc} />
+                                                                <input type="file" className="hidden" accept="image/jpeg,image/png,image/heic,image/heif,image/webp" capture="environment" onChange={handleUploadDoc} />
                                                             </label>
                                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:underline flex items-center gap-1">
                                                                 <UploadCloud size={10} /> Gal
-                                                                <input type="file" className="hidden" accept="image/*" onChange={handleUploadDoc} />
+                                                                <input type="file" className="hidden" accept="image/jpeg,image/png,image/heic,image/heif,image/webp" onChange={handleUploadDoc} />
                                                             </label>
                                                         </div>
                                                     </div>
@@ -562,11 +540,11 @@ export default function MyWorkDashboard() {
                                                     <div className="flex items-center gap-2">
                                                         <label className="flex items-center justify-center gap-1.5 bg-indigo-50 border border-indigo-100 px-3 py-2 rounded-xl text-[10px] font-black text-indigo-700 cursor-pointer hover:bg-indigo-100 transition-all shadow-sm uppercase tracking-widest whitespace-nowrap">
                                                             <Camera size={14} /> Camera
-                                                            <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleUploadDoc} />
+                                                            <input type="file" className="hidden" accept="image/jpeg,image/png,image/heic,image/heif,image/webp" capture="environment" onChange={handleUploadDoc} />
                                                         </label>
                                                         <label className="flex items-center justify-center gap-1.5 bg-white border border-slate-200 px-3 py-2 rounded-xl text-[10px] font-black text-slate-600 cursor-pointer hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest whitespace-nowrap">
                                                             <UploadCloud size={14} /> Gallery
-                                                            <input type="file" className="hidden" accept="image/*" onChange={handleUploadDoc} />
+                                                            <input type="file" className="hidden" accept="image/jpeg,image/png,image/heic,image/heif,image/webp" onChange={handleUploadDoc} />
                                                         </label>
                                                     </div>
                                                 )}

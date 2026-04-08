@@ -21,6 +21,7 @@ import {
 
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
+import { convertHeicToJpeg } from '@/lib/heic-utils';
 
 const SECURITY_AMOUNTS = [
     { value: '1000', label: 'Basic', desc: '1 Bunch' },
@@ -69,19 +70,21 @@ export default function PublicQrPage() {
         setStep(2);
     };
 
-    const handleScreenshotSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleScreenshotSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!file.type.startsWith('image/')) {
+        const processedFile = await convertHeicToJpeg(file);
+
+        if (!processedFile.type.startsWith('image/')) {
             toast.error('Please select an image file');
             return;
         }
 
-        setScreenshot(file);
+        setScreenshot(processedFile);
         const reader = new FileReader();
         reader.onload = () => setScreenshotPreview(reader.result as string);
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(processedFile);
     };
 
     const handleSubmit = async () => {
@@ -422,7 +425,7 @@ export default function PublicQrPage() {
                                          <input
                                              type="file"
                                              className="hidden"
-                                             accept="image/*"
+                                             accept="image/jpeg,image/png,image/heic,image/heif,image/webp"
                                              capture="environment"
                                              onChange={handleScreenshotSelect}
                                          />
@@ -435,7 +438,7 @@ export default function PublicQrPage() {
                                          <input
                                              type="file"
                                              className="hidden"
-                                             accept="image/*"
+                                             accept="image/jpeg,image/png,image/heic,image/heif,image/webp"
                                              onChange={handleScreenshotSelect}
                                          />
                                      </label>
