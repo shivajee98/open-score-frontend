@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch } from '@/lib/api';
 import { toast } from 'sonner';
+import BroadcastBanner from './BroadcastBanner';
 
 export default function NotificationHandler() {
     const router = useRouter();
+    const [activeBroadcast, setActiveBroadcast] = useState<{title: string, body: string, link: string} | null>(null);
     const hasRegistered = useRef(false);
     const hasNativePushSupport = () => Capacitor.isPluginAvailable('PushNotifications');
 
@@ -125,7 +127,13 @@ export default function NotificationHandler() {
                     console.log('[Notifications] Web foreground message:', payload);
                     const title = payload.notification?.title || 'OpenScore';
                     const body = payload.notification?.body || 'You have a new notification';
-                    toast.success(title, { description: body });
+                    const data = payload.data || {};
+                    
+                    if (data.type === 'broadcast') {
+                        setActiveBroadcast({ title, body, link: data.link });
+                    } else {
+                        toast.success(title, { description: body });
+                    }
                 });
 
                 console.log('[Notifications] Web push registered successfully');
@@ -166,9 +174,18 @@ export default function NotificationHandler() {
 
                 PushNotifications.addListener('pushNotificationReceived', (notification) => {
                     console.log('[Notifications] Foreground push:', JSON.stringify(notification));
-                    toast.success(notification.title || 'New Notification', {
-                        description: notification.body
-                    });
+                    const data = notification.data || {};
+                    if (data.type === 'broadcast') {
+                        setActiveBroadcast({ 
+                            title: notification.title || 'Broadcast', 
+                            body: notification.body || '', 
+                            link: data.link 
+                        });
+                    } else {
+                        toast.success(notification.title || 'New Notification', {
+                            description: notification.body
+                        });
+                    }
                 });
 
                 PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
@@ -239,5 +256,16 @@ export default function NotificationHandler() {
         };
     }, [registerNativePush, registerWebPush, syncToken]);
 
-    return null;
+    return (
+        <>
+            {activeBroadcast && (
+                <BroadcastBanner 
+                    title={activeBroadcast.title}
+                    body={activeBroadcast.body}
+                    link={activeBroadcast.link}
+                    onClose={() => setActiveBroadcast(null)}
+                />
+            )}
+        </>
+    );
 }
