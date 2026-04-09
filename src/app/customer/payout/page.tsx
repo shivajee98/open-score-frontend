@@ -151,13 +151,20 @@ export default function PayoutPage() {
 
         // Check for charge applicability and show confirmation modal
         // Charge applies if:
-        // 1. Below standard free threshold (min_withdrawal)
-        // 2. OR if monthly free quota is exhausted (for standard amounts)
-        const isStandard = payoutAmount >= (withdrawalRule?.min_withdrawal || 0);
+        // Revised Logic based on User Request:
+        // 1. Below min_charge_amount -> Blocked (handled in execute)
+        // 2. Between min_charge_amount and max_charge_amount -> CHARGE APPLIES
+        // 3. Above max_charge_amount -> FREE (No Rate)
+        
+        const isStandard = payoutAmount > (withdrawalRule?.max_charge_amount || 0);
+        const isInPaidRange = payoutAmount >= (withdrawalRule?.min_charge_amount || 0) && 
+                              payoutAmount <= (withdrawalRule?.max_charge_amount || 0);
+        
         const isOverMonthlyLimit = isStandard && usedThisMonth >= monthlyFreeCount;
-        const isLowTier = !isStandard;
 
-        const hasCharge = withdrawalRule?.is_charge_enabled && (isLowTier || isOverMonthlyLimit);
+        // Charge applies IF in the paid range OR if high-tier but monthly quota exhausted
+        const hasCharge = withdrawalRule?.is_charge_enabled && 
+                         (isInPaidRange || isOverMonthlyLimit);
 
         if (hasCharge || payoutAmount >= 500) { // Always confirm for larger amounts or if charge applies
             setIsConfirmModalOpen(true);
@@ -172,36 +179,35 @@ export default function PayoutPage() {
         const payoutAmount = parseFloat(amount);
         setShowWithdrawalLimits(true);
 
-            // Check minimum withdrawal
-            if (payoutAmount < (withdrawalRule.min_charge_amount || 0)) {
-                toast.error(`Min settlement: ${(withdrawalRule.min_charge_amount || 0).toLocaleString()}`);
-                return;
-            }
+        // Check absolute minimum
+        if (payoutAmount < (withdrawalRule.min_charge_amount || 0)) {
+            toast.error(`Min settlement: ${(withdrawalRule.min_charge_amount || 0).toLocaleString()}`);
+            return;
+        }
 
-            if (withdrawalRule.min_withdrawal > 0 && payoutAmount < withdrawalRule.min_withdrawal) {
-                 const isInChargeRange = withdrawalRule.is_charge_enabled && 
-                                        payoutAmount >= (withdrawalRule.min_charge_amount || 0) && 
-                                        payoutAmount <= (withdrawalRule.max_charge_amount || 0);
-                 
-                 if (!isInChargeRange) {
-                    toast.error(`Range: ${withdrawalRule.min_charge_amount} - ${withdrawalRule.max_charge_amount} with fee`);
-                    return;
-                 }
-            }
+        // High tier logic
+        const isHighTier = payoutAmount > (withdrawalRule.max_charge_amount || 0);
+        const isPaidRange = payoutAmount >= (withdrawalRule.min_charge_amount || 0) && 
+                           payoutAmount <= (withdrawalRule.max_charge_amount || 0);
+        
+        if (!isHighTier && !isPaidRange) {
+             toast.error(`Minimum payout is ₹${withdrawalRule.min_charge_amount}`);
+             return;
+        }
 
-            // Check limits
-            if (withdrawalRule.max_withdrawal && payoutAmount > withdrawalRule.max_withdrawal) {
-                 toast.error(`Max: ${withdrawalRule.max_withdrawal.toLocaleString()}`);
-                 return;
-            }
-            if (dailyTxnLimit && usedTxnsToday !== null && usedTxnsToday >= dailyTxnLimit) {
-                 toast.error("Daily request limit reached");
-                 return;
-            }
-            if (isLocked) {
-                setShowRestricted(true);
-                return;
-            }
+        // Check limits
+        if (withdrawalRule.max_withdrawal && payoutAmount > withdrawalRule.max_withdrawal) {
+             toast.error(`Max: ${withdrawalRule.max_withdrawal.toLocaleString()}`);
+             return;
+        }
+        if (dailyTxnLimit && usedTxnsToday !== null && usedTxnsToday >= dailyTxnLimit) {
+             toast.error("Daily request limit reached");
+             return;
+        }
+        if (isLocked) {
+            setShowRestricted(true);
+            return;
+        }
 
         // 2. Fetch latest user data to check verification status
         setIsSubmitting(true);
@@ -505,7 +511,7 @@ export default function PayoutPage() {
                                 <div className="mb-2">
                                     <span className="text-sm opacity-40 font-black mr-1"></span>
                                     <span className="text-2xl font-black tracking-tighter">
-                                        {balance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                        {balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                     </span>
                                 </div>
                                 <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
@@ -531,7 +537,7 @@ export default function PayoutPage() {
                                 <div className="mb-1">
                                     <span className="text-sm opacity-40 font-black mr-1"></span>
                                     <span className="text-2xl font-black tracking-tighter drop-shadow-md">
-                                        {cashbackBalance.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                        {cashbackBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between gap-2">
@@ -568,18 +574,32 @@ export default function PayoutPage() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <div className={`w-2 h-2 rounded-full ${
-                                                parseFloat(amount) < (withdrawalRule.min_withdrawal || 0) 
-                                                ? 'bg-amber-500 shadow-[0_0_8px_oklch(0.7_0.2_80)]' 
-                                                : 'bg-emerald-500 shadow-[0_0_8px_oklch(0.7_0.2_150)]'
+                                                parseFloat(amount) > (withdrawalRule.max_charge_amount || 0)
+                                                ? 'bg-emerald-500 shadow-[0_0_8px_oklch(0.7_0.2_150)]' 
+                                                : parseFloat(amount) < (withdrawalRule.min_charge_amount || 0)
+                                                    ? 'bg-slate-300'
+                                                    : 'bg-amber-500 shadow-[0_0_8px_oklch(0.7_0.2_80)]'
                                             }`}></div>
                                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">
-                                                {parseFloat(amount) < (withdrawalRule.min_withdrawal || 0) ? 'Standard Settlement' : 'Express Settlement'}
+                                                {parseFloat(amount) > (withdrawalRule.max_charge_amount || 0)
+                                                    ? 'Priority Duty-Free Payout' 
+                                                    : parseFloat(amount) < (withdrawalRule.min_charge_amount || 0)
+                                                        ? 'Invalid Amount'
+                                                        : 'Standard Withdrawal (Paid Tier)'}
                                             </span>
                                         </div>
                                         <div className="text-[10px] font-black text-slate-900">
-                                            {parseFloat(amount) < (withdrawalRule.min_withdrawal || 0) 
-                                                ? `Fee: ${withdrawalRule.charge_percent}%` 
-                                                : 'Fee: ₹0'}
+                                            {(() => {
+                                                const amt = parseFloat(amount) || 0;
+                                                const minAmt = (withdrawalRule.min_charge_amount || 0);
+                                                const maxAmt = (withdrawalRule.max_charge_amount || 0);
+                                                
+                                                if (amt < minAmt) return 'Fee: -';
+                                                if (amt > maxAmt) return 'Fee: ₹0';
+                                                
+                                                // Between min and max -> Paid Tier
+                                                return `Fee: ${withdrawalRule.charge_percent || 0}%`;
+                                            })()}
                                         </div>
                                     </div>
 
@@ -592,14 +612,14 @@ export default function PayoutPage() {
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <Landmark size={10} strokeWidth={3} />
-                                            <span>Limit: ₹{(withdrawalRule.min_charge_amount || 0).toLocaleString()} - ₹{withdrawalRule.max_withdrawal?.toLocaleString() || '∞'}</span>
+                                            <span>Tier Range: {(withdrawalRule.min_charge_amount || 0).toLocaleString()} - {(withdrawalRule.max_charge_amount || 0).toLocaleString()}</span>
                                         </div>
                                     </div>
 
                                     {parseFloat(amount) < (withdrawalRule.min_charge_amount || 0) && (
                                         <div className="mt-1 flex items-center gap-2 text-rose-500 animate-pulse text-[9px] font-black uppercase tracking-tighter">
                                             <XCircle size={12} />
-                                            Amount below minimum threshold
+                                            Entry amount below Minimum Limit
                                         </div>
                                     )}
                                 </div>
