@@ -99,7 +99,7 @@ const MerchantLoanMilestone: React.FC<MerchantLoanMilestoneProps> = ({ totalCred
                                 >
                                     <div className="flex items-center gap-1.5">
                                         <Info size={14} />
-                                        <span>How to unlock {Number(milestonePlan.amount).toLocaleString()}?</span>
+                                        <span>How to unlock {Number(milestonePlan.amount).toLocaleString()}<span className='text-red-500'>?</span></span>
                                     </div>
                                     {isDetailsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                                 </button>

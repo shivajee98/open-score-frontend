@@ -81,6 +81,7 @@ export default function PayoutPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false); // Simulated processing state
     const [isSuccess, setIsSuccess] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [showRestricted, setShowRestricted] = useState(false); // Show restriction screen after attempt
     const [transferStatus, setTransferStatus] = useState<any>(null);
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
@@ -109,7 +110,9 @@ export default function PayoutPage() {
     const withdrawalRule = rulesData || null;
     const isLocked = withdrawalRule?.unlock_status?.has_active_loan && !withdrawalRule?.unlock_status?.is_unlocked;
     const dailyTxnLimit = withdrawalRule?.daily_txn_limit;
-    const usedTxnsToday = withdrawalRule?.remaining_txns_today; // Backend sends used count
+    const usedTxnsToday = withdrawalRule?.today_txn_count; // Backend sends used count
+    const monthlyFreeCount = withdrawalRule?.monthly_free_count || 0;
+    const usedThisMonth = withdrawalRule?.this_month_withdrawal_count || 0;
 
     const isLoading = userLoading || walletLoading || rulesLoading || (userData?.role === 'CUSTOMER' && loansLoading);
 
@@ -146,17 +149,44 @@ export default function PayoutPage() {
             return;
         }
 
+        // Check for charge applicability and show confirmation modal
+        // Charge applies if:
+        // 1. Below standard free threshold (min_withdrawal)
+        // 2. OR if monthly free quota is exhausted (for standard amounts)
+        const isStandard = payoutAmount >= (withdrawalRule?.min_withdrawal || 0);
+        const isOverMonthlyLimit = isStandard && usedThisMonth >= monthlyFreeCount;
+        const isLowTier = !isStandard;
+
+        const hasCharge = withdrawalRule?.is_charge_enabled && (isLowTier || isOverMonthlyLimit);
+
+        if (hasCharge || payoutAmount >= 500) { // Always confirm for larger amounts or if charge applies
+            setIsConfirmModalOpen(true);
+            return;
+        }
+
+        // If no confirmation needed, proceed
+        executeWithdrawal();
+    };
+
+    const executeWithdrawal = async () => {
+        const payoutAmount = parseFloat(amount);
         setShowWithdrawalLimits(true);
 
         // 1. Withdrawal Rule Verification (Pre-check)
         if (withdrawalRule) {
-            // Check minimum withdrawal
             if (withdrawalRule.min_withdrawal > 0 && payoutAmount < withdrawalRule.min_withdrawal) {
-                setRuleError({
-                    title: "Required Value for Transfer",
-                    message: `Minimum Transfer Required is ₹${withdrawalRule.min_withdrawal.toLocaleString()}.`
-                });
-                return;
+                 // Logic from backend: Allow if in Charge Range
+                 const isInChargeRange = withdrawalRule.is_charge_enabled && 
+                                        payoutAmount >= (withdrawalRule.min_charge_amount || 0) && 
+                                        payoutAmount <= (withdrawalRule.max_charge_amount || 0);
+                 
+                 if (!isInChargeRange) {
+                    setRuleError({
+                        title: "Min Transfer Threshold",
+                        message: `Minimum free transfer is ${withdrawalRule.min_withdrawal.toLocaleString()}. Lower amounts allowed only in ₹${withdrawalRule.min_charge_amount} - ₹${withdrawalRule.max_charge_amount} range with fee.`
+                    });
+                    return;
+                 }
             }
             // Check maximum withdrawal
             if (withdrawalRule.max_withdrawal && payoutAmount > withdrawalRule.max_withdrawal) {
@@ -247,6 +277,11 @@ export default function PayoutPage() {
             setIsSubmitting(false);
             setIsProcessing(false);
         }
+    };
+
+    const handleConfirmWithdrawal = () => {
+        setIsConfirmModalOpen(false);
+        executeWithdrawal();
     };
 
     const handleTransferToWallet = () => {
@@ -537,7 +572,31 @@ export default function PayoutPage() {
                                 />
                             </div>
                             {withdrawalRule && (
-                                <div className="mt-2 ml-1">
+                                <div className="mt-2 ml-1 space-y-2">
+                                    {(parseFloat(amount) > 0 && withdrawalRule.is_charge_enabled) && (
+                                        <div className={`p-3 rounded-xl border transition-all animate-in slide-in-from-top-1 ${
+                                            parseFloat(amount) < withdrawalRule.charge_threshold 
+                                            ? 'bg-amber-50 border-amber-100' 
+                                            : 'bg-emerald-50 border-emerald-100'
+                                        }`}>
+                                            {parseFloat(amount) < withdrawalRule.charge_threshold ? (
+                                                <div className="flex items-center gap-2">
+                                                    <AlertCircle size={14} className="text-amber-600" />
+                                                    <p className="text-[10px] font-bold text-amber-700">
+                                                        Transfer Charge: <span className="font-black">{withdrawalRule.charge_percent}%</span> applied for amounts below ₹{withdrawalRule.charge_threshold.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <CheckCircle2 size={14} className="text-emerald-600" />
+                                                    <p className="text-[10px] font-bold text-emerald-700">
+                                                        Charge Waived: Amount is above ₹{withdrawalRule.charge_threshold.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {showWithdrawalLimits && (
                                         <p className={`text-[9px] font-bold flex items-center gap-1 ${
                                             (parseFloat(amount) > 0 && ((parseFloat(amount) < withdrawalRule.min_withdrawal) || (withdrawalRule.max_withdrawal && parseFloat(amount) > withdrawalRule.max_withdrawal)))
@@ -549,7 +608,7 @@ export default function PayoutPage() {
                                     )}
                                     
                                     {dailyTxnLimit && showWithdrawalLimits && (
-                                        <div className="mt-4 bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50 animate-in slide-in-from-top-2 duration-500">
+                                        <div className="mt-2 bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50 animate-in slide-in-from-top-2 duration-500">
                                             <p className="text-[10px] font-bold text-emerald-700 leading-relaxed flex items-center gap-2">
                                                 <Clock size={12} className="shrink-0" />
                                                 <span>Daily Withdrawal Rule: You can submit up to <b>{dailyTxnLimit} requests</b> per day. You have used <b>{usedTxnsToday}</b> out of <b>{dailyTxnLimit}</b> requests for today.</span>
@@ -612,6 +671,28 @@ export default function PayoutPage() {
                             Go to Profile & Add Details
                             <ArrowRight size={16} />
                         </button>
+                    </div>
+                )}
+                
+                {withdrawalRule?.is_charge_enabled && monthlyFreeCount > 0 && (
+                    <div className="mb-4 mt-4 px-4 py-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${usedThisMonth >= monthlyFreeCount ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                                <Clock size={16} />
+                             </div>
+                             <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Monthly Free Quota</p>
+                                <p className={`text-xs font-black ${usedThisMonth >= monthlyFreeCount ? 'text-rose-600' : 'text-indigo-600'}`}>
+                                    {usedThisMonth >= monthlyFreeCount ? 'Limit Reached' : `${monthlyFreeCount - usedThisMonth} of ${monthlyFreeCount} remaining`}
+                                </p>
+                             </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[9px] font-bold text-slate-400 leading-tight">
+                                {usedThisMonth >= monthlyFreeCount ? 'Fees apply to all' : `Free if >= ₹${(withdrawalRule?.min_withdrawal || 0).toLocaleString()}`}
+                                <br /> settlements
+                            </p>
+                        </div>
                     </div>
                 )}
 
@@ -871,6 +952,57 @@ export default function PayoutPage() {
                             className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
                         >
                             Not Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        {/* Withdrawal Confirmation Modal */}
+        {isConfirmModalOpen && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+                    
+                    <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tighter">Are you sure?</h3>
+                    <p className="text-slate-400 font-bold text-[10px] leading-relaxed uppercase tracking-widest mb-8">
+                        Please review your settlement details before proceeding.
+                    </p>
+
+                    <div className="space-y-3 mb-8">
+                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
+                            <span className="text-[10px] font-black text-slate-400 uppercase">Gross Amount</span>
+                            <span className="text-sm font-black text-slate-900">₹{parseFloat(amount).toLocaleString()}</span>
+                        </div>
+
+                        {withdrawalRule?.is_charge_enabled && (parseFloat(amount) < (withdrawalRule?.min_withdrawal || 0) || (parseFloat(amount) >= (withdrawalRule?.min_withdrawal || 0) && usedThisMonth >= monthlyFreeCount)) && (
+                            <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 flex justify-between items-center text-rose-600">
+                                <span className="text-[10px] font-black uppercase">
+                                    {parseFloat(amount) < (withdrawalRule?.min_withdrawal || 0) ? 'Low Amount Charge' : 'Quota Exceeded Charge'} ({withdrawalRule.charge_percent}%)
+                                </span>
+                                <span className="text-sm font-black">-₹{((parseFloat(amount) * (withdrawalRule.charge_percent || 0)) / 100).toLocaleString()}</span>
+                            </div>
+                        )}
+
+                        <div className="p-5 bg-indigo-600 rounded-[1.75rem] shadow-lg shadow-indigo-200 flex justify-between items-center text-white">
+                            <span className="text-[10px] font-black uppercase tracking-wider">Final Payout</span>
+                            <span className="text-xl font-black">
+                                ₹{(parseFloat(amount) - (withdrawalRule?.is_charge_enabled && (parseFloat(amount) < (withdrawalRule?.min_withdrawal || 0) || (parseFloat(amount) >= (withdrawalRule?.min_withdrawal || 0) && usedThisMonth >= monthlyFreeCount)) ? (parseFloat(amount) * (withdrawalRule.charge_percent || 0)) / 100 : 0)).toLocaleString()}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            onClick={() => setIsConfirmModalOpen(false)}
+                            className="py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirmWithdrawal}
+                            className={`py-4 ${isMerchant ? 'bg-emerald-600' : 'bg-slate-900'} text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:opacity-90 transition-all shadow-xl shadow-slate-200`}
+                        >
+                            Yes, Withdraw
                         </button>
                     </div>
                 </div>

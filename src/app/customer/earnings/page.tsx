@@ -141,9 +141,10 @@ export default function TeamEarningsPage() {
                     <div className="relative z-10">
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <p className="text-[9px] font-black text-violet-200 uppercase tracking-widest">Earn Wallet</p>
+                                <p className="text-[9px] font-black text-violet-200 uppercase tracking-widest">Upcoming Earning</p>
                                 <h3 className="text-3xl font-black mt-1">
-                                    {((stats?.qr_earning || 0) + (stats?.loan_earning || 0) + (stats?.bonus_earned || 0)).toLocaleString('en-IN', { minimumFractionDigits: 0 })}
+                                    {/* {((stats?.qr_earning || 0) + (stats?.loan_earning || 0) + (stats?.bonus_earned || 0)).toLocaleString('en-IN', { minimumFractionDigits: 0 })} */}
+                                    {stats.unverified_held.toLocaleString()}
                                 </h3>
                                 <p className="text-[10px] text-violet-200 font-medium mt-1">Total Earnings</p>
                             </div>
@@ -153,16 +154,16 @@ export default function TeamEarningsPage() {
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Mapping</p>
-                                <p className="text-base font-black">{(stats?.qr_earning || 0).toLocaleString('en-IN')}</p>
+                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">QR Onboarded</p>
+                                <p className="text-base font-black">{(stats?.qr_onboard_count || 0).toLocaleString()}</p>
                             </div>
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Loan Bonus</p>
-                                <p className="text-base font-black">{(stats?.loan_earning || 0).toLocaleString('en-IN')}</p>
+                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Loans Applied</p>
+                                <p className="text-base font-black">{(stats?.loan_onboard_count || 0).toLocaleString()}</p>
                             </div>
                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
-                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Milestone</p>
-                                <p className="text-base font-black">{(stats?.bonus_earned || 0).toLocaleString('en-IN')}</p>
+                                <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Verified</p>
+                                <p className="text-base font-black">{(stats?.qr_verified_count || 0).toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
@@ -175,20 +176,6 @@ export default function TeamEarningsPage() {
                             <div>
                                 <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Available for Transfer</p>
                                 <h2 className="text-4xl font-black text-slate-900 tracking-tighter">{stats?.available?.toLocaleString() || 0}</h2>
-                                {stats?.unverified_held > 0 && (
-                                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-amber-200">
-                                        <div className="flex items-center gap-1.5">
-                                            <Clock size={12} className="animate-pulse" />
-                                            <span>Held (Unverified): {stats.unverified_held.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                )}
-                                {timeLeft.locked && (
-                                    <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-200">
-                                        <Clock size={12} />
-                                        <span>Withdraw in: {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m</span>
-                                    </div>
-                                )}
                             </div>
                             <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center shadow-inner shrink-0 ml-4">
                                 <TrendingUp size={24} />
@@ -208,12 +195,12 @@ export default function TeamEarningsPage() {
 
                         <div className="grid grid-cols-2 gap-4 mb-8">
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">QR Mapping Earning</p>
-                                <p className="text-lg font-black text-slate-800">{stats?.qr_earning?.toLocaleString() || 0}</p>
+                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Verified Mappings</p>
+                                <p className="text-lg font-black text-slate-800">{stats?.qr_verified_count?.toLocaleString() || 0}</p>
                             </div>
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Loan Earning</p>
-                                <p className="text-lg font-black text-slate-800">{stats?.loan_earning?.toLocaleString() || 0}</p>
+                                <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Loans Disbursed</p>
+                                <p className="text-lg font-black text-slate-800">{stats?.loan_verified_count?.toLocaleString() || 0}</p>
                             </div>
                         </div>
 
@@ -243,15 +230,13 @@ export default function TeamEarningsPage() {
 
                         <button
                             onClick={handleTransferClick}
-                            disabled={submitting || (stats?.available || 0) <= 0 || timeLeft.locked || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)}
-                            className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${timeLeft.locked || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
+                            disabled={submitting || (stats?.available || 0) <= 0 || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)}
+                            className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${(stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
                                     ? 'bg-slate-300 cursor-not-allowed shadow-none'
                                     : 'bg-slate-900 hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
                                 }`}
                         >
-                            {timeLeft.locked
-                                ? 'Currently Time Locked'
-                                : (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
+                            {(stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
                                     ? 'Locked: Milestone '
                                     : (stats?.available || 0) <= 0
                                         ? 'No Earnings Available'
@@ -360,10 +345,7 @@ export default function TeamEarningsPage() {
                         
                         <div className="flex items-center justify-between">
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                {activeTab === 'QR' ? 'Mappings' : 'Referrals'} ({stats?.history?.filter((f: any) => {
-                                    if (activeTab === 'QR') return Number(f.signup_bonus) > 0 || f.type === 'QR' || f.type === 'SIGNUP';
-                                    return Number(f.loan_bonus) > 0 || f.type === 'LOAN';
-                                }).length || 0})
+                                {activeTab === 'QR' ? 'Mappings' : 'Referrals'} ({activeTab === 'QR' ? (stats?.qr_onboard_count || 0) : (stats?.loan_onboard_count || 0)})
                             </p>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -399,7 +381,7 @@ export default function TeamEarningsPage() {
                                 })();
                                 return matchTab && matchSearch;
                             }).map((friend: any) => {
-                                const isVerified = friend.type === 'LOAN' ? friend.is_field_verified : friend.transactions_met;
+                                const isVerified = friend.is_field_verified;
                                 const verifiedText = friend.type === 'LOAN' ? 'Disbursed' : 'Txn Complete';
                                 
                                 return (
