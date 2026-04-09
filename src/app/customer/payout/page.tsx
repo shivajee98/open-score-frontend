@@ -151,20 +151,13 @@ export default function PayoutPage() {
 
         // Check for charge applicability and show confirmation modal
         // Charge applies if:
-        // Revised Logic based on User Request:
-        // 1. Below min_charge_amount -> Blocked (handled in execute)
-        // 2. Between min_charge_amount and max_charge_amount -> CHARGE APPLIES
-        // 3. Above max_charge_amount -> FREE (No Rate)
-        
-        const isStandard = payoutAmount > (withdrawalRule?.max_charge_amount || 0);
+        const isFreeTier = payoutAmount > (withdrawalRule?.max_charge_amount || 0);
         const isInPaidRange = payoutAmount >= (withdrawalRule?.min_charge_amount || 0) && 
                               payoutAmount <= (withdrawalRule?.max_charge_amount || 0);
         
-        const isOverMonthlyLimit = isStandard && usedThisMonth >= monthlyFreeCount;
-
-        // Charge applies IF in the paid range OR if high-tier but monthly quota exhausted
-        const hasCharge = withdrawalRule?.is_charge_enabled && 
-                         (isInPaidRange || isOverMonthlyLimit);
+        // Fee applies ONLY in the dedicated paid range. 
+        // Above the range is always free per the latest requirement.
+        const hasCharge = withdrawalRule?.is_charge_enabled && isInPaidRange;
 
         if (hasCharge || payoutAmount >= 500) { // Always confirm for larger amounts or if charge applies
             setIsConfirmModalOpen(true);
@@ -971,21 +964,32 @@ export default function PayoutPage() {
                             <span className="text-xs font-black text-slate-900">₹{parseFloat(amount).toLocaleString()}</span>
                         </div>
 
-                        {withdrawalRule?.is_charge_enabled && (parseFloat(amount) < (withdrawalRule?.min_withdrawal || 0) || (parseFloat(amount) >= (withdrawalRule?.min_withdrawal || 0) && usedThisMonth >= monthlyFreeCount)) && (
-                            <div className="flex justify-between items-center px-1 text-rose-500">
-                                <span className="text-[9px] font-black uppercase tracking-widest">Fee ({withdrawalRule.charge_percent}%)</span>
-                                <span className="text-xs font-black">-₹{((parseFloat(amount) * (withdrawalRule.charge_percent || 0)) / 100).toLocaleString()}</span>
-                            </div>
-                        )}
+                        {(() => {
+                            const amt = parseFloat(amount);
+                            const chargeRange = (amt >= (withdrawalRule?.min_charge_amount || 0) && amt <= (withdrawalRule?.max_charge_amount || 0));
+                            const showFee = withdrawalRule?.is_charge_enabled && chargeRange;
+                            const feeAmt = showFee ? (amt * (withdrawalRule.charge_percent || 0)) / 100 : 0;
 
-                        <div className="h-px bg-slate-200/50 mx-1"></div>
+                            return (
+                                <>
+                                    {showFee && (
+                                        <div className="flex justify-between items-center px-1 text-rose-500">
+                                            <span className="text-[9px] font-black uppercase tracking-widest">Fee ({withdrawalRule.charge_percent}%)</span>
+                                            <span className="text-xs font-black">-₹{feeAmt.toLocaleString()}</span>
+                                        </div>
+                                    )}
 
-                        <div className={`p-4 rounded-xl shadow-md border flex justify-between items-center ${isMerchant ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-200' : 'bg-slate-900 border-slate-800 text-white shadow-slate-200'}`}>
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">Net Cred-out</span>
-                            <span className="text-lg font-black">
-                                ₹{(parseFloat(amount) - (withdrawalRule?.is_charge_enabled && (parseFloat(amount) < (withdrawalRule?.min_withdrawal || 0) || (parseFloat(amount) >= (withdrawalRule?.min_withdrawal || 0) && usedThisMonth >= monthlyFreeCount)) ? (parseFloat(amount) * (withdrawalRule.charge_percent || 0)) / 100 : 0)).toLocaleString()}
-                            </span>
-                        </div>
+                                    <div className="h-px bg-slate-200/50 mx-1"></div>
+
+                                    <div className={`p-4 rounded-xl shadow-md border flex justify-between items-center ${isMerchant ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-200' : 'bg-slate-900 border-slate-800 text-white shadow-slate-200'}`}>
+                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">Net Cred-out</span>
+                                        <span className="text-lg font-black">
+                                            ₹{(amt - feeAmt).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
