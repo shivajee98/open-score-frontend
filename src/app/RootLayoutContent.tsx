@@ -13,6 +13,7 @@ import MobileNavigationHandler from "@/components/MobileNavigationHandler";
 import NotificationHandler from "@/components/NotificationHandler";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import AppLockGuard from "@/components/AppLockGuard";
+import AdminPreviewBanner from "@/components/AdminPreviewBanner";
 
 export function RootLayoutContent({
   children,
@@ -46,6 +47,7 @@ export function RootLayoutContent({
           <IncomingCallModal />
           <MobileNavigationHandler />
           <ToastContainer />
+          <AdminPreviewBanner />
           <AppLockGuard>
             {children}
           </AppLockGuard>

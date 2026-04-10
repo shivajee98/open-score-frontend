@@ -57,6 +57,33 @@ function HomeContent() {
 
   useEffect(() => {
     const checkSession = async () => {
+      // Handle Admin Impersonation Bridge
+      const bridgeToken = searchParams.get('token');
+      const isAdminPreview = searchParams.get('admin_preview');
+
+      if (bridgeToken) {
+        console.log('[Auth Bridge] Impersonation token detected, initializing session...');
+        localStorage.setItem('token', bridgeToken);
+        if (isAdminPreview) localStorage.setItem('admin_preview', 'true');
+
+        try {
+          const userData = await apiFetch('/auth/me', { skipAuthCheck: true });
+          localStorage.setItem('user', JSON.stringify(userData));
+          localStorage.setItem('hasSeenOnboarding', 'true');
+
+          // Clean URL to remove sensitive token from history
+          const cleanUrl = window.location.pathname;
+          window.history.replaceState({}, '', cleanUrl);
+
+          window.dispatchEvent(new Event('auth-login'));
+          redirectUser(userData);
+          return; // Exit checkSession and prevent further execution
+        } catch (e) {
+          console.error('[Auth Bridge] Failed to initialize impersonation session', e);
+          clearAuthState();
+        }
+      }
+
       // Step 0: Fast path redirect if possible
       const localUserStr = localStorage.getItem('user');
       const localToken = localStorage.getItem('token');
