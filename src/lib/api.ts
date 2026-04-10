@@ -88,6 +88,19 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
         ...fetchOptions.headers,
     };
 
+    // Block mutations in Admin Preview mode
+    if (typeof window !== 'undefined' && localStorage.getItem('admin_preview') === 'true') {
+        const mutationMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+        if (mutationMethods.includes(method.toUpperCase())) {
+            console.warn(`[Blocked] Mutation ${method} on ${endpoint} prohibited in Admin Preview.`);
+            // toast might not be imported yet or might cause circular dependency if used here directly, 
+            // but we'll try to use a standard event or just throw.
+            // Actually, we can dispatch a custom event that UI can listen to.
+            window.dispatchEvent(new CustomEvent('mutation-blocked'));
+            throw new Error('Action prohibited in read-only Admin Preview mode');
+        }
+    }
+
     // Always Inject Auth Token for Static Export
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token');

@@ -70,6 +70,7 @@ function HomeContent() {
           const userData = await apiFetch('/auth/me', { skipAuthCheck: true });
           localStorage.setItem('user', JSON.stringify(userData));
           localStorage.setItem('hasSeenOnboarding', 'true');
+          sessionStorage.setItem('app_unlocked', 'true');
 
           // Clean URL to remove sensitive token from history
           const cleanUrl = window.location.pathname;
@@ -265,7 +266,9 @@ function HomeContent() {
       }));
     }
 
-    if (!user.is_onboarded) {
+    const isAdminPreview = localStorage.getItem('admin_preview') === 'true';
+
+    if (!user.is_onboarded && !isAdminPreview) {
       if (user.role === 'MERCHANT') router.push('/auth/merchant-onboarding');
       else router.push('/auth/onboarding');
       return;

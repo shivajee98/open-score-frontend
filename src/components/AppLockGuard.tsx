@@ -26,6 +26,17 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
                 return;
             }
 
+            // Admin Preview Bypass
+            const urlParams = new URLSearchParams(window.location.search);
+            const isAdminPreview = localStorage.getItem('admin_preview') === 'true' || urlParams.get('admin_preview') === 'true';
+            
+            if (isAdminPreview) {
+                console.log('[AppLockGuard] Admin Preview detected, bypassing PIN lock.');
+                setIsLocked(false);
+                setInitialized(true);
+                return;
+            }
+
             const userStr = localStorage.getItem("user");
             if (!userStr) {
                 setIsLocked(false);
