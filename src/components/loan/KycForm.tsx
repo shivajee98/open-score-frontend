@@ -230,7 +230,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             });
 
             if (!res.unique) {
-                setUniquenessErrors(prev => ({ ...prev, [type]: res.message }));
+                setUniquenessErrors(prev => ({ ...prev, [type]: 'Apply for loan from another account' }));
             } else {
                 setUniquenessErrors(prev => ({ ...prev, [type]: undefined }));
             }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { createEcho } from "@/lib/echo";
 import SuspendedScreen from "@/components/SuspendedScreen";
@@ -9,7 +9,6 @@ import SuspendedScreen from "@/components/SuspendedScreen";
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const searchParams = useSearchParams();
     const [authorized, setAuthorized] = useState(false);
     const [suspended, setSuspended] = useState(false);
 
@@ -20,8 +19,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Handle Bridge Token / Admin Preview from URL
-        const bridgeToken = searchParams?.get('token');
-        const isAdminPreview = searchParams?.get('admin_preview') === 'true';
+        const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const bridgeToken = urlParams?.get('token');
+        const isAdminPreview = urlParams?.get('admin_preview') === 'true';
 
         if (bridgeToken && typeof window !== 'undefined') {
             console.log('[AuthGuard] Capturing bridge token from URL');

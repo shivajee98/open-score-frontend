@@ -111,6 +111,16 @@ export default function QrPaymentPage() {
             formData.append('state', form.state);
             formData.append('security_amount', form.security_amount);
             formData.append('payment_screenshot', screenshot);
+            
+            // Add configuration payload
+            const selectedConfig = SECURITY_AMOUNTS.find(a => a.value === form.security_amount);
+            if (selectedConfig) {
+                formData.append('payload', JSON.stringify({
+                    package_name: selectedConfig.label,
+                    description: selectedConfig.desc,
+                    amount: selectedConfig.value
+                }));
+            }
 
             await apiFetch('/auth/team/qr-book', {
                 method: 'POST',

@@ -8,7 +8,7 @@ import { ArrowLeft, Briefcase, FileText, CheckCircle, Clock, XCircle, ShieldChec
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import QrStatusStepper from '@/components/qr/QrStatusStepper';
-import { Package, Truck, Home, CreditCard, ScanBarcode, History, User, MessageSquare } from 'lucide-react';
+import { Package, Truck, Home, CreditCard, ScanBarcode, History, User, MessageSquare, Search } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import SupportTicketScreen from '@/components/support/SupportTicketScreen';
 import DirectSupportChat from '@/components/support/DirectSupportChat';
@@ -56,6 +56,7 @@ export default function MyWorkDashboard() {
     // QR History State
     const [qrHistory, setQrHistory] = useState<any[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    const [qrSearchTerm, setQrSearchTerm] = useState('');
 
     // Earn Wallet State
     const [earnStats, setEarnStats] = useState<any>(null);
@@ -418,6 +419,71 @@ export default function MyWorkDashboard() {
                                     />
                                 </div>
 
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-2">
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">Aadhar Number (12 Digits)</label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength={12}
+                                        placeholder="123456789012"
+                                        defaultValue={user?.kyc_verification?.aadhar_number}
+                                        onChange={(e) => {
+                                            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                                        }}
+                                        onBlur={async (e) => {
+                                            const val = e.target.value;
+                                            if (val.length !== 12) {
+                                                if (val.length > 0) toast.error("Aadhar number must be 12 digits");
+                                                return;
+                                            }
+                                            if (val === user?.kyc_verification?.aadhar_number) return;
+                                            try {
+                                                await apiFetch('/auth/team/kyc-submit', {
+                                                    method: 'POST',
+                                                    body: JSON.stringify({ aadhar_number: val }),
+                                                    headers: { 'Content-Type': 'application/json' }
+                                                });
+                                                toast.success("Aadhar updated");
+                                                mutate();
+                                            } catch (err) {
+                                                toast.error("Failed to update Aadhar");
+                                            }
+                                        }}
+                                        className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 rounded-xl p-3 outline-none"
+                                    />
+                                </div>
+
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-2">
+                                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">PAN Card Number (Alphanumeric)</label>
+                                    <input
+                                        type="text"
+                                        maxLength={10}
+                                        placeholder="ABCDE1234F"
+                                        style={{ textTransform: 'uppercase' }}
+                                        defaultValue={user?.kyc_verification?.pan_number}
+                                        onBlur={async (e) => {
+                                            const val = e.target.value.toUpperCase();
+                                            if (val.length !== 10) {
+                                                if (val.length > 0) toast.error("PAN number must be 10 characters");
+                                                return;
+                                            }
+                                            if (val === user?.kyc_verification?.pan_number) return;
+                                            try {
+                                                await apiFetch('/auth/team/kyc-submit', {
+                                                    method: 'POST',
+                                                    body: JSON.stringify({ pan_number: val }),
+                                                    headers: { 'Content-Type': 'application/json' }
+                                                });
+                                                toast.success("PAN updated");
+                                                mutate();
+                                            } catch (err) {
+                                                toast.error("Failed to update PAN");
+                                            }
+                                        }}
+                                        className="w-full text-sm font-bold text-slate-900 bg-white border border-slate-200 focus:border-indigo-500 rounded-xl p-3 outline-none"
+                                    />
+                                </div>
+
                                 <div className="grid grid-cols-2 gap-4 mb-2">
                                     <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
                                         <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block mb-2">City</label>
@@ -606,7 +672,33 @@ export default function MyWorkDashboard() {
                                 Instant Approval • Doorstep Delivery • Premium Quality
                             </p>
                         </div>
-                        <QrHistoryList history={qrHistory} loading={loadingHistory} onRefresh={fetchQrHistory} />
+                        <div className="relative mb-4 px-1">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                            <input
+                                type="text"
+                                placeholder="Search by name, address, city..."
+                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
+                                value={qrSearchTerm}
+                                onChange={(e) => setQrSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <QrHistoryList 
+                            history={qrHistory.filter(item => {
+                                if (!qrSearchTerm) return true;
+                                const term = qrSearchTerm.toLowerCase();
+                                return (
+                                    (item.full_name && item.full_name.toLowerCase().includes(term)) ||
+                                    (item.city && item.city.toLowerCase().includes(term)) ||
+                                    (item.state && item.state.toLowerCase().includes(term)) ||
+                                    (item.address && item.address.toLowerCase().includes(term)) ||
+                                    (item.pin_code && item.pin_code.includes(term)) ||
+                                    (item.id && item.id.toString().includes(term))
+                                );
+                            })} 
+                            loading={loadingHistory} 
+                            onRefresh={fetchQrHistory} 
+                        />
                     </div>
                 )}
             </div>
@@ -986,7 +1078,7 @@ function QrHistoryList({ history, loading, onRefresh }: { history: any[], loadin
                             <MapPin size={16} className="text-slate-400 mt-0.5" />
                             <div>
                                 <p className="text-xs font-bold text-slate-700 leading-relaxed">{item.address}</p>
-                                <p className="text-[10px] font-medium text-slate-400 mt-1">{item.city} - {item.pin_code}</p>
+                                <p className="text-[10px] font-medium text-slate-400 mt-1">{item.city}{item.state ? `, ${item.state}` : ''} - {item.pin_code}</p>
                             </div>
                         </div>
 

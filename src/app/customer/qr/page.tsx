@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import QRCode from 'react-qr-code';
-import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X, Scan, ArrowLeft, Landmark, Zap } from 'lucide-react';
+import { Share2, Copy, Check, Home, Smartphone, QrCode, Receipt, Link2, X, Scan, ArrowLeft, Landmark, Zap, AlertCircle, Lock } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function CustomerQR() {
     const router = useRouter();
@@ -27,6 +28,15 @@ export default function CustomerQR() {
     const [referrerName, setReferrerName] = useState('');
     const [scanning, setScanning] = useState(false);
     const scannerRef = useRef<any>(null);
+    const [isKycComplete, setIsKycComplete] = useState(true);
+
+    // KYC Check for Merchants
+    useEffect(() => {
+        if (user && user.role === 'MERCHANT') {
+            const complete = !!(user.aadhar_number && user.pan_number && user.aadhar_image && user.pan_image);
+            setIsKycComplete(complete);
+        }
+    }, [user]);
 
     // Debounced Agent Check
     useEffect(() => {
@@ -237,148 +247,173 @@ export default function CustomerQR() {
     return (
         <DashboardLayout title="Receive Money" navItems={navItems}>
             <div className="max-w-md mx-auto space-y-6 relative pb-20">
-                <div className="bg-gradient-to-br from-[#0F3935] via-[#10403B] to-[#041C1A] rounded-[2.5rem] p-8 md:p-10 text-center shadow-2xl shadow-[#0F3935]/40 border border-emerald-500/20 relative overflow-hidden text-white group">
-                    {/* CSS-based Background Patterns for Vibrancy */}
-                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
-                    <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] -mr-20 -mt-20 mix-blend-screen animate-pulse"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/10 rounded-full blur-[80px] -ml-20 -mb-20 mix-blend-screen"></div>
-
-                    {/* Content Layer */}
-                    <div className="relative z-10 flex flex-col items-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 backdrop-blur-md mb-6 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                            <Zap size={12} className="text-emerald-400 fill-emerald-400 animate-pulse" />
-                            <h4 className="text-emerald-300 font-black text-[10px] uppercase tracking-[0.3em]">MSME SHAKTI</h4>
+                {isMerchant && !isKycComplete ? (
+                    <div className="bg-amber-400 rounded-2xl p-6 text-amber-950 shadow-xl border-b-4 border-amber-500/50 m-1">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center shadow-inner">
+                                <Lock size={20} className="text-white" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black uppercase tracking-tight leading-none">KYC Required</h3>
+                                <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">Identity Not Verified</p>
+                            </div>
                         </div>
-
-                        <h2 className="text-4xl font-black uppercase tracking-tight mb-2 drop-shadow-lg text-transparent bg-clip-text bg-gradient-to-b from-white to-emerald-100">
-                            OPEN SCORE
-                        </h2>
-                        <p className="text-emerald-200/80 text-xs font-bold uppercase tracking-[0.15em] mb-10">
-                            Unlock Cashback Rewards!
+                        
+                        <p className="text-xs font-bold leading-relaxed mb-6">
+                            Your QR code is hidden. Please upload <span className="underline decoration-2">Aadhaar & PAN</span> images/details in your profile to activate your merchant account.
                         </p>
 
-                        {/* QR Code Container (Slider) */}
-                        <div className="relative w-72 bg-white rounded-[2rem] p-4 shadow-[0_0_40px_rgba(16,185,129,0.3)] flex flex-col items-center mb-10 transition-transform duration-500 hover:scale-[1.02]">
-                            {/* Animated Border Glow */}
-                            <div className="absolute -inset-1 bg-gradient-to-tr from-emerald-400 via-teal-400 to-emerald-600 rounded-[2.2rem] opacity-30 blur-md animate-pulse"></div>
+                        <button 
+                            onClick={() => router.push('/customer/profile')}
+                            className="w-full py-4 bg-amber-950 text-amber-400 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            Complete Profile
+                        </button>
+                    </div>
+                ) : (
+                    <div className="bg-gradient-to-br from-[#0F3935] via-[#10403B] to-[#041C1A] rounded-[2.5rem] p-8 md:p-10 text-center shadow-2xl shadow-[#0F3935]/40 border border-emerald-500/20 relative overflow-hidden text-white group">
+                        {/* CSS-based Background Patterns for Vibrancy */}
+                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] -mr-20 -mt-20 mix-blend-screen animate-pulse"></div>
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/10 rounded-full blur-[80px] -ml-20 -mb-20 mix-blend-screen"></div>
 
-                            {/* Left Navigation Arrow */}
-                            {physicalQrs.length > 0 && activeQrIndex > 0 && (
-                                <button 
-                                    onClick={handleScrollLeft}
-                                    className="absolute left-1 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-slate-800/80 backdrop-blur text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-colors"
+                        {/* Content Layer */}
+                        <div className="relative z-10 flex flex-col items-center">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 backdrop-blur-md mb-6 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                                <Zap size={12} className="text-emerald-400 fill-emerald-400 animate-pulse" />
+                                <h4 className="text-emerald-300 font-black text-[10px] uppercase tracking-[0.3em]">MSME SHAKTI</h4>
+                            </div>
+
+                            <h2 className="text-4xl font-black uppercase tracking-tight mb-2 drop-shadow-lg text-transparent bg-clip-text bg-gradient-to-b from-white to-emerald-100">
+                                OPEN SCORE
+                            </h2>
+                            <p className="text-emerald-200/80 text-xs font-bold uppercase tracking-[0.15em] mb-10">
+                                Unlock Cashback Rewards!
+                            </p>
+
+                            {/* QR Code Container (Slider) */}
+                            <div className="relative w-72 bg-white rounded-[2rem] p-4 shadow-[0_0_40px_rgba(16,185,129,0.3)] flex flex-col items-center mb-10 transition-transform duration-500 hover:scale-[1.02]">
+                                {/* Animated Border Glow */}
+                                <div className="absolute -inset-1 bg-gradient-to-tr from-emerald-400 via-teal-400 to-emerald-600 rounded-[2.2rem] opacity-30 blur-md animate-pulse"></div>
+
+                                {/* Left Navigation Arrow */}
+                                {physicalQrs.length > 0 && activeQrIndex > 0 && (
+                                    <button 
+                                        onClick={handleScrollLeft}
+                                        className="absolute left-1 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-slate-800/80 backdrop-blur text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-colors"
+                                    >
+                                        <ArrowLeft size={16} />
+                                    </button>
+                                )}
+
+                                {/* Horizontal scrolling container */}
+                                <div 
+                                    ref={scrollContainerRef}
+                                    className="relative w-full flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden" 
+                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                    onScroll={(e) => {
+                                        const el = e.currentTarget;
+                                        const index = Math.round(el.scrollLeft / el.clientWidth);
+                                        setActiveQrIndex(index);
+                                    }}
                                 >
-                                    <ArrowLeft size={16} />
-                                </button>
-                            )}
-
-                            {/* Horizontal scrolling container */}
-                            <div 
-                                ref={scrollContainerRef}
-                                className="relative w-full flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden" 
-                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                                onScroll={(e) => {
-                                    const el = e.currentTarget;
-                                    const index = Math.round(el.scrollLeft / el.clientWidth);
-                                    setActiveQrIndex(index);
-                                }}
-                            >
-                                {/* Default Digital QR */}
-                                <div className="w-full flex-shrink-0 snap-center flex justify-center p-2">
-                                    <div className="w-full bg-white rounded-[1.6rem] flex items-center justify-center p-3 border border-slate-100 overflow-hidden aspect-square">
-                                        {qrData ? (
-                                            <QRCode
-                                                value={qrData}
-                                                size={256}
-                                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                                viewBox={`0 0 256 256`}
-                                                level="H"
-                                            />
-                                        ) : (
-                                            <div className="animate-pulse w-full h-full bg-slate-50 flex flex-col items-center justify-center gap-2">
-                                                <QrCode className="text-slate-300 w-12 h-12" />
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading QR...</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Physical QRs */}
-                                {physicalQrs.map((code, idx) => (
-                                    <div key={idx} className="w-full flex-shrink-0 snap-center flex justify-center p-2">
+                                    {/* Default Digital QR */}
+                                    <div className="w-full flex-shrink-0 snap-center flex justify-center p-2">
                                         <div className="w-full bg-white rounded-[1.6rem] flex items-center justify-center p-3 border border-slate-100 overflow-hidden aspect-square">
-                                            <QRCode
-                                                value={code} // Contains the physical mapping code
-                                                size={256}
-                                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                                viewBox={`0 0 256 256`}
-                                                level="H"
-                                            />
+                                            {qrData ? (
+                                                <QRCode
+                                                    value={qrData}
+                                                    size={256}
+                                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                                    viewBox={`0 0 256 256`}
+                                                    level="H"
+                                                />
+                                            ) : (
+                                                <div className="animate-pulse w-full h-full bg-slate-50 flex flex-col items-center justify-center gap-2">
+                                                    <QrCode className="text-slate-300 w-12 h-12" />
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading QR...</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
 
-                            {/* Right Navigation Arrow */}
-                            {physicalQrs.length > 0 && activeQrIndex < physicalQrs.length && (
-                                <button 
-                                    onClick={handleScrollRight}
-                                    className="absolute right-1 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-slate-800/80 backdrop-blur text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-colors"
-                                >
-                                    <ArrowLeft size={16} className="rotate-180" />
-                                </button>
-                            )}
-                            
-                            {/* Pagination Dots */}
-                            {physicalQrs.length > 0 && (
-                                <div className="flex justify-center gap-1.5 mt-2 z-10 w-full relative">
-                                    {Array.from({ length: physicalQrs.length + 1 }).map((_, i) => (
-                                        <div 
-                                            key={i} 
-                                            className={`h-1.5 rounded-full transition-all duration-300 ${i === activeQrIndex ? 'w-4 bg-emerald-500' : 'w-1.5 bg-slate-200'}`} 
-                                        />
+                                    {/* Physical QRs */}
+                                    {physicalQrs.map((code, idx) => (
+                                        <div key={idx} className="w-full flex-shrink-0 snap-center flex justify-center p-2">
+                                            <div className="w-full bg-white rounded-[1.6rem] flex items-center justify-center p-3 border border-slate-100 overflow-hidden aspect-square">
+                                                <QRCode
+                                                    value={code} // Contains the physical mapping code
+                                                    size={256}
+                                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                                    viewBox={`0 0 256 256`}
+                                                    level="H"
+                                                />
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
-                            )}
-                            
-                            {physicalQrs.length > 0 && (
-                                <p className="text-[9px] text-emerald-800/80 font-black tracking-widest uppercase mt-3 w-full text-center z-10 relative">
-                                    {activeQrIndex === 0 ? 'Digital QR' : `Physical QR #${activeQrIndex}`}
-                                </p>
-                            )}
-                        </div>
 
-                        <div className="relative w-full">
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent"></div>
-                            <h3 className="relative inline-block px-4 bg-[#0F3935] text-2xl font-black uppercase tracking-[0.2em] mb-2 text-white text-shadow-lg z-10">
-                                SCAN & PAY
-                            </h3>
-                        </div>
-
-                        <p className="text-emerald-100/70 text-[10px] font-medium max-w-[200px] leading-relaxed mb-8 mt-2">
-                            Get <span className="text-[#FFD700] font-black">Instant Cashback</span> on Every Transaction via Open Score
-                        </p>
-
-                        <div className="w-full flex flex-col items-center gap-4">
-                            <div
-                                onClick={copyVPA}
-                                className="w-full py-3 bg-emerald-950/50 backdrop-blur-sm border border-emerald-500/20 rounded-xl flex items-center justify-center gap-3 cursor-pointer hover:bg-emerald-900/50 transition-colors active:scale-95 group/vpa"
-                            >
-                                <span className="text-[10px] text-emerald-300 font-mono tracking-widest uppercase group-hover/vpa:text-white transition-colors">
-                                    {user?.mobile_number}@openscore
-                                </span>
-                                <Copy size={12} className="text-emerald-500 group-hover/vpa:text-white transition-colors" />
+                                {/* Right Navigation Arrow */}
+                                {physicalQrs.length > 0 && activeQrIndex < physicalQrs.length && (
+                                    <button 
+                                        onClick={handleScrollRight}
+                                        className="absolute right-1 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-slate-800/80 backdrop-blur text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-colors"
+                                    >
+                                        <ArrowLeft size={16} className="rotate-180" />
+                                    </button>
+                                )}
+                                
+                                {/* Pagination Dots */}
+                                {physicalQrs.length > 0 && (
+                                    <div className="flex justify-center gap-1.5 mt-2 z-10 w-full relative">
+                                        {Array.from({ length: physicalQrs.length + 1 }).map((_, i) => (
+                                            <div 
+                                                key={i} 
+                                                className={`h-1.5 rounded-full transition-all duration-300 ${i === activeQrIndex ? 'w-4 bg-emerald-500' : 'w-1.5 bg-slate-200'}`} 
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                                
+                                {physicalQrs.length > 0 && (
+                                    <p className="text-[9px] text-emerald-800/80 font-black tracking-widest uppercase mt-3 w-full text-center z-10 relative">
+                                        {activeQrIndex === 0 ? 'Digital QR' : `Physical QR #${activeQrIndex}`}
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="flex items-center gap-2 opacity-60">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <p className="text-[8px] font-black uppercase tracking-[0.25em] text-emerald-500">
-                                    Powered by MSME Shakti
-                                </p>
+                            <div className="relative w-full">
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent"></div>
+                                <h3 className="relative inline-block px-4 bg-[#0F3935] text-2xl font-black uppercase tracking-[0.2em] mb-2 text-white text-shadow-lg z-10">
+                                    SCAN & PAY
+                                </h3>
+                            </div>
+
+                            <p className="text-emerald-100/70 text-[10px] font-medium max-w-[200px] leading-relaxed mb-8 mt-2">
+                                Get <span className="text-[#FFD700] font-black">Instant Cashback</span> on Every Transaction via Open Score
+                            </p>
+
+                            <div className="w-full flex flex-col items-center gap-4">
+                                <div
+                                    onClick={copyVPA}
+                                    className="w-full py-3 bg-emerald-950/50 backdrop-blur-sm border border-emerald-500/20 rounded-xl flex items-center justify-center gap-3 cursor-pointer hover:bg-emerald-900/50 transition-colors active:scale-95 group/vpa"
+                                >
+                                    <span className="text-[10px] text-emerald-300 font-mono tracking-widest uppercase group-hover/vpa:text-white transition-colors">
+                                        {user?.mobile_number}@openscore
+                                    </span>
+                                    <Copy size={12} className="text-emerald-500 group-hover/vpa:text-white transition-colors" />
+                                </div>
+
+                                <div className="flex items-center gap-2 opacity-60">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <p className="text-[8px] font-black uppercase tracking-[0.25em] text-emerald-500">
+                                        Powered by MSME Shakti
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="grid grid-cols-2 gap-4">
@@ -387,10 +422,25 @@ export default function CustomerQR() {
                     </button>
                     {user?.role === 'MERCHANT' && (
                         <button
-                            onClick={() => setIsMapping(true)}
-                            className="py-4 bg-[#0F3935] text-emerald-400 border border-emerald-500/30 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#092220] transition-all active:scale-95 shadow-xl shadow-black/20"
+                            onClick={() => {
+                                if (!isKycComplete) {
+                                    toast.error("Mandatory: Upload Aadhaar/PAN images and details in Profile first.", {
+                                        icon: '🔒',
+                                        duration: 4000
+                                    });
+                                    router.push('/customer/profile');
+                                    return;
+                                }
+                                setIsMapping(true);
+                            }}
+                            className={`py-4 flex-1 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl ${
+                                !isKycComplete 
+                                    ? 'bg-slate-100 text-slate-400 border border-slate-200' 
+                                    : 'bg-[#0F3935] text-emerald-400 border border-emerald-500/30 hover:bg-[#092220] shadow-black/20'
+                            }`}
                         >
-                            <Link2 size={16} /> Map Physical
+                            {isKycComplete ? <Link2 size={16} /> : <AlertCircle size={16} />} 
+                            Map Physical
                         </button>
                     )}
                 </div>

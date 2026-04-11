@@ -85,7 +85,7 @@ export function getTransactionSubtitle(tx: any): string {
         if (srcType === 'PLATFORM_FEE') return 'System Fee';
         
         if (tx.type === 'DEBIT') return 'Withdrawal';
-        return 'System Credit';
+        return 'Increment Value';
     }
     
     return tx.counterparty_vpa || 'Wallet Transfer';

@@ -56,8 +56,8 @@ export default function Profile() {
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
     const [isPortalOpen, setIsPortalOpen] = useState(false);
     const [dynamicButtons, setDynamicButtons] = useState<any[]>([]);
-    const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string }>({});
-    const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean }>({});
+    const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string, account?: string }>({});
+    const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean, account?: boolean }>({});
     const [uploadingImages, setUploadingImages] = useState<Record<string, boolean>>({});
     const [isAppPinMissing, setIsAppPinMissing] = useState(false);
     const hasPromptedPin = useRef(false);
@@ -75,16 +75,17 @@ export default function Profile() {
         }
     }, [pinData]);
 
-    const checkUniqueness = async (type: 'aadhar' | 'pan', value: string) => {
+    const checkUniqueness = async (type: 'aadhar' | 'pan' | 'account', value: string) => {
         setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
         try {
+            const apiType = type === 'account' ? 'account_number' : type;
             const res = await apiFetch('/loans/check-kyc-uniqueness', {
                 method: 'POST',
-                body: JSON.stringify({ type, value })
+                body: JSON.stringify({ type: apiType, value })
             });
 
             if (!res.unique) {
-                setUniquenessErrors(prev => ({ ...prev, [type]: res.message }));
+                setUniquenessErrors(prev => ({ ...prev, [type]: 'Apply for loan from another account' }));
             } else {
                 setUniquenessErrors(prev => ({ ...prev, [type]: undefined }));
             }
@@ -249,6 +250,17 @@ export default function Profile() {
             setUniquenessErrors(prev => ({ ...prev, pan: undefined }));
         }
     }, [formData.pan_number, isEditing, user?.pan_number]);
+
+    useEffect(() => {
+        if (isEditing && formData.account_number.length >= 9 && formData.account_number !== user?.account_number) {
+            const timer = setTimeout(() => {
+                checkUniqueness('account', formData.account_number);
+            }, 600);
+            return () => clearTimeout(timer);
+        } else {
+            setUniquenessErrors(prev => ({ ...prev, account: undefined }));
+        }
+    }, [formData.account_number, isEditing, user?.account_number]);
 
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
@@ -439,8 +451,8 @@ export default function Profile() {
             return;
         }
 
-        if (uniquenessErrors.aadhar || uniquenessErrors.pan) {
-            toast.error("Please resolve Aadhaar/PAN uniqueness issues before saving.");
+        if (uniquenessErrors.aadhar || uniquenessErrors.pan || uniquenessErrors.account) {
+            toast.error("Please resolve KYC or Bank uniqueness issues before saving.");
             return;
         }
 
@@ -624,6 +636,7 @@ export default function Profile() {
     };
 
     const isMerchant = user?.role === 'MERCHANT';
+    const isNameLocked = isMerchant && !!user?.name;
     const themeColor = isMerchant ? 'emerald' : 'blue';
 
     if (userError) {
@@ -732,16 +745,28 @@ export default function Profile() {
 
                         {isEditing ? (
                             <>
-                                <input
-                                    type="text"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className={`text-xl font-medium text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                />
-                                {formData.name.trim().toLowerCase() !== formData.account_holder_name.trim().toLowerCase() && formData.account_holder_name && (
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={formData.name}
+                                        onChange={(e) => !isNameLocked && setFormData({ ...formData, name: e.target.value })}
+                                        readOnly={isNameLocked}
+                                        className={`text-xl font-medium text-slate-900 tracking-tight mb-2 text-center bg-transparent border-b-2 ${isNameLocked ? 'border-transparent cursor-not-allowed' : `border-slate-200 focus:border-${themeColor}-500`} focus:outline-none w-full`}
+                                        placeholder="Full Name"
+                                    />
+                                    {isNameLocked && (
+                                        <div className="absolute right-0 top-1 text-slate-300" title="Name cannot be changed after saving">
+                                            <Lock size={14} />
+                                        </div>
+                                    )}
+                                </div>
+                                {!isNameLocked && formData.name.trim().toLowerCase() !== formData.account_holder_name.trim().toLowerCase() && formData.account_holder_name && (
                                     <p className="text-rose-500 text-[10px] font-bold mt-1 uppercase tracking-tighter animate-pulse">
                                         ⚠️ Must match account holder name
                                     </p>
+                                )}
+                                {isNameLocked && (
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Profile Identity Verified</p>
                                 )}
                             </>
                         ) : (
@@ -1423,16 +1448,20 @@ export default function Profile() {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Account Number</p>
                                         {isEditing && !user.account_number ? (
-                                            <input
-                                                type="text"
-                                                value={formData.account_number}
-                                                onChange={(e) => {
-                                                    const val = e.target.value.replace(/[^0-9]/g, '');
-                                                    setFormData({ ...formData, account_number: val });
-                                                }}
-                                                className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                placeholder="Enter account number"
-                                            />
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={formData.account_number}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/[^0-9]/g, '');
+                                                        setFormData({ ...formData, account_number: val });
+                                                    }}
+                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 ${uniquenessErrors.account ? 'border-red-500' : 'border-slate-200'} focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="Enter account number"
+                                                />
+                                                {uniquenessErrors.account && <p className="text-[9px] text-red-500 mt-1 font-bold animate-in fade-in transition-all">{uniquenessErrors.account}</p>}
+                                                {checkingUniqueness.account && <p className="text-[9px] text-blue-500 mt-1 font-bold animate-pulse">Verifying...</p>}
+                                            </>
                                         ) : (
                                             <p className="text-sm font-medium text-slate-900 truncate">{user.account_number || 'Not Set'}</p>
                                         )}
