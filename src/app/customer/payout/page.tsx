@@ -969,6 +969,10 @@ export default function PayoutPage() {
                             const chargeRange = (amt >= (withdrawalRule?.min_charge_amount || 0) && amt <= (withdrawalRule?.max_charge_amount || 0));
                             const showFee = withdrawalRule?.is_charge_enabled && chargeRange;
                             const feeAmt = showFee ? (amt * (withdrawalRule.charge_percent || 0)) / 100 : 0;
+                            
+                            // Cashback reversal preview
+                            const ratio = balance > 0 ? Math.min(1, amt / balance) : 0;
+                            const cashbackDeduction = (cashbackBalance * ratio);
 
                             return (
                                 <>
@@ -987,23 +991,36 @@ export default function PayoutPage() {
                                             ₹{(amt - feeAmt).toLocaleString()}
                                         </span>
                                     </div>
+
+                                    {cashbackDeduction > 0 && (
+                                        <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-xl animate-pulse">
+                                            <div className="flex items-center gap-2 text-rose-600 mb-1">
+                                                <AlertCircle size={12} />
+                                                <span className="text-[10px] font-black uppercase tracking-tighter">Proportional Reversal</span>
+                                            </div>
+                                            <p className="text-[10px] font-bold text-rose-500/80 leading-tight">
+                                                ₹{cashbackDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })} amount from cashback will be debited.
+                                            </p>
+                                        </div>
+                                    )}
                                 </>
                             );
                         })()}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            onClick={handleConfirmWithdrawal}
+                            className="py-3.5 bg-rose-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
+                        >
+                            <AlertCircle size={14} />
+                            Confirm
+                        </button>
                         <button
                             onClick={() => setIsConfirmModalOpen(false)}
                             className="py-3.5 bg-slate-100 text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all"
                         >
                             Cancel
-                        </button>
-                        <button
-                            onClick={handleConfirmWithdrawal}
-                            className={`py-3.5 ${isMerchant ? 'bg-emerald-600' : 'bg-slate-900'} text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-slate-200`}
-                        >
-                            Confirm
                         </button>
                     </div>
                 </div>
