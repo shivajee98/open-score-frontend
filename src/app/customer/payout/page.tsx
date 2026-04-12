@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee, MessageSquare, Eye, ChevronDown, Info, CreditCard, TrendingUp, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 import PinModal from '@/components/PinModal';
@@ -15,6 +15,18 @@ export default function PayoutPage() {
     const { data: walletData, isLoading: walletLoading, mutate: mutateWallet } = useApi('/wallet/balance');
     const { data: rulesData, isLoading: rulesLoading, mutate: mutateRules } = useApi('/wallet/withdrawal-rule');
     const { data: loans, isLoading: loansLoading } = useApi(userData?.role === 'CUSTOMER' ? '/loans' : null);
+
+    // Vault Data
+    const [vaultData, setVaultData] = useState<any>(null);
+    const [vaultLoading, setVaultLoading] = useState(true);
+    const fetchVault = async () => {
+        try {
+            const data = await apiFetch('/vault/me');
+            setVaultData(data);
+        } catch (e) { console.error(e); }
+        finally { setVaultLoading(false); }
+    };
+    useEffect(() => { fetchVault(); }, []);
 
     // Pagination for withdrawals
     const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -88,7 +100,52 @@ export default function PayoutPage() {
     const [showWithdrawalLimits, setShowWithdrawalLimits] = useState(false);
     const [ruleError, setRuleError] = useState<{ title: string, message: string } | null>(null);
     const [lastRequestTime, setLastRequestTime] = useState<number | null>(null);
-    
+    const [isRefundInfoOpen, setIsRefundInfoOpen] = useState(false);
+    const [isBenefitAlertOpen, setIsBenefitAlertOpen] = useState(false);
+
+    // Vault modals
+    const [isVaultDepositOpen, setIsVaultDepositOpen] = useState(false);
+    const [isVaultWithdrawOpen, setIsVaultWithdrawOpen] = useState(false);
+    const [vaultDepositAmount, setVaultDepositAmount] = useState('');
+    const [vaultDepositTenure, setVaultDepositTenure] = useState<number | null>(null);
+    const [vaultWithdrawAmount, setVaultWithdrawAmount] = useState('');
+    const [isVaultSubmitting, setIsVaultSubmitting] = useState(false);
+
+    const handleVaultDeposit = async () => {
+        if (!vaultDepositAmount || !vaultDepositTenure) return;
+        setIsVaultSubmitting(true);
+        try {
+            await apiFetch('/vault/deposit', {
+                method: 'POST',
+                body: JSON.stringify({ amount: parseFloat(vaultDepositAmount), tenure_days: vaultDepositTenure }),
+            });
+            toast.success('Deposited to Vault');
+            setIsVaultDepositOpen(false);
+            setVaultDepositAmount('');
+            setVaultDepositTenure(null);
+            mutateWallet();
+            fetchVault();
+        } catch (e: any) { toast.error(e.message || 'Deposit failed'); }
+        finally { setIsVaultSubmitting(false); }
+    };
+
+    const handleVaultWithdraw = async () => {
+        if (!vaultWithdrawAmount) return;
+        setIsVaultSubmitting(true);
+        try {
+            await apiFetch('/vault/withdraw', {
+                method: 'POST',
+                body: JSON.stringify({ amount: parseFloat(vaultWithdrawAmount) }),
+            });
+            toast.success('Withdrawn from Vault');
+            setIsVaultWithdrawOpen(false);
+            setVaultWithdrawAmount('');
+            mutateWallet();
+            fetchVault();
+        } catch (e: any) { toast.error(e.message || 'Withdrawal failed'); }
+        finally { setIsVaultSubmitting(false); }
+    };
+
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('last_merchant_verification_request');
@@ -152,9 +209,9 @@ export default function PayoutPage() {
         // Check for charge applicability and show confirmation modal
         // Charge applies if:
         const isFreeTier = payoutAmount > (withdrawalRule?.max_charge_amount || 0);
-        const isInPaidRange = payoutAmount >= (withdrawalRule?.min_charge_amount || 0) && 
-                              payoutAmount <= (withdrawalRule?.max_charge_amount || 0);
-        
+        const isInPaidRange = payoutAmount >= (withdrawalRule?.min_charge_amount || 0) &&
+            payoutAmount <= (withdrawalRule?.max_charge_amount || 0);
+
         // Fee applies ONLY in the dedicated paid range. 
         // Above the range is always free per the latest requirement.
         const hasCharge = withdrawalRule?.is_charge_enabled && isInPaidRange;
@@ -180,22 +237,22 @@ export default function PayoutPage() {
 
         // High tier logic
         const isHighTier = payoutAmount > (withdrawalRule.max_charge_amount || 0);
-        const isPaidRange = payoutAmount >= (withdrawalRule.min_charge_amount || 0) && 
-                           payoutAmount <= (withdrawalRule.max_charge_amount || 0);
-        
+        const isPaidRange = payoutAmount >= (withdrawalRule.min_charge_amount || 0) &&
+            payoutAmount <= (withdrawalRule.max_charge_amount || 0);
+
         if (!isHighTier && !isPaidRange) {
-             toast.error(`Minimum payout is ₹${withdrawalRule.min_charge_amount}`);
-             return;
+            toast.error(`Minimum payout is ${withdrawalRule.min_charge_amount}`);
+            return;
         }
 
         // Check limits
         if (withdrawalRule.max_withdrawal && payoutAmount > withdrawalRule.max_withdrawal) {
-             toast.error(`Max: ${withdrawalRule.max_withdrawal.toLocaleString()}`);
-             return;
+            toast.error(`Max: ${withdrawalRule.max_withdrawal.toLocaleString()}`);
+            return;
         }
         if (dailyTxnLimit && usedTxnsToday !== null && usedTxnsToday >= dailyTxnLimit) {
-             toast.error("Daily request limit reached");
-             return;
+            toast.error("Daily request limit reached");
+            return;
         }
         if (isLocked) {
             setShowRestricted(true);
@@ -548,6 +605,76 @@ export default function PayoutPage() {
                             </div>
                         </div>
 
+                        {/* Vault Card */}
+                        {vaultData?.vault && (
+                            <div className="relative">
+                                <div className="bg-[#0c0f1a] rounded-2xl p-5 text-white relative overflow-hidden">
+                                    {/* Decorative lines */}
+                                    <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 40px, #fff 40px, #fff 41px)'}} />
+                                    <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-gradient-to-bl from-amber-500/10 to-transparent -mr-12 -mt-12" />
+
+                                    <div className="relative z-10">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <CreditCard size={14} className="text-amber-400/60" />
+                                                <span className="text-[8px] font-black uppercase tracking-[0.3em] text-amber-400/60">Vault</span>
+                                            </div>
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => setIsVaultDepositOpen(true)}
+                                                    className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[7px] font-black uppercase tracking-wider transition-colors flex items-center gap-1"
+                                                >
+                                                    <ArrowDownToLine size={10} /> Deposit
+                                                </button>
+                                                <button
+                                                    onClick={() => setIsVaultWithdrawOpen(true)}
+                                                    className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[7px] font-black uppercase tracking-wider transition-colors flex items-center gap-1"
+                                                >
+                                                    <ArrowUpFromLine size={10} /> Withdraw
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Card Number */}
+                                        <p className="font-mono text-[13px] tracking-[0.2em] text-white/70 mb-3">
+                                            {vaultData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()}
+                                        </p>
+
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <span className="text-[8px] font-bold uppercase tracking-widest text-white/30 block">Balance</span>
+                                                <span className="text-2xl font-black tracking-tighter">
+                                                    ₹{parseFloat(vaultData.vault.balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-[9px] font-mono text-white/30">
+                                                <div>
+                                                    <span className="block text-[7px] uppercase tracking-wider">Exp</span>
+                                                    {vaultData.vault.expiry_date || '—'}
+                                                </div>
+                                                <div>
+                                                    <span className="block text-[7px] uppercase tracking-wider">CVC</span>
+                                                    {vaultData.vault.cvc || '•••'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Rates strip */}
+                                        {vaultData.rates?.length > 0 && (
+                                            <div className="mt-4 pt-3 border-t border-white/5 flex gap-3 overflow-x-auto scrollbar-hide">
+                                                {vaultData.rates.map((r: any) => (
+                                                    <div key={r.id} className="shrink-0 bg-white/5 px-3 py-2 rounded-lg">
+                                                        <span className="text-[8px] font-black uppercase tracking-wider text-amber-400/80 block">{r.tenure_days}d</span>
+                                                        <span className="text-[11px] font-black text-emerald-400">{r.interest_rate}%</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden">
                             <div className="flex items-start justify-between mb-4">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Transfer Amount</label>
@@ -566,16 +693,15 @@ export default function PayoutPage() {
                                 <div className="mt-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 flex flex-col gap-3">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${
-                                                parseFloat(amount) > (withdrawalRule.max_charge_amount || 0)
-                                                ? 'bg-emerald-500 shadow-[0_0_8px_oklch(0.7_0.2_150)]' 
-                                                : parseFloat(amount) < (withdrawalRule.min_charge_amount || 0)
-                                                    ? 'bg-slate-300'
-                                                    : 'bg-amber-500 shadow-[0_0_8px_oklch(0.7_0.2_80)]'
-                                            }`}></div>
+                                            <div className={`w-2 h-2 rounded-full ${parseFloat(amount) > (withdrawalRule.max_charge_amount || 0)
+                                                    ? 'bg-emerald-500 shadow-[0_0_8px_oklch(0.7_0.2_150)]'
+                                                    : parseFloat(amount) < (withdrawalRule.min_charge_amount || 0)
+                                                        ? 'bg-slate-300'
+                                                        : 'bg-amber-500 shadow-[0_0_8px_oklch(0.7_0.2_80)]'
+                                                }`}></div>
                                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">
                                                 {parseFloat(amount) > (withdrawalRule.max_charge_amount || 0)
-                                                    ? 'Priority Duty-Free Payout' 
+                                                    ? 'Priority Duty-Free Payout'
                                                     : parseFloat(amount) < (withdrawalRule.min_charge_amount || 0)
                                                         ? 'Invalid Amount'
                                                         : 'Standard Withdrawal (Paid Tier)'}
@@ -586,10 +712,10 @@ export default function PayoutPage() {
                                                 const amt = parseFloat(amount) || 0;
                                                 const minAmt = (withdrawalRule.min_charge_amount || 0);
                                                 const maxAmt = (withdrawalRule.max_charge_amount || 0);
-                                                
+
                                                 if (amt < minAmt) return 'Fee: -';
-                                                if (amt > maxAmt) return 'Fee: ₹0';
-                                                
+                                                if (amt > maxAmt) return 'Fee: 0';
+
                                                 // Between min and max -> Paid Tier
                                                 return `Fee: ${withdrawalRule.charge_percent || 0}%`;
                                             })()}
@@ -620,412 +746,517 @@ export default function PayoutPage() {
                         </div>
                     </div>
 
-            {/* Bank Side */}
-            <div className="space-y-4">
-                {user?.bank_name && user?.account_number ? (
-                    <>
-                        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                                <Landmark className="w-3.5 h-3.5" />
-                                Settlement Bank Account
-                            </h3>
+                    {/* Bank Side */}
+                    <div className="space-y-4">
+                        {user?.bank_name && user?.account_number ? (
+                            <>
+                                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                        <Landmark className="w-3.5 h-3.5" />
+                                        Settlement Bank Account
+                                    </h3>
 
-                            <div className="space-y-3">
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">Bank</span>
-                                    <span className="font-black text-slate-900 uppercase text-sm">{user?.bank_name}</span>
+                                    <div className="space-y-3">
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                            <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">Bank</span>
+                                            <span className="font-black text-slate-900 uppercase text-sm">{user?.bank_name}</span>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                            <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">A/C No.</span>
+                                            <span className="font-black text-slate-900 font-mono italic text-sm">
+                                                {'*'.repeat(Math.max(0, (user?.account_number?.length || 0) - 4)) + user?.account_number?.slice(-4)}
+                                            </span>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                                            <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">IFSC</span>
+                                            <span className="font-black text-slate-900 font-mono px-1.5 py-0.5 bg-slate-100 rounded text-sm">{user?.ifsc_code}</span>
+                                        </div>
+                                    </div>
+
+                                    <p className="mt-3 flex items-start gap-2 text-[10px] font-bold text-indigo-700/80 leading-relaxed italic">
+                                        <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-70" />
+                                        Bank details will update 24 to 48 hours
+                                    </p>
                                 </div>
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">A/C No.</span>
-                                    <span className="font-black text-slate-900 font-mono italic text-sm">
-                                        {'*'.repeat(Math.max(0, (user?.account_number?.length || 0) - 4)) + user?.account_number?.slice(-4)}
-                                    </span>
+                            </>
+                        ) : (
+                            <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl p-6 border-2 border-rose-200 shadow-sm">
+                                <div className="text-center mb-4">
+                                    <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <Landmark className="w-8 h-8 text-rose-600" />
+                                    </div>
+                                    <h3 className="text-lg font-black text-slate-900 mb-2">Add Bank Details</h3>
+                                    <p className="text-xs font-bold text-slate-500 leading-relaxed">
+                                        You need to add your bank account details to receive payouts
+                                    </p>
                                 </div>
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                                    <span className="font-bold text-slate-400 uppercase tracking-tighter text-xs">IFSC</span>
-                                    <span className="font-black text-slate-900 font-mono px-1.5 py-0.5 bg-slate-100 rounded text-sm">{user?.ifsc_code}</span>
+                                <button
+                                    onClick={() => router.push('/customer/profile?editBank=true')}
+                                    className="w-full py-3 bg-rose-600 text-white rounded-xl font-black text-sm hover:bg-rose-700 transition-all active:scale-95 shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
+                                >
+                                    Go to Profile & Add Details
+                                    <ArrowRight size={16} />
+                                </button>
+                            </div>
+                        )}
+
+                        {withdrawalRule?.is_charge_enabled && monthlyFreeCount > 0 && usedThisMonth >= monthlyFreeCount && (
+                            <div className="mb-4 mt-2 px-4 py-3 bg-amber-50/50 rounded-2xl border border-amber-100/50 flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                                    <AlertCircle size={14} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest">Standard fees apply</p>
+                                    <p className="text-[8px] font-bold text-amber-600/70">Free monthly quota ({monthlyFreeCount}) exhausted.</p>
                                 </div>
                             </div>
+                        )}
 
-                            <p className="mt-3 flex items-start gap-2 text-[10px] font-bold text-indigo-700/80 leading-relaxed italic">
-                                <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-70" />
-                                Bank details will update 24 to 48 hours
-                            </p>
-                        </div>
-                    </>
-                ) : (
-                    <div className="bg-gradient-to-br from-rose-50 to-orange-50 rounded-2xl p-6 border-2 border-rose-200 shadow-sm">
-                        <div className="text-center mb-4">
-                            <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <Landmark className="w-8 h-8 text-rose-600" />
-                            </div>
-                            <h3 className="text-lg font-black text-slate-900 mb-2">Add Bank Details</h3>
-                            <p className="text-xs font-bold text-slate-500 leading-relaxed">
-                                You need to add your bank account details to receive payouts
-                            </p>
-                        </div>
                         <button
-                            onClick={() => router.push('/customer/profile?editBank=true')}
-                            className="w-full py-3 bg-rose-600 text-white rounded-xl font-black text-sm hover:bg-rose-700 transition-all active:scale-95 shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
+                            onClick={handlePayout}
+                            disabled={isSubmitting || !amount || parseFloat(amount) < (withdrawalRule?.min_charge_amount || 0) || parseFloat(amount) > balance}
+                            className={`w-full py-4 ${isMerchant ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-black text-sm disabled:bg-slate-100 disabled:text-slate-300 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-slate-200 mt-2`}
                         >
-                            Go to Profile & Add Details
-                            <ArrowRight size={16} />
+                            {isSubmitting ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    Verify & Withdraw
+                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
                         </button>
-                    </div>
-                )}
-                
-                {withdrawalRule?.is_charge_enabled && monthlyFreeCount > 0 && usedThisMonth >= monthlyFreeCount && (
-                    <div className="mb-4 mt-2 px-4 py-3 bg-amber-50/50 rounded-2xl border border-amber-100/50 flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
-                            <AlertCircle size={14} />
-                         </div>
-                         <div className="flex flex-col">
-                            <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest">Standard fees apply</p>
-                            <p className="text-[8px] font-bold text-amber-600/70">Free monthly quota ({monthlyFreeCount}) exhausted.</p>
-                         </div>
-                    </div>
-                )}
 
-                <button
-                    onClick={handlePayout}
-                    disabled={isSubmitting || !amount || parseFloat(amount) < (withdrawalRule?.min_charge_amount || 0) || parseFloat(amount) > balance}
-                    className={`w-full py-4 ${isMerchant ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-black text-sm disabled:bg-slate-100 disabled:text-slate-300 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-slate-200 mt-2`}
-                >
-                    {isSubmitting ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                        <>
-                            Verify & Withdraw
-                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </>
-                    )}
-                </button>
+                        {/* Transfer Button */}
+                        {isMerchant && (
+                            <button
+                                onClick={() => router.push('/customer/transfer')}
+                                disabled={!transferEnabled}
+                                className={`w-full py-4 mt-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg ${transferEnabled
+                                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-violet-200'
+                                    : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'
+                                    }`}
+                                title={!transferEnabled ? 'Transfer is not enabled for your account. Contact admin.' : 'Transfer to bank accounts'}
+                            >
+                                <ArrowRightLeft size={18} />
+                                Transfer
+                                {!transferEnabled && <Lock size={14} className="ml-1 opacity-50" />}
+                            </button>
+                        )}
 
-                {/* Transfer Button */}
-                {isMerchant && (
-                    <button
-                        onClick={() => router.push('/customer/transfer')}
-                        disabled={!transferEnabled}
-                        className={`w-full py-4 mt-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg ${transferEnabled
-                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-violet-200'
-                            : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'
-                            }`}
-                        title={!transferEnabled ? 'Transfer is not enabled for your account. Contact admin.' : 'Transfer to bank accounts'}
-                    >
-                        <ArrowRightLeft size={18} />
-                        Transfer
-                        {!transferEnabled && <Lock size={14} className="ml-1 opacity-50" />}
-                    </button>
-                )}
-
-                {/* Transfer Status Banner */}
-                {isMerchant && transferStatus?.has_transfers && (
-                    <div className={`w-full mt-3 p-4 rounded-2xl border flex items-center gap-3 ${transferStatus.status === 'PENDING' ? 'bg-amber-50 border-amber-200' :
-                        transferStatus.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-200' :
-                            transferStatus.status === 'REJECTED' ? 'bg-rose-50 border-rose-200' :
-                                'bg-slate-50 border-slate-200'
-                        }`}>
-                        {transferStatus.status === 'PENDING' && <Clock className="w-5 h-5 text-amber-500" />}
-                        {transferStatus.status === 'APPROVED' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-                        {transferStatus.status === 'REJECTED' && <XCircle className="w-5 h-5 text-rose-500" />}
-                        <div>
-                            <p className="text-xs font-black text-slate-900">
-                                {transferStatus.status === 'PENDING' ? 'Transfer Under Process' :
-                                    transferStatus.status === 'APPROVED' ? 'Transfer Approved' :
-                                        transferStatus.status === 'REJECTED' ? 'Transfer Rejected' : transferStatus.status}
-                            </p>
-                            <p className="text-[10px] font-bold text-slate-400">
-                                Bulk Pay {transferStatus.total_amount?.toLocaleString('en-IN')} • {transferStatus.count} recipients
-                            </p>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-
-                {/* History Section */ }
-    <div className="mt-10 mb-20 animate-in slide-in-from-bottom duration-700">
-        <div className="flex items-center justify-between px-4 mb-6">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Withdrawal History</h3>
-            <div className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[9px] font-black text-slate-400 uppercase shadow-sm">
-                Activity Log
-            </div>
-        </div>
-
-        <div className="space-y-3">
-            {withdrawals?.map((w: any, idx) => (
-                <div
-                    key={w.id}
-                    ref={idx === withdrawals.length - 1 ? lastWithdrawalRef : null}
-                    className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-all"
-                >
-                    <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${w.status === 'PAID' ? 'bg-emerald-50 text-emerald-600' :
-                            w.status === 'REJECTED' ? 'bg-rose-50 text-rose-600' :
-                                'bg-amber-50 text-amber-600'
-                            }`}>
-                            <Landmark size={20} />
-                        </div>
-                        <div>
-                            <p className="text-xs font-black text-slate-900">{parseFloat(w.amount).toLocaleString('en-IN')}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                {new Date(w.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} • #{w.id}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${w.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
-                            w.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
-                                'bg-amber-100 text-amber-700'
-                            }`}>
-                            {w.status}
-                        </span>
-                        {w.admin_note && (
-                            <p className="text-[8px] font-bold text-slate-500 mt-1 italic max-w-[150px]">{w.admin_note}</p>
+                        {/* Transfer Status Banner */}
+                        {isMerchant && transferStatus?.has_transfers && (
+                            <div className={`w-full mt-3 p-4 rounded-2xl border flex items-center gap-3 ${transferStatus.status === 'PENDING' ? 'bg-amber-50 border-amber-200' :
+                                transferStatus.status === 'APPROVED' ? 'bg-emerald-50 border-emerald-200' :
+                                    transferStatus.status === 'REJECTED' ? 'bg-rose-50 border-rose-200' :
+                                        'bg-slate-50 border-slate-200'
+                                }`}>
+                                {transferStatus.status === 'PENDING' && <Clock className="w-5 h-5 text-amber-500" />}
+                                {transferStatus.status === 'APPROVED' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                                {transferStatus.status === 'REJECTED' && <XCircle className="w-5 h-5 text-rose-500" />}
+                                <div>
+                                    <p className="text-xs font-black text-slate-900">
+                                        {transferStatus.status === 'PENDING' ? 'Transfer Under Process' :
+                                            transferStatus.status === 'APPROVED' ? 'Transfer Approved' :
+                                                transferStatus.status === 'REJECTED' ? 'Transfer Rejected' : transferStatus.status}
+                                    </p>
+                                    <p className="text-[10px] font-bold text-slate-400">
+                                        Bulk Pay {transferStatus.total_amount?.toLocaleString('en-IN')} • {transferStatus.count} recipients
+                                    </p>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>
-            ))}
 
-            {initialLoadingW && withdrawals.length === 0 && (
-                <div className="space-y-3">
-                    {[1, 2, 3].map(i => <div key={i} className="h-20 bg-white border border-slate-50 rounded-3xl animate-pulse"></div>)}
-                </div>
-            )}
-
-            {fetchingMoreW && (
-                <div className="flex justify-center py-6">
-                    <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-                </div>
-            )}
-
-            {!initialLoadingW && withdrawals.length === 0 && (
-                <div className="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">No transactions</p>
-                    <p className="text-[10px] text-slate-400 font-medium">Your withdrawal history will appear here.</p>
-                </div>
-            )}
-
-            {!hasMoreW && withdrawals.length > 0 && (
-                <div className="text-center py-8">
-                    <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">End of withdrawal history</p>
-                </div>
-            )}
-        </div>
-    </div>
-            </div >
-        {/* Amount Input Modal */ }
-    {
-        isTransferModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
-
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-black text-slate-900 tracking-tight">Transfer Rewards</h3>
-                        <button onClick={() => setIsTransferModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
-                            <ArrowLeft className="w-5 h-5 text-slate-400" />
-                        </button>
+                {/* History Section */}
+                <div className="mt-10 mb-20 animate-in slide-in-from-bottom duration-700">
+                    <div className="flex items-center justify-between px-4 mb-6">
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Withdrawal History</h3>
+                        <div className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[9px] font-black text-slate-400 uppercase shadow-sm">
+                            Activity Log
+                        </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 mb-4">
-                            <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-1">Available Rewards</p>
-                            <p className="text-xl font-black text-orange-900">{parseFloat(cashbackBalance.toString()).toLocaleString()}</p>
+                    <div className="space-y-3">
+                        {withdrawals?.map((w: any, idx) => (
+                            <div
+                                key={w.id}
+                                ref={idx === withdrawals.length - 1 ? lastWithdrawalRef : null}
+                                className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-all"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${w.status === 'PAID' ? 'bg-emerald-50 text-emerald-600' :
+                                        w.status === 'REJECTED' ? 'bg-rose-50 text-rose-600' :
+                                            'bg-amber-50 text-amber-600'
+                                        }`}>
+                                        <Landmark size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-black text-slate-900">{parseFloat(w.amount).toLocaleString('en-IN')}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                            {new Date(w.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} • #{w.id}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${w.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
+                                        w.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
+                                            'bg-amber-100 text-amber-700'
+                                        }`}>
+                                        {w.status}
+                                    </span>
+                                    {w.admin_note && (
+                                        <p className="text-[8px] font-bold text-slate-500 mt-1 italic max-w-[150px]">{w.admin_note}</p>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+
+                        {initialLoadingW && withdrawals.length === 0 && (
+                            <div className="space-y-3">
+                                {[1, 2, 3].map(i => <div key={i} className="h-20 bg-white border border-slate-50 rounded-3xl animate-pulse"></div>)}
+                            </div>
+                        )}
+
+                        {fetchingMoreW && (
+                            <div className="flex justify-center py-6">
+                                <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                            </div>
+                        )}
+
+                        {!initialLoadingW && withdrawals.length === 0 && (
+                            <div className="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">No transactions</p>
+                                <p className="text-[10px] text-slate-400 font-medium">Your withdrawal history will appear here.</p>
+                            </div>
+                        )}
+
+                        {!hasMoreW && withdrawals.length > 0 && (
+                            <div className="text-center py-8">
+                                <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">End of withdrawal history</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div >
+            {/* Amount Input Modal */}
+            {
+                isTransferModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-lg font-black text-slate-900 tracking-tight">Transfer Rewards</h3>
+                                <button onClick={() => setIsTransferModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors">
+                                    <ArrowLeft className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 mb-4">
+                                    <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-1">Available Rewards</p>
+                                    <p className="text-xl font-black text-orange-900">{parseFloat(cashbackBalance.toString()).toLocaleString()}</p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Amount to Transfer</label>
+                                    <div className="relative group">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-black text-slate-300 group-focus-within:text-slate-900 transition-colors"></span>
+                                        <input
+                                            type="number"
+                                            value={transferAmountValue}
+                                            onChange={(e) => setTransferAmountValue(e.target.value)}
+                                            placeholder="Enter Amount"
+                                            className="w-full bg-slate-50 border-none rounded-xl py-4 pl-10 pr-4 text-xl font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={confirmTransferAmount}
+                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
+                                >
+                                    Continue
+                                    <ArrowRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* PIN Verification Modal */}
+            <PinModal
+                isOpen={isPinModalOpen}
+                onClose={() => setIsPinModalOpen(false)}
+                onComplete={handlePinVerification}
+                title="Verify Wallet PIN"
+            />
+
+            {/* Rule Error Modal */}
+            {
+                ruleError && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm shadow-2xl" onClick={() => setRuleError(null)}></div>
+                        <div className="relative w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+                            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-500">
+                                <Clock size={32} />
+                            </div>
+                            <h2 className="text-xl font-black text-slate-900 text-center mb-2">{ruleError.title}</h2>
+                            <p className="text-sm font-bold text-slate-500 text-center mb-8 leading-relaxed">
+                                {ruleError.message}
+                            </p>
+                            <button
+                                onClick={() => setRuleError(null)}
+                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
+                            >
+                                Understood
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+            {/* Merchant Verification Modal */}
+            {isVerificationModalOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-center">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+
+                        <button
+                            onClick={() => setIsVerificationModalOpen(false)}
+                            className="absolute top-6 right-6 p-2 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors"
+                        >
+                            <XCircle className="w-5 h-5 text-slate-400" />
+                        </button>
+
+                        <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-inner">
+                            <Lock className="w-8 h-8 text-amber-500" />
                         </div>
 
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Amount to Transfer</label>
-                            <div className="relative group">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-black text-slate-300 group-focus-within:text-slate-900 transition-colors"></span>
-                                <input
-                                    type="number"
-                                    value={transferAmountValue}
-                                    onChange={(e) => setTransferAmountValue(e.target.value)}
-                                    placeholder="Enter Amount"
-                                    className="w-full bg-slate-50 border-none rounded-xl py-4 pl-10 pr-4 text-xl font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 outline-none transition-all"
-                                />
+                        <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tighter leading-tight">Verification Pending</h3>
+                        <p className="text-slate-400 font-bold text-[10px] leading-relaxed uppercase tracking-widest mb-8">
+                            Your merchant profile is under review. Field verification is required to enable bank settlements.
+                        </p>
+
+                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center gap-4 mb-8 text-left">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${user?.is_qr_mapped ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
+                                {user?.is_qr_mapped ? '✓' : ''}
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-black text-slate-900 tracking-tight">QR Mapping Verification</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase">Pending Field KYC</p>
                             </div>
                         </div>
 
-                        <button
-                            onClick={confirmTransferAmount}
-                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
-                        >
-                            Continue
-                            <ArrowRight size={16} />
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    {/* PIN Verification Modal */ }
-    <PinModal
-        isOpen={isPinModalOpen}
-        onClose={() => setIsPinModalOpen(false)}
-        onComplete={handlePinVerification}
-        title="Verify Wallet PIN"
-    />
-
-    {/* Rule Error Modal */ }
-    {
-        ruleError && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm shadow-2xl" onClick={() => setRuleError(null)}></div>
-                <div className="relative w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
-                    <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-500">
-                        <Clock size={32} />
-                    </div>
-                    <h2 className="text-xl font-black text-slate-900 text-center mb-2">{ruleError.title}</h2>
-                    <p className="text-sm font-bold text-slate-500 text-center mb-8 leading-relaxed">
-                        {ruleError.message}
-                    </p>
-                    <button
-                        onClick={() => setRuleError(null)}
-                        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
-                    >
-                        Understood
-                    </button>
-                </div>
-            </div>
-        )
-    }
-        {/* Merchant Verification Modal */}
-        {isVerificationModalOpen && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-center">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
-                    
-                    <button 
-                        onClick={() => setIsVerificationModalOpen(false)}
-                        className="absolute top-6 right-6 p-2 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors"
-                    >
-                        <XCircle className="w-5 h-5 text-slate-400" />
-                    </button>
-
-                    <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-inner">
-                        <Lock className="w-8 h-8 text-amber-500" />
-                    </div>
-
-                    <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tighter leading-tight">Verification Pending</h3>
-                    <p className="text-slate-400 font-bold text-[10px] leading-relaxed uppercase tracking-widest mb-8">
-                        Your merchant profile is under review. Field verification is required to enable bank settlements.
-                    </p>
-
-                    <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center gap-4 mb-8 text-left">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${user?.is_qr_mapped ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
-                            {user?.is_qr_mapped ? '✓' : ''}
-                        </div>
-                        <div>
-                            <p className="text-[11px] font-black text-slate-900 tracking-tight">QR Mapping Verification</p>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase">Pending Field KYC</p>
+                        <div className="space-y-4">
+                            <button
+                                onClick={handleRequestVerification}
+                                disabled={!canRequestVerification}
+                                className={`w-full py-4 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center gap-3 ${canRequestVerification
+                                        ? 'bg-slate-900 text-white hover:bg-slate-800'
+                                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    }`}
+                            >
+                                {canRequestVerification ? 'Request Fast Verification' : 'Request Already Sent'}
+                                <MessageSquare className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setIsVerificationModalOpen(false)}
+                                className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                            >
+                                Not Now
+                            </button>
                         </div>
                     </div>
-
-                    <div className="space-y-4">
-                        <button
-                            onClick={handleRequestVerification}
-                            disabled={!canRequestVerification}
-                            className={`w-full py-4 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center gap-3 ${
-                                canRequestVerification 
-                                ? 'bg-slate-900 text-white hover:bg-slate-800' 
-                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                            }`}
-                        >
-                            {canRequestVerification ? 'Request Fast Verification' : 'Request Already Sent'}
-                            <MessageSquare className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setIsVerificationModalOpen(false)}
-                            className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
-                        >
-                            Not Now
-                        </button>
-                    </div>
                 </div>
-            </div>
-        )}
-        {/* Withdrawal Confirmation Modal */}
-        {isConfirmModalOpen && (
-            <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                <div className="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
-                    
-                    <h3 className="text-xl font-black text-slate-900 mb-1 tracking-tighter">Are you sure?</h3>
-                    <p className="text-slate-400 font-bold text-[9px] leading-relaxed uppercase tracking-widest mb-6">
-                        Review settlement details
-                    </p>
+            )}
+            {/* Withdrawal Confirmation Modal */}
+            {isConfirmModalOpen && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
 
-                    <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 mb-6 space-y-3">
-                        <div className="flex justify-between items-center px-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gross Settlement</span>
-                            <span className="text-xs font-black text-slate-900">₹{parseFloat(amount).toLocaleString()}</span>
-                        </div>
+                        <h3 className="text-xl font-black text-slate-900 mb-1 tracking-tighter">Are you sure?</h3>
+                        <p className="text-slate-400 font-bold text-[9px] leading-relaxed uppercase tracking-widest mb-6">
+                            Review settlement details
+                        </p>
 
-                        {(() => {
-                            const amt = parseFloat(amount);
-                            const chargeRange = (amt >= (withdrawalRule?.min_charge_amount || 0) && amt <= (withdrawalRule?.max_charge_amount || 0));
-                            const showFee = withdrawalRule?.is_charge_enabled && chargeRange;
-                            const feeAmt = showFee ? (amt * (withdrawalRule.charge_percent || 0)) / 100 : 0;
-                            
-                            // Cashback reversal preview
-                            const ratio = balance > 0 ? Math.min(1, amt / balance) : 0;
-                            const cashbackDeduction = (cashbackBalance * ratio);
+                        <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 mb-6 space-y-3">
+                            <div className="flex justify-between items-center px-1">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gross Settlement</span>
+                                <span className="text-xs font-black text-slate-900">{parseFloat(amount).toLocaleString()}</span>
+                            </div>
 
-                            return (
-                                <>
-                                    {showFee && (
-                                        <div className="flex justify-between items-center px-1 text-rose-500">
-                                            <span className="text-[9px] font-black uppercase tracking-widest">Fee ({withdrawalRule.charge_percent}%)</span>
-                                            <span className="text-xs font-black">-₹{feeAmt.toLocaleString()}</span>
-                                        </div>
-                                    )}
+                            {(() => {
+                                const amt = parseFloat(amount);
+                                const chargeRange = (amt >= (withdrawalRule?.min_charge_amount || 0) && amt <= (withdrawalRule?.max_charge_amount || 0));
+                                const showFee = withdrawalRule?.is_charge_enabled && chargeRange;
+                                const feeAmt = showFee ? (amt * (withdrawalRule.charge_percent || 0)) / 100 : 0;
 
-                                    <div className="h-px bg-slate-200/50 mx-1"></div>
+                                // Cashback reversal preview
+                                const ratio = balance > 0 ? Math.min(1, amt / balance) : 0;
+                                const cashbackDeduction = (cashbackBalance * ratio);
 
-                                    <div className={`p-4 rounded-xl shadow-md border flex justify-between items-center ${isMerchant ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-200' : 'bg-slate-900 border-slate-800 text-white shadow-slate-200'}`}>
-                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">Net Cred-out</span>
-                                        <span className="text-lg font-black">
-                                            ₹{(amt - feeAmt).toLocaleString()}
-                                        </span>
-                                    </div>
-
-                                    {cashbackDeduction > 0 && (
-                                        <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-xl animate-pulse">
-                                            <div className="flex items-center gap-2 text-rose-600 mb-1">
-                                                <AlertCircle size={12} />
-                                                <span className="text-[10px] font-black uppercase tracking-tighter">Proportional Reversal</span>
+                                return (
+                                    <>
+                                        {showFee && (
+                                            <div className="flex justify-between items-center px-1 text-rose-500">
+                                                <span className="text-[9px] font-black uppercase tracking-widest">Fee ({withdrawalRule.charge_percent}%)</span>
+                                                <span className="text-xs font-black">-{feeAmt.toLocaleString()}</span>
                                             </div>
-                                            <p className="text-[10px] font-bold text-rose-500/80 leading-tight">
-                                                ₹{cashbackDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })} amount from cashback will be debited.
-                                            </p>
-                                        </div>
-                                    )}
-                                </>
-                            );
-                        })()}
-                    </div>
+                                        )}
 
-                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="h-px bg-slate-200/50 mx-1"></div>
+
+                                        <div className={`p-4 rounded-xl shadow-md border flex justify-between items-center ${isMerchant ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-200' : 'bg-slate-900 border-slate-800 text-white shadow-slate-200'}`}>
+                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">Net Cred-out</span>
+                                            <span className="text-lg font-black">
+                                                {(amt - feeAmt).toLocaleString()}
+                                            </span>
+                                        </div>
+
+                                        {cashbackDeduction > 0 && (
+                                            <div className="mt-6 px-1 space-y-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <div className="flex items-center gap-2 text-rose-500">
+                                                    <AlertCircle size={14} className="flex-shrink-0" />
+                                                    <span className="text-xs font-black uppercase tracking-widest leading-none">Cashback Expired Due To Withdraw</span>
+                                                </div>
+                                                <p className="text-[11px] font-bold text-slate-400 leading-relaxed">
+                                                    Withdrawal will reduce your cashback, <span className="text-rose-500 font-extrabold">{cashbackDeduction.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                </p>
+                                                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100">
+                                                    <div className="flex items-center justify-between">
+                                                        <button
+                                                            onClick={() => setIsRefundInfoOpen(!isRefundInfoOpen)}
+                                                            className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1.5"
+                                                        >
+                                                            How to save cashback?
+                                                            <ChevronDown size={12} className={`transition-transform duration-300 ${isRefundInfoOpen ? 'rotate-180' : ''}`} />
+                                                        </button>
+                                                    </div>
+
+                                                    {isRefundInfoOpen && (
+                                                        <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl animate-in slide-in-from-top-1 fade-in duration-300">
+                                                            <p className="text-[10px] font-bold text-slate-500 leading-normal">
+                                                                Avoid withdrawals. Use app transfers for full benefits.
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={handleConfirmWithdrawal}
+                                className="py-3.5 bg-rose-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
+                            >
+                                <AlertCircle size={14} />
+                                Confirm
+                            </button>
+                            <button
+                                onClick={() => setIsConfirmModalOpen(false)}
+                                className="py-3.5 bg-slate-100 text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Vault Deposit Modal */}
+            {isVaultDepositOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[2rem] p-7 shadow-2xl relative">
+                        <div className="flex justify-between items-center mb-5">
+                            <h3 className="text-lg font-black text-slate-900 tracking-tight">Deposit to Vault</h3>
+                            <button onClick={() => setIsVaultDepositOpen(false)} className="p-2 hover:bg-slate-50 rounded-full"><XCircle className="w-5 h-5 text-slate-300" /></button>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5">Amount (₹)</label>
+                            <input type="number" value={vaultDepositAmount} onChange={(e) => setVaultDepositAmount(e.target.value)} placeholder="Enter amount"
+                                className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-lg font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 outline-none" />
+                        </div>
+
+                        {vaultData?.rates?.length > 0 && (
+                            <div className="mb-5">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Select Tenure</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {vaultData.rates.map((r: any) => (
+                                        <button
+                                            key={r.id}
+                                            onClick={() => setVaultDepositTenure(r.tenure_days)}
+                                            className={`p-3 rounded-xl border-2 text-left transition-all ${
+                                                vaultDepositTenure === r.tenure_days
+                                                    ? 'border-slate-900 bg-slate-50'
+                                                    : 'border-slate-100 hover:border-slate-200'
+                                            }`}
+                                        >
+                                            <span className="text-sm font-black text-slate-900 block">{r.tenure_days} Days</span>
+                                            <span className="text-[10px] font-bold text-emerald-600">{r.interest_rate}% return</span>
+                                            {r.penalty_rate > 0 && <span className="text-[8px] font-bold text-rose-400 block">Early exit: {r.penalty_rate}%</span>}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <button
-                            onClick={handleConfirmWithdrawal}
-                            className="py-3.5 bg-rose-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
+                            onClick={handleVaultDeposit}
+                            disabled={isVaultSubmitting || !vaultDepositAmount || !vaultDepositTenure}
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 shadow-xl shadow-slate-200"
                         >
-                            <AlertCircle size={14} />
-                            Confirm
-                        </button>
-                        <button
-                            onClick={() => setIsConfirmModalOpen(false)}
-                            className="py-3.5 bg-slate-100 text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all"
-                        >
-                            Cancel
+                            {isVaultSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Confirm Deposit'}
                         </button>
                     </div>
                 </div>
-            </div>
-        )}
+            )}
+
+            {/* Vault Withdraw Modal */}
+            {isVaultWithdrawOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-sm rounded-[2rem] p-7 shadow-2xl relative">
+                        <div className="flex justify-between items-center mb-5">
+                            <h3 className="text-lg font-black text-slate-900 tracking-tight">Withdraw from Vault</h3>
+                            <button onClick={() => setIsVaultWithdrawOpen(false)} className="p-2 hover:bg-slate-50 rounded-full"><XCircle className="w-5 h-5 text-slate-300" /></button>
+                        </div>
+
+                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-4 flex items-center justify-between">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vault Balance</span>
+                            <span className="text-sm font-black text-slate-900">₹{parseFloat(vaultData?.vault?.balance || 0).toLocaleString('en-IN')}</span>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5">Withdraw Amount (₹)</label>
+                            <input type="number" value={vaultWithdrawAmount} onChange={(e) => setVaultWithdrawAmount(e.target.value)} placeholder="Enter amount"
+                                className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-lg font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 outline-none" />
+                        </div>
+
+                        <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 mb-5 flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                            <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
+                                Early withdrawal may incur a penalty and forfeit interest for the current cycle.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={handleVaultWithdraw}
+                            disabled={isVaultSubmitting || !vaultWithdrawAmount || parseFloat(vaultWithdrawAmount) > parseFloat(vaultData?.vault?.balance || 0)}
+                            className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-700 transition-all active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 shadow-xl shadow-rose-200"
+                        >
+                            {isVaultSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Confirm Withdrawal'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

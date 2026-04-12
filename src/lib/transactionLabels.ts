@@ -13,6 +13,13 @@ export function getTransactionLabel(tx: any): string {
     // ── Description-based overrides ────────────────────────────
     if (desc.includes('welcome bonus')) return 'Welcome Bonus';
     if (desc.includes('referral') || desc.includes('earning')) return 'Earning';
+    
+    // ── Cashback & Withdrawal Refinements ──────────────────────
+    if (srcType === 'CASHBACK_REVERSAL') return 'Cashback Expired';
+    if (srcType === 'CASHBACK_REFUND') return 'Cashback Credited';
+    if (srcType === 'WITHDRAWAL_REFUND') return 'Amount Revert';
+    if (srcType === 'WITHDRAWAL_REQUEST') return 'Withdrawal';
+
     if (desc.includes('cashback')) return 'Cashback Reward';
 
     // ── Loan Repayment / EMI ───────────────────────────────────
