@@ -109,6 +109,10 @@ export default function PayoutPage() {
     const [vaultDepositAmount, setVaultDepositAmount] = useState('');
     const [vaultDepositTenure, setVaultDepositTenure] = useState<number | null>(null);
     const [vaultWithdrawAmount, setVaultWithdrawAmount] = useState('');
+    const [isVaultFlipped, setIsVaultFlipped] = useState(false);
+    const [showVaultCardNumber, setShowVaultCardNumber] = useState(false);
+    const [showVaultExpiry, setShowVaultExpiry] = useState(false);
+    const [showVaultCvc, setShowVaultCvc] = useState(false);
     const [isVaultSubmitting, setIsVaultSubmitting] = useState(false);
 
     const handleVaultDeposit = async () => {
@@ -137,7 +141,7 @@ export default function PayoutPage() {
                 method: 'POST',
                 body: JSON.stringify({ amount: parseFloat(vaultWithdrawAmount) }),
             });
-            toast.success('Withdrawn from Vault');
+            toast.success('Bank settlement request submitted. Your vault funds will be transferred to your bank.');
             setIsVaultWithdrawOpen(false);
             setVaultWithdrawAmount('');
             mutateWallet();
@@ -605,71 +609,143 @@ export default function PayoutPage() {
                             </div>
                         </div>
 
-                        {/* Vault Card */}
+                        {/* Vault Card — 3D Flip & Privacy Toggles */}
                         {vaultData?.vault && (
-                            <div className="relative">
-                                <div className="bg-[#0c0f1a] rounded-2xl p-5 text-white relative overflow-hidden">
-                                    {/* Decorative lines */}
-                                    <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 40px, #fff 40px, #fff 41px)'}} />
-                                    <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-gradient-to-bl from-amber-500/10 to-transparent -mr-12 -mt-12" />
-
-                                    <div className="relative z-10">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <CreditCard size={14} className="text-amber-400/60" />
-                                                <span className="text-[8px] font-black uppercase tracking-[0.3em] text-amber-400/60">Vault</span>
-                                            </div>
-                                            <div className="flex gap-1">
-                                                <button
-                                                    onClick={() => setIsVaultDepositOpen(true)}
-                                                    className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[7px] font-black uppercase tracking-wider transition-colors flex items-center gap-1"
-                                                >
-                                                    <ArrowDownToLine size={10} /> Deposit
-                                                </button>
-                                                <button
-                                                    onClick={() => setIsVaultWithdrawOpen(true)}
-                                                    className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[7px] font-black uppercase tracking-wider transition-colors flex items-center gap-1"
-                                                >
-                                                    <ArrowUpFromLine size={10} /> Withdraw
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Card Number */}
-                                        <p className="font-mono text-[13px] tracking-[0.2em] text-white/70 mb-3">
-                                            {vaultData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()}
-                                        </p>
-
-                                        <div className="flex items-end justify-between">
-                                            <div>
-                                                <span className="text-[8px] font-bold uppercase tracking-widest text-white/30 block">Balance</span>
-                                                <span className="text-2xl font-black tracking-tighter">
-                                                    ₹{parseFloat(vaultData.vault.balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-4 text-[9px] font-mono text-white/30">
-                                                <div>
-                                                    <span className="block text-[7px] uppercase tracking-wider">Exp</span>
-                                                    {vaultData.vault.expiry_date || '—'}
+                            <div className="relative mb-6">
+                                <div 
+                                    className="relative w-full max-w-[340px] mx-auto perspective-1000 cursor-pointer h-[191px]"
+                                    onClick={() => setIsVaultFlipped(!isVaultFlipped)}
+                                >
+                                    <div className={`relative w-full h-full transition-all duration-700 preserve-3d ${isVaultFlipped ? 'rotate-y-180' : ''}`}>
+                                        
+                                        {/* FRONT SIDE */}
+                                        <div className="absolute inset-0 backface-hidden">
+                                            <div className="bg-[#121417] rounded-xl px-4 py-3.5 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col justify-between group">
+                                                {/* Matte Finish & Grain */}
+                                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                                                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}>
                                                 </div>
-                                                <div>
-                                                    <span className="block text-[7px] uppercase tracking-wider">CVC</span>
-                                                    {vaultData.vault.cvc || '•••'}
-                                                </div>
-                                            </div>
-                                        </div>
+                                                <div className="absolute inset-0 opacity-5 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
 
-                                        {/* Rates strip */}
-                                        {vaultData.rates?.length > 0 && (
-                                            <div className="mt-4 pt-3 border-t border-white/5 flex gap-3 overflow-x-auto scrollbar-hide">
-                                                {vaultData.rates.map((r: any) => (
-                                                    <div key={r.id} className="shrink-0 bg-white/5 px-3 py-2 rounded-lg">
-                                                        <span className="text-[8px] font-black uppercase tracking-wider text-amber-400/80 block">{r.tenure_days}d</span>
-                                                        <span className="text-[11px] font-black text-emerald-400">{r.interest_rate}%</span>
+                                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-4 h-4 bg-gradient-to-br from-[#f9e37a] to-[#a8924a] rounded-sm flex items-center justify-center text-[#121417] font-black text-[8px] shadow-sm transform -rotate-6 group-hover:rotate-0 transition-transform">OS</div>
+                                                                <span className="text-[9px] font-['Noto_Serif'] italic tracking-[0.2em] text-[#f9e37a]">VAULT</span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                            <button 
+                                                                onClick={() => setIsVaultDepositOpen(true)}
+                                                                className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
+                                                            >
+                                                                <ArrowDownToLine size={10} className="text-[#f9e37a]" />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setIsVaultWithdrawOpen(true)}
+                                                                className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
+                                                            >
+                                                                <ArrowUpFromLine size={10} className="text-[#f9e37a]" />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                ))}
+
+                                                    {/* Card Number with Hide Toggle */}
+                                                    <div className="py-2 flex items-center justify-center gap-3 group/number" onClick={(e) => e.stopPropagation()}>
+                                                        <p className="font-mono text-[13px] tracking-[0.25em] text-white/80 text-center pl-4">
+                                                            {showVaultCardNumber 
+                                                                ? vaultData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim() 
+                                                                : '••••  ••••  ••••  ' + vaultData.vault.card_number?.slice(-4)}
+                                                        </p>
+                                                        <button 
+                                                            onClick={() => setShowVaultCardNumber(!showVaultCardNumber)}
+                                                            className="p-1 hover:bg-white/10 rounded-md transition-all opacity-0 group-hover/number:opacity-100"
+                                                        >
+                                                            <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-white/30'} />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="flex items-end justify-between border-t border-white/[0.03] pt-2 pb-0.5">
+                                                        <div>
+                                                            <span className="text-[6px] font-bold uppercase tracking-widest text-[#a8924a] block opacity-60 mb-0.5">Asset Value</span>
+                                                            <div className="flex items-baseline gap-1">
+                                                                <span className="text-[10px] font-['Noto_Serif'] text-[#f9e37a]">₹</span>
+                                                                <span className="text-lg font-black tracking-tighter text-[#fef9f3]">
+                                                                    {parseFloat(vaultData.vault.balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="flex gap-4 text-[8px] font-mono text-white/30 mb-0.5" onClick={(e) => e.stopPropagation()}>
+                                                            <div className="text-right border-r border-white/5 pr-3 flex flex-col items-end group/exp">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="block text-[5px] uppercase tracking-widest text-[#a8924a] opacity-60">Valid Thru</span>
+                                                                    <button onClick={() => setShowVaultExpiry(!showVaultExpiry)} className="opacity-0 group-hover/exp:opacity-100 transition-opacity">
+                                                                        <Eye size={8} />
+                                                                    </button>
+                                                                </div>
+                                                                <span className="text-white/50">{showVaultExpiry ? (vaultData.vault.expiry_date || '—') : '••/••'}</span>
+                                                            </div>
+                                                            <div className="text-right flex flex-col items-end group/cvc">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="block text-[5px] uppercase tracking-widest text-[#a8924a] opacity-60">Secure</span>
+                                                                    <button onClick={() => setShowVaultCvc(!showVaultCvc)} className="opacity-0 group-hover/cvc:opacity-100 transition-opacity">
+                                                                        <Eye size={8} />
+                                                                    </button>
+                                                                </div>
+                                                                <span className="text-white/50">{showVaultCvc ? (vaultData.vault.cvc || '•••') : '•••'}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )}
+                                        </div>
+
+                                        {/* BACK SIDE — Yield Matrix */}
+                                        <div className="absolute inset-0 backface-hidden rotate-y-180">
+                                            <div className="bg-[#121417] rounded-xl text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col group">
+                                                {/* Black Magnetic Strip */}
+                                                <div className="w-full h-8 bg-[#000] mt-5 shadow-inner" />
+                                                
+                                                <div className="px-5 py-4 flex-1 flex flex-col">
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-black tracking-[0.2em] text-[#f9e37a] uppercase leading-none">Yield Matrix</span>
+                                                            <span className="text-[5px] font-black tracking-[0.4em] text-white/20 uppercase mt-1">Cycle Intelligence</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1 opacity-20">
+                                                            <Lock size={10} />
+                                                            <span className="text-[6px] font-black uppercase tracking-widest">ENCRYPTED</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Internal Rates Grid */}
+                                                    <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto scrollbar-hide py-1" onClick={(e) => e.stopPropagation()}>
+                                                        {vaultData.rates?.map((r: any) => (
+                                                            <div key={r.id} className="bg-white/[0.03] border border-white/[0.04] p-2 rounded-lg flex flex-col justify-center hover:bg-white/[0.07] transition-all">
+                                                                <div className="flex items-center justify-between mb-1">
+                                                                    <span className="text-[6px] font-black text-white/40 uppercase tracking-widest">{r.tenure_days}D</span>
+                                                                    <TrendingUp size={8} className="text-emerald-500/40" />
+                                                                </div>
+                                                                <span className="text-sm font-black text-[#f9e37a] leading-none">{r.interest_rate}%</span>
+                                                                <span className="text-[5px] font-bold text-white/20 uppercase mt-1 tracking-tighter">Annual Yield</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <div className="mt-2 flex items-center justify-between border-t border-white/[0.03] pt-2">
+                                                        <div className="flex gap-[1px] h-3 items-end opacity-20">
+                                                            {[1,3,1,5,2,4,1,6,2,3,1,7,4,1].map((w, i) => (
+                                                                <div key={i} className="bg-white" style={{ width: `${w}px`, height: '100%' }} />
+                                                            ))}
+                                                        </div>
+                                                        <span className="text-[6px] font-serif italic text-white/10 uppercase tracking-widest">OPEN SCORE BRANDED ASSET</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1220,7 +1296,7 @@ export default function PayoutPage() {
                 </div>
             )}
 
-            {/* Vault Withdraw Modal */}
+            {/* Vault Withdraw Modal — Bank Settlement (No Fees) */}
             {isVaultWithdrawOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-sm rounded-[2rem] p-7 shadow-2xl relative">
@@ -1240,19 +1316,50 @@ export default function PayoutPage() {
                                 className="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-lg font-black text-slate-900 focus:ring-1 focus:ring-slate-900/5 outline-none" />
                         </div>
 
+                        {/* Settlement Info — No Fees */}
+                        {vaultWithdrawAmount && parseFloat(vaultWithdrawAmount) > 0 && (
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4 space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Settlement Amount</span>
+                                    <span className="text-sm font-black text-slate-900">₹{parseFloat(vaultWithdrawAmount).toLocaleString('en-IN')}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Processing Fee</span>
+                                    <span className="text-[10px] font-black text-emerald-600">₹0 (Waived)</span>
+                                </div>
+                                <div className="h-px bg-slate-200/50"></div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Net to Bank</span>
+                                    <span className="text-sm font-black text-emerald-700">₹{parseFloat(vaultWithdrawAmount).toLocaleString('en-IN')}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Bank Details Preview */}
+                        {user?.bank_name && (
+                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-4 space-y-1.5">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Landmark className="w-3 h-3 text-slate-400" />
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Settlement Account</span>
+                                </div>
+                                <p className="text-xs font-black text-slate-900">{user.bank_name}</p>
+                                <p className="text-[10px] font-bold text-slate-500">A/C: {'*'.repeat(Math.max(0, (user?.account_number?.length || 0) - 4)) + user?.account_number?.slice(-4)}</p>
+                            </div>
+                        )}
+
                         <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 mb-5 flex items-start gap-2">
                             <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                             <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
-                                Early withdrawal may incur a penalty and forfeit interest for the current cycle.
+                                Early withdrawal may incur a penalty and forfeit interest for the current cycle. Funds will be settled to your bank account.
                             </p>
                         </div>
 
                         <button
                             onClick={handleVaultWithdraw}
-                            disabled={isVaultSubmitting || !vaultWithdrawAmount || parseFloat(vaultWithdrawAmount) > parseFloat(vaultData?.vault?.balance || 0)}
-                            className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-700 transition-all active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 shadow-xl shadow-rose-200"
+                            disabled={isVaultSubmitting || !vaultWithdrawAmount || parseFloat(vaultWithdrawAmount) > parseFloat(vaultData?.vault?.balance || 0) || parseFloat(vaultWithdrawAmount) <= 0}
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 shadow-xl shadow-slate-200"
                         >
-                            {isVaultSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Confirm Withdrawal'}
+                            {isVaultSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Confirm Bank Settlement'}
                         </button>
                     </div>
                 </div>

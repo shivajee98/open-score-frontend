@@ -219,15 +219,16 @@ export default function RepaymentDashboard() {
     if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Application not found</div>;
 
     const paidEmis = repayments.filter(r => r.status === 'PAID');
-    const pendingEmi = repayments.find(r => r.status === 'PENDING');
-    const totalPaid = Number(loan.paid_amount || 0);
+    const pendingEmi = repayments.find(r => r.status === 'PENDING' || r.status === 'PENDING_VERIFICATION' || r.status === 'MANUAL_VERIFICATION');
+    const totalPaid = paidEmis.filter(r => Number(r.emi_number) > 0).reduce((sum, r) => sum + Number(r.amount), 0);
+    const totalFeesPaid = paidEmis.filter(r => Number(r.emi_number) === 0).reduce((sum, r) => sum + Number(r.amount), 0);
 
     const serviceFeeEmi = repayments.find(r => Number(r.emi_number) === 0);
     const regularEmis = repayments.filter(r => Number(r.emi_number) > 0);
 
     // Use Backend Calculations
     const calculations = loan.calculations || {};
-    const totalPayable = Number(calculations.net_payable_amount || loan.amount);
+    const totalPayable = Number(calculations.principal_plus_interest || calculations.net_payable_amount || loan.amount);
 
     // Progress Calculation
     const progress = totalPayable > 0 ? Math.min(100, Math.round((totalPaid / totalPayable) * 100)) : 0;
@@ -276,7 +277,7 @@ export default function RepaymentDashboard() {
                         >
                             <ChevronLeft className="w-6 h-6" />
                         </button>
-                        <h1 className="text-[17px] font-black text-slate-800 tracking-tight">Payment Schedule</h1>
+                        <h1 className="text-[17px] font-black text-slate-800 tracking-tight">Loan Repayment Schedule</h1>
                         <div className="w-10"></div> {/* Spacer to keep title centered if needed, or just remove */}
                     </div>
 

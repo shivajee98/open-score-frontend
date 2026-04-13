@@ -293,6 +293,7 @@ function CustomerPayPage() {
     const selectPayee = (p: any) => {
         console.log("Selecting payee from suggestion:", p);
         setPayee({
+            id: p.user_id,
             name: p.name,
             role: p.role,
             payee_wallet_uuid: p.wallet_uuid,

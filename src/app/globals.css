@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 
 :root {
   --background: #ffffff;
@@ -134,7 +136,7 @@ input, textarea, [contenteditable="true"], .select-text {
   }
 }
 
-/* 3D Transform Utilities for Welcome Bonus Card */
+/* 3D Transform Utilities */
 .preserve-3d {
   transform-style: preserve-3d;
 }
@@ -143,8 +145,13 @@ input, textarea, [contenteditable="true"], .select-text {
   transform: rotateY(180deg);
 }
 
-.translate-z-\[-500px\] {
-  transform: translateZ(-500px);
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
 }
 
 .perspective-2000 {
