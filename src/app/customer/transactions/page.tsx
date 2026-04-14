@@ -205,7 +205,7 @@ export default function CustomerTransactions() {
                                                 </div>
                                                 <div className="text-right">
                                                     <p className={`font-black text-xs ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-slate-900'}`}>
-                                                        {t.type === 'CREDIT' ? '+' : '-'} {parseFloat(t.amount).toLocaleString('en-IN')}
+                                                        {t.type === 'CREDIT' ? '+' : '-'} {parseFloat(t.net_amount || t.amount).toLocaleString('en-IN')}
                                                     </p>
                                                     <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">{t.reference_id || `REF-ID-${t.id}`}</p>
                                                 </div>

@@ -179,7 +179,21 @@ export default function PayoutPage() {
 
     // Merchant Verification Logic
     const isMerchant = user?.role === 'MERCHANT';
-    const isMerchantUnverified = isMerchant && (user?.is_qr_mapped === false || user?.kyc_status !== 'FULL_VERIFIED');
+
+    // Verification timeframe logic (24h timer)
+    const verificationTime = Math.max(
+        user?.field_verified_at ? new Date(user.field_verified_at).getTime() : 0,
+        user?.admin_verified_at ? new Date(user.admin_verified_at).getTime() : 0
+    );
+    const isVerifiedAtLeastOnce = verificationTime > 0;
+    const is24hWaitPassed = isVerifiedAtLeastOnce && (Date.now() - verificationTime > 24 * 60 * 60 * 1000);
+
+    // Truly verified means QR mapped, status is FULL_VERIFIED AND 24h passed
+    const isMerchantVerified = isMerchant && user?.is_qr_mapped && user?.kyc_status === 'FULL_VERIFIED' && is24hWaitPassed;
+    const isMerchantUnverified = isMerchant && !isMerchantVerified;
+
+    // Timer message for modal
+    const showWithin24hMessage = isMerchant && isVerifiedAtLeastOnce && !is24hWaitPassed;
 
     const handleRequestVerification = () => {
         if (!canRequestVerification) return;
@@ -269,7 +283,13 @@ export default function PayoutPage() {
         try {
             const freshUser = await mutateUser();
             if (freshUser) {
-                currentMerchantUnverified = freshUser.role === 'MERCHANT' && (freshUser.is_qr_mapped === false || freshUser.kyc_status !== 'FULL_VERIFIED');
+                const freshVerifiedTime = Math.max(
+                    freshUser.field_verified_at ? new Date(freshUser.field_verified_at).getTime() : 0,
+                    freshUser.admin_verified_at ? new Date(freshUser.admin_verified_at).getTime() : 0
+                );
+                const fresh24hPassed = freshVerifiedTime > 0 && (Date.now() - freshVerifiedTime > 24 * 60 * 60 * 1000);
+                const isFreshMerchantVerified = freshUser.role === 'MERCHANT' && freshUser.is_qr_mapped && freshUser.kyc_status === 'FULL_VERIFIED' && fresh24hPassed;
+                currentMerchantUnverified = freshUser.role === 'MERCHANT' && !isFreshMerchantVerified;
             }
         } catch (e) {
             console.error("Failed to refresh user status", e);
@@ -544,8 +564,16 @@ export default function PayoutPage() {
                     <button onClick={() => router.push('/customer')} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm text-slate-400 hover:text-slate-900 transition-all active:scale-90">
                         <ArrowLeft size={20} />
                     </button>
-                    <div className="text-right">
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Cred-out</h1>
+                    <div className="text-right flex flex-col items-end">
+                        <div className="flex items-center gap-2">
+                            {isMerchantVerified && (
+                                <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100 shadow-sm animate-in fade-in zoom-in duration-500">
+                                    <CheckCircle2 size={10} strokeWidth={3} />
+                                    <span className="text-[8px] font-black uppercase tracking-tighter">Verified</span>
+                                </div>
+                            )}
+                            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Cred-out</h1>
+                        </div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Bank Settlement</p>
                     </div>
                 </div>
@@ -969,7 +997,16 @@ export default function PayoutPage() {
                                         <Landmark size={20} />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-black text-slate-900">{parseFloat(w.amount).toLocaleString('en-IN')}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className={`text-xs font-black ${parseFloat(w.charge_amount) > 0 ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+                                                {parseFloat(w.amount).toLocaleString('en-IN')}
+                                            </p>
+                                            {parseFloat(w.charge_amount) > 0 && (
+                                                <p className="text-xs font-black text-emerald-600">
+                                                    {parseFloat(w.net_amount).toLocaleString('en-IN')}
+                                                </p>
+                                            )}
+                                        </div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
                                             {new Date(w.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} • #{w.id}
                                         </p>
@@ -1111,9 +1148,13 @@ export default function PayoutPage() {
                             <Lock className="w-8 h-8 text-amber-500" />
                         </div>
 
-                        <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tighter leading-tight">Verification Pending</h3>
+                        <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tighter leading-tight">
+                            {showWithin24hMessage ? 'Activation in Progress' : 'Verification Pending'}
+                        </h3>
                         <p className="text-slate-400 font-bold text-[10px] leading-relaxed uppercase tracking-widest mb-8">
-                            Your merchant profile is under review. Field verification is required to enable bank settlements.
+                            {showWithin24hMessage 
+                                ? 'Your profile has been verified successfully. Your payout will be activated within 24 hours.'
+                                : 'Your merchant profile is under review. Field verification is required to enable bank settlements.'}
                         </p>
 
                         <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center gap-4 mb-8 text-left">
@@ -1121,8 +1162,12 @@ export default function PayoutPage() {
                                 {user?.is_qr_mapped ? '✓' : ''}
                             </div>
                             <div>
-                                <p className="text-[11px] font-black text-slate-900 tracking-tight">QR Mapping Verification</p>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase">Pending Field KYC</p>
+                                <p className="text-[11px] font-black text-slate-900 tracking-tight">
+                                    {isVerifiedAtLeastOnce ? 'Verification Completed' : 'QR Mapping Verification'}
+                                </p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase">
+                                    {showWithin24hMessage ? 'Enabling Payout (24hrs)' : (isVerifiedAtLeastOnce ? 'Status: Fully Verified' : 'Pending Field KYC')}
+                                </p>
                             </div>
                         </div>
 
