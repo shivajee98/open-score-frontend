@@ -88,10 +88,10 @@ export default function LoanList() {
     const [unlockedAmount, setUnlockedAmount] = useState<number>(50000); // Default unlock up to 50k
 
     const fetchLoans = () => {
-        apiFetch('/loans').then((data: any) => {
+        apiFetch('/loans?history=1').then((data: any) => {
             const loans = Array.isArray(data) ? data : (data?.data || []);
             if (loans && loans.length > 0) {
-                const filteredRecent = loans.filter((l: any) => l.status !== 'CANCELLED');
+                const filteredRecent = loans; // Include all for recent activity logic
                 const sorted = filteredRecent.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 setRecentLoan(sorted[0]);
 

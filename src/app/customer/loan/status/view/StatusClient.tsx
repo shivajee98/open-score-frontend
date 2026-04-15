@@ -29,7 +29,7 @@ export default function LoanStatus() {
 
     const fetchLoan = async () => {
         try {
-            const data = await apiFetch('/loans');
+            const data = await apiFetch('/loans?history=1');
             const loans = Array.isArray(data) ? data : (data?.data || []);
             const found = loans.find((l: any) => l.id == loanId || l.loan_id == loanId);
 
@@ -257,6 +257,39 @@ export default function LoanStatus() {
                                             <span className="text-[10px] font-black text-rose-700 uppercase tracking-widest">Application Rejected</span>
                                         </div>
                                         <p className="text-sm text-rose-600 font-medium leading-relaxed pl-8">{loan.reason}</p>
+                                    </div>
+                                )}
+
+                                {loan.status === 'CANCELLED' && (
+                                    <div className="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-xl animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center">
+                                                <Ban size={12} className="text-slate-600" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Application Cancelled</span>
+                                        </div>
+                                        <p className="text-sm text-slate-600 font-medium leading-relaxed pl-8">{loan.remarks || 'This application has been cancelled by the administration.'}</p>
+                                    </div>
+                                )}
+
+                                {loan.status === 'KYC_SENT' && loan.reupload_fields?.length > 0 && (
+                                    <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl animate-in fade-in slide-in-from-top-2 shadow-sm">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
+                                                <MessageSquare size={12} className="text-amber-600" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Action Required: KYC Correction</span>
+                                        </div>
+                                        <p className="text-sm text-amber-700 font-bold leading-relaxed italic pl-8">
+                                            "{loan.remarks || 'Admin has requested corrections for specific fields in your KYC application.'}"
+                                        </p>
+                                        <div className="mt-3 pl-8 flex flex-wrap gap-2">
+                                            {loan.reupload_fields.map((field: string, i: number) => (
+                                                <span key={i} className="text-[8px] font-black bg-white/50 text-amber-800 px-2 py-0.5 rounded border border-amber-200/50 uppercase tracking-tighter">
+                                                    {field.replace(/_/g, ' ')}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>

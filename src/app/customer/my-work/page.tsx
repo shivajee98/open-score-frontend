@@ -168,14 +168,14 @@ export default function MyWorkDashboard() {
             <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 pt-10 pb-12 px-4 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] -mr-32 -mt-32"></div>
                 <div className="relative z-10 max-w-2xl mx-auto">
-                    <BackButton className="mb-6 flex items-center gap-2 text-indigo-200 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-all">
+                    <BackButton className="mb-[clamp(1rem,4vw,2rem)] flex items-center gap-2 text-indigo-200 font-black text-[clamp(9px,2vw,11px)] uppercase tracking-[0.2em] hover:text-white transition-all">
                         <ArrowLeft className="w-4 h-4" /> Back to Profile
                     </BackButton>
 
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <h1 className="text-2xl font-black text-white tracking-tight">My Work</h1>
-                            <p className="text-indigo-200 text-xs font-bold mt-1 uppercase tracking-widest">{profile ? 'Active Employee' : user?.sub_user_id ? 'Profile Pending' : 'Not Linked Yet'}</p>
+                    <div className="flex justify-between items-end gap-4 overflow-hidden">
+                        <div className="min-w-0">
+                            <h1 className="text-[clamp(1.5rem,6vw,2.5rem)] font-[950] text-white tracking-tight leading-[0.95] truncate">My Work</h1>
+                            <p className="text-indigo-200 text-[clamp(9px,2vw,11px)] font-black mt-2 uppercase tracking-[0.2em]">{profile ? 'Active Employee' : user?.sub_user_id ? 'Profile Pending' : 'Not Linked Yet'}</p>
                         </div>
                         <div className="flex gap-2">
                             <button
@@ -209,24 +209,24 @@ export default function MyWorkDashboard() {
                 </div>
             </div>
 
-            <div className="max-w-2xl mx-auto px-4 -mt-6 relative z-20">
+            <div className="max-w-2xl mx-auto px-[clamp(1rem,5vw,1.5rem)] -mt-8 relative z-20">
                 {/* Tabs */}
-                <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-1 mb-6 flex border border-slate-100">
+                <div className="bg-white rounded-[1.75rem] shadow-2xl shadow-slate-200/60 p-1.5 mb-[clamp(1.5rem,5vw,2.5rem)] flex border border-slate-100/50 backdrop-blur-sm">
                     <button
                         onClick={() => setActiveTab('profile')}
-                        className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}
+                        className={`flex-1 py-3.5 text-[clamp(9px,2vw,11px)] font-black uppercase tracking-widest rounded-[1.25rem] transition-all duration-300 ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700 shadow-sm scale-[1.02]' : 'text-slate-400 hover:bg-slate-50'}`}
                     >
                         Overview
                     </button>
                     <button
                         onClick={() => setActiveTab('kyc')}
-                        className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === 'kyc' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}
+                        className={`flex-1 py-3.5 text-[clamp(9px,2vw,11px)] font-black uppercase tracking-widest rounded-[1.25rem] transition-all duration-300 ${activeTab === 'kyc' ? 'bg-indigo-50 text-indigo-700 shadow-sm scale-[1.02]' : 'text-slate-400 hover:bg-slate-50'}`}
                     >
                         KYC Docs
                     </button>
                     <button
                         onClick={() => setActiveTab('qr')}
-                        className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-1 ${activeTab === 'qr' ? 'bg-indigo-50 text-indigo-700 shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}
+                        className={`flex-1 py-3.5 text-[clamp(9px,2vw,11px)] font-black uppercase tracking-widest rounded-[1.25rem] transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'qr' ? 'bg-indigo-50 text-indigo-700 shadow-sm scale-[1.02]' : 'text-slate-400 hover:bg-slate-50'}`}
                     >
                         QR Code
                     </button>
@@ -244,10 +244,10 @@ export default function MyWorkDashboard() {
                                 }`}>
                                 <ShieldCheck size={32} />
                             </div>
-                            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                            <h2 className="text-[clamp(1.25rem,4vw,1.75rem)] font-[950] text-slate-900 tracking-tight leading-none text-balance">
                                 {isKycApproved ? 'Verified Partner' : kycStatus === 'pending' ? 'Verification Pending' : kycStatus === 'rejected' ? 'Verification Rejected' : 'Verification Required'}
                             </h2>
-                            <p className="text-sm font-medium text-slate-500 mt-2 max-w-sm">
+                            <p className="text-[clamp(0.8rem,2.5vw,0.9rem)] font-medium text-slate-500 mt-4 max-w-sm leading-relaxed">
                                 {isKycApproved ? 'Your account is fully verified. You can now access all features, order QR codes, and transfer earnings.'
                                     : 'Complete your KYC verification to unlock your ID card, Earnings transfers, and QR Code booking.'}
                             </p>
@@ -267,8 +267,8 @@ export default function MyWorkDashboard() {
                                 </button>
                             )}
                             {user?.latest_loan?.reupload_fields?.length > 0 && (
-                                <p className="mt-4 text-[10px] font-black text-rose-500 uppercase tracking-widest animate-pulse">
-                                    Admin requested re-upload for: {user.latest_loan.reupload_fields.map((f: string) => f.replace(/_/g, ' ')).join(', ')}
+                                <p className="mt-5 text-[9px] font-black text-rose-500 uppercase tracking-[0.15em] animate-pulse">
+                                    Action Required: {user.latest_loan.reupload_fields.map((f: string) => f.replace(/_/g, ' ')).join(', ')}
                                 </p>
                             )}
                         </div>
@@ -340,8 +340,8 @@ export default function MyWorkDashboard() {
                                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner mb-4">
                                     <MessageSquare size={32} />
                                 </div>
-                                <h3 className="text-xl font-black text-slate-900 tracking-tight">Need Support?</h3>
-                                <p className="text-sm font-medium text-slate-500 mt-2">
+                                <h3 className="text-[clamp(1.25rem,4vw,1.75rem)] font-[950] text-slate-900 tracking-tight">Need Support?</h3>
+                                <p className="text-[clamp(0.8rem,2.5vw,0.9rem)] font-medium text-slate-500 mt-3 leading-relaxed">
                                     Your immediate senior is here to help you with your work, commissions, and platform guidance.
                                 </p>
                                 <div className="grid grid-cols-2 gap-4 w-full mt-6">
@@ -363,6 +363,24 @@ export default function MyWorkDashboard() {
                             </div>
                         )}
 
+                        {/* Area Analytics Entry */}
+                        {/* <div 
+                            onClick={() => router.push('/customer/my-work/pincodes')}
+                            className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center justify-between group cursor-pointer hover:border-indigo-200 transition-all"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                    <MapPin size={28} />
+                                </div>
+                                <div className="text-left min-w-0">
+                                    <h3 className="text-[clamp(1.1rem,4vw,1.5rem)] font-[950] text-slate-900 tracking-tight leading-tight">Pin Code List</h3>
+                                    <p className="text-[clamp(9px,2vw,11px)] font-black text-indigo-600 uppercase tracking-[0.15em] leading-none mt-1.5">Discover Active Zones</p>
+                                </div>
+                            </div>
+                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
+                                <ArrowRight size={20} />
+                            </div>
+                        </div> */}
 
                     </div>
                 )}

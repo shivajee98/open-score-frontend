@@ -1,9 +1,57 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Receipt, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Receipt, Loader2, RefreshCw, X, Info } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { apiFetch } from '@/lib/api';
+
+const RemarkModal = ({ isOpen, onClose, loan }: { isOpen: boolean, onClose: () => void, loan: any }) => {
+    if (!isOpen || !loan) return null;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
+            <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full relative z-10 shadow-2xl border border-white/20 animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
+                <div className="flex justify-between items-start mb-6">
+                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100">
+                        <Info className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
+                        <X size={16} />
+                    </button>
+                </div>
+
+                <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest ${
+                            loan.status === 'REJECTED' ? 'bg-rose-50 text-rose-600' : 'bg-slate-50 text-slate-600'
+                        }`}>
+                            {loan.status === 'REJECTED' ? 'Application Rejected' : 'Application Cancelled'}
+                        </span>
+                        <span className="text-[10px] font-medium text-slate-400">
+                            ID: {loan.display_id || loan.id}
+                        </span>
+                    </div>
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-4">
+                        Status Information
+                    </h2>
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p className="text-sm font-medium text-slate-600 leading-relaxed italic">
+                            "{loan.remarks || loan.reason || 'No additional administrative notes provided for this status change.'}"
+                        </p>
+                    </div>
+                </div>
+
+                <button
+                    onClick={onClose}
+                    className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95 uppercase tracking-widest text-[11px]"
+                >
+                    Close Details
+                </button>
+            </div>
+        </div>
+    );
+};
 
 export default function LoanHistory() {
     const router = useRouter();
@@ -13,6 +61,8 @@ export default function LoanHistory() {
     const [fetchingMore, setFetchingMore] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [selectedLoan, setSelectedLoan] = useState<any>(null);
+    const [isRemarkModalOpen, setIsRemarkModalOpen] = useState(false);
 
     useEffect(() => {
         const u = localStorage.getItem('user');
@@ -41,7 +91,7 @@ export default function LoanHistory() {
         else setFetchingMore(true);
 
         try {
-            const data = await apiFetch(`/loans?page=${pageNum}`);
+            const data = await apiFetch(`/loans?page=${pageNum}&history=1`);
             // Defensive: Backend now returns paginated object
             const newLoans = data.data || (Array.isArray(data) ? data : []);
 
@@ -70,8 +120,17 @@ export default function LoanHistory() {
         fetchLoans(page);
     }, [page]);
 
+    const handleLoanClick = (loan: any) => {
+        if (loan.status === 'CANCELLED' || loan.status === 'REJECTED') {
+            setSelectedLoan(loan);
+            setIsRemarkModalOpen(true);
+        } else {
+            router.push(`/customer/loan/status/view?id=${loan.id}`);
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-slate-50 relative pb-24">
+        <div className="min-h-screen bg-slate-50 relative pb-24 font-sans">
             {/* Themed Header */}
             <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-950 via-green-900 to-teal-950' : 'from-slate-900 via-indigo-950 to-violet-950'} pt-12 pb-20 px-4 relative overflow-hidden`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/20' : 'bg-blue-600/20'} rounded-full blur-[80px] -mr-32 -mt-32 animate-pulse`}></div>
@@ -104,7 +163,7 @@ export default function LoanHistory() {
                             <div
                                 key={loan.id}
                                 ref={idx === loans.length - 1 ? lastElementRef : null}
-                                onClick={() => router.push(`/customer/loan/status/view?id=${loan.id}`)}
+                                onClick={() => handleLoanClick(loan)}
                                 className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-all cursor-pointer active:scale-[0.98]"
                             >
                                 <div>
@@ -145,7 +204,7 @@ export default function LoanHistory() {
                                         </button>
                                     )}
                                     <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors">
-                                        <ArrowLeft className="w-4 h-4 rotate-180" />
+                                        {(loan.status === 'CANCELLED' || loan.status === 'REJECTED') ? <Info size={16} /> : <ArrowLeft className="w-4 h-4 rotate-180" />}
                                     </div>
                                 </div>
                             </div>
@@ -179,6 +238,12 @@ export default function LoanHistory() {
                     </div>
                 )}
             </div>
+
+            <RemarkModal 
+                isOpen={isRemarkModalOpen} 
+                onClose={() => setIsRemarkModalOpen(false)} 
+                loan={selectedLoan} 
+            />
         </div>
     );
 }

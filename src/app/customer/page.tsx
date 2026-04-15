@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import MerchantClaimModal from '@/components/MerchantClaimModal';
 import SupportModal from '@/components/SupportModal';
 import HomeBannerCarousel from '@/components/HomeBannerCarousel';
-
+import { cn } from '@/lib/loanUtils';
 import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
 import MerchantLoanMilestone from '@/components/MerchantLoanMilestone';
 
@@ -598,16 +598,50 @@ export default function CustomerHome() {
                 kycLoan && (
                     <div className="px-4 mb-3">
                         <Link href={`/customer/loan/status/view?id=${kycLoan.id}`} prefetch={false}>
-                            <div className="bg-yellow-400 p-4 rounded-3xl shadow-2xl shadow-yellow-900/30 border-4 border-white flex items-center justify-between group active:scale-[0.98] transition-all overflow-hidden relative">
-                                <div className="flex items-center gap-3 relative z-10">
-                                    <div className="w-12 h-12 rounded-xl bg-slate-900 text-yellow-400 flex items-center justify-center shadow-lg">
-                                        <ShieldCheck size={36} />
+                            <div className={cn(
+                                "py-3 px-4 rounded-2xl shadow-xl border-2 flex flex-col gap-2 group active:scale-[0.98] transition-all overflow-hidden relative",
+                                kycLoan.reupload_fields?.length > 0 
+                                    ? "bg-rose-50 border-rose-500 shadow-rose-900/10 ring-4 ring-rose-500/10" 
+                                    : "bg-yellow-400 border-white shadow-yellow-900/20"
+                            )}>
+                                <div className="flex items-center justify-between relative z-10 w-full">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-9 h-9 rounded-xl flex items-center justify-center shadow-lg",
+                                            kycLoan.reupload_fields?.length > 0 ? "bg-rose-600 text-white" : "bg-slate-900 text-yellow-400"
+                                        )}>
+                                            <ShieldCheck size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 className={cn(
+                                                "font-black text-sm leading-tight uppercase tracking-tight",
+                                                kycLoan.reupload_fields?.length > 0 ? "text-rose-900" : "text-slate-900"
+                                            )}>
+                                                {kycLoan.reupload_fields?.length > 0 ? 'Correct KYC Errors' : 'Complete KYC Now'}
+                                            </h3>
+                                            <p className={cn(
+                                                "text-[8px] font-black leading-tight mt-0.5 uppercase tracking-widest leading-none",
+                                                kycLoan.reupload_fields?.length > 0 ? "text-rose-600/60" : "text-slate-800 opacity-60"
+                                            )}>Credit Request ID #{kycLoan.id}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="text-slate-900 font-black text-lg leading-tight uppercase tracking-tight">Complete KYC Now</h3>
-                                        <p className="text-slate-800 text-[10px] font-black leading-tight mt-1 opacity-60 uppercase tracking-widest">Required for Loan #{kycLoan.id}</p>
+                                    <div className={cn(
+                                        "w-7 h-7 rounded-full flex items-center justify-center",
+                                        kycLoan.reupload_fields?.length > 0 ? "bg-rose-600/10 text-rose-600" : "bg-slate-900/10 text-slate-900"
+                                    )}>
+                                        <ArrowRight size={14} />
                                     </div>
                                 </div>
+
+                                {kycLoan.reupload_fields?.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {kycLoan.reupload_fields.map((field: string, idx: number) => (
+                                            <span key={idx} className="bg-rose-600/10 text-rose-600 text-[8px] font-black uppercase px-2 py-1 rounded-lg border border-rose-600/10">
+                                                {field.replace(/_/g, ' ')}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </Link>
                     </div>
