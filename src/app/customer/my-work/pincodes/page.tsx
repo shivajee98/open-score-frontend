@@ -77,7 +77,7 @@ export default function AreaAnalyticsPage() {
                     </BackButton>
                     <div>
                         <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none">Pincode List</h1>
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">Market Network Index</p>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">Market Network Index (One Layer)</p>
                     </div>
                 </div>
             </div>
@@ -184,25 +184,25 @@ export default function AreaAnalyticsPage() {
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-2.5 space-y-1 custom-scrollbar bg-slate-50/30">
                             {loadingMerchants ? (
                                 <div className="py-12 flex justify-center"><Loader2 className="w-5 h-5 text-indigo-600 animate-spin" /></div>
                             ) : filteredMerchants.length === 0 ? (
                                 <p className="py-12 text-center text-[7px] font-black uppercase text-slate-300">Empty Area</p>
                             ) : (
                                 filteredMerchants.map((m) => (
-                                    <div key={m.id} className="bg-slate-50/50 p-2 rounded-xl border border-slate-50 flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-300 font-bold text-xs uppercase shadow-sm">
-                                                {m.name?.[0] || 'M'}
+                                    <div key={m.id} className="bg-white p-1.5 rounded-lg border border-slate-100 flex items-center justify-between shadow-sm active:scale-[0.99] transition-all">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <div className="w-6 h-6 bg-slate-50 rounded-md flex items-center justify-center text-[9px] font-black text-slate-400 shrink-0">
+                                                {m.business_name?.[0] || 'B'}
                                             </div>
                                             <div className="min-w-0">
-                                                <h5 className="font-black text-slate-900 text-[10px] leading-tight truncate max-w-[120px]">{m.business_name || 'Business'}</h5>
-                                                <p className="text-[8px] font-bold text-slate-400">{m.mobile_number}</p>
+                                                <h5 className="font-black text-slate-900 text-[9px] uppercase truncate leading-none mb-0.5 italic">{m.business_name || 'Business'}</h5>
+                                                <p className="text-[7px] font-bold text-slate-400 leading-none">{m.mobile_number}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[7px] font-black text-indigo-500 uppercase">{m.name}</p>
+                                            <p className="text-[6px] font-black text-indigo-500 uppercase leading-none truncate max-w-[90px]">{m.name}</p>
                                         </div>
                                     </div>
                                 ))

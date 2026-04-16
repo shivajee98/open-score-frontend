@@ -277,7 +277,7 @@ export default function RepaymentDashboard() {
                         >
                             <ChevronLeft className="w-6 h-6" />
                         </button>
-                        <h1 className="text-[17px] font-black text-slate-800 tracking-tight">Loan Repayment Schedule</h1>
+                        <h1 className="text-[17px] font-black text-slate-800 tracking-tight">Demand Voucher Repayment Schedule</h1>
                         <div className="w-10"></div> {/* Spacer to keep title centered if needed, or just remove */}
                     </div>
 
