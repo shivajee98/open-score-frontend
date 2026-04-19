@@ -59,36 +59,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         last_name: z.string().min(1, 'Last name is required'),
         email: z.string().email('Invalid email address'),
         phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid 10-digit mobile number'),
-        birth_date: z.string().min(1, 'Birth date is required').refine((val) => {
-            const birthDate = new Date(val);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            return age >= 15;
-        }, { message: 'Minimum age is 15' }).refine((val) => {
-            const birthDate = new Date(val);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-
-            // If below 18, must be a student
-            if (age < 18 && user?.role !== 'STUDENT') {
-                return false;
-            }
-            return true;
-        }, { message: 'Only students can apply if under 18' }),
-
         annual_income: z.string().min(1, 'Income is required'),
         loan_usage: z.string().min(5, 'Please provide more detail about loan usage'),
-
-        aadhar_number: z.string().regex(/^\d{12}$/, 'Aadhaar must be exactly 12 digits'),
-        pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i, 'Invalid PAN Card format (e.g. ABCDE1234F)'),
 
         street_address: z.string().min(5, 'Address is too short'),
         city: z.string().min(2, 'City is required'),
@@ -125,7 +97,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             last_name: user?.name?.split(' ').slice(1).join(' ') || '',
             email: user?.email || '',
             phone: user?.mobile_number || '',
-            birth_date: user?.date_of_birth ? user.date_of_birth.split('T')[0] : '',
             employer: user?.role === 'STUDENT' ? (user?.student_profile?.school_name || '') : (user?.business_name || ''),
             occupation: user?.role === 'STUDENT' ? (user?.student_profile?.course_name || 'Student') : '',
             street_address: user?.business_address || (user?.role === 'STUDENT' ? (user?.student_profile?.school_address || '') : ''),
@@ -137,8 +108,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             permanent_state: user?.permanent_state || '',
             permanent_postal_code: user?.permanent_pincode || '',
             is_permanent_same: user?.is_permanent_same || false,
-            aadhar_number: user?.aadhar_number || '',
-            pan_number: user?.pan_number || '',
             ...initialData
         }
     });
@@ -155,23 +124,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
     }, [initialData, setValue]);
 
-    const aadharValue = watch('aadhar_number');
-    const panValue = watch('pan_number');
     const streetAddress = watch('street_address');
     const city = watch('city');
     const state = watch('state');
     const postalCode = watch('postal_code');
 
-    useEffect(() => {
-        if (aadharValue && aadharValue.length === 12 && !user?.aadhar_number && user?.kyc_status !== 'FULL_VERIFIED') {
-            const timer = setTimeout(() => {
-                checkUniqueness('aadhar', aadharValue);
-            }, 600);
-            return () => clearTimeout(timer);
-        } else {
-            setUniquenessErrors(prev => ({ ...prev, aadhar: undefined }));
-        }
-    }, [aadharValue, user?.aadhar_number, user?.kyc_status]);
 
     const referralValue = watch('referral_code');
 
@@ -210,16 +167,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
     };
 
-    useEffect(() => {
-        if (panValue && panValue.length === 10 && !user?.pan_number && user?.kyc_status !== 'FULL_VERIFIED') {
-            const timer = setTimeout(() => {
-                checkUniqueness('pan', panValue);
-            }, 600);
-            return () => clearTimeout(timer);
-        } else {
-            setUniquenessErrors(prev => ({ ...prev, pan: undefined }));
-        }
-    }, [panValue, user?.pan_number, user?.kyc_status]);
 
     const checkUniqueness = async (type: 'aadhar' | 'pan', value: string) => {
         setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
@@ -267,8 +214,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const getFieldsForStep = (step: number) => {
         switch (step) {
             case 0: return ['annual_income', 'loan_usage', 'referral_code'];
-            case 1: return ['first_name', 'last_name', 'email', 'phone', 'birth_date'];
-            case 2: return ['aadhar_number', 'pan_number', 'street_address', 'city', 'state', 'postal_code', 'permanent_street_address', 'permanent_city', 'permanent_state', 'permanent_postal_code', 'is_permanent_same'];
+            case 1: return ['first_name', 'last_name', 'email', 'phone'];
+            case 2: return ['street_address', 'city', 'state', 'postal_code', 'permanent_street_address', 'permanent_city', 'permanent_state', 'permanent_postal_code', 'is_permanent_same'];
             case 3: return ['employer', 'occupation'];
             case 4: return ['consent'];
             default: return [];
@@ -352,14 +299,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             </div>
                         </div>
 
-                        <div>
-                            <label className={labelClasses}>Birth Date</label>
-                            <div className="relative">
-                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
-                                <input type="date" {...register('birth_date')} className={`${inputClasses} pl-11`} />
-                            </div>
-                            {errors.birth_date && <p className={errorClasses}>{errors.birth_date.message}</p>}
-                        </div>
 
                         <div>
                             <label className={labelClasses}>Email Address</label>
@@ -391,44 +330,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             case 2:
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="grid grid-cols-1 gap-4">
-                            <div>
-                                <label className={labelClasses}>Aadhaar Card (12 Digits)</label>
-                                <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    placeholder="0000 0000 0000"
-                                    onInput={(e) => {
-                                        const target = e.target as HTMLInputElement;
-                                        target.value = target.value.replace(/\D/g, '').slice(0, 12);
-                                    }}
-                                    {...register('aadhar_number')}
-                                    readOnly={!!user?.aadhar_number || user?.kyc_status === 'FULL_VERIFIED'}
-                                    className={cn(inputClasses, (errors.aadhar_number || uniquenessErrors.aadhar) && "border-rose-500 ring-rose-50", (!!user?.aadhar_number || user?.kyc_status === 'FULL_VERIFIED') && "bg-slate-50 text-slate-500 cursor-not-allowed")}
-                                />
-                                {errors.aadhar_number && <p className={errorClasses}>{errors.aadhar_number.message}</p>}
-                                {uniquenessErrors.aadhar && <p className={errorClasses}>{uniquenessErrors.aadhar}</p>}
-                                {checkingUniqueness.aadhar && <p className="text-[9px] text-blue-500 mt-1 ml-2 font-bold animate-pulse uppercase tracking-widest">Verifying Aadhaar...</p>}
-                            </div>
-                            <div>
-                                <label className={labelClasses}>PAN Card Number</label>
-                                <input
-                                    placeholder="ABCDE1234F"
-                                    maxLength={10}
-                                    {...register('pan_number', {
-                                        onChange: (e) => {
-                                            if (user?.pan_number || user?.kyc_status === 'FULL_VERIFIED') return;
-                                            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                                        }
-                                    })}
-                                    readOnly={!!user?.pan_number || user?.kyc_status === 'FULL_VERIFIED'}
-                                    className={cn(inputClasses, "uppercase tracking-widest", (errors.pan_number || uniquenessErrors.pan) && "border-rose-500 ring-rose-50", (!!user?.pan_number || user?.kyc_status === 'FULL_VERIFIED') && "bg-slate-50 text-slate-500 cursor-not-allowed")}
-                                />
-                                {errors.pan_number && <p className={errorClasses}>{errors.pan_number.message}</p>}
-                                {uniquenessErrors.pan && <p className={errorClasses}>{uniquenessErrors.pan}</p>}
-                                {checkingUniqueness.pan && <p className="text-[9px] text-blue-500 mt-1 ml-2 font-bold animate-pulse uppercase tracking-widest">Verifying PAN...</p>}
-                            </div>
-                        </div>
 
                         <div>
                             <label className={labelClasses}>Street Address</label>

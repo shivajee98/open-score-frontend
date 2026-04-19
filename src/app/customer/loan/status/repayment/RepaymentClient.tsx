@@ -32,9 +32,11 @@ import {
     Smartphone,
     Upload,
     X,
-    Menu
+    Menu,
+    QrCode
 } from 'lucide-react';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function RepaymentDashboard() {
     const router = useRouter();
@@ -85,13 +87,7 @@ export default function RepaymentDashboard() {
     };
 
     const handleUpiClick = () => {
-        if (!pendingEmi) return;
-
-        const amount = pendingEmi.amount;
-        const transactionNote = `EMI Payment for Loan #${loanId}`;
-
-        // Construct the UPI Intent URL
-        const upiUrl = `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
+        if (!upiUrl) return;
 
         // Create a hidden link and click it
         const link = document.createElement('a');
@@ -220,6 +216,10 @@ export default function RepaymentDashboard() {
 
     const paidEmis = repayments.filter(r => r.status === 'PAID');
     const pendingEmi = repayments.find(r => r.status === 'PENDING' || r.status === 'PENDING_VERIFICATION' || r.status === 'MANUAL_VERIFICATION');
+    
+    // Dynamic UPI URL for QR and Button
+    const upiUrl = pendingEmi ? `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${pendingEmi.amount}&tn=${encodeURIComponent(`EMI Payment for Loan #${loanId}`)}` : '';
+
     const totalPaid = paidEmis.filter(r => Number(r.emi_number) > 0).reduce((sum, r) => sum + Number(r.amount), 0);
     const totalFeesPaid = paidEmis.filter(r => Number(r.emi_number) === 0).reduce((sum, r) => sum + Number(r.amount), 0);
 
@@ -342,27 +342,53 @@ export default function RepaymentDashboard() {
 
                         <div className="space-y-3 relative z-10">
                             {!showManualPay ? (
-                                <button
-                                    onClick={handleUpiClick}
-                                    disabled={paying || pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION'}
-                                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.15em] shadow-xl shadow-slate-900/10 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    {(pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION') ? (
-                                        pendingEmi.agent_approved_by ? (
-                                            <>
-                                                <CheckCircle2 size={16} className="text-emerald-400" /> Verified: Waiting Admin
-                                            </>
+                                <>
+                                    <button
+                                        onClick={handleUpiClick}
+                                        disabled={paying || pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION'}
+                                        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.15em] shadow-xl shadow-slate-900/10 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {(pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION') ? (
+                                            pendingEmi.agent_approved_by ? (
+                                                <>
+                                                    <CheckCircle2 size={16} className="text-emerald-400" /> Verified: Waiting Admin
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ShieldCheck size={16} className="text-amber-400" /> Under Verification
+                                                </>
+                                            )
                                         ) : (
                                             <>
-                                                <ShieldCheck size={16} className="text-amber-400" /> Under Verification
+                                                <Smartphone size={16} /> Pay via UPI App
                                             </>
-                                        )
-                                    ) : (
-                                        <>
-                                            <Smartphone size={16} /> Pay via UPI App
-                                        </>
-                                    )}
-                                </button>
+                                        )}
+                                    </button>
+                                    {pendingEmi && pendingEmi.status === 'PENDING' && (
+                                    <div className="flex flex-col items-center mt-4 animate-in fade-in zoom-in-95 duration-500">
+                                        <div className="p-1 bg-white rounded-lg border border-slate-100 shadow-sm mb-2">
+                                            <QRCodeSVG 
+                                                value={upiUrl} 
+                                                size={130}
+                                                level="M"
+                                                includeMargin={false}
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-1 opacity-50 mb-4">
+                                            <QrCode size={10} className="text-slate-800" />
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.1em]">Scan to Pay Instantly</p>
+                                        </div>
+
+                                        <button 
+                                            onClick={() => setShowManualPay(true)}
+                                            className="w-full py-3.5 bg-slate-900 border border-slate-100 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-100 transition-all active:scale-95"
+                                        >
+                                            <Upload size={14} className="text-blue-500" />
+                                            I've Paid, Upload Screenshot
+                                        </button>
+                                    </div>
+                                )}
+                                </>
                             ) : (
                                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                                     <div
