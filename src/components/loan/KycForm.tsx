@@ -326,22 +326,47 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 }
 
                 if (activeCameraCategory === 'aadhar_back') {
-                    // Better address extraction from raw_text if available
-                    let fullAddress = ocr_data.address || '';
-                    if (ocr_data.raw_text && Array.isArray(ocr_data.raw_text)) {
+                    // Robust address extraction
+                    let fullAddress = '';
+                    
+                    // 1. Try to use ocr_data.address if it looks valid (not just a short string or trash)
+                    if (ocr_data.address && ocr_data.address.length > 20 && !ocr_data.address.toLowerCase().includes('authority')) {
+                        fullAddress = ocr_data.address;
+                    } 
+                    
+                    // 2. If ocr_data.address is missing or looks like trash, try raw_text
+                    if (!fullAddress && ocr_data.raw_text && Array.isArray(ocr_data.raw_text)) {
                         const addressIndex = ocr_data.raw_text.findIndex((line: string) => 
                             line.toLowerCase().includes('address:') || line.toLowerCase().includes('पता:')
                         );
+                        
                         if (addressIndex !== -1) {
-                            // Take lines after "Address:" until we hit something that looks like an ID or end of array
-                            const addressLines = ocr_data.raw_text.slice(addressIndex + 1).filter((line: string) => {
-                                const isId = /^\d{4}\s\d{4}\s\d{4}$/.test(line.trim()) || line.toLowerCase().includes('vid :');
-                                return !isId;
-                            });
+                            // Take lines after "Address:" until we hit an Aadhaar number pattern or end
+                            const addressLines = [];
+                            for (let i = addressIndex + 1; i < ocr_data.raw_text.length; i++) {
+                                const line = ocr_data.raw_text[i].trim();
+                                // Stop if line is an Aadhaar number (xxxx xxxx xxxx) or VID
+                                if (/^\d{4}\s\d{4}\s\d{4}$/.test(line) || line.toLowerCase().includes('vid :') || line.length < 2) {
+                                    if (addressLines.length > 0) break; 
+                                    continue;
+                                }
+                                addressLines.push(line);
+                            }
                             if (addressLines.length > 0) {
                                 fullAddress = addressLines.join(', ');
                             }
                         }
+                    }
+
+                    // 3. Last ditch: clean up the provided address if it contains trash headers
+                    if (fullAddress) {
+                        fullAddress = fullAddress
+                            .replace(/unique identification authority of india/gi, '')
+                            .replace(/government of india/gi, '')
+                            .replace(/भारत सरकार/g, '')
+                            .replace(/भारतीय विशिष्ट पहचान प्राधिकरण/g, '')
+                            .trim()
+                            .replace(/^,|,$/g, '');
                     }
 
                     if (fullAddress) setValue('street_address', fullAddress);
