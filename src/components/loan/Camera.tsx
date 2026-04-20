@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Camera as CameraIcon, RotateCw, Check, X, MapPin, Image as ImageIcon, Upload } from 'lucide-react';
+import { Camera as CameraIcon, RotateCw, Check, X, MapPin, Image as ImageIcon, Upload, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
 
@@ -196,9 +196,28 @@ export default function Camera({ onCapture, label }: CameraProps) {
 
             {/* Local Loading Overlay */}
             {loading && (
-                <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl overflow-hidden animate-in fade-in duration-300">
-                    <div className="w-12 h-12 border-4 border-white/20 border-t-blue-500 rounded-full animate-spin" />
-                    <span className="text-[10px] font-black text-white uppercase tracking-widest mt-4">Processing...</span>
+                <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center rounded-3xl overflow-hidden animate-in fade-in duration-300">
+                    <div className="relative w-24 h-24 mb-6">
+                        <div className="absolute inset-0 border-2 border-blue-500/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
+                        <div className="absolute inset-2 border-2 border-blue-400/10 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <Shield className="text-blue-500/40 animate-pulse" size={32} />
+                        </div>
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_15px_rgba(96,165,250,0.8)] animate-[scan_1.5s_ease-in-out_infinite]"></div>
+                    </div>
+                    <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-2">Analyzing Image</span>
+                    <div className="flex gap-1.5">
+                        <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                        <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                        <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce"></div>
+                    </div>
+
+                    <style jsx>{`
+                        @keyframes scan {
+                            0%, 100% { top: 0%; opacity: 0; }
+                            50% { top: 100%; opacity: 1; }
+                        }
+                    `}</style>
                 </div>
             )}
         </div>

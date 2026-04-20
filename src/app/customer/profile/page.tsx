@@ -43,7 +43,9 @@ export default function Profile() {
         show_timing: true,
         shop_timing: null as any,
         aadhar_number: '',
-        pan_number: ''
+        pan_number: '',
+        date_of_birth: '',
+        father_name: ''
     });
     const [newShopImages, setNewShopImages] = useState<File[]>([]);
     const [newAadharImage, setNewAadharImage] = useState<File | null>(null);
@@ -75,13 +77,13 @@ export default function Profile() {
         }
     }, [pinData]);
 
-    const checkUniqueness = async (type: 'aadhar' | 'pan' | 'account', value: string) => {
+    const checkUniqueness = async (type: 'aadhar' | 'pan' | 'account', value: string, ifsc?: string) => {
         setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
         try {
             const apiType = type === 'account' ? 'account_number' : type;
             const res = await apiFetch('/loans/check-kyc-uniqueness', {
                 method: 'POST',
-                body: JSON.stringify({ type: apiType, value })
+                body: JSON.stringify({ type: apiType, value, ifsc_code: ifsc })
             });
 
             if (!res.unique) {
@@ -207,7 +209,9 @@ export default function Profile() {
                     show_timing: user.show_timing ?? true,
                     shop_timing: user.shop_timing || null,
                     aadhar_number: user.aadhar_number || '',
-                    pan_number: user.pan_number || ''
+                    pan_number: user.pan_number || '',
+                    date_of_birth: user.date_of_birth ? user.date_of_birth.split('T')[0] : '',
+                    father_name: user.father_name || (user.family_detail?.father_name || '')
                 });
                 initialDataLoaded.current = true;
             }
@@ -252,15 +256,16 @@ export default function Profile() {
     }, [formData.pan_number, isEditing, user?.pan_number]);
 
     useEffect(() => {
-        if (isEditing && formData.account_number.length >= 9 && formData.account_number !== user?.account_number) {
+        const isNewBank = formData.account_number !== user?.account_number || formData.ifsc_code !== user?.ifsc_code;
+        if (isEditing && formData.account_number.length >= 9 && formData.ifsc_code.length === 11 && isNewBank) {
             const timer = setTimeout(() => {
-                checkUniqueness('account', formData.account_number);
+                checkUniqueness('account', formData.account_number, formData.ifsc_code);
             }, 600);
             return () => clearTimeout(timer);
         } else {
             setUniquenessErrors(prev => ({ ...prev, account: undefined }));
         }
-    }, [formData.account_number, isEditing, user?.account_number]);
+    }, [formData.account_number, formData.ifsc_code, isEditing, user?.account_number, user?.ifsc_code]);
 
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
@@ -488,6 +493,8 @@ export default function Profile() {
             uploadData.append('show_timing', formData.show_timing ? '1' : '0');
             uploadData.append('aadhar_number', formData.aadhar_number);
             uploadData.append('pan_number', formData.pan_number);
+            uploadData.append('date_of_birth', formData.date_of_birth);
+            uploadData.append('father_name', formData.father_name);
 
             // Bank details
             if (!user?.account_number) {
@@ -1100,8 +1107,8 @@ export default function Profile() {
                                                         type="text"
                                                         value={formData.pan_number}
                                                         onChange={(e) => setFormData({ ...formData, pan_number: e.target.value.toUpperCase().slice(0, 10) })}
-                                                        disabled={user?.kyc_status === 'FULL_VERIFIED'}
-                                                        className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 ${uniquenessErrors.pan ? 'border-red-500' : 'border-slate-200'} focus:border-${themeColor}-500 focus:outline-none w-full ${user?.kyc_status === 'FULL_VERIFIED' ? 'opacity-60 grayscale' : ''}`}
+                                                        disabled={user?.kyc_status === 'FULL_VERIFIED' || user?.pan_number}
+                                                        className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 ${uniquenessErrors.pan ? 'border-red-500' : 'border-slate-200'} focus:border-${themeColor}-500 focus:outline-none w-full ${(user?.kyc_status === 'FULL_VERIFIED' || user?.pan_number) ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                         placeholder="ABCDE1234F"
                                                     />
                                                     {uniquenessErrors.pan && <p className="text-[9px] text-red-500 mt-1 font-bold animate-in fade-in transition-all">{uniquenessErrors.pan}</p>}
@@ -1109,6 +1116,38 @@ export default function Profile() {
                                                 </>
                                             ) : (
                                                 <p className="text-sm font-medium text-slate-900 uppercase">{user.pan_number || 'Not Set'}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 mt-4">
+                                        <div>
+                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Date of Birth</p>
+                                            {isEditing ? (
+                                                <input
+                                                    type="date"
+                                                    value={formData.date_of_birth}
+                                                    onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
+                                                    disabled={user?.date_of_birth}
+                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full ${user?.date_of_birth ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                />
+                                            ) : (
+                                                <p className="text-sm font-medium text-slate-900">{user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : 'Not Set'}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Father's Name</p>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={formData.father_name}
+                                                    onChange={(e) => setFormData({ ...formData, father_name: e.target.value })}
+                                                    disabled={user?.father_name || user?.family_detail?.father_name}
+                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full ${(user?.father_name || user?.family_detail?.father_name) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                    placeholder="Father's full name"
+                                                />
+                                            ) : (
+                                                <p className="text-sm font-medium text-slate-900 uppercase">{user.father_name || user.family_detail?.father_name || 'Not Set'}</p>
                                             )}
                                         </div>
                                     </div>

@@ -254,48 +254,51 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         
         try {
             const { url, ocr_data } = await uploadToServer(blob, activeCameraCategory);
-            setIsOcrLoading(false);
             
-            if (ocr_data && !ocr_data.error) {
-                // Same Image Check (using raw_text signature)
-                const currentText = JSON.stringify(ocr_data.raw_text);
-                const isSameImage = Object.entries(ocrResults).some(([cat, data]) => {
-                    return cat !== activeCameraCategory && JSON.stringify(data.raw_text) === currentText;
-                });
+            if ((ocr_data && !ocr_data.error) || activeCameraCategory === 'applicant_selfie') {
+                if (activeCameraCategory !== 'applicant_selfie') {
+                    // Same Image Check (using raw_text signature)
+                    const currentText = JSON.stringify(ocr_data.raw_text);
+                    const isSameImage = Object.entries(ocrResults).some(([cat, data]) => {
+                        return cat !== activeCameraCategory && data && JSON.stringify(data.raw_text) === currentText;
+                    });
 
-                if (isSameImage) {
-                    setErrorPopup("यह तस्वीर पहले ही किसी अन्य श्रेणी में उपयोग की जा चुकी है। कृपया सही तस्वीर अपलोड करें।");
-                    setActiveCameraCategory(null);
-                    return;
+                    if (isSameImage) {
+                        setErrorPopup("यह तस्वीर पहले ही किसी अन्य श्रेणी में उपयोग की जा चुकी है। कृपया सही तस्वीर अपलोड करें।");
+                        setActiveCameraCategory(null);
+                        return;
+                    }
                 }
 
-                // Side-specific Keyword Check
-                const rawTextStr = (ocr_data.raw_text || []).join(' ').toLowerCase();
-                const isBackSide = rawTextStr.includes('address') || rawTextStr.includes('पता') || rawTextStr.includes('s/o') || rawTextStr.includes('w/o') || rawTextStr.includes('d/o');
-                const isFrontSide = rawTextStr.includes('dob') || rawTextStr.includes('जन्म') || rawTextStr.includes('male') || rawTextStr.includes('female');
+                if (activeCameraCategory !== 'applicant_selfie') {
+                    // Side-specific Keyword Check
+                    const rawTextStr = (ocr_data.raw_text || []).join(' ').toLowerCase();
+                    const isBackSide = rawTextStr.includes('address') || rawTextStr.includes('पता') || rawTextStr.includes('s/o') || rawTextStr.includes('w/o') || rawTextStr.includes('d/o');
+                    const isFrontSide = rawTextStr.includes('dob') || rawTextStr.includes('जन्म') || rawTextStr.includes('male') || rawTextStr.includes('female');
 
-                if (activeCameraCategory === 'aadhar_front' && isBackSide && !isFrontSide) {
-                    setErrorPopup("आपने आधार कार्ड का पिछला हिस्सा अपलोड किया है। कृपया सामने का हिस्सा अपलोड करें।");
-                    setActiveCameraCategory(null);
-                    return;
-                }
+                    if (activeCameraCategory === 'aadhar_front' && isBackSide && !isFrontSide) {
+                        setErrorPopup("आपने आधार कार्ड का पिछला हिस्सा अपलोड किया है। कृपया सामने का हिस्सा अपलोड करें।");
+                        setActiveCameraCategory(null);
+                        return;
+                    }
 
-                if (activeCameraCategory === 'aadhar_back' && isFrontSide && !isBackSide) {
-                    setErrorPopup("आपने आधार कार्ड का सामने का हिस्सा अपलोड किया है। कृपया पिछला हिस्सा अपलोड करें।");
-                    setActiveCameraCategory(null);
-                    return;
-                }
+                    if (activeCameraCategory === 'aadhar_back' && isFrontSide && !isBackSide) {
+                        setErrorPopup("आपने आधार कार्ड का सामने का हिस्सा अपलोड किया है। कृपया पिछला हिस्सा अपलोड करें।");
+                        setActiveCameraCategory(null);
+                        return;
+                    }
 
-                // Aadhaar Consistency Check
-                if (activeCameraCategory === 'aadhar_back') {
-                    const frontAadhar = ocrResults['aadhar_front']?.aadhaar_number || watch('aadhar_number');
-                    if (ocr_data.aadhaar_number && frontAadhar) {
-                        const frontNum = frontAadhar.replace(/\s/g, '');
-                        const backNum = ocr_data.aadhaar_number.replace(/\s/g, '');
-                        if (frontNum !== backNum) {
-                            setErrorPopup("आधार कार्ड के दोनों तरफ के नंबर अलग-अलग हैं। कृपया उसी आधार कार्ड का पिछला हिस्सा अपलोड करें।");
-                            setActiveCameraCategory(null);
-                            return; 
+                    // Aadhaar Consistency Check
+                    if (activeCameraCategory === 'aadhar_back') {
+                        const frontAadhar = ocrResults['aadhar_front']?.aadhaar_number || watch('aadhar_number');
+                        if (ocr_data.aadhaar_number && frontAadhar) {
+                            const frontNum = frontAadhar.replace(/\s/g, '');
+                            const backNum = ocr_data.aadhaar_number.replace(/\s/g, '');
+                            if (frontNum !== backNum) {
+                                setErrorPopup("आधार कार्ड के दोनों तरफ के नंबर अलग-अलग हैं। कृपया उसी आधार कार्ड का पिछला हिस्सा अपलोड करें।");
+                                setActiveCameraCategory(null);
+                                return; 
+                            }
                         }
                     }
                 }
@@ -382,9 +385,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 setActiveCameraCategory(null);
             }
         } catch (err: any) {
-            setIsOcrLoading(false);
-            setErrorPopup(err.message || "Upload failed");
+            console.error("Capture error:", err);
+            setErrorPopup(err.message || "An unexpected error occurred during capture.");
             setActiveCameraCategory(null);
+        } finally {
+            setIsOcrLoading(false);
         }
     };
 
