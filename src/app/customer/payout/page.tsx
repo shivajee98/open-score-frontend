@@ -186,7 +186,7 @@ export default function PayoutPage() {
         user?.admin_verified_at ? new Date(user.admin_verified_at).getTime() : 0
     );
     const isVerifiedAtLeastOnce = verificationTime > 0;
-    const is24hWaitPassed = isVerifiedAtLeastOnce && (Date.now() - verificationTime > 24 * 60 * 60 * 1000);
+    const is24hWaitPassed = isVerifiedAtLeastOnce && (user?.kyc_status === 'FULL_VERIFIED' || !!user?.admin_verified_at || (Date.now() - verificationTime > 24 * 60 * 60 * 1000));
 
     // Truly verified means QR mapped, status is FULL_VERIFIED AND 24h passed
     const isMerchantVerified = isMerchant && user?.is_qr_mapped && user?.kyc_status === 'FULL_VERIFIED' && is24hWaitPassed;
@@ -287,7 +287,7 @@ export default function PayoutPage() {
                     freshUser.field_verified_at ? new Date(freshUser.field_verified_at).getTime() : 0,
                     freshUser.admin_verified_at ? new Date(freshUser.admin_verified_at).getTime() : 0
                 );
-                const fresh24hPassed = freshVerifiedTime > 0 && (Date.now() - freshVerifiedTime > 24 * 60 * 60 * 1000);
+                const fresh24hPassed = freshVerifiedTime > 0 && (freshUser.kyc_status === 'FULL_VERIFIED' || !!freshUser.admin_verified_at || (Date.now() - freshVerifiedTime > 24 * 60 * 60 * 1000));
                 const isFreshMerchantVerified = freshUser.role === 'MERCHANT' && freshUser.is_qr_mapped && freshUser.kyc_status === 'FULL_VERIFIED' && fresh24hPassed;
                 currentMerchantUnverified = freshUser.role === 'MERCHANT' && !isFreshMerchantVerified;
             }

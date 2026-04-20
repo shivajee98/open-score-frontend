@@ -53,12 +53,29 @@ export default function Camera({ onCapture, label }: CameraProps) {
 
     const capture = () => {
         if (!videoRef.current || !isAligned) return;
+        const video = videoRef.current;
         const canvas = document.createElement('canvas');
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
+        
+        // Cap resolution to 2000px max dimension
+        let width = video.videoWidth;
+        let height = video.videoHeight;
+        const maxDim = 2000;
+        
+        if (width > maxDim || height > maxDim) {
+            if (width > height) {
+                height = (maxDim / width) * height;
+                width = maxDim;
+            } else {
+                width = (maxDim / height) * width;
+                height = maxDim;
+            }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (ctx) {
-            ctx.drawImage(videoRef.current, 0, 0);
+            ctx.drawImage(video, 0, 0, width, height);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
             setCapturedImage(dataUrl);
             stopCamera();
@@ -80,13 +97,56 @@ export default function Camera({ onCapture, label }: CameraProps) {
         }
     };
 
+    const resizeImage = (file: File, maxDim: number = 2000): Promise<File> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = (maxDim / width) * height;
+                            width = maxDim;
+                        } else {
+                            width = (maxDim / height) * width;
+                            height = maxDim;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const resizedFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+                            resolve(resizedFile);
+                        } else {
+                            resolve(file);
+                        }
+                    }, 'image/jpeg', 0.8);
+                };
+                img.src = e.target?.result as string;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setLoading(true);
         try {
-            const processedFile = await convertHeicToJpeg(file);
+            let processedFile = await convertHeicToJpeg(file);
 
             const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
             const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
@@ -97,6 +157,9 @@ export default function Camera({ onCapture, label }: CameraProps) {
                 setLoading(false);
                 return;
             }
+
+            // Resize the image before sending it to the parent
+            processedFile = await resizeImage(processedFile);
 
             await onCapture(processedFile);
         } catch (err) {

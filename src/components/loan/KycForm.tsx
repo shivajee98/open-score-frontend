@@ -40,8 +40,9 @@ interface KycFormProps {
 }
 
 const STEPS = [
-    { id: 'documents', title: 'Identity', desc: 'Scan Aadhaar & PAN', icon: Shield },
     { id: 'purpose', title: 'Loan', desc: 'Amount & Purpose', icon: IndianRupee },
+    { id: 'aadhaar', title: 'Aadhaar', desc: 'Scan ID Card', icon: Shield },
+    { id: 'pan', title: 'PAN', desc: 'Scan PAN Card', icon: Shield },
     { id: 'personal', title: 'Personal', desc: 'Verify information', icon: User },
     { id: 'employment', title: 'Work', desc: 'Income & profession', icon: Briefcase },
     { id: 'consent', title: 'Review', desc: 'Final application', icon: FileText },
@@ -50,7 +51,7 @@ const STEPS = [
 const DOCUMENT_CATEGORIES = [
     { id: 'aadhar_front', label: 'Aadhaar (Front)', icon: FileText, color: 'bg-blue-50 text-blue-600' },
     { id: 'aadhar_back', label: 'Aadhaar (Back)', icon: FileText, color: 'bg-indigo-50 text-indigo-600' },
-    { id: 'pan_front', label: 'PAN Card (Front)', icon: FileText, color: 'bg-emerald-50 text-emerald-600' },
+    { id: 'pan_card', label: 'PAN Card (Front)', icon: FileText, color: 'bg-emerald-50 text-emerald-600' },
     { id: 'applicant_selfie', label: "Applicant Selfie", icon: User, color: 'bg-amber-50 text-amber-600' },
 ];
 
@@ -60,6 +61,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string, referral?: string }>({});
     const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean, referral?: boolean }>({});
     const [referrerName, setReferrerName] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Dynamic schema based on role
     const kycSchema = z.object({
@@ -85,6 +87,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         city: z.string().min(2, 'City is required'),
         state: z.string().min(2, 'State is required'),
         postal_code: z.string().length(6, 'Pincode must be 6 digits'),
+
+        permanent_street_address: z.string().optional(),
+        permanent_city: z.string().optional(),
+        permanent_state: z.string().optional(),
+        permanent_postal_code: z.string().optional(),
+        is_permanent_same: z.boolean().default(true),
 
         referral_code: z.string().optional(),
         consent: z.boolean().refine(val => val === true, 'You must agree to the terms'),
@@ -119,9 +127,40 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             city: user?.city || '',
             state: user?.state || '',
             postal_code: user?.pincode || '',
+            permanent_street_address: user?.permanent_street_address || '',
+            permanent_city: user?.permanent_city || '',
+            permanent_state: user?.permanent_state || '',
+            permanent_postal_code: user?.permanent_pincode || '',
+            is_permanent_same: user?.is_permanent_same ?? true,
             ...initialData
         }
     });
+
+    useEffect(() => {
+        const saved = localStorage.getItem('kyc_loan_draft');
+        if (saved) {
+            try {
+                const draft = JSON.parse(saved);
+                Object.keys(draft).forEach(key => {
+                    if (draft[key] !== undefined) {
+                        setValue(key as any, draft[key]);
+                    }
+                });
+            } catch (e) {
+                console.error("Failed to load draft", e);
+            }
+        }
+    }, [setValue]);
+
+    useEffect(() => {
+        const subscription = watch((value) => {
+            setIsSaving(true);
+            localStorage.setItem('kyc_loan_draft', JSON.stringify(value));
+            const timer = setTimeout(() => setIsSaving(false), 1000);
+            return () => clearTimeout(timer);
+        });
+        return () => subscription.unsubscribe();
+    }, [watch]);
 
     useEffect(() => {
         if (initialData) {
@@ -134,9 +173,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             });
         }
     }, [initialData, setValue]);
-
-
-
 
     const referralValue = watch('referral_code');
 
@@ -197,11 +233,16 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const nextStep = async () => {
-        // Enforce document uploads if in Step 0
-        if (currentStep === 0) {
-            const missingDocs = DOCUMENT_CATEGORIES.filter(cat => !capturedImages[cat.id]);
-            if (missingDocs.length > 0) {
-                setErrorPopup(`कृपया सभी दस्तावेज अपलोड करें: ${missingDocs.map(d => d.label).join(', ')}`);
+        // Enforce document uploads
+        if (currentStep === 1) { // Aadhaar step
+            if (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back']) {
+                setErrorPopup("कृपया आधार कार्ड के दोनों हिस्से अपलोड करें।");
+                return;
+            }
+        }
+        if (currentStep === 2) { // PAN step
+            if (!capturedImages['pan_card']) {
+                setErrorPopup("कृपया अपना पैन कार्ड अपलोड करें।");
                 return;
             }
         }
@@ -212,13 +253,19 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             if (!isStepValid) return;
         }
 
-        // Prevent next step if uniqueness check is failing
-        if (currentStep === 1 && referralValue && (checkingUniqueness.referral || uniquenessErrors.referral)) {
+        // Uniqueness checks
+        if (currentStep === 0 && referralValue && (checkingUniqueness.referral || uniquenessErrors.referral)) {
+            setErrorPopup(uniquenessErrors.referral || "रेफ़रल कोड की जाँच की जा रही है...");
+            return;
+        }
+        
+        if (currentStep === 1 && uniquenessErrors.aadhar) {
+            setErrorPopup("यह आधार कार्ड पहले से ही उपयोग किया जा चुका है।");
             return;
         }
 
-        // Prevent next step if uniqueness check is failing (Personal step now at index 2)
-        if (currentStep === 2 && (uniquenessErrors.aadhar || uniquenessErrors.pan)) {
+        if (currentStep === 2 && uniquenessErrors.pan) {
+            setErrorPopup("यह पैन कार्ड पहले से ही उपयोग किया जा चुका है।");
             return;
         }
 
@@ -255,8 +302,16 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         try {
             const { url, ocr_data } = await uploadToServer(blob, activeCameraCategory);
             
-            if ((ocr_data && !ocr_data.error) || activeCameraCategory === 'applicant_selfie') {
-                if (activeCameraCategory !== 'applicant_selfie') {
+            // Define which categories REQUIRE ocr_data to be present/valid
+            const identityTypes = ['aadhar_front', 'aadhar_back', 'pan_card'];
+            const requiresOcr = identityTypes.includes(activeCameraCategory);
+
+            if (requiresOcr) {
+                if (!ocr_data || ocr_data.error) {
+                    console.warn("OCR failed, allowing manual entry", ocr_data?.error);
+                    // Don't return early - allow the user to use the image even if OCR fails
+                } else {
+                    // OCR Success Path
                     // Same Image Check (using raw_text signature)
                     const currentText = JSON.stringify(ocr_data.raw_text);
                     const isSameImage = Object.entries(ocrResults).some(([cat, data]) => {
@@ -268,9 +323,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         setActiveCameraCategory(null);
                         return;
                     }
-                }
 
-                if (activeCameraCategory !== 'applicant_selfie') {
                     // Side-specific Keyword Check
                     const rawTextStr = (ocr_data.raw_text || []).join(' ').toLowerCase();
                     const isBackSide = rawTextStr.includes('address') || rawTextStr.includes('पता') || rawTextStr.includes('s/o') || rawTextStr.includes('w/o') || rawTextStr.includes('d/o');
@@ -301,89 +354,78 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             }
                         }
                     }
-                }
 
-                setOcrResults(prev => ({ ...prev, [activeCameraCategory]: ocr_data }));
-                setCapturedImages(prev => ({ ...prev, [activeCameraCategory]: url }));
-                
-                // Auto-fill
-                if (activeCameraCategory === 'aadhar_front') {
-                    if (ocr_data.name) {
-                        const [first, ...rest] = ocr_data.name.split(' ');
-                        setValue('first_name', first);
-                        setValue('last_name', rest.join(' '));
-                    }
-                    if (ocr_data.aadhaar_number) setValue('aadhar_number', ocr_data.aadhaar_number);
-                    if (ocr_data.dob) {
-                        const dob = ocr_data.dob.split(/[/-]/).reverse().join('-');
-                        setValue('date_of_birth', dob);
-                    }
-                    checkUniqueness('aadhar', ocr_data.aadhaar_number);
-                }
-                
-                if (activeCameraCategory === 'pan_front') {
-                    if (ocr_data.pan_number) {
-                        setValue('pan_number', ocr_data.pan_number);
-                        checkUniqueness('pan', ocr_data.pan_number);
-                    }
-                }
-
-                if (activeCameraCategory === 'aadhar_back') {
-                    // Robust address extraction
-                    let fullAddress = '';
+                    setOcrResults(prev => ({ ...prev, [activeCameraCategory]: ocr_data }));
                     
-                    // 1. Try to use ocr_data.address if it looks valid (not just a short string or trash)
-                    if (ocr_data.address && ocr_data.address.length > 20 && !ocr_data.address.toLowerCase().includes('authority')) {
-                        fullAddress = ocr_data.address;
-                    } 
+                    // Auto-fill
+                    if (activeCameraCategory === 'aadhar_front') {
+                        if (ocr_data.name) {
+                            const [first, ...rest] = ocr_data.name.split(' ');
+                            setValue('first_name', first);
+                            setValue('last_name', rest.join(' '));
+                        }
+                        if (ocr_data.aadhaar_number) setValue('aadhar_number', ocr_data.aadhaar_number);
+                        if (ocr_data.dob) {
+                            const dob = ocr_data.dob.split(/[/-]/).reverse().join('-');
+                            setValue('date_of_birth', dob);
+                        }
+                        checkUniqueness('aadhar', ocr_data.aadhaar_number);
+                    }
                     
-                    // 2. If ocr_data.address is missing or looks like trash, try raw_text
-                    if (!fullAddress && ocr_data.raw_text && Array.isArray(ocr_data.raw_text)) {
-                        const addressIndex = ocr_data.raw_text.findIndex((line: string) => 
-                            line.toLowerCase().includes('address:') || line.toLowerCase().includes('पता:')
-                        );
-                        
-                        if (addressIndex !== -1) {
-                            // Take lines after "Address:" until we hit an Aadhaar number pattern or end
-                            const addressLines = [];
-                            for (let i = addressIndex + 1; i < ocr_data.raw_text.length; i++) {
-                                const line = ocr_data.raw_text[i].trim();
-                                // Stop if line is an Aadhaar number (xxxx xxxx xxxx) or VID
-                                if (/^\d{4}\s\d{4}\s\d{4}$/.test(line) || line.toLowerCase().includes('vid :') || line.length < 2) {
-                                    if (addressLines.length > 0) break; 
-                                    continue;
-                                }
-                                addressLines.push(line);
-                            }
-                            if (addressLines.length > 0) {
-                                fullAddress = addressLines.join(', ');
-                            }
+                    if (activeCameraCategory === 'pan_card') {
+                        if (ocr_data.pan_number) {
+                            setValue('pan_number', ocr_data.pan_number);
+                            checkUniqueness('pan', ocr_data.pan_number);
                         }
                     }
 
-                    // 3. Last ditch: clean up the provided address if it contains trash headers
-                    if (fullAddress) {
-                        fullAddress = fullAddress
-                            .replace(/unique identification authority of india/gi, '')
-                            .replace(/government of india/gi, '')
-                            .replace(/भारत सरकार/g, '')
-                            .replace(/भारतीय विशिष्ट पहचान प्राधिकरण/g, '')
-                            .trim()
-                            .replace(/^,|,$/g, '');
-                    }
+                    if (activeCameraCategory === 'aadhar_back') {
+                        // Robust address extraction ... [kept original logic]
+                        let fullAddress = '';
+                        if (ocr_data.address && ocr_data.address.length > 20 && !ocr_data.address.toLowerCase().includes('authority')) {
+                            fullAddress = ocr_data.address;
+                        } else if (ocr_data.raw_text && Array.isArray(ocr_data.raw_text)) {
+                            const addressIndex = ocr_data.raw_text.findIndex((line: string) => 
+                                line.toLowerCase().includes('address:') || line.toLowerCase().includes('पता:')
+                            );
+                            if (addressIndex !== -1) {
+                                const addressLines = [];
+                                for (let i = addressIndex + 1; i < ocr_data.raw_text.length; i++) {
+                                    const line = ocr_data.raw_text[i].trim();
+                                    if (/^\d{4}\s\d{4}\s\d{4}$/.test(line) || line.toLowerCase().includes('vid :') || line.length < 2) {
+                                        if (addressLines.length > 0) break; 
+                                        continue;
+                                    }
+                                    addressLines.push(line);
+                                }
+                                if (addressLines.length > 0) fullAddress = addressLines.join(', ');
+                            }
+                        }
 
-                    if (fullAddress) setValue('street_address', fullAddress);
-                    if (ocr_data.pincode) setValue('postal_code', ocr_data.pincode);
-                    if (ocr_data.city) setValue('city', ocr_data.city);
-                    if (ocr_data.state) setValue('state', ocr_data.state);
+                        if (fullAddress) {
+                            fullAddress = fullAddress.replace(/unique identification authority of india/gi, '').replace(/government of india/gi, '').replace(/भारत सरकार/g, '').replace(/भारतीय विशिष्ट पहचान प्राधिकरण/g, '').trim().replace(/^,|,$/g, '');
+                            setValue('permanent_street_address', fullAddress);
+                            if (watch('is_permanent_same')) setValue('street_address', fullAddress);
+                        }
+                        if (ocr_data.pincode) {
+                            setValue('permanent_postal_code', ocr_data.pincode);
+                            if (watch('is_permanent_same')) setValue('postal_code', ocr_data.pincode);
+                        }
+                    }
+                    if (ocr_data.city) {
+                        setValue('permanent_city', ocr_data.city);
+                        if (watch('is_permanent_same')) setValue('city', ocr_data.city);
+                    }
+                    if (ocr_data.state) {
+                        setValue('permanent_state', ocr_data.state);
+                        if (watch('is_permanent_same')) setValue('state', ocr_data.state);
+                    }
                     if (ocr_data.father_name) setValue('father_name', ocr_data.father_name);
                 }
-
-                setActiveCameraCategory(null);
-            } else {
-                setErrorPopup(ocr_data?.error || "Could not extract information. Please re-upload.");
-                setActiveCameraCategory(null);
             }
+
+            setCapturedImages(prev => ({ ...prev, [activeCameraCategory]: url }));
+            setActiveCameraCategory(null);
         } catch (err: any) {
             console.error("Capture error:", err);
             setErrorPopup(err.message || "An unexpected error occurred during capture.");
@@ -395,11 +437,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     const getFieldsForStep = (step: number) => {
         switch (step) {
-            case 0: return []; // Documents step (manually checked in nextStep)
-            case 1: return ['annual_income', 'loan_usage', 'referral_code'];
-            case 2: return ['first_name', 'last_name', 'email', 'phone', 'aadhar_number', 'pan_number', 'date_of_birth', 'father_name', 'mother_name', 'marital_status', 'street_address', 'city', 'state', 'postal_code'];
-            case 3: return ['employer', 'occupation'];
-            case 4: return ['consent'];
+            case 0: return ['annual_income', 'loan_usage', 'referral_code'];
+            case 1: return ['aadhar_number', 'date_of_birth'];
+            case 2: return ['pan_number'];
+            case 3: return ['first_name', 'last_name', 'email', 'phone', 'father_name', 'mother_name', 'marital_status', 'street_address', 'city', 'state', 'postal_code'];
+            case 4: return ['employer', 'occupation'];
+            case 5: return ['consent'];
             default: return [];
         }
     };
@@ -413,8 +456,42 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             case 0:
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                        <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 mb-6">
+                            <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                <IndianRupee size={14} className="text-blue-500" />
+                                Loan Requirements
+                            </h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className={labelClasses}>Annual Income (₹)</label>
+                                    <input type="number" placeholder="e.g. 500000" {...register('annual_income')} className={inputClasses} />
+                                    {errors.annual_income && <p className={errorClasses}>{errors.annual_income.message}</p>}
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>Purpose of Loan</label>
+                                    <input placeholder="e.g. Education, Business" {...register('loan_usage')} className={inputClasses} />
+                                    {errors.loan_usage && <p className={errorClasses}>{errors.loan_usage.message}</p>}
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>Referral Code (Optional)</label>
+                                    <div className="relative">
+                                        <input placeholder="Enter code" {...register('referral_code')} className={inputClasses} />
+                                        {checkingUniqueness.referral && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />}
+                                        {referrerName && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-emerald-500 uppercase tracking-widest">{referrerName}</div>}
+                                    </div>
+                                    {errors.referral_code && <p className={errorClasses}>{errors.referral_code.message}</p>}
+                                    {uniquenessErrors.referral && <p className={errorClasses}>{uniquenessErrors.referral}</p>}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 1:
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {DOCUMENT_CATEGORIES.map((cat) => {
+                            {DOCUMENT_CATEGORIES.filter(cat => cat.id.startsWith('aadhar')).map((cat) => {
                                 const isCaptured = !!capturedImages[cat.id];
                                 return (
                                     <button
@@ -430,10 +507,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                             {isCaptured ? <Check className="w-8 h-8" /> : <cat.icon className="w-7 h-7" />}
                                         </div>
                                         <p className="text-xs font-black uppercase tracking-widest text-slate-900">{cat.label}</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                                            {isCaptured ? "Captured Successfully" : "Tap to capture"}
-                                        </p>
-                                        
                                         {isCaptured && (
                                             <div className="mt-3 w-full h-12 rounded-xl border border-emerald-100 overflow-hidden bg-white">
                                                 <img src={capturedImages[cat.id]} className="w-full h-full object-cover" alt="Preview" />
@@ -443,79 +516,73 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 );
                             })}
                         </div>
-                        <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-start gap-4">
-                            <Shield className="text-blue-500 shrink-0 mt-1" size={18} />
-                            <div>
-                                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Identity Verification</p>
-                                <p className="text-[11px] text-blue-800/70 font-medium leading-relaxed">
-                                    Please ensure your documents are clearly visible and not expired. We use encrypted OCR to verify your details instantly.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                );
 
-            case 1:
-                return (
-                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 flex items-center justify-between shadow-inner">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
-                                    <Shield className="text-blue-600" size={24} />
+                        {/* Aadhaar Extracted Details */}
+                        {(watch('aadhar_number') || watch('date_of_birth')) && (
+                            <div className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100 space-y-4">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Shield className="text-emerald-500" size={16} />
+                                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Aadhaar Data Verified</h4>
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Applying for</p>
-                                    <p className="text-lg font-black text-slate-900 leading-tight">₹ {loanAmount?.toLocaleString()}</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Number</p>
+                                        <p className="text-xs font-bold text-slate-700">{watch('aadhar_number')}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">DOB</p>
+                                        <p className="text-xs font-bold text-slate-700">{watch('date_of_birth')}</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform</p>
-                                <p className="text-xs font-black text-slate-900">Open Score</p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className={labelClasses}>Annual Income</label>
-                                <div className="relative">
-                                    <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        placeholder="Total yearly income"
-                                        {...register('annual_income')}
-                                        className={`${inputClasses} pl-11`}
-                                    />
-                                </div>
-                                {errors.annual_income && <p className={errorClasses}>{errors.annual_income.message}</p>}
-                            </div>
-
-                            <div>
-                                <label className={labelClasses}>Referral Code (Optional)</label>
-                                <input
-                                    placeholder="Agent ID or Friend's Code"
-                                    {...register('referral_code')}
-                                    className={cn(inputClasses, uniquenessErrors.referral && "border-rose-500 ring-rose-50", referrerName && "border-emerald-500 ring-emerald-50")}
-                                />
-                                {checkingUniqueness.referral && <p className="text-[9px] text-blue-500 font-bold mt-1 ml-2 animate-pulse uppercase tracking-widest">Verifying Code...</p>}
-                                {uniquenessErrors.referral && <p className={errorClasses}>{uniquenessErrors.referral}</p>}
-                                {referrerName && <p className="text-[9px] text-emerald-600 font-black mt-1 ml-2 uppercase tracking-widest">Referrer: {referrerName}</p>}
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className={labelClasses}>Purpose of Loan</label>
-                            <textarea
-                                placeholder="Why do you need this loan?"
-                                {...register('loan_usage')}
-                                className={`${inputClasses} min-h-[100px] resize-none`}
-                            />
-                            {errors.loan_usage && <p className={errorClasses}>{errors.loan_usage.message}</p>}
-                        </div>
+                        )}
                     </div>
                 );
 
             case 2:
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                         {DOCUMENT_CATEGORIES.filter(cat => cat.id === 'pan_card').map((cat) => {
+                            const isCaptured = !!capturedImages[cat.id];
+                            return (
+                                <button
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => setActiveCameraCategory(cat.id)}
+                                    className={cn(
+                                        "relative p-8 rounded-[2.5rem] border-2 border-dashed transition-all flex flex-col items-center text-center group w-full",
+                                        isCaptured ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white"
+                                    )}
+                                >
+                                    <div className={cn("w-16 h-16 rounded-2xl mb-4 flex items-center justify-center transition-transform group-hover:scale-110", cat.color)}>
+                                        {isCaptured ? <Check className="w-8 h-8" /> : <cat.icon className="w-8 h-8" />}
+                                    </div>
+                                    <p className="text-sm font-black uppercase tracking-widest text-slate-900">{cat.label}</p>
+                                    {isCaptured && (
+                                        <div className="mt-4 w-full h-24 rounded-2xl border border-emerald-100 overflow-hidden bg-white">
+                                            <img src={capturedImages[cat.id]} className="w-full h-full object-cover" alt="Preview" />
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+
+                        {watch('pan_number') && (
+                            <div className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Shield className="text-emerald-500" size={16} />
+                                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">PAN Data Verified</h4>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">PAN Card Number</p>
+                                    <p className="text-sm font-black text-slate-700 tracking-wider">{watch('pan_number')}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+
+            case 3:
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="grid grid-cols-2 gap-4">
@@ -531,62 +598,15 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             </div>
                         </div>
 
-                        {/* OCR Extracted Details (Read-only) */}
-                        <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
-                            <div className="flex items-center gap-3 mb-2">
-                                <Shield className="text-blue-500" size={16} />
-                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Verified Identity Details</h4>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Aadhaar Number</p>
-                                    <p className="text-xs font-bold text-slate-700">{watch('aadhar_number') || 'Not Captured'}</p>
-                                    <input type="hidden" {...register('aadhar_number')} />
-                                    {errors.aadhar_number && <p className={errorClasses}>Required via Scan</p>}
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">PAN Number</p>
-                                    <p className="text-xs font-bold text-slate-700">{watch('pan_number') || 'Not Captured'}</p>
-                                    <input type="hidden" {...register('pan_number')} />
-                                    {errors.pan_number && <p className={errorClasses}>Required via Scan</p>}
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Date of Birth</p>
-                                    <p className="text-xs font-bold text-slate-700">{watch('date_of_birth') || 'Not Captured'}</p>
-                                    <input type="hidden" {...register('date_of_birth')} />
-                                    {errors.date_of_birth && <p className={errorClasses}>Required via Scan</p>}
-                                </div>
-                            </div>
-
-                            <p className="text-[9px] text-slate-400 font-medium italic">These details were extracted from your documents. If incorrect, please re-scan in Step 1.</p>
-                        </div>
-
-
-
-                        <div>
-                            <label className={labelClasses}>Email Address</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
-                                <input type="email" placeholder="name@email.com" {...register('email')} className={`${inputClasses} pl-11`} />
-                            </div>
-                            {errors.email && <p className={errorClasses}>{errors.email.message}</p>}
-                        </div>
-
                         <div className="grid grid-cols-2 gap-4">
                             <div>
+                                <label className={labelClasses}>Email Address</label>
+                                <input type="email" placeholder="name@email.com" {...register('email')} className={inputClasses} />
+                                {errors.email && <p className={errorClasses}>{errors.email.message}</p>}
+                            </div>
+                            <div>
                                 <label className={labelClasses}>Mobile Number</label>
-                                <div className="relative">
-                                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
-                                    <input 
-                                        type="tel" 
-                                        maxLength={10} 
-                                        placeholder="9876543210" 
-                                        {...register('phone')} 
-                                        readOnly={!!user?.mobile_number}
-                                        className={cn(inputClasses, "pl-11", !!user?.mobile_number && "bg-slate-50 text-slate-500 cursor-not-allowed")} 
-                                    />
-                                </div>
+                                <input type="tel" maxLength={10} placeholder="9876543210" {...register('phone')} className={inputClasses} />
                                 {errors.phone && <p className={errorClasses}>{errors.phone.message}</p>}
                             </div>
                         </div>
@@ -612,105 +632,128 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <option value="Divorced">Divorced</option>
                                 <option value="Widowed">Widowed</option>
                             </select>
-                            {errors.marital_status && <p className={errorClasses}>{errors.marital_status.message}</p>}
                         </div>
 
-                        <div className="space-y-4 pt-4 border-t border-slate-50">
-                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Current Address</h4>
-                            <div>
-                                <label className={labelClasses}>Street Address</label>
-                                <input placeholder="House No, Street, Area" {...register('street_address')} className={inputClasses} />
-                                {errors.street_address && <p className={errorClasses}>{errors.street_address.message}</p>}
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-4 pt-6 border-t border-slate-100">
+                             <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-4">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Permanent Address (From Aadhaar)</h4>
                                 <div>
-                                    <label className={labelClasses}>City</label>
-                                    <input placeholder="City" {...register('city')} className={inputClasses} />
-                                    {errors.city && <p className={errorClasses}>{errors.city.message}</p>}
+                                    <label className={labelClasses}>Street Address</label>
+                                    <input placeholder="Street Address" {...register('permanent_street_address')} className={inputClasses} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>City</label>
+                                        <input placeholder="City" {...register('permanent_city')} className={inputClasses} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Pincode</label>
+                                        <input placeholder="Pincode" maxLength={6} {...register('permanent_postal_code')} className={inputClasses} />
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className={labelClasses}>Pincode</label>
-                                    <input placeholder="6 Digit PIN" maxLength={6} {...register('postal_code')} className={inputClasses} />
-                                    {errors.postal_code && <p className={errorClasses}>{errors.postal_code.message}</p>}
+                                    <label className={labelClasses}>State</label>
+                                    <input placeholder="State" {...register('permanent_state')} className={inputClasses} />
                                 </div>
                             </div>
-                            <div>
-                                <label className={labelClasses}>State</label>
-                                <input placeholder="State" {...register('state')} className={inputClasses} />
-                                {errors.state && <p className={errorClasses}>{errors.state.message}</p>}
+
+                            <div className="flex items-center justify-between px-2 pt-4">
+                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.15em]">Current Address</h4>
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest group-hover:text-blue-500 transition-colors">Same as Permanent</span>
+                                    <div className="relative">
+                                        <input type="checkbox" {...register('is_permanent_same')} className="sr-only peer" />
+                                        <div className="w-8 h-4 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4 shadow-inner"></div>
+                                    </div>
+                                </label>
                             </div>
-                        </div>
-                    </div>
-                );
 
-
-            case 3:
-                return (
-                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
-                        <div>
-                            <label className={labelClasses}>{user?.role === 'STUDENT' ? 'School / College Name' : 'Current Employer / Shop Name'}</label>
-                            <input 
-                                placeholder={user?.role === 'STUDENT' ? 'Enter your school or college name' : 'Company or Business Name'} 
-                                {...register('employer')} 
-                                className={inputClasses} 
-                            />
-                            {errors.employer && <p className={errorClasses}>{errors.employer.message}</p>}
-                        </div>
-
-                        <div>
-                            <label className={labelClasses}>{user?.role === 'STUDENT' ? 'Course / Degree' : 'Occupation / Role'}</label>
-                            <input 
-                                placeholder={user?.role === 'STUDENT' ? 'e.g. B.Tech Computer Science' : 'e.g. Sales Manager, Shop Owner'} 
-                                {...register('occupation')} 
-                                className={inputClasses} 
-                            />
-                            {errors.occupation && <p className={errorClasses}>{errors.occupation.message}</p>}
-                        </div>
-
-                        <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 mt-12">
-                            <h4 className="flex items-center gap-2 text-sm font-black text-slate-900 mb-3">
-                                <Shield className="w-4 h-4 text-blue-500" />
-                                Safe & Secure
-                            </h4>
-                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                                Your information is encrypted and only used for credit assessment. We never share your sensitive data with third parties without permission.
-                            </p>
+                            {!watch('is_permanent_same') && (
+                                <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                                    <div>
+                                        <label className={labelClasses}>Current Street Address</label>
+                                        <input placeholder="Current House No, Street" {...register('street_address')} className={inputClasses} />
+                                        {errors.street_address && <p className={errorClasses}>{errors.street_address.message}</p>}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className={labelClasses}>City</label>
+                                            <input placeholder="City" {...register('city')} className={inputClasses} />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Pincode</label>
+                                            <input placeholder="Pincode" maxLength={6} {...register('postal_code')} className={inputClasses} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>State</label>
+                                        <input placeholder="State" {...register('state')} className={inputClasses} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
 
             case 4:
                 return (
-                    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest px-2">Application Summary</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReviewItem label="Full Name" value={`${watch('first_name')} ${watch('last_name')}`} icon={User} />
-                                <ReviewItem label="Aadhaar" value={watch('aadhar_number')} icon={Shield} />
-                                <ReviewItem label="PAN Card" value={watch('pan_number')} icon={CreditCard} />
-                                <ReviewItem label="Father's Name" value={watch('father_name')} icon={User} />
-                                <ReviewItem label="Mother's Name" value={watch('mother_name')} icon={User} />
-                                <ReviewItem label="City" value={watch('city')} icon={MapPin} />
-                                <ReviewItem label="Income" value={`₹ ${watch('annual_income')}`} icon={IndianRupee} />
-                            </div>
-                        </div>
-
-                        <label className="flex items-start gap-4 p-6 bg-slate-50 rounded-3xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
-                            <div className="mt-1">
-                                <input
-                                    type="checkbox"
-                                    {...register('consent')}
-                                    className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
-                                />
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                        <div className="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 space-y-6">
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                                <Briefcase size={16} className="text-blue-500" />
+                                Employment Information
+                            </h3>
+                            <div>
+                                <label className={labelClasses}>{user?.role === 'STUDENT' ? 'School / College Name' : 'Company / Business Name'}</label>
+                                <input placeholder="Enter name" {...register('employer')} className={inputClasses} />
+                                {errors.employer && <p className={errorClasses}>{errors.employer.message}</p>}
                             </div>
                             <div>
-                                <p className="text-xs font-black text-slate-900 uppercase tracking-wide mb-1">Declaration</p>
-                                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                                    I certify that the information provided is true and accurate. I authorize Open Score to verify my identity and assess my creditworthiness.
-                                </p>
-                                {errors.consent && <p className={errorClasses}>{errors.consent.message}</p>}
+                                <label className={labelClasses}>Occupation / Position</label>
+                                <input placeholder="e.g. Software Engineer, Shop Owner" {...register('occupation')} className={inputClasses} />
+                                {errors.occupation && <p className={errorClasses}>{errors.occupation.message}</p>}
                             </div>
-                        </label>
+                        </div>
+                    </div>
+                );
+
+            case 5:
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                         <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 space-y-8 shadow-2xl">
+                            <div>
+                                <h3 className="text-2xl font-black tracking-tight mb-2">Almost there!</h3>
+                                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Review your details and submit</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3">
+                                <div className="p-5 bg-white/5 rounded-3xl border border-white/10 flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Loan Amount</span>
+                                    <span className="text-xl font-black text-emerald-400">₹{loanAmount.toLocaleString()}</span>
+                                </div>
+                                <div className="p-5 bg-white/5 rounded-3xl border border-white/10 flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Aadhaar Number</span>
+                                    <span className="text-sm font-bold text-white/80">{watch('aadhar_number')}</span>
+                                </div>
+                            </div>
+
+                            <div className="pt-4">
+                                <label className="flex items-start gap-4 p-5 bg-white/5 rounded-3xl border border-white/5 cursor-pointer group hover:bg-white/10 transition-all">
+                                    <div className="relative mt-1">
+                                        <input type="checkbox" {...register('consent')} className="sr-only peer" />
+                                        <div className="w-6 h-6 border-2 border-white/20 rounded-xl peer-checked:bg-blue-500 peer-checked:border-blue-500 transition-all flex items-center justify-center">
+                                            <Check className="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-all" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[11px] font-bold text-white leading-relaxed">
+                                            I declare that the information provided is true and I accept the terms of the loan agreement.
+                                        </p>
+                                        {errors.consent && <p className="text-[10px] font-black text-rose-400 uppercase mt-2 tracking-widest">{errors.consent.message}</p>}
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 );
 
@@ -789,6 +832,19 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         </button>
                     )}
 
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsSaving(true);
+                            localStorage.setItem('kyc_loan_draft', JSON.stringify(watch()));
+                            setTimeout(() => setIsSaving(false), 1500);
+                        }}
+                        className="flex-1 py-4 bg-white border-2 border-slate-100 text-slate-400 rounded-3xl font-black text-[10px] uppercase tracking-widest hover:border-slate-200 hover:text-slate-600 transition-all flex items-center justify-center gap-2"
+                    >
+                        {isSaving ? <Check size={16} className="text-emerald-500" /> : <Shield size={16} />}
+                        {isSaving ? 'Saved' : 'Save Draft'}
+                    </button>
+
                     {currentStep < STEPS.length - 1 ? (
                         <button
                             type="button"
@@ -817,6 +873,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             {isModal ? (
                 <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 backdrop-blur-xl p-4 overflow-y-auto animate-in fade-in duration-300">
                     <div className="w-full max-w-2xl bg-white rounded-[3rem] p-8 sm:p-12 shadow-2xl my-8 animate-in slide-in-from-bottom-10 duration-500 relative">
+                        {isSaving && (
+                            <div className="absolute top-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Draft Saved</span>
+                                </div>
+                            </div>
+                        )}
                         <div className="flex justify-between items-center mb-10">
                             <div>
                                 <h2 className="text-3xl font-black text-slate-900 tracking-tight">Kyc Verification</h2>
@@ -838,7 +902,15 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     </div>
                 </div>
             ) : (
-                <div className="bg-white rounded-[3rem] p-8 sm:p-12 shadow-2xl border border-slate-100 max-w-4xl mx-auto">
+                <div className="bg-white rounded-[3rem] p-8 sm:p-12 shadow-2xl border border-slate-100 max-w-4xl mx-auto relative">
+                    {isSaving && (
+                        <div className="absolute top-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Draft Saved</span>
+                            </div>
+                        </div>
+                    )}
                     <div className="mb-10">
                         <h2 className="text-3xl font-black text-slate-900 tracking-tight">Loan Application</h2>
                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">

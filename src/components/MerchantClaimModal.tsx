@@ -35,27 +35,38 @@ export default function MerchantClaimModal({ isOpen, onClose, onSuccess, bonusAm
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'pan' | 'aadhar') => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 10 * 1024 * 1024) {
-                toast.error('File too large (max 10MB)');
-                return;
-            }
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX = 1200;
+                    const MAX = 2000;
                     let w = img.width;
                     let h = img.height;
-                    if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } }
-                    else { if (h > MAX) { w *= MAX / h; h = MAX; } }
+                    
+                    if (w > MAX || h > MAX) {
+                        if (w > h) {
+                            h = (MAX / w) * h;
+                            w = MAX;
+                        } else {
+                            w = (MAX / h) * w;
+                            h = MAX;
+                        }
+                    }
+                    
                     canvas.width = w;
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx?.drawImage(img, 0, 0, w, h);
+                    
                     canvas.toBlob((blob) => {
                         if (blob) {
                             const newFile = new File([blob], `${type}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                            // Final size check after resizing
+                            if (newFile.size > 10 * 1024 * 1024) {
+                                toast.error('File still too large after optimization');
+                                return;
+                            }
                             if (type === 'pan') { setPanFile(newFile); setPanPreview(URL.createObjectURL(newFile)); }
                             else { setAadharFile(newFile); setAadharPreview(URL.createObjectURL(newFile)); }
                         }
