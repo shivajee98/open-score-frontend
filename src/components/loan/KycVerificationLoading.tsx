@@ -6,9 +6,10 @@ import { Shield, Database, UserCheck, CreditCard, Smile, Check, X } from 'lucide
 interface KycVerificationLoadingProps {
     loanAmount: number;
     onComplete: () => void;
+    duration?: number; // Optional duration in milliseconds
 }
 
-export default function KycVerificationLoading({ loanAmount, onComplete }: KycVerificationLoadingProps) {
+export default function KycVerificationLoading({ loanAmount, onComplete, duration = 30000 }: KycVerificationLoadingProps) {
     const [progress, setProgress] = useState(0);
     const [phase, setPhase] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -23,7 +24,6 @@ export default function KycVerificationLoading({ loanAmount, onComplete }: KycVe
     ];
 
     useEffect(() => {
-        const duration = 30000; // 30 Seconds
         const interval = 50;
         const steps = duration / interval;
         let currentStep = 0;

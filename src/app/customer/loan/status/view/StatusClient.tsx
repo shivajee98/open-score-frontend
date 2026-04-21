@@ -4,6 +4,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, MessageSquare } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
+import { CountdownCircleTimer } from 'react-countdown-circle-timer';
 import KycForm from '@/components/loan/KycForm';
 import KycVerificationLoading from '@/components/loan/KycVerificationLoading';
 import { toast } from '@/components/ui/Toast';
@@ -25,6 +26,7 @@ export default function LoanStatus() {
     const [existingKycData, setExistingKycData] = useState<any>(null);
     const [tickets, setTickets] = useState<any[]>([]);
     const [showVerificationLoading, setShowVerificationLoading] = useState(false);
+    const [animationDuration, setAnimationDuration] = useState(30000);
     const resolveSubmissionRef = useRef<(() => void) | null>(null);
 
     const fetchLoan = async () => {
@@ -99,6 +101,44 @@ export default function LoanStatus() {
         }
     };
 
+    // Auto Pilot Timer Logic
+    const [timerInfo, setTimerInfo] = useState<{ total: number, remaining: number } | null>(null);
+
+    useEffect(() => {
+        if (!loan?.auto_pilot_next_step_at || !loan?.auto_pilot_enabled) {
+            setTimerInfo(null);
+            return;
+        }
+
+        const start = new Date(loan.updated_at).getTime();
+        const target = new Date(loan.auto_pilot_next_step_at).getTime();
+        const total = Math.max(1, Math.floor((target - start) / 1000));
+        
+        const updateTimer = () => {
+            const now = new Date().getTime();
+            const remaining = Math.max(0, Math.floor((target - now) / 1000));
+            setTimerInfo({ total, remaining });
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [loan?.auto_pilot_next_step_at, loan?.auto_pilot_enabled, loan?.updated_at]);
+
+    const formatTimerLabel = (seconds: number) => {
+        if (seconds >= 3600) {
+            const hours = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${mins}m`;
+        }
+        if (seconds >= 60) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}m ${secs}s`;
+        }
+        return `${seconds}s`;
+    };
+
     useEffect(() => {
         fetchLoan();
         fetchUserData();
@@ -121,6 +161,47 @@ export default function LoanStatus() {
         window.addEventListener('loanStateUpdate', handleLoanUpdate);
         return () => window.removeEventListener('loanStateUpdate', handleLoanUpdate);
     }, [loanId, showKycForm]);
+
+    // Multi-stage Animation Trigger Logic
+    useEffect(() => {
+        if (!loan || showKycForm || showVerificationLoading) return;
+
+        const status = loan.status;
+        const storageKey = `loan_${loan.id}_anim_shown`;
+        const shownStages = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+        // Stage 2: Verification (VETTING/PROCEEDED)
+        if (['VETTING', 'PROCEEDED'].includes(status) && !shownStages.stage2) {
+            const duration = timerInfo?.remaining ? timerInfo.remaining * 1000 : 30000;
+            setAnimationDuration(duration);
+            setShowVerificationLoading(true);
+            
+            // Mark as shown
+            shownStages.stage2 = true;
+            localStorage.setItem(storageKey, JSON.stringify(shownStages));
+            
+            // For auto-pilot stages, we don't need a manual "Get Money Now" resolver 
+            // but we use a dummy one that just closes the modal and reloads
+            resolveSubmissionRef.current = () => {
+                setShowVerificationLoading(false);
+                window.location.reload();
+            };
+        }
+        
+        // Stage 3: Final Approval (APPROVED)
+        if (status === 'APPROVED' && !shownStages.stage3) {
+            setAnimationDuration(15000); // 15s for the final "wow" moment
+            setShowVerificationLoading(true);
+            
+            shownStages.stage3 = true;
+            localStorage.setItem(storageKey, JSON.stringify(shownStages));
+            
+            resolveSubmissionRef.current = () => {
+                setShowVerificationLoading(false);
+                window.location.reload();
+            };
+        }
+    }, [loan?.status, timerInfo?.remaining, showKycForm]);
 
     // Prepare initial KYC data from user profile and existing form data
     const initialKycData = useMemo(() => {
@@ -165,8 +246,15 @@ export default function LoanStatus() {
     const handleKycSubmit = async (kycData: any) => {
         setSubmitting(true);
         try {
-            // First, start the Sci-Fi loading animation
+            // First, start the Sci-Fi loading animation (Stage 1)
+            setAnimationDuration(30000);
             setShowVerificationLoading(true);
+
+            // Mark stage 1 as shown in localStorage
+            const storageKey = `loan_${loan.id}_anim_shown`;
+            const shownStages = JSON.parse(localStorage.getItem(storageKey) || '{}');
+            shownStages.stage1 = true;
+            localStorage.setItem(storageKey, JSON.stringify(shownStages));
 
             // This Promise will be resolved when the user clicks "Get Money Now" in the loading component
             await new Promise<void>((resolve) => {
@@ -393,6 +481,49 @@ export default function LoanStatus() {
 
                 {/* Timeline Stepper */}
                 <div className="bg-white rounded-lg p-4 py-6 shadow-xl shadow-blue-900/5">
+                    {loan?.auto_pilot_enabled && timerInfo && timerInfo.remaining > 0 && (
+                        <div className="mb-8 flex flex-col items-center justify-center p-6 bg-slate-50/50 border border-slate-100 rounded-[2rem] animate-in fade-in zoom-in duration-500 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 to-transparent pointer-events-none" />
+                            
+                            <div className="relative z-10 flex flex-col items-center gap-4">
+                                <CountdownCircleTimer
+                                    key={`${loan.status}-${loan.auto_pilot_next_step_at}`}
+                                    isPlaying
+                                    duration={timerInfo.total}
+                                    initialRemainingTime={timerInfo.remaining}
+                                    colors={['#3b82f6', '#2563eb', '#1d4ed8', '#1e3a8a']}
+                                    colorsTime={[timerInfo.total, timerInfo.total * 0.6, timerInfo.total * 0.3, 0]}
+                                    size={120}
+                                    strokeWidth={6}
+                                    trailColor="#f1f5f9"
+                                    onComplete={() => {
+                                        fetchLoan();
+                                        window.location.reload();
+                                    }}
+                                >
+                                    {({ remainingTime }) => (
+                                        <div className="flex flex-col items-center justify-center text-center">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Remaining</span>
+                                            <span className="text-xl font-black text-slate-900 tabular-nums tracking-tighter leading-none">
+                                                {formatTimerLabel(remainingTime)}
+                                            </span>
+                                            <span className="text-[9px] font-bold text-blue-500 mt-1 uppercase tracking-widest animate-pulse">Syncing</span>
+                                        </div>
+                                    )}
+                                </CountdownCircleTimer>
+
+                                <div className="text-center">
+                                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-1">
+                                        Under Processing: {loan.auto_pilot_next_step_name?.replace('_', ' ')}
+                                    </h4>
+                                    <p className="text-[9px] font-medium text-slate-400 italic">
+                                        Under Process
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between relative px-2">
                         {/* Connecting Line - Thinner and Elegant */}
                         <div className="absolute left-6 right-6 top-[20px] h-[2px] bg-slate-50 z-0">
@@ -410,7 +541,7 @@ export default function LoanStatus() {
                             {
                                 label: 'Submitted',
                                 date: new Date(loan.created_at).toLocaleDateString(),
-                                status: 'done'
+                                status: (['VETTING', 'PROCEEDED', 'KYC_SENT', 'FORM_SUBMITTED', 'KYC_SUBMITTED', 'APPROVED', 'DISBURSED', 'CLOSED'].includes(loan.status)) ? 'done' : 'current'
                             },
                             {
                                 label: 'Verification',
@@ -432,15 +563,29 @@ export default function LoanStatus() {
                             },
                         ].map((step, i) => (
                             <div key={i} className="relative z-10 flex flex-col items-center gap-3">
-                                <div className={`w-9 h-9 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 ${step.status === 'done' ? 'bg-emerald-500 border-white text-white shadow-lg shadow-emerald-500/10' :
+                                <div className={`w-9 h-9 rounded-full border-[3px] flex items-center justify-center transition-all duration-500 relative ${step.status === 'done' ? 'bg-emerald-500 border-white text-white shadow-lg shadow-emerald-500/10' :
                                     step.status === 'error' ? 'bg-rose-500 border-white text-white' :
                                         step.status === 'current' ? 'bg-white border-amber-400 text-amber-500 shadow-xl shadow-amber-400/5' :
                                             'bg-slate-50 border-white text-slate-100'
                                     }`}>
                                     {step.status === 'done' ? <Check size={16} strokeWidth={4} /> :
                                         step.status === 'error' ? <Ban size={16} strokeWidth={4} /> :
-                                            step.status === 'current' ? <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" /> :
-                                                <div className="w-2 h-2 rounded-full bg-slate-200" />}
+                                            (step.status === 'current' && loan?.auto_pilot_enabled && timerInfo && i < 3) ? (
+                                                <div className="scale-[0.25]">
+                                                    <CountdownCircleTimer
+                                                        key={`${loan.status}-${loan.auto_pilot_next_step_at}-mini`}
+                                                        isPlaying
+                                                        duration={timerInfo.total}
+                                                        initialRemainingTime={timerInfo.remaining}
+                                                        colors="#fbbf24"
+                                                        size={120}
+                                                        strokeWidth={12}
+                                                        trailColor="#ffffff"
+                                                    />
+                                                </div>
+                                            ) :
+                                                step.status === 'current' ? <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" /> :
+                                                    <div className="w-2 h-2 rounded-full bg-slate-200" />}
                                 </div>
                                 <div className="text-center">
                                     <p className={`text-[10px] uppercase tracking-widest font-medium ${step.status === 'current' ? 'text-amber-500' : 'text-slate-400'}`}>{step.label}</p>
@@ -609,7 +754,15 @@ export default function LoanStatus() {
             {showVerificationLoading && (
                 <KycVerificationLoading
                     loanAmount={Number(loan.amount)}
-                    onComplete={() => resolveSubmissionRef.current?.()}
+                    duration={animationDuration}
+                    onComplete={() => {
+                        if (resolveSubmissionRef.current) {
+                            resolveSubmissionRef.current();
+                            resolveSubmissionRef.current = null;
+                        } else {
+                            setShowVerificationLoading(false);
+                        }
+                    }}
                 />
             )}
         </div >

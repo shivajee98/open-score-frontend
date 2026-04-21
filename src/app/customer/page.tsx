@@ -200,6 +200,25 @@ export default function CustomerHome() {
     const [showVaultExpiry, setShowVaultExpiry] = useState(false);
     const [showVaultCvc, setShowVaultCvc] = useState(false);
 
+    // New Loan Launch Banner State
+    const [showLoanBanner, setShowLoanBanner] = useState(false);
+
+    useEffect(() => {
+        const launchTime = new Date('2026-04-20T17:42:00').getTime();
+        const now = new Date().getTime();
+        const isWithin24Hours = now - launchTime < 24 * 60 * 60 * 1000;
+        const isDismissed = localStorage.getItem('loan_banner_dismissed_15k') === 'true';
+        
+        if (isWithin24Hours && !isDismissed) {
+            setShowLoanBanner(true);
+        }
+    }, []);
+
+    const dismissLoanBanner = () => {
+        setShowLoanBanner(false);
+        localStorage.setItem('loan_banner_dismissed_15k', 'true');
+    };
+
     useEffect(() => {
         const checkBonus = async () => {
             if (!user) return;
@@ -347,6 +366,24 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
+            {showLoanBanner && (
+                <div className="bg-emerald-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-[100] shadow-lg animate-in slide-in-from-top duration-500">
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
+                            <Zap size={14} className="text-white fill-white" />
+                        </div>
+                        <p className="text-[10px] font-black uppercase tracking-widest">
+                            New Loan of 15,000 Launched! <span className="ml-1 opacity-80">🚀 Apply Now</span>
+                        </p>
+                    </div>
+                    <button 
+                        onClick={dismissLoanBanner}
+                        className="p-1 hover:bg-white/10 rounded-md transition-colors"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+            )}
             <WelcomeBonusPopup isOpen={showWelcomeBonus} onClose={handleCloseWelcomeBonus} amount={welcomeBonusAmount} />
             {showVaultSetupPopup && (
                 <div className="fixed inset-0 z-[120] bg-slate-950/65 backdrop-blur-[2px] flex items-center justify-center px-5">

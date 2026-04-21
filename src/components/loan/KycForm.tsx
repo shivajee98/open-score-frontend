@@ -232,20 +232,53 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
     };
 
+    const isStepAutoSkippable = (stepIdx: number) => {
+        if (stepIdx === 1) { // Aadhaar
+            // If user already has a verified Aadhaar number in their profile OR form, skip this step
+            const val = watch('aadhar_number');
+            return !!(val && val.length === 12);
+        }
+        if (stepIdx === 2) { // PAN
+            // If user already has a verified PAN number in their profile OR form, skip this step
+            const val = watch('pan_number');
+            return !!(val && val.length === 10);
+        }
+        return false;
+    };
+
+    // Auto-jump to the first incomplete step on mount/data-load
+    useEffect(() => {
+        if (currentStep === 0 && (user || initialData)) {
+            let startStep = 0;
+            // Only skip if the step is actually skippable and we are not forcing a re-entry
+            while (startStep < STEPS.length - 1 && isStepAutoSkippable(startStep)) {
+                startStep++;
+            }
+            if (startStep > 0) {
+                setCurrentStep(startStep);
+            }
+        }
+    }, [user, initialData, currentStep]);
+
     const nextStep = async () => {
-        // Enforce document uploads
+        // Enforce document uploads - Only if not already verified
+        const aadharVal = watch('aadhar_number');
+        const panVal = watch('pan_number');
+
         if (currentStep === 1) { // Aadhaar step
-            if (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back']) {
+            if (!aadharVal && (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'])) {
                 setErrorPopup("कृपया आधार कार्ड के दोनों हिस्से अपलोड करें।");
                 return;
             }
         }
         if (currentStep === 2) { // PAN step
-            if (!capturedImages['pan_card']) {
+            if (!panVal && !capturedImages['pan_card']) {
                 setErrorPopup("कृपया अपना पैन कार्ड अपलोड करें।");
                 return;
             }
         }
+
+
 
         const fieldsToValidate = getFieldsForStep(currentStep);
         if (fieldsToValidate.length > 0) {
@@ -269,8 +302,15 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             return;
         }
 
-        setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1));
+        let targetStep = currentStep + 1;
+        // Skip steps if they are already "auto-skippable" (fully submitted previously)
+        while (targetStep < STEPS.length - 1 && isStepAutoSkippable(targetStep)) {
+            targetStep++;
+        }
+
+        setCurrentStep(Math.min(targetStep, STEPS.length - 1));
     };
+
 
     const prevStep = () => {
         setCurrentStep(prev => Math.max(prev - 1, 0));
@@ -281,6 +321,36 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const [ocrResults, setOcrResults] = useState<Record<string, any>>({});
     const [capturedImages, setCapturedImages] = useState<Record<string, string>>({});
     const [errorPopup, setErrorPopup] = useState<string | null>(null);
+
+    // Effect to restore captured images and OCR results from user profile or initialData
+    useEffect(() => {
+        if (user || initialData) {
+            const newImages: Record<string, string> = {};
+            const newOcr: Record<string, any> = {};
+            
+            // Map from user profile (Verified documents)
+            if (user?.aadhar_image) newImages['aadhar_front'] = user.aadhar_image;
+            if (user?.aadhar_back_image) newImages['aadhar_back'] = user.aadhar_back_image;
+            if (user?.pan_image) newImages['pan_card'] = user.pan_image;
+            if (user?.profile_image) newImages['applicant_selfie'] = user.profile_image;
+            
+            // Map from initialData (Precedence)
+            if (initialData?.kyc_images) {
+                Object.assign(newImages, initialData.kyc_images);
+            }
+            if (initialData?.ocr_results) {
+                Object.assign(newOcr, initialData.ocr_results);
+            }
+            
+            if (Object.keys(newImages).length > 0) {
+                setCapturedImages(prev => ({ ...prev, ...newImages }));
+            }
+            if (Object.keys(newOcr).length > 0) {
+                setOcrResults(prev => ({ ...prev, ...newOcr }));
+            }
+        }
+    }, [user, initialData]);
+
 
     const uploadToServer = async (blob: Blob, type?: string) => {
         const fd = new FormData();
@@ -497,19 +567,24 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     <button
                                         key={cat.id}
                                         type="button"
-                                        onClick={() => setActiveCameraCategory(cat.id)}
+                                        onClick={() => {
+                                            if (user?.aadhar_number) return; // Locked once verified
+                                            setActiveCameraCategory(cat.id);
+                                        }}
                                         className={cn(
                                             "relative p-6 rounded-[2.5rem] border-2 border-dashed transition-all flex flex-col items-center text-center group",
-                                            isCaptured ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white"
+                                            isCaptured ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white",
+                                            user?.aadhar_number && "opacity-60 cursor-not-allowed border-emerald-200 bg-emerald-50/20"
                                         )}
                                     >
+
                                         <div className={cn("w-14 h-14 rounded-2xl mb-4 flex items-center justify-center transition-transform group-hover:scale-110", cat.color)}>
                                             {isCaptured ? <Check className="w-8 h-8" /> : <cat.icon className="w-7 h-7" />}
                                         </div>
                                         <p className="text-xs font-black uppercase tracking-widest text-slate-900">{cat.label}</p>
                                         {isCaptured && (
-                                            <div className="mt-3 w-full h-12 rounded-xl border border-emerald-100 overflow-hidden bg-white">
-                                                <img src={capturedImages[cat.id]} className="w-full h-full object-cover" alt="Preview" />
+                                            <div className="mt-3 w-full h-auto min-h-[3rem] max-h-32 rounded-xl border border-emerald-100 overflow-hidden bg-white/50 relative flex items-center justify-center">
+                                                <img src={capturedImages[cat.id]} className="max-w-full max-h-32 object-contain" alt="Preview" />
                                             </div>
                                         )}
                                     </button>
@@ -548,19 +623,24 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <button
                                     key={cat.id}
                                     type="button"
-                                    onClick={() => setActiveCameraCategory(cat.id)}
+                                    onClick={() => {
+                                        if (user?.pan_number) return; // Locked once verified
+                                        setActiveCameraCategory(cat.id);
+                                    }}
                                     className={cn(
                                         "relative p-8 rounded-[2.5rem] border-2 border-dashed transition-all flex flex-col items-center text-center group w-full",
-                                        isCaptured ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white"
+                                        isCaptured ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white",
+                                        user?.pan_number && "opacity-60 cursor-not-allowed border-emerald-200 bg-emerald-50/20"
                                     )}
                                 >
+
                                     <div className={cn("w-16 h-16 rounded-2xl mb-4 flex items-center justify-center transition-transform group-hover:scale-110", cat.color)}>
                                         {isCaptured ? <Check className="w-8 h-8" /> : <cat.icon className="w-8 h-8" />}
                                     </div>
                                     <p className="text-sm font-black uppercase tracking-widest text-slate-900">{cat.label}</p>
                                     {isCaptured && (
-                                        <div className="mt-4 w-full h-24 rounded-2xl border border-emerald-100 overflow-hidden bg-white">
-                                            <img src={capturedImages[cat.id]} className="w-full h-full object-cover" alt="Preview" />
+                                        <div className="mt-4 w-full h-auto min-h-[4rem] max-h-48 rounded-2xl border border-emerald-100 overflow-hidden bg-white/50 relative flex items-center justify-center">
+                                            <img src={capturedImages[cat.id]} className="max-w-full max-h-48 object-contain" alt="Preview" />
                                         </div>
                                     )}
                                 </button>
@@ -588,40 +668,43 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={labelClasses}>First Name</label>
-                                <input placeholder="John" {...register('first_name')} className={inputClasses} />
+                                <input placeholder="John" {...register('first_name')} className={inputClasses} disabled={!!user?.name} />
                                 {errors.first_name && <p className={errorClasses}>{errors.first_name.message}</p>}
                             </div>
                             <div>
                                 <label className={labelClasses}>Last Name</label>
-                                <input placeholder="Doe" {...register('last_name')} className={inputClasses} />
+                                <input placeholder="Doe" {...register('last_name')} className={inputClasses} disabled={!!user?.name} />
                                 {errors.last_name && <p className={errorClasses}>{errors.last_name.message}</p>}
                             </div>
+
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                             <div>
                                 <label className={labelClasses}>Email Address</label>
-                                <input type="email" placeholder="name@email.com" {...register('email')} className={inputClasses} />
+                                <input type="email" placeholder="john@example.com" {...register('email')} className={inputClasses} disabled={!!user?.email} />
                                 {errors.email && <p className={errorClasses}>{errors.email.message}</p>}
                             </div>
                             <div>
                                 <label className={labelClasses}>Mobile Number</label>
-                                <input type="tel" maxLength={10} placeholder="9876543210" {...register('phone')} className={inputClasses} />
+                                <input type="tel" maxLength={10} placeholder="9876543210" {...register('phone')} className={inputClasses} disabled={!!user?.mobile_number} />
                                 {errors.phone && <p className={errorClasses}>{errors.phone.message}</p>}
                             </div>
+
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={labelClasses}>Father Name</label>
-                                <input placeholder="Father's Full Name" {...register('father_name')} className={inputClasses} />
+                                <input placeholder="Father's Full Name" {...register('father_name')} className={inputClasses} disabled={!!user?.family_detail?.father_name} />
                                 {errors.father_name && <p className={errorClasses}>{errors.father_name.message}</p>}
                             </div>
                             <div>
                                 <label className={labelClasses}>Mother Name</label>
-                                <input placeholder="Mother's Full Name" {...register('mother_name')} className={inputClasses} />
+                                <input placeholder="Mother's Full Name" {...register('mother_name')} className={inputClasses} disabled={!!user?.family_detail?.mother_name} />
                                 {errors.mother_name && <p className={errorClasses}>{errors.mother_name.message}</p>}
                             </div>
+
                         </div>
 
                         <div>
@@ -729,7 +812,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div className="grid grid-cols-1 gap-3">
                                 <div className="p-5 bg-white/5 rounded-3xl border border-white/10 flex justify-between items-center">
                                     <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Loan Amount</span>
-                                    <span className="text-xl font-black text-emerald-400">₹{loanAmount.toLocaleString()}</span>
+                                    <span className="text-xl font-black text-emerald-400">{loanAmount.toLocaleString()}</span>
                                 </div>
                                 <div className="p-5 bg-white/5 rounded-3xl border border-white/10 flex justify-between items-center">
                                     <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Aadhaar Number</span>
