@@ -66,7 +66,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     // Dynamic schema based on role
     const kycSchema = z.object({
         first_name: z.string().min(2, 'First name is too short'),
-        last_name: z.string().min(1, 'Last name is required'),
+        last_name: z.string().optional(),
         email: z.string().email('Invalid email address'),
         phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid 10-digit mobile number'),
         annual_income: z.string().min(1, 'Income is required'),
@@ -194,17 +194,25 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         try {
             const res = await apiFetch('/referral/verify-code', {
                 method: 'POST',
-                body: JSON.stringify({ code: code.toUpperCase() }),
+                body: JSON.stringify({ 
+                    code: code.toUpperCase(),
+                    amount: loanAmount 
+                }),
                 skipAuthCheck: true
             });
             if (!res.valid) {
-                setUniquenessErrors(prev => ({ ...prev, referral: 'Invalid referral code' }));
+                setUniquenessErrors(prev => ({ ...prev, referral: res.message || 'invalid refer code' }));
                 setReferrerName(null);
+                
+                // If it's a vendor code with insufficient funds/limit, discard it
+                if (res.dismiss_code) {
+                    setValue('referral_code', '');
+                }
             } else {
                 setReferrerName(res.referrer_name);
             }
         } catch (e) {
-            setUniquenessErrors(prev => ({ ...prev, referral: 'Invalid referral code' }));
+            setUniquenessErrors(prev => ({ ...prev, referral: 'invalid refer code' }));
             setReferrerName(null);
         } finally {
             setCheckingUniqueness(prev => ({ ...prev, referral: false }));
@@ -668,12 +676,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={labelClasses}>First Name</label>
-                                <input placeholder="John" {...register('first_name')} className={inputClasses} disabled={!!user?.name} />
+                                <input placeholder="John" {...register('first_name')} className={inputClasses} disabled={!!user?.name || !!ocrResults['aadhar_front']?.name} />
                                 {errors.first_name && <p className={errorClasses}>{errors.first_name.message}</p>}
                             </div>
                             <div>
                                 <label className={labelClasses}>Last Name</label>
-                                <input placeholder="Doe" {...register('last_name')} className={inputClasses} disabled={!!user?.name} />
+                                <input placeholder="Doe" {...register('last_name')} className={inputClasses} disabled={!!user?.name || !!ocrResults['aadhar_front']?.name} />
                                 {errors.last_name && <p className={errorClasses}>{errors.last_name.message}</p>}
                             </div>
 
@@ -696,7 +704,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={labelClasses}>Father Name</label>
-                                <input placeholder="Father's Full Name" {...register('father_name')} className={inputClasses} disabled={!!user?.family_detail?.father_name} />
+                                <input placeholder="Father's Full Name" {...register('father_name')} className={inputClasses} disabled={!!user?.family_detail?.father_name || !!ocrResults['aadhar_back']?.father_name || !!ocrResults['aadhar_front']?.father_name} />
                                 {errors.father_name && <p className={errorClasses}>{errors.father_name.message}</p>}
                             </div>
                             <div>
@@ -704,7 +712,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <input placeholder="Mother's Full Name" {...register('mother_name')} className={inputClasses} disabled={!!user?.family_detail?.mother_name} />
                                 {errors.mother_name && <p className={errorClasses}>{errors.mother_name.message}</p>}
                             </div>
-
                         </div>
 
                         <div>
@@ -722,21 +729,21 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Permanent Address (From Aadhaar)</h4>
                                 <div>
                                     <label className={labelClasses}>Street Address</label>
-                                    <input placeholder="Street Address" {...register('permanent_street_address')} className={inputClasses} />
+                                    <input placeholder="Street Address" {...register('permanent_street_address')} className={inputClasses} disabled={!!user?.permanent_street_address || !!ocrResults['aadhar_back']} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className={labelClasses}>City</label>
-                                        <input placeholder="City" {...register('permanent_city')} className={inputClasses} />
+                                        <input placeholder="City" {...register('permanent_city')} className={inputClasses} disabled={!!user?.permanent_city || !!ocrResults['aadhar_back']} />
                                     </div>
                                     <div>
                                         <label className={labelClasses}>Pincode</label>
-                                        <input placeholder="Pincode" maxLength={6} {...register('permanent_postal_code')} className={inputClasses} />
+                                        <input placeholder="Pincode" maxLength={6} {...register('permanent_postal_code')} className={inputClasses} disabled={!!user?.permanent_pincode || !!ocrResults['aadhar_back']} />
                                     </div>
                                 </div>
                                 <div>
                                     <label className={labelClasses}>State</label>
-                                    <input placeholder="State" {...register('permanent_state')} className={inputClasses} />
+                                    <input placeholder="State" {...register('permanent_state')} className={inputClasses} disabled={!!user?.permanent_state || !!ocrResults['aadhar_back']} />
                                 </div>
                             </div>
 
@@ -755,22 +762,22 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div>
                                         <label className={labelClasses}>Current Street Address</label>
-                                        <input placeholder="Current House No, Street" {...register('street_address')} className={inputClasses} />
+                                        <input placeholder="Current House No, Street" {...register('street_address')} className={inputClasses} disabled={!!user?.business_address || (watch('is_permanent_same') && !!ocrResults['aadhar_back'])} />
                                         {errors.street_address && <p className={errorClasses}>{errors.street_address.message}</p>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className={labelClasses}>City</label>
-                                            <input placeholder="City" {...register('city')} className={inputClasses} />
+                                            <input placeholder="City" {...register('city')} className={inputClasses} disabled={!!user?.city || (watch('is_permanent_same') && !!ocrResults['aadhar_back'])} />
                                         </div>
                                         <div>
                                             <label className={labelClasses}>Pincode</label>
-                                            <input placeholder="Pincode" maxLength={6} {...register('postal_code')} className={inputClasses} />
+                                            <input placeholder="Pincode" maxLength={6} {...register('postal_code')} className={inputClasses} disabled={!!user?.pincode || (watch('is_permanent_same') && !!ocrResults['aadhar_back'])} />
                                         </div>
                                     </div>
                                     <div>
                                         <label className={labelClasses}>State</label>
-                                        <input placeholder="State" {...register('state')} className={inputClasses} />
+                                        <input placeholder="State" {...register('state')} className={inputClasses} disabled={!!user?.state || (watch('is_permanent_same') && !!ocrResults['aadhar_back'])} />
                                     </div>
                                 </div>
                             )}

@@ -141,8 +141,9 @@ function CustomerPayPage() {
         setError('');
         hasScanned.current = false;
 
-        // Dynamic import to avoid SSR issues
-        const { Html5Qrcode } = await import('html5-qrcode');
+        // Dynamic import with chunk failure protection
+        const { safeImport } = await import('@/lib/utils');
+        const { Html5Qrcode } = await safeImport(() => import('html5-qrcode'));
 
         setTimeout(async () => {
             try {

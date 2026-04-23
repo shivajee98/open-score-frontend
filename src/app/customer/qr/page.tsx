@@ -132,7 +132,8 @@ export default function CustomerQR() {
 
     const startScanner = async () => {
         setScanning(true);
-        const { Html5Qrcode } = await import('html5-qrcode');
+        const { safeImport } = await import('@/lib/utils');
+        const { Html5Qrcode } = await safeImport(() => import('html5-qrcode'));
         setTimeout(async () => {
             try {
                 if (!document.getElementById("reader")) return;

@@ -131,7 +131,7 @@ export default function Profile() {
             const section = searchParams.get('section');
 
             if (isEdit || editBank) {
-                if (user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED') {
+                if (user?.role === 'MERCHANT' && user?.kyc_status === 'FULL_VERIFIED' && user.aadhar_image && user.pan_image) {
                     toast.error("Verified profile cannot be edited.");
                     return;
                 }
@@ -783,6 +783,28 @@ export default function Profile() {
                             {(user.kyc_status === 'FULL_VERIFIED' || user.kyc_status === 'FIELD_VERIFIED') ? <ShieldCheck className="w-4 h-4" /> : <Shield className="w-3 h-3" />}
                             {(user.kyc_status === 'FULL_VERIFIED' || user.kyc_status === 'FIELD_VERIFIED') ? 'Verified Merchant' : `${user.role} Account`}
                         </div>
+
+                        {/* Missing KYC Documents Alert */}
+                        {user.role === 'MERCHANT' && (!user.aadhar_image || !user.aadhar_back_image || !user.pan_image) && (
+                            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 animate-in slide-in-from-top duration-500">
+                                <div className="flex gap-3 items-start">
+                                    <div className="p-2 bg-amber-100 rounded-xl text-amber-600">
+                                        <AlertTriangle size={20} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-black text-amber-900 uppercase tracking-tight mb-1">Missing Documents</p>
+                                        <p className="text-[10px] font-medium text-amber-700 leading-relaxed">
+                                            Your KYC is incomplete. Please click <span className="font-bold underline">Edit Profile</span> below to upload your Aadhaar and PAN card images.
+                                        </p>
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            {!user.aadhar_image && <span className="text-[8px] font-black bg-white/50 px-2 py-0.5 rounded text-amber-800 border border-amber-200">AADHAAR FRONT</span>}
+                                            {!user.aadhar_back_image && <span className="text-[8px] font-black bg-white/50 px-2 py-0.5 rounded text-amber-800 border border-amber-200">AADHAAR BACK</span>}
+                                            {!user.pan_image && <span className="text-[8px] font-black bg-white/50 px-2 py-0.5 rounded text-amber-800 border border-amber-200">PAN CARD</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-4">

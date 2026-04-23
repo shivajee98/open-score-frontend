@@ -1,9 +1,10 @@
 // Static Export: Always talk directly to backend
-// Static Export: Always talk directly to backend
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost'
         ? 'http://localhost:8000/api'
         : 'https://api.msmeloan.sbs/api');
+
+import { getDeviceHeaders } from './device';
 
 // Loop Prevention
 let isRedirecting = false;
@@ -106,6 +107,15 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
         const token = localStorage.getItem('token');
         if (token) {
             (headers as any)['Authorization'] = `Bearer ${token}`;
+        }
+        
+        // Inject Device Headers
+        try {
+            const deviceHeaders = await getDeviceHeaders();
+            Object.assign(headers, deviceHeaders);
+        } catch (e) {
+            // Ignore if Capacitor plugins fail (e.g. on pure web without polyfills)
+            console.warn('Device identification headers injection failed:', e);
         }
     }
 
