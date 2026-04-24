@@ -32,11 +32,11 @@ function HomeContent() {
   const [userExists, setUserExists] = useState<boolean | null>(null);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const [hasPin, setHasPin] = useState<boolean | null>(null);
+  const [isTrusted, setIsTrusted] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [verifyingReferral, setVerifyingReferral] = useState(false);
   const [referralName, setReferralName] = useState<string | null>(null);
   const [referralError, setReferralError] = useState<string | null>(null);
-
   const isRegistering = useRef(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -216,6 +216,7 @@ function HomeContent() {
           const data = await apiFetch(`/auth/check-user/${mobile}`, { skipAuthCheck: true });
           setUserExists(data.exists);
           setHasPin(data.has_pin);
+          setIsTrusted(data.is_trusted);
 
           if (data.exists) {
             setTempReferralCode('');
@@ -356,6 +357,10 @@ function HomeContent() {
         redirectUser(data.user);
       }
     } catch (err: any) {
+      if (err.message.includes('verify via OTP')) {
+        handleSendOtp();
+        return;
+      }
       setError(err.message);
       setPin(''); // clear on fail
     } finally {
@@ -634,8 +639,8 @@ function HomeContent() {
                     // Only block if we are a NEW user and have referral errors
                     const isNewUser = userExists === false;
                     if (isNewUser && tempReferralCode && (verifyingReferral || referralError)) return;
-                    
-                    if (hasPin) {
+
+                    if (hasPin && isTrusted) {
                       setFlow('pin_login');
                     } else {
                       handleSendOtp(false);
@@ -648,7 +653,7 @@ function HomeContent() {
                     <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
                   ) : (
                     <>
-                      {userExists ? 'Login with PIN' : 'Get OTP'}
+                      { (userExists && isTrusted && hasPin) ? 'Login with PIN' : 'Get OTP' }
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}

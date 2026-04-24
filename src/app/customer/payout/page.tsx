@@ -1015,14 +1015,27 @@ export default function PayoutPage() {
                                 <div className="text-right">
                                     <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${w.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
                                         w.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
-                                            'bg-amber-100 text-amber-700'
+                                            w.status === 'WAITING' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-amber-100 text-amber-700'
                                         }`}>
                                         {w.status}
                                     </span>
-                                    {w.admin_note && (
+                                    {w.status === 'WAITING' && (
+                                        <div className="mt-2 text-left bg-blue-50/50 p-2 rounded-xl border border-blue-100/50 max-w-[200px]">
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <Clock className="w-2.5 h-2.5 text-blue-500" />
+                                                <span className="text-[8px] font-black text-blue-600 uppercase tracking-tighter">On Hold</span>
+                                            </div>
+                                            <p className="text-[9px] font-bold text-blue-700 leading-tight">
+                                                {w.admin_note || "Bank server is experiencing a delay. Funds will be sent within hours."}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {w.status !== 'WAITING' && w.admin_note && (
                                         <p className="text-[8px] font-bold text-slate-500 mt-1 italic max-w-[150px]">{w.admin_note}</p>
                                     )}
                                 </div>
+
                             </div>
                         ))}
 

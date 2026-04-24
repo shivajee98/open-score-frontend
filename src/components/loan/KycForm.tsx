@@ -94,7 +94,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         permanent_postal_code: z.string().optional(),
         is_permanent_same: z.boolean().default(true),
 
-        referral_code: z.string().optional(),
+        referral_code: z.string().min(4, 'Referral code is required'),
         consent: z.boolean().refine(val => val === true, 'You must agree to the terms'),
     });
 
@@ -294,10 +294,24 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             if (!isStepValid) return;
         }
 
-        // Uniqueness checks
-        if (currentStep === 0 && referralValue && (checkingUniqueness.referral || uniquenessErrors.referral)) {
-            setErrorPopup(uniquenessErrors.referral || "रेफ़रल कोड की जाँच की जा रही है...");
-            return;
+        // Referral code is mandatory
+        if (currentStep === 0) {
+            if (!referralValue || referralValue.length < 4) {
+                setErrorPopup("रेफ़रल कोड अनिवार्य है। कृपया एजेंट का रेफ़रल कोड दर्ज करें।");
+                return;
+            }
+            if (checkingUniqueness.referral) {
+                setErrorPopup("रेफ़रल कोड की जाँच की जा रही है...");
+                return;
+            }
+            if (uniquenessErrors.referral) {
+                setErrorPopup(uniquenessErrors.referral);
+                return;
+            }
+            if (!referrerName) {
+                setErrorPopup("कृपया एक वैध रेफ़रल कोड दर्ज करें।");
+                return;
+            }
         }
         
         if (currentStep === 1 && uniquenessErrors.aadhar) {
@@ -551,7 +565,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     {errors.loan_usage && <p className={errorClasses}>{errors.loan_usage.message}</p>}
                                 </div>
                                 <div>
-                                    <label className={labelClasses}>Referral Code (Optional)</label>
+                                    <label className={labelClasses}>Referral Code <span className="text-rose-500">*</span></label>
                                     <div className="relative">
                                         <input placeholder="Enter code" {...register('referral_code')} className={inputClasses} />
                                         {checkingUniqueness.referral && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />}
