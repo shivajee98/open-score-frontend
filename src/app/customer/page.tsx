@@ -1227,57 +1227,55 @@ export default function CustomerHome() {
 
             {/* Admin Message Overlay (Forced Read) */}
             {showAdminMessage && unreadAdminMessages.length > 0 && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowAdminMessage(false)} />
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowAdminMessage(false)} />
                     
-                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300">
-                        {/* Header */}
-                        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-10 text-white relative flex flex-col items-center text-center">
+                    <div className="bg-white w-full max-w-[320px] rounded-[2rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-100 italic-selection">
+                        {/* Header - More Professional & Compact */}
+                        <div className="bg-slate-900 p-6 text-white relative">
                             <button 
                                 onClick={() => setShowAdminMessage(false)}
-                                className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors group"
+                                className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors group"
                             >
-                                <X size={48} strokeWidth={1} className="text-white/40 group-hover:text-white" />
+                                <X size={16} strokeWidth={2} className="text-white/60 group-hover:text-white" />
                             </button>
 
-                            <div className="w-16 h-16 rounded-[2rem] bg-white/10 backdrop-blur-md flex items-center justify-center mb-6 shadow-xl border border-white/20">
-                                <MessageSquare size={32} strokeWidth={2} />
+                            <div className="flex items-center gap-3 mb-1">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                    <MessageSquare size={16} strokeWidth={2.5} />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-300">Correspondence</span>
                             </div>
                             
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-100/60 mb-2">Internal Communiqué</span>
-                            <h3 className="text-2xl font-black tracking-tighter uppercase leading-tight">New Message</h3>
+                            <h3 className="text-lg font-black tracking-tight uppercase leading-none mt-2">
+                                {unreadAdminMessages[currentMsgIndex]?.title || 'New Notification'}
+                            </h3>
                         </div>
 
                         {/* Content */}
-                        <div className="p-10">
-                            <div className="flex justify-between items-center mb-5 px-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Message Block</span>
-                                <div className="flex items-center gap-1.5 text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
-                                    <Clock size={10} strokeWidth={3} />
-                                    <span className="text-[9px] font-black uppercase tracking-tighter">
-                                        {unreadAdminMessages[currentMsgIndex] && new Date(unreadAdminMessages[currentMsgIndex].created_at).toLocaleString('en-IN', {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                            hour12: true,
-                                            day: '2-digit',
-                                            month: 'short'
-                                        })}
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Secure Payload</span>
+                                <div className="flex items-center gap-1 text-slate-400">
+                                    <Clock size={8} strokeWidth={3} />
+                                    <span className="text-[8px] font-black uppercase">
+                                        {unreadAdminMessages[currentMsgIndex] && new Date(unreadAdminMessages[currentMsgIndex].created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
                             </div>
                             
-                            <div className="bg-slate-50 border-2 border-dashed border-slate-200 p-8 rounded-[2.5rem] mb-10 min-h-[180px] flex flex-col justify-center shadow-inner group">
-                                <p className="text-[15px] font-bold text-slate-800 leading-relaxed uppercase italic text-center selection:bg-indigo-100">
+                            <div className="bg-slate-50 border border-slate-100 p-5 rounded-2xl mb-6 min-h-[120px] flex flex-col justify-center shadow-inner">
+                                <p className="text-[13px] font-medium text-slate-700 leading-relaxed uppercase italic text-center">
                                     {unreadAdminMessages[currentMsgIndex]?.message}
                                 </p>
                             </div>
 
                             <button
                                 onClick={() => handleMarkAsRead(unreadAdminMessages[currentMsgIndex].id)}
-                                className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-emerald-600"
+                                className="w-full py-3.5 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-indigo-700"
                             >
-                                <Check size={14} strokeWidth={4} />
-                                Confirm Receipt
+                                <Check size={12} strokeWidth={4} />
+                                Acknowledge Receipt
                             </button>
                         </div>
                     </div>
@@ -1289,59 +1287,59 @@ export default function CustomerHome() {
                 <div className="fixed inset-0 z-[100] flex flex-col justify-end">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowAdminMessageHistory(false)} />
                     
-                    <div className="bg-white w-full rounded-t-[3.5rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-500">
-                        <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <div className="bg-white w-full rounded-t-[2.5rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[85vh] animate-in slide-in-from-bottom duration-500 border-t border-slate-100">
+                        <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
                             <div>
-                                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Messeges</h3>
-                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-1">Immutable Interaction History</p>
+                                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Messages</h3>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Interaction History</p>
                             </div>
                             <button 
                                 onClick={() => setShowAdminMessageHistory(false)}
-                                className="w-14 h-14 rounded-[2rem] bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-sm transition-all hover:rotate-90"
+                                className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-sm transition-all"
                             >
-                                <X size={24} strokeWidth={3} />
+                                <X size={18} strokeWidth={2.5} />
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-8 space-y-6 pb-32">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-32 bg-slate-50/40">
                             {allAdminMessages.length === 0 ? (
                                 <div className="text-center py-20">
-                                    <MessageSquare size={48} className="mx-auto text-slate-100 mb-4" />
-                                    <p className="text-sm font-black text-slate-300 uppercase tracking-widest">No Transmissions Found</p>
+                                    <MessageSquare size={32} className="mx-auto text-slate-200 mb-3 opacity-50" />
+                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Transmissions Found</p>
                                 </div>
                             ) : (
                                 allAdminMessages.map((msg: any) => (
-                                    <div key={msg.id} className={`p-8 rounded-[3rem] border-2 transition-all ${msg.is_read ? 'bg-white border-slate-100' : 'bg-indigo-50/50 border-indigo-200 shadow-xl shadow-indigo-100/40'}`}>
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-[1.25rem] flex items-center justify-center ${msg.is_read ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'}`}>
-                                                    <Clock size={18} strokeWidth={2.5} />
+                                    <div key={msg.id} className={`p-5 rounded-3xl border-2 transition-all ${msg.is_read ? 'bg-white border-slate-100/50' : 'bg-white border-indigo-200 shadow-lg shadow-indigo-100/30'}`}>
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${msg.is_read ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'}`}>
+                                                    <MessageSquare size={14} strokeWidth={2.5} />
                                                 </div>
                                                 <div>
-                                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] block ${msg.is_read ? 'text-slate-400' : 'text-indigo-600'}`}>
-                                                        {msg.is_read ? 'Archived Log' : 'Priority Signal'}
+                                                    <span className={`text-[9px] font-black uppercase tracking-widest block ${msg.is_read ? 'text-slate-400' : 'text-indigo-600'}`}>
+                                                        {msg.title || (msg.is_read ? 'Notification' : 'Priority Alert')}
                                                     </span>
-                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">ID: {msg.id.toString().padStart(6, '0')}</span>
+                                                    <span className="text-[7px] font-bold text-slate-300 uppercase tracking-tighter">ID: {msg.id.toString().padStart(6, '0')}</span>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-tighter">Sent: {new Date(msg.created_at).toLocaleString('en-IN')}</p>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{new Date(msg.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                                                 {msg.read_at && (
-                                                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter mt-1 bg-emerald-50 px-2 py-0.5 rounded-md inline-block">Read: {new Date(msg.read_at).toLocaleString('en-IN')}</p>
+                                                    <p className="text-[7px] font-black text-emerald-500 uppercase tracking-tighter mt-1 bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block">Ack Confirmed</p>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100">
-                                            <p className={`text-[13px] font-bold leading-relaxed uppercase italic ${msg.is_read ? 'text-slate-600' : 'text-slate-900'}`}>
+                                        <div className={`rounded-2xl p-4 border ${msg.is_read ? 'bg-slate-50/50 border-slate-100' : 'bg-slate-50/30 border-indigo-50'}`}>
+                                            <p className={`text-[12px] font-medium leading-relaxed uppercase italic ${msg.is_read ? 'text-slate-500' : 'text-slate-800'}`}>
                                                 {msg.message}
                                             </p>
                                         </div>
                                         {!msg.is_read && (
                                             <button
                                                 onClick={() => handleMarkAsRead(msg.id)}
-                                                className="mt-8 w-full py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                                className="mt-4 w-full py-3 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-2"
                                             >
-                                                <Check size={14} strokeWidth={4} />
+                                                <Check size={12} strokeWidth={4} />
                                                 Confirm Receipt
                                             </button>
                                         )}

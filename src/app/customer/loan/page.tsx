@@ -99,7 +99,7 @@ export default function LoanList() {
                 if (pendingKyc) setKycLoan(pendingKyc);
 
                 const active = loans.find((l: any) => {
-                    const statusMatch = ['PENDING', 'PROCEEDED', 'KYC_SENT', 'FORM_SUBMITTED', 'APPROVED', 'PREVIEW'].includes(l.status);
+                    const statusMatch = ['PENDING', 'PROCEEDED', 'VETTING', 'KYC_SENT', 'FORM_SUBMITTED', 'KYC_SUBMITTED', 'APPROVED', 'PREVIEW'].includes(l.status);
                     const isUnpaidDisbursed = l.status === 'DISBURSED' && Number(l.paid_amount || 0) < Number(l.amount);
                     return statusMatch || isUnpaidDisbursed;
                 });
@@ -258,7 +258,7 @@ export default function LoanList() {
                 )}
 
                 {/* Recent Activity / History Highlight - MOVED TO TOP */}
-                {recentLoan && (
+                {recentLoan && (!activeLoan || recentLoan.id !== activeLoan.id) && (
                     <div className="mb-10 animate-in fade-in slide-in-from-bottom-4">
                         <div className="flex justify-between items-end mb-4">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Recent Activity</h3>
