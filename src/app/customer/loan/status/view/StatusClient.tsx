@@ -360,7 +360,7 @@ export default function LoanStatus() {
                                     </div>
                                 )}
 
-                                {loan.status === 'KYC_SENT' && loan.reupload_fields?.length > 0 && (
+                                {loan.reupload_fields?.length > 0 && (
                                     <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl animate-in fade-in slide-in-from-top-2 shadow-sm">
                                         <div className="flex items-center gap-2 mb-2">
                                             <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
@@ -618,8 +618,8 @@ export default function LoanStatus() {
                     </div>
                 )}
 
-                {/* Special Action: Complete KYC */}
-                {loan.status === 'KYC_SENT' && (
+                {/* Special Action: Complete KYC / Correction */}
+                {(loan.status === 'KYC_SENT' || loan.reupload_fields?.length > 0) && (
                     <div className="bg-blue-600 rounded-lg p-4 text-white shadow-xl shadow-blue-600/20 flex flex-col items-center text-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                             <Check className="w-6 h-6" />
