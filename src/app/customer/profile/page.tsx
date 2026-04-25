@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info, Check, X, Clock } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, Smartphone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info, Check, X, Clock } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -63,6 +63,19 @@ export default function Profile() {
     const [uploadingImages, setUploadingImages] = useState<Record<string, boolean>>({});
     const [isAppPinMissing, setIsAppPinMissing] = useState(false);
     const hasPromptedPin = useRef(false);
+
+    // Alternate Number Verification States
+    const [alternatePhone, setAlternatePhone] = useState(user?.alternate_number?.phone || '');
+    const [altOtp, setAltOtp] = useState('');
+    const [altOtpSent, setAltOtpSent] = useState(false);
+    const [isAltOtpSending, setIsAltOtpSending] = useState(false);
+    const [isAltOtpVerifying, setIsAltOtpVerifying] = useState(false);
+
+    useEffect(() => {
+        if (user?.alternate_number?.phone) {
+            setAlternatePhone(user.alternate_number.phone);
+        }
+    }, [user?.alternate_number]);
 
     useEffect(() => {
         if (pinData && !pinData.has_pin) {
@@ -615,6 +628,57 @@ export default function Profile() {
         }
     };
 
+    const handleRequestAltOtp = async () => {
+        if (!alternatePhone || alternatePhone.length !== 10) {
+            toast.error("Please enter a valid 10-digit mobile number");
+            return;
+        }
+
+        if (alternatePhone === user?.mobile_number) {
+            toast.error("Alternate number cannot be the same as your primary number");
+            return;
+        }
+
+        setIsAltOtpSending(true);
+        try {
+            const res = await apiFetch('/auth/alternate-number/otp', {
+                method: 'POST',
+                body: JSON.stringify({ phone: alternatePhone })
+            });
+            if (res.error) throw new Error(res.error);
+            setAltOtpSent(true);
+            toast.success("OTP sent to your alternate number");
+        } catch (e: any) {
+            toast.error(e.message || "Failed to send OTP");
+        } finally {
+            setIsAltOtpSending(false);
+        }
+    };
+
+    const handleVerifyAltOtp = async () => {
+        if (!altOtp || altOtp.length !== 6) {
+            toast.error("Please enter the 6-digit OTP");
+            return;
+        }
+
+        setIsAltOtpVerifying(true);
+        try {
+            const res = await apiFetch('/auth/alternate-number/verify', {
+                method: 'POST',
+                body: JSON.stringify({ phone: alternatePhone, otp: altOtp })
+            });
+            if (res.error) throw new Error(res.error);
+            toast.success("Alternate number verified successfully!");
+            setAltOtpSent(false);
+            setAltOtp('');
+            await mutateUser();
+        } catch (e: any) {
+            toast.error(e.message || "Invalid OTP");
+        } finally {
+            setIsAltOtpVerifying(false);
+        }
+    };
+
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -813,6 +877,74 @@ export default function Profile() {
                             <div>
                                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Mobile Number</p>
                                 <p className="text-sm font-medium text-slate-900">+91 {user.mobile_number}</p>
+                            </div>
+                        </div>
+
+                        {/* Alternate Mobile Number Section */}
+                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 relative overflow-hidden group">
+                            {user?.has_verified_alternate_number && (
+                                <div className="absolute top-0 right-0 p-2 text-emerald-500">
+                                    <ShieldCheck size={16} />
+                                </div>
+                            )}
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm">
+                                    <Smartphone className="w-5 h-5 text-indigo-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Alternate Mobile Number</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <input
+                                            type="tel"
+                                            value={alternatePhone}
+                                            onChange={(e) => !user?.has_verified_alternate_number && setAlternatePhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                            placeholder="Enter alternate number"
+                                            disabled={user?.has_verified_alternate_number || altOtpSent}
+                                            className={`text-sm font-bold text-slate-900 bg-transparent border-b-2 ${user?.has_verified_alternate_number ? 'border-transparent' : 'border-slate-200 focus:border-indigo-500'} focus:outline-none w-full disabled:opacity-70`}
+                                        />
+                                        {!user?.has_verified_alternate_number && !altOtpSent && (
+                                            <button
+                                                onClick={handleRequestAltOtp}
+                                                disabled={isAltOtpSending || alternatePhone.length !== 10}
+                                                className="shrink-0 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg disabled:opacity-50 active:scale-95 transition-all"
+                                            >
+                                                {isAltOtpSending ? 'Sending...' : 'Verify'}
+                                            </button>
+                                        )}
+                                    </div>
+                                    {altOtpSent && (
+                                        <div className="mt-4 p-3 bg-white rounded-xl border border-indigo-100 animate-in zoom-in-95 duration-200">
+                                            <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-2">Enter 6-Digit OTP</p>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={altOtp}
+                                                    onChange={(e) => setAltOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                    placeholder="000 000"
+                                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-black tracking-[0.3em] text-center focus:outline-none focus:border-indigo-500"
+                                                />
+                                                <button
+                                                    onClick={handleVerifyAltOtp}
+                                                    disabled={isAltOtpVerifying || altOtp.length !== 6}
+                                                    className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-indigo-700 transition-all"
+                                                >
+                                                    {isAltOtpVerifying ? 'Wait...' : 'Confirm'}
+                                                </button>
+                                                <button 
+                                                    onClick={() => setAltOtpSent(false)}
+                                                    className="p-2 text-slate-400 hover:text-rose-500"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {user?.has_verified_alternate_number && (
+                                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mt-1 flex items-center gap-1">
+                                            <Check size={10} /> Verified & Secure
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
 

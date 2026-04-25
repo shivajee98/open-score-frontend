@@ -422,6 +422,28 @@ export default function CustomerHome() {
                 </div>
             )}
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
+            
+            {/* Alternate Number Verification Banner */}
+            {!activeUser?.has_verified_alternate_number && (
+                <div className="mx-4 mt-4 bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20">
+                            <Smartphone size={20} strokeWidth={2.5} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-0.5">Mandatory Action</p>
+                            <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">Verify Alternate Number</h4>
+                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Required for loan & secure withdrawals</p>
+                        </div>
+                    </div>
+                    <Link href="/customer/profile">
+                        <button className="bg-slate-900 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-slate-800 transition-all active:scale-95">
+                            Verify Now <ArrowRight size={12} />
+                        </button>
+                    </Link>
+                </div>
+            )}
+
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} user={activeUser} />
 
             <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-3 items-end">

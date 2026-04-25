@@ -53,6 +53,7 @@ const DOCUMENT_CATEGORIES = [
     { id: 'aadhar_back', label: 'Aadhaar (Back)', icon: FileText, color: 'bg-indigo-50 text-indigo-600' },
     { id: 'pan_card', label: 'PAN Card (Front)', icon: FileText, color: 'bg-emerald-50 text-emerald-600' },
     { id: 'applicant_selfie', label: "Applicant Selfie", icon: User, color: 'bg-amber-50 text-amber-600' },
+    { id: 'selfie_with_agent', label: "Selfie with Loan Agent", icon: User, color: 'bg-rose-50 text-rose-600' },
 ];
 
 export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false }: KycFormProps) {
@@ -242,14 +243,16 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     const isStepAutoSkippable = (stepIdx: number) => {
         if (stepIdx === 1) { // Aadhaar
-            // If user already has a verified Aadhaar number in their profile OR form, skip this step
+            // If user already has a verified Aadhaar number AND images, skip this step
             const val = watch('aadhar_number');
-            return !!(val && val.length === 12);
+            const hasImages = !!(capturedImages['aadhar_front'] && capturedImages['aadhar_back']);
+            return !!(val && val.length === 12 && hasImages);
         }
         if (stepIdx === 2) { // PAN
-            // If user already has a verified PAN number in their profile OR form, skip this step
+            // If user already has a verified PAN number AND image, skip this step
             const val = watch('pan_number');
-            return !!(val && val.length === 10);
+            const hasImage = !!capturedImages['pan_card'];
+            return !!(val && val.length === 10 && hasImage);
         }
         return false;
     };
@@ -841,7 +844,41 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 </div>
                             </div>
 
-                            <div className="pt-4">
+                            <div className="pt-4 space-y-4">
+                                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] px-2">Final Verification Photos</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {DOCUMENT_CATEGORIES.filter(cat => ['applicant_selfie', 'selfie_with_agent'].includes(cat.id)).map((cat) => {
+                                        const img = capturedImages[cat.id];
+                                        return (
+                                            <button
+                                                key={cat.id}
+                                                type="button"
+                                                onClick={() => setActiveCameraCategory(cat.id)}
+                                                className={cn(
+                                                    "relative h-32 rounded-3xl border-2 border-dashed transition-all flex flex-col items-center justify-center text-center overflow-hidden group",
+                                                    img ? "border-emerald-500/50 bg-emerald-500/5" : "border-white/10 bg-white/5 hover:border-blue-500/50 hover:bg-white/10"
+                                                )}
+                                            >
+                                                {img ? (
+                                                    <img src={img} className="absolute inset-0 w-full h-full object-cover" alt={cat.label} />
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", cat.color.replace('bg-', 'bg-opacity-20 bg-'))}>
+                                                            <cat.icon className="w-5 h-5" />
+                                                        </div>
+                                                        <span className="text-[8px] font-black text-white/60 uppercase tracking-widest">{cat.label}</span>
+                                                    </div>
+                                                )}
+                                                {img && (
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <span className="text-[8px] font-black text-white uppercase tracking-widest">Retake</span>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
                                 <label className="flex items-start gap-4 p-5 bg-white/5 rounded-3xl border border-white/5 cursor-pointer group hover:bg-white/10 transition-all">
                                     <div className="relative mt-1">
                                         <input type="checkbox" {...register('consent')} className="sr-only peer" />

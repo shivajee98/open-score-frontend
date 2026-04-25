@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode, Search } from 'lucide-react';
+import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode, Search, Info, CreditCard } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import { useStore } from '@/store/useStore';
@@ -20,8 +20,53 @@ export default function TeamEarningsPage() {
     const [copied, setCopied] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [transferAmount, setTransferAmount] = useState('');
-    const [activeTab, setActiveTab] = useState<'QR' | 'LOAN'>('QR');
+    const [activeTab, setActiveTab] = useState<'QR' | 'LOAN' | 'CARD' | 'DECLINED'>('QR');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedRemark, setSelectedRemark] = useState<string | null>(null);
+
+    // Card Activation State
+    const [cardMobile, setCardMobile] = useState('');
+    const [cardCustomer, setCardCustomer] = useState<any>(null);
+    const [cardLoading, setCardLoading] = useState(false);
+    const { data: cardRequests, mutate: mutateCardRequests } = useApi(activeTab === 'CARD' ? '/vault-cards' : null);
+
+    const handleCheckCustomer = async () => {
+        if (cardMobile.length !== 10) return toast.error("Mobile number must be 10 digits");
+        setCardLoading(true);
+        try {
+            const res = await apiFetch(`/auth/check-user/${cardMobile}`);
+            if (res.exists) {
+                setCardCustomer(res.user);
+            } else {
+                toast.error("Customer not found. Have them sign up first.");
+                setCardCustomer(null);
+            }
+        } catch (e: any) {
+            toast.error(e.message || "Failed to check customer");
+        } finally {
+            setCardLoading(false);
+        }
+    };
+
+    const handleRequestCard = async () => {
+        if (!cardMobile || cardMobile.length !== 10) return;
+        setSubmitting(true);
+        try {
+            const res = await apiFetch('/vault-cards/request', {
+                method: 'POST',
+                body: JSON.stringify({ customer_number: cardMobile })
+            });
+            if (res.error) throw new Error(res.error);
+            toast.success(res.message);
+            mutateCardRequests();
+            setCardMobile('');
+            setCardCustomer(null);
+        } catch (e: any) {
+            toast.error(e.message || "Failed to request card");
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     // Timer State
     const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, locked: boolean }>({ d: 0, h: 0, m: 0, locked: false });
@@ -161,10 +206,15 @@ export default function TeamEarningsPage() {
                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Loans Applied</p>
                                 <p className="text-base font-black">{(stats?.loan_onboard_count || 0).toLocaleString()}</p>
                             </div>
-                            <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
+                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Verified</p>
                                 <p className="text-base font-black">{(stats?.qr_verified_count || 0).toLocaleString()}</p>
                             </div>
+                        </div>
+                        <div className="mt-2 text-center">
+                            <p className="text-[10px] font-bold text-violet-200 uppercase tracking-widest">
+                                <span className="text-red-300">{(stats?.declined_count || 0)}</span> Lead(s) Declined
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -269,37 +319,50 @@ export default function TeamEarningsPage() {
 
                 {/* Status/Banner — Earning Rates */}
                 {(stats?.my_rates?.qr_onboarding_rate > 0 || stats?.my_rates?.loan_disbursement_rate > 0 || user?.sub_user_id) ? (
-                    <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200/50 relative overflow-hidden">
-                        <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mb-16"></div>
-                        <div className="flex items-center gap-4 relative z-10">
-                            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md shrink-0">
-                                <TrendingUp size={24} className="text-white" />
+                    <div className="bg-indigo-600 rounded-3xl p-4 text-white shadow-xl shadow-indigo-200/50 relative overflow-hidden">
+                        <div className="absolute right-0 bottom-0 w-24 h-24 bg-white/10 rounded-full blur-3xl -mr-12 -mb-12"></div>
+                        <div className="flex items-center gap-3 relative z-10">
+                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md shrink-0">
+                                <TrendingUp size={20} className="text-white" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-black text-sm uppercase tracking-wider mb-2">Your Earning Rates</h3>
-                                <div className="flex flex-wrap gap-3">
-                                    <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
-                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">QR Mapping</p>
-                                        <p className="text-lg font-black">{(stats?.my_rates?.qr_onboarding_rate || 0).toLocaleString()}</p>
-                                        <p className="text-[8px] text-indigo-200/70 uppercase">Per Merchant</p>
+                                <h3 className="font-black text-[10px] uppercase tracking-wider mb-1.5 opacity-80">Your Rates</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    <div className="bg-white/10 border border-white/10 rounded-lg px-2.5 py-1 backdrop-blur-md">
+                                        <p className="text-[8px] text-indigo-200 uppercase tracking-tighter font-bold">QR Onboard</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-sm font-black">{(stats?.my_rates?.qr_onboarding_rate || 0).toLocaleString()}</p>
+                                            <span className="text-[6px] text-indigo-200/70 uppercase">/Unit</span>
+                                        </div>
                                     </div>
-                                    <div className="bg-white/10 border border-white/10 rounded-xl px-4 py-2 backdrop-blur-md">
-                                        <p className="text-[9px] text-indigo-200 uppercase tracking-widest font-bold">Virtual Credit Disbursement</p>
-                                        <p className="text-lg font-black">{(stats?.my_rates?.loan_disbursement_rate || 0).toLocaleString()}</p>
-                                        <p className="text-[8px] text-indigo-200/70 uppercase">Per Disbursement</p>
+                                    <div className="bg-white/10 border border-white/10 rounded-lg px-2.5 py-1 backdrop-blur-md">
+                                        <p className="text-[8px] text-indigo-200 uppercase tracking-tighter font-bold">V-Credit</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-sm font-black">{(stats?.my_rates?.loan_disbursement_rate || 0).toLocaleString()}</p>
+                                            <span className="text-[6px] text-indigo-200/70 uppercase">/Disb</span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-white/10 border border-white/10 rounded-lg px-2.5 py-1 backdrop-blur-md">
+                                        <p className="text-[8px] text-indigo-200 uppercase tracking-tighter font-bold">Vault Card</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-sm font-black">{(stats?.my_rates?.vault_card_commission || 0).toLocaleString()}</p>
+                                            <span className="text-[6px] text-indigo-200/70 uppercase">/Actv</span>
+                                        </div>
                                     </div>
                                     {(stats?.my_rates?.bonus_milestone_count > 0 || (user?.sub_user_id && stats?.my_rates?.bonus_milestone_amount === 0)) && (
-                                        <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl px-4 py-2 backdrop-blur-md">
-                                            <p className="text-[9px] text-amber-200 uppercase tracking-widest font-bold flex items-center gap-1">
-                                                <Trophy size={8} /> Milestone
+                                        <div className="bg-amber-400/20 border border-amber-400/30 rounded-lg px-2.5 py-1 backdrop-blur-md">
+                                            <p className="text-[8px] text-amber-200 uppercase tracking-tighter font-bold flex items-center gap-1">
+                                                <Trophy size={7} /> Milestone
                                             </p>
-                                            <p className="text-lg font-black">{(stats?.my_rates?.bonus_milestone_amount || 0).toLocaleString()}</p>
-                                            <p className="text-[8px] text-amber-200/70 uppercase">Target: {stats?.my_rates?.bonus_milestone_count || '-'} Mappings</p>
+                                            <div className="flex items-baseline gap-1">
+                                                <p className="text-sm font-black">{(stats?.my_rates?.bonus_milestone_amount || 0).toLocaleString()}</p>
+                                                <span className="text-[6px] text-amber-200/70 uppercase">@{stats?.my_rates?.bonus_milestone_count || '-'}</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
                                 {user?.sub_user_id && !stats?.my_rates?.qr_onboarding_rate && !stats?.my_rates?.loan_disbursement_rate && (
-                                    <p className="text-[9px] text-indigo-200 mt-3 font-bold uppercase tracking-widest">Note: Your commission rates are currently set to 0 by your agency.</p>
+                                    <p className="text-[8px] text-indigo-200 mt-2 font-bold uppercase tracking-widest leading-none">Note: Rates are 0 by agency.</p>
                                 )}
                             </div>
                         </div>
@@ -322,71 +385,190 @@ export default function TeamEarningsPage() {
                 {/* Earnings List */}
                 <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
                     <div className="p-4 bg-slate-50 border-b border-slate-100">
-                        <div className="flex p-1 bg-slate-200/50 rounded-xl mb-4">
+                        <div className="flex p-1 bg-slate-200/50 rounded-xl mb-3 flex-wrap sm:flex-nowrap gap-1">
                             <button
                                 onClick={() => setActiveTab('QR')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${
                                     activeTab === 'QR' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                                 }`}
                             >
                                 <QrCode size={14} />
-                                QR Onboarding
+                                QR
                             </button>
                             <button
                                 onClick={() => setActiveTab('LOAN')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${
                                     activeTab === 'LOAN' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                                 }`}
                             >
                                 <History size={14} />
-                                Virtual Credit Process
+                                Credit
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('CARD')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${
+                                    activeTab === 'CARD' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                <CreditCard size={14} />
+                                Card
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('DECLINED')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${
+                                    activeTab === 'DECLINED' ? 'bg-white text-rose-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                            >
+                                <X size={14} />
+                                Decline ({stats?.declined_count || 0})
                             </button>
                         </div>
                         
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mt-3">
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                {activeTab === 'QR' ? 'Mappings' : 'Referrals'} ({activeTab === 'QR' ? (stats?.qr_onboard_count || 0) : (stats?.loan_onboard_count || 0)})
+                                {activeTab === 'QR' ? 'Mappings' : activeTab === 'LOAN' ? 'Referrals' : activeTab === 'CARD' ? 'Requests' : 'Declined Leads'} (
+                                    {activeTab === 'QR' ? (stats?.history?.filter((f:any) => f.status !== 'DECLINED' && (f.type !== 'LOAN')).length || 0) : 
+                                     activeTab === 'LOAN' ? (stats?.history?.filter((f:any) => f.status !== 'DECLINED' && f.type === 'LOAN').length || 0) : 
+                                     activeTab === 'CARD' ? (cardRequests?.length || 0) :
+                                     (stats?.declined_count || 0)}
+                                )
                             </p>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Search size={14} className="text-slate-400" />
+                            {activeTab !== 'CARD' && (
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Search size={14} className="text-slate-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Search name/mobile..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs w-44 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm placeholder:text-slate-300 font-medium"
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    placeholder="Search name/mobile..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs w-44 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm placeholder:text-slate-300 font-medium"
-                                />
-                            </div>
+                            )}
                         </div>
                     </div>
 
                     <div className="space-y-3 p-4">
+                        {activeTab === 'CARD' && (
+                            <div className="mb-4">
+                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-4 shadow-sm">
+                                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <CreditCard size={14} /> New Card Activation
+                                    </h4>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="tel"
+                                            placeholder="Enter 10-digit mobile"
+                                            value={cardMobile}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                if (val.length <= 10) setCardMobile(val);
+                                            }}
+                                            className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400"
+                                            disabled={cardCustomer !== null || submitting}
+                                        />
+                                        {cardCustomer ? (
+                                            <button
+                                                onClick={() => { setCardCustomer(null); setCardMobile(''); }}
+                                                className="px-3 py-2 bg-slate-200 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-300"
+                                                disabled={submitting}
+                                            >
+                                                Clear
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={handleCheckCustomer}
+                                                disabled={cardMobile.length !== 10 || cardLoading}
+                                                className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700 disabled:opacity-50"
+                                            >
+                                                {cardLoading ? 'Checking...' : 'Check'}
+                                            </button>
+                                        )}
+                                    </div>
+                                    {cardCustomer && (
+                                        <div className="mt-3 bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex items-center justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mb-0.5">Customer Name</p>
+                                                <p className="font-black text-indigo-900 text-sm">{cardCustomer.name}</p>
+                                            </div>
+                                            <button
+                                                onClick={handleRequestCard}
+                                                disabled={submitting}
+                                                className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase shadow-md active:scale-95 disabled:opacity-50"
+                                            >
+                                                {submitting ? 'Requesting...' : 'Request Card'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {cardRequests?.map((req: any) => (
+                                    <div key={req.id} className="bg-white px-3 py-3 rounded-[22px] border border-slate-100 shadow-sm mb-3">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div>
+                                                <h4 className="text-sm font-black text-slate-900">{req.customer?.name || 'Unknown'}</h4>
+                                                <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{req.customer_number}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                                    req.status === 'ACTIVATED' ? 'bg-emerald-100 text-emerald-700' :
+                                                    req.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
+                                                    req.status === 'PENDING_PAYMENT' ? 'bg-amber-100 text-amber-700' :
+                                                    'bg-blue-100 text-blue-700'
+                                                }`}>
+                                                    {req.status.replace('_', ' ')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {req.status === 'PENDING_PAYMENT' && req.activation_charge && (
+                                            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                                                <p className="text-xs font-bold text-slate-600">Charge: <span className="text-amber-600 font-black">₹{req.activation_charge}</span></p>
+                                                <button
+                                                    onClick={() => router.push(`/customer/vault-card/payment?id=${req.id}`)}
+                                                    className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest"
+                                                >
+                                                    Pay Now
+                                                </button>
+                                            </div>
+                                        )}
+                                        {req.status === 'REJECTED' && req.rejection_reason && (
+                                            <div className="mt-2 text-[10px] text-rose-500 bg-rose-50 p-2 rounded-lg">
+                                                {req.rejection_reason}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {(!cardRequests || cardRequests.length === 0) && (
+                                    <div className="p-8 text-center border border-dashed border-slate-200 rounded-2xl">
+                                        <CreditCard className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No card requests yet</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         {stats?.history?.filter((f: any) => {
-                            const matchTab = activeTab === 'QR' ? (Number(f.signup_bonus) > 0 || f.type === 'QR' || f.type === 'SIGNUP') : (Number(f.loan_bonus) > 0 || f.type === 'LOAN');
+                            if (activeTab === 'DECLINED') return f.status === 'DECLINED';
+                            if (f.status === 'DECLINED') return false; 
+                            
+                            const matchTab = activeTab === 'QR' ? (f.type !== 'LOAN') : (f.type === 'LOAN');
                             const matchSearch = (() => {
                                 if (!searchQuery) return true;
                                 const q = searchQuery.toLowerCase();
                                 return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
                             })();
                             return matchTab && matchSearch;
-                        }).length > 0 ? (
-                            stats.history.filter((f: any) => {
-                                const matchTab = activeTab === 'QR' ? (Number(f.signup_bonus) > 0 || f.type === 'QR' || f.type === 'SIGNUP') : (Number(f.loan_bonus) > 0 || f.type === 'LOAN');
-                                const matchSearch = (() => {
-                                    if (!searchQuery) return true;
-                                    const q = searchQuery.toLowerCase();
-                                    return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
-                                })();
-                                return matchTab && matchSearch;
-                            }).map((friend: any) => {
-                                const isVerified = friend.is_field_verified;
-                                const verifiedText = friend.type === 'LOAN' ? 'Disbursed' : 'Txn Complete';
-                                
-                                return (
-                                <div key={friend.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
-                                    <div className="flex justify-between items-start mb-4">
+                        }).map((friend: any) => {
+                            const isVerified = friend.is_field_verified;
+                            const isDeclined = friend.status === 'DECLINED';
+                            const verifiedText = isDeclined ? 'Declined' : (friend.type === 'LOAN' ? 'Disbursed' : 'Txn Complete');
+                            
+                            return (
+                                <div key={friend.id} className="bg-white px-3 py-2 rounded-[22px] border border-slate-100 shadow-sm relative overflow-hidden">
+                                    <div className="flex justify-between items-start mb-1.5">
                                         <div>
                                             <h4 className="text-sm font-black text-slate-900">{friend.name}</h4>
                                             <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{friend.mobile}</p>
@@ -397,18 +579,32 @@ export default function TeamEarningsPage() {
                                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
                                                     <p className={`text-xs font-black ${isVerified ? 'text-emerald-600' : 'text-slate-300'}`}>{Number(friend.signup_bonus || 0).toFixed(0)}</p>
                                                 </div>
-                                            ) : (
+                                            ) : activeTab === 'LOAN' ? (
                                                 <div>
                                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Credit Disbursed Earn</p>
                                                     <p className={`text-xs font-black ${isVerified ? 'text-indigo-600' : 'text-slate-300'}`}>{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-end">
+                                                    <div className="flex items-center gap-1 mb-1">
+                                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Lead Type</p>
+                                                        {isDeclined && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); setSelectedRemark(friend.rejection_reason || 'Information provided was inaccurate or incomplete.'); }} 
+                                                                className="w-4 h-4 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-colors"
+                                                                title="View Remark"
+                                                            >
+                                                                <Info size={10} strokeWidth={3} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs font-black text-rose-500 uppercase">{friend.type === 'SIGNUP' ? 'QR MAP' : friend.type}</p>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* Progress Indicator */}
-                                    <div className="grid grid-cols-4 gap-1 relative pt-2 mb-2">
-                                        {/* Step 1: Joined */}
+                                    <div className="grid grid-cols-4 gap-0.5 relative pt-0.5 mb-1 text-[10px]">
                                         <div className="flex flex-col items-center gap-1 z-10 text-center">
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100`}>
                                                 <Users size={12} />
@@ -416,7 +612,6 @@ export default function TeamEarningsPage() {
                                             <span className="text-[7px] font-black uppercase text-emerald-500">Joined</span>
                                         </div>
 
-                                        {/* Step 2: Action (Mapped/Applied) */}
                                         <div className="flex flex-col items-center gap-1 z-10 text-center">
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
                                                 (friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN')
@@ -430,19 +625,24 @@ export default function TeamEarningsPage() {
                                             </span>
                                         </div>
 
-                                        {/* Step 3: Verified / Txn Complete */}
                                         <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                                isVerified 
-                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
-                                                : 'bg-white border-amber-300 text-amber-500 animate-pulse'
-                                            }`}>
-                                                {isVerified ? <Check size={11} /> : <Clock size={11} />}
-                                            </div>
-                                            <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-emerald-500' : 'text-amber-500'}`}>{verifiedText}</span>
+                                            <button 
+                                                onClick={() => {
+                                                    if (isDeclined) {
+                                                        setSelectedRemark(friend.rejection_reason || 'Information provided was inaccurate or incomplete.');
+                                                    }
+                                                }}
+                                                className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-transform active:scale-95 ${
+                                                    isVerified 
+                                                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
+                                                    : isDeclined ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-100' : 'bg-white border-amber-300 text-amber-500 animate-pulse'
+                                                }`}
+                                            >
+                                                {isVerified ? <Check size={11} /> : isDeclined ? <X size={11} /> : <Clock size={11} />}
+                                            </button>
+                                            <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-emerald-500' : isDeclined ? 'text-rose-500' : 'text-amber-500'}`}>{verifiedText}</span>
                                         </div>
 
-                                        {/* Step 4: Paid */}
                                         <div className="flex flex-col items-center gap-1 z-10 text-center">
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
                                                 isVerified 
@@ -453,23 +653,45 @@ export default function TeamEarningsPage() {
                                             </div>
                                             <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-indigo-600' : 'text-slate-400'}`}>Paid</span>
                                         </div>
-
-                                        {/* Connecting Line Backdrop */}
-                                        <div className="absolute top-[21px] left-[15%] right-[15%] h-[1.5px] bg-slate-100 -z-0"></div>
+                                        {!isDeclined && (
+                                            <div className="absolute top-[18px] left-[15%] right-[15%] h-[1px] bg-slate-100 -z-0"></div>
+                                        )}
                                     </div>
                                 </div>
-                                );
-                            })
-                        ) : (
+                            );
+                        })}
+
+                        {stats?.history?.filter((f: any) => {
+                            if (activeTab === 'DECLINED') return f.status === 'DECLINED';
+                            if (f.status === 'DECLINED') return false; 
+                            
+                            const matchTab = activeTab === 'QR' ? (f.type !== 'LOAN') : (f.type === 'LOAN');
+                            const matchSearch = (() => {
+                                if (!searchQuery) return true;
+                                const q = searchQuery.toLowerCase();
+                                return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
+                            })();
+                            return matchTab && matchSearch;
+                        }).length === 0 && (
                             <div className="p-12 text-center">
-                                <TrendingUp className="w-12 h-12 text-slate-100 mx-auto mb-4" />
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No referral earnings yet</p>
-                                <button
-                                    onClick={() => router.push('/customer/referral')}
-                                    className="mt-4 text-xs font-black text-indigo-600 uppercase tracking-widest hover:underline"
-                                >
-                                    Start Referring Now
-                                </button>
+                                {activeTab === 'DECLINED' ? (
+                                    <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                                        <CheckCircle size={32} />
+                                    </div>
+                                ) : (
+                                    <TrendingUp className="w-12 h-12 text-slate-100 mx-auto mb-4" />
+                                )}
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                    {activeTab === 'DECLINED' ? 'Great! No declined leads' : 'No referral earnings yet'}
+                                </p>
+                                {activeTab !== 'DECLINED' && (
+                                    <button
+                                        onClick={() => router.push('/customer/referral')}
+                                        className="mt-4 text-xs font-black text-indigo-600 uppercase tracking-widest hover:underline"
+                                    >
+                                        Start Referring Now
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -518,6 +740,29 @@ export default function TeamEarningsPage() {
                                 {submitting ? 'Processing...' : 'Confirm Withdrawal'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Rejection Remark Modal */}
+            {selectedRemark && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px]" onClick={() => setSelectedRemark(null)}>
+                    <div className="bg-white rounded-[24px] p-5 max-w-[280px] w-full shadow-2xl scale-100 animate-in fade-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center text-rose-500">
+                                <Info size={14} strokeWidth={3} />
+                            </div>
+                            <h3 className="text-[13px] font-black text-slate-900 tracking-tight">Rejection Remark</h3>
+                        </div>
+                        <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-h-[150px] overflow-y-auto pr-1">
+                            {selectedRemark}
+                        </p>
+                        <button 
+                            onClick={() => setSelectedRemark(null)}
+                            className="mt-4 w-full py-2.5 bg-slate-50 text-slate-700 hover:bg-slate-100 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors active:scale-95"
+                        >
+                            Got it
+                        </button>
                     </div>
                 </div>
             )}
