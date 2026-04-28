@@ -25,6 +25,7 @@ import { twMerge } from 'tailwind-merge';
 import { useStore } from '@/store/useStore';
 import { apiFetch } from '@/lib/api';
 import Camera from './Camera';
+import toast from 'react-hot-toast';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -63,6 +64,19 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean, referral?: boolean }>({});
     const [referrerName, setReferrerName] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [eligibilityError, setEligibilityError] = useState<{ message: string, step: number } | null>(null);
+
+    const calculateAge = (dobString: string) => {
+        if (!dobString) return 0;
+        const today = new Date();
+        const birthDate = new Date(dobString);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
 
     // Dynamic schema based on role
     const kycSchema = z.object({
@@ -230,7 +244,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             });
 
             if (!res.unique) {
-                setUniquenessErrors(prev => ({ ...prev, [type]: 'Apply for loan from another account' }));
+                setUniquenessErrors(prev => ({ ...prev, [type]: `This ${type === 'aadhar' ? 'Aadhaar' : 'PAN'} is already linked with another account. Please use your own document.` }));
             } else {
                 setUniquenessErrors(prev => ({ ...prev, [type]: undefined }));
             }
@@ -316,18 +330,51 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 return;
             }
         }
+
+        if (currentStep === 1 && checkingUniqueness.aadhar) {
+            toast.loading("Fetching Aadhaar data... please wait", { id: 'api-loading' });
+            return;
+        }
         
         if (currentStep === 1 && uniquenessErrors.aadhar) {
-            setErrorPopup("यह आधार कार्ड पहले से ही उपयोग किया जा चुका है।");
+            toast.error("यह आधार कार्ड पहले से ही उपयोग किया जा चुका है।", { id: 'api-error' });
+            return;
+        }
+
+        if (currentStep === 2 && checkingUniqueness.pan) {
+            toast.loading("Fetching PAN data... please wait", { id: 'api-loading' });
             return;
         }
 
         if (currentStep === 2 && uniquenessErrors.pan) {
-            setErrorPopup("यह पैन कार्ड पहले से ही उपयोग किया जा चुका है।");
+            toast.error("यह पैन कार्ड पहले से ही उपयोग किया जा चुका है।", { id: 'api-error' });
             return;
         }
 
         let targetStep = currentStep + 1;
+
+        // Eligibility Pre-check before proceeding from Aadhaar step
+        if (currentStep === 1) {
+            const dob = watch('date_of_birth');
+            if (dob) {
+                const age = calculateAge(dob);
+                if (age < 15) {
+                    setEligibilityError({
+                        message: "We're sorry, but the minimum age requirement for an Open Score account is 15 years. Please ensure the Aadhaar card uploaded is correct.",
+                        step: 1
+                    });
+                    return;
+                }
+                if (age < 18 && user?.role !== 'STUDENT') {
+                    setEligibilityError({
+                        message: "Accounts for users under 18 years of age are currently restricted to Students only. Please verify your date of birth or account type.",
+                        step: 1
+                    });
+                    return;
+                }
+            }
+        }
+
         // Skip steps if they are already "auto-skippable" (fully submitted previously)
         while (targetStep < STEPS.length - 1 && isStepAutoSkippable(targetStep)) {
             targetStep++;
@@ -407,6 +454,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     // Don't return early - allow the user to use the image even if OCR fails
                 } else {
                     // OCR Success Path
+                    let fullAddress = '';
                     // Same Image Check (using raw_text signature)
                     const currentText = JSON.stringify(ocr_data.raw_text);
                     const isSameImage = Object.entries(ocrResults).some(([cat, data]) => {
@@ -476,7 +524,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
                     if (activeCameraCategory === 'aadhar_back') {
                         // Robust address extraction ... [kept original logic]
-                        let fullAddress = '';
                         if (ocr_data.address && ocr_data.address.length > 20 && !ocr_data.address.toLowerCase().includes('authority')) {
                             fullAddress = ocr_data.address;
                         } else if (ocr_data.raw_text && Array.isArray(ocr_data.raw_text)) {
@@ -516,6 +563,25 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         if (watch('is_permanent_same')) setValue('state', ocr_data.state);
                     }
                     if (ocr_data.father_name) setValue('father_name', ocr_data.father_name);
+
+                    // Strict Mandatory Field Check
+                    const missingFields: string[] = [];
+                    if (activeCameraCategory === 'aadhar_front') {
+                        if (!ocr_data.name) missingFields.push('Name (नाम)');
+                        if (!ocr_data.aadhaar_number) missingFields.push('Aadhaar Number (आधार नंबर)');
+                        if (!ocr_data.dob) missingFields.push('Date of Birth (जन्म तिथि)');
+                    } else if (activeCameraCategory === 'aadhar_back') {
+                        if (!ocr_data.pincode) missingFields.push('Pincode (पिनकोड)');
+                        if (!fullAddress) missingFields.push('Address (पता)');
+                    } else if (activeCameraCategory === 'pan_card') {
+                        if (!ocr_data.pan_number) missingFields.push('PAN Number (पैन नंबर)');
+                    }
+
+                    if (missingFields.length > 0) {
+                        setErrorPopup(`Unable to read: ${missingFields.join(', ')}. Please re-upload a clear image where the document covers 90% of the screen and background is minimized.`);
+                        setActiveCameraCategory(null);
+                        return;
+                    }
                 }
             }
 
@@ -629,9 +695,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Number</p>
                                         <p className="text-xs font-bold text-slate-700">{watch('aadhar_number')}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">DOB</p>
-                                        <p className="text-xs font-bold text-slate-700">{watch('date_of_birth')}</p>
+                                    <div className="space-y-1 mt-auto">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight mb-1">DOB</p>
+                                        <input 
+                                            type="date" 
+                                            {...register('date_of_birth')} 
+                                            className="w-full p-2 bg-white/80 border border-emerald-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
+                                        />
+                                        {errors.date_of_birth && <p className={errorClasses}>{errors.date_of_birth.message as string}</p>}
                                     </div>
                                 </div>
                             </div>
@@ -909,7 +980,21 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             kyc_images: capturedImages,
             ocr_results: ocrResults
         };
-        onSubmit(payload);
+        
+        try {
+            await onSubmit(payload);
+        } catch (err: any) {
+            console.error("Submission error catch in KycForm:", err);
+            const msg = err.message || "Submission failed";
+            
+            if (msg.toLowerCase().includes('eligib') || msg.toLowerCase().includes('age') || msg.toLowerCase().includes('requirement')) {
+                setEligibilityError({ message: msg, step: 1 });
+            } else if (msg.toLowerCase().includes('aadhar') || msg.toLowerCase().includes('pan')) {
+                setEligibilityError({ message: msg, step: msg.toLowerCase().includes('pan') ? 2 : 1 });
+            } else {
+                setErrorPopup(msg || "Could not process your application at this time.");
+            }
+        }
     };
 
     const formContent = (
@@ -1070,13 +1155,18 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
                                 <CreditCard size={20} />
                             </div>
-                            <h3 className="text-white font-black uppercase tracking-widest text-sm">
-                                {DOCUMENT_CATEGORIES.find(c => c.id === activeCameraCategory)?.label}
-                            </h3>
+                            <div>
+                                <h3 className="text-white font-black uppercase tracking-widest text-sm">
+                                    {DOCUMENT_CATEGORIES.find(c => c.id === activeCameraCategory)?.label}
+                                </h3>
+                                <p className="text-blue-400 text-[9px] font-bold uppercase tracking-tight opacity-80 mt-0.5">
+                                    Ensure document covers 90% of frame • Minimize background
+                                </p>
+                            </div>
                         </div>
                         <button 
                             onClick={() => setActiveCameraCategory(null)}
-                            className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20"
+                            className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
                         >
                             <X size={20} />
                         </button>
@@ -1158,22 +1248,45 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 </div>
             )}
 
-            {/* Error Popup */}
-            {errorPopup && (
+            {/* Eligibility / Verification Error Popup */}
+            {(errorPopup || eligibilityError) && (
                 <div className="fixed inset-0 z-[1200] bg-slate-900/60 backdrop-blur-sm p-4 flex items-center justify-center animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[2rem] w-full max-w-sm p-8 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-rose-500"></div>
-                        <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center mb-6 text-rose-500 mx-auto">
-                            <X size={28} strokeWidth={3} />
+                    <div className="bg-white rounded-[3rem] w-full max-w-sm p-8 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-rose-500"></div>
+                        <div className="w-20 h-20 rounded-full bg-rose-50 flex items-center justify-center mb-6 text-rose-500 mx-auto">
+                            <X size={32} strokeWidth={3} />
                         </div>
-                        <h3 className="text-center font-black text-slate-900 text-lg mb-2 uppercase tracking-widest">Verification Error</h3>
-                        <p className="text-center text-slate-500 text-sm font-medium leading-relaxed mb-8">{errorPopup}</p>
-                        <button 
-                            onClick={() => setErrorPopup(null)}
-                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/20"
-                        >
-                            Try Again
-                        </button>
+                        <h3 className="text-center font-black text-slate-900 text-xl mb-3 uppercase tracking-widest">
+                            {eligibilityError ? "Not Eligible" : "Verification Issue"}
+                        </h3>
+                        <p className="text-center text-slate-500 text-sm font-bold leading-relaxed mb-8 px-2">
+                            {eligibilityError ? eligibilityError.message : errorPopup}
+                        </p>
+                        
+                        <div className="flex flex-col gap-3">
+                            <button 
+                                onClick={() => {
+                                    if (eligibilityError) {
+                                        setCurrentStep(eligibilityError.step);
+                                        setEligibilityError(null);
+                                    } else {
+                                        setErrorPopup(null);
+                                    }
+                                }}
+                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-[0.98]"
+                            >
+                                {eligibilityError ? "Re-upload Documents" : "Try Again"}
+                            </button>
+                            
+                            {eligibilityError && (
+                                <button 
+                                    onClick={() => setEligibilityError(null)}
+                                    className="w-full py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-[0.98]"
+                                >
+                                    Cancel
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

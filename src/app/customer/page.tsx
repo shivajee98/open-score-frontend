@@ -181,7 +181,7 @@ export default function CustomerHome() {
             : (activeWallet?.locked_balance || '0'))
         : 0;
 
-    const kycLoan = loansList?.find((l: any) => l.status === 'KYC_SENT') || null;
+    const kycLoan = loansList?.find((l: any) => l.status === 'KYC_SENT' || (Array.isArray(l.reupload_fields) && l.reupload_fields.length > 0)) || null;
     const activeLoan = loansList?.find((l: any) => l.status === 'DISBURSED' || l.status === 'OVERDUE');
     const hasActiveLoan = !!activeLoan;
     const loading = !activeUser && (userLoading || walletLoading);
@@ -1016,7 +1016,7 @@ export default function CustomerHome() {
                                                 "font-black text-sm leading-tight uppercase tracking-tight",
                                                 kycLoan.reupload_fields?.length > 0 ? "text-rose-900" : "text-slate-900"
                                             )}>
-                                                {kycLoan.reupload_fields?.length > 0 ? 'Correct KYC Errors' : 'Complete KYC Now'}
+                                                {kycLoan.reupload_fields?.length > 0 ? 'Document Update Required' : 'Complete KYC Verification'}
                                             </h3>
                                             <p className={cn(
                                                 "text-[8px] font-black leading-tight mt-0.5 uppercase tracking-widest leading-none",

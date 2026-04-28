@@ -94,7 +94,7 @@ export default function PayoutPage() {
     const [isProcessing, setIsProcessing] = useState(false); // Simulated processing state
     const [isSuccess, setIsSuccess] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [showRestricted, setShowRestricted] = useState(false); // Show restriction screen after attempt
+
     const [transferStatus, setTransferStatus] = useState<any>(null);
     const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
     const [showWithdrawalLimits, setShowWithdrawalLimits] = useState(false);
@@ -169,7 +169,7 @@ export default function PayoutPage() {
 
     // Dynamic Restrictions from Backend Rules
     const withdrawalRule = rulesData || null;
-    const isLocked = withdrawalRule?.unlock_status?.has_active_loan && !withdrawalRule?.unlock_status?.is_unlocked;
+
     const dailyTxnLimit = withdrawalRule?.daily_txn_limit;
     const usedTxnsToday = withdrawalRule?.today_txn_count; // Backend sends used count
     const monthlyFreeCount = withdrawalRule?.monthly_free_count || 0;
@@ -272,10 +272,7 @@ export default function PayoutPage() {
             toast.error("Daily request limit reached");
             return;
         }
-        if (isLocked) {
-            setShowRestricted(true);
-            return;
-        }
+
 
         // 2. Fetch latest user data to check verification status
         setIsSubmitting(true);
@@ -335,8 +332,8 @@ export default function PayoutPage() {
                 const error = apiResult.reason;
                 const errorMsg = error?.message || "";
 
-                if (isLocked || errorMsg.toLowerCase().includes('limit') || errorMsg.toLowerCase().includes('unlock')) {
-                    setShowRestricted(true);
+                if (errorMsg.toLowerCase().includes('limit') || errorMsg.toLowerCase().includes('unlock')) {
+                    toast.error(errorMsg || "Withdrawal restricted");
                 } else {
                     toast.error(errorMsg || "Failed to submit request");
                 }
@@ -478,83 +475,7 @@ export default function PayoutPage() {
     // The full-screen restriction is removed to retain users on the page
     // if (isMerchantUnverified) { ... }
 
-    if (showRestricted || (isLocked && !isSuccess)) {
-        const unlock = withdrawalRule?.unlock_status;
-        return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center font-sans">
 
-                <div className="space-y-4 mb-8">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight">
-                        {unlock?.has_active_loan ? 'Unlock Account for Transfers' : 'Withdrawal Restricted'}
-                    </h2>
-                    <p className="text-slate-400 font-bold text-xs leading-relaxed uppercase tracking-wider max-w-xs mx-auto">
-                        {unlock?.has_active_loan
-                            ? `Your current ${unlock.loan_plan} requires specific activity to enable wallet transfers.`
-                            : "Your account is currently ineligible for large transfers. Please check your limits."}
-                    </p>
-                </div>
-
-                {unlock?.has_active_loan && (
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-indigo-900/5 w-full max-w-sm text-left relative overflow-hidden mb-6">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-                        <h4 className="font-black text-slate-900 text-[10px] uppercase tracking-widest mb-6 flex items-center gap-2">
-                            <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
-                            How to Unlock?
-                        </h4>
-
-                        <div className="space-y-4">
-                            {unlock.requirements.map((req: any, idx: number) => (
-                                <div key={idx} className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
-                                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tight mb-2">
-                                        <span className={req.current >= req.required ? 'text-emerald-600' : 'text-slate-500'}>
-                                            {req.label} {req.current >= req.required ? '✓' : ''}
-                                        </span>
-                                        <span className="text-slate-400">
-                                            {req.type === 'spend' ? '' : ''}{req.current.toLocaleString()} / {req.type === 'spend' ? '' : ''}{req.required.toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full transition-all duration-1000 ${req.current >= req.required ? 'bg-emerald-500' : (req.type === 'spend' ? 'bg-indigo-600' : 'bg-amber-500')}`}
-                                            style={{ width: `${Math.min(100, (req.current / req.required) * 100)}%` }}
-                                        />
-                                    </div>
-                                    {req.current < req.required && (
-                                        <p className="text-[9px] font-bold text-rose-400 mt-2 uppercase tracking-tighter">
-                                            {req.type === 'spend' ? `Spend ${req.remaining.toLocaleString()} more` : `Complete ${req.remaining} more transactions`}
-                                        </p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {!unlock?.is_unlocked && (
-                    <div className="w-full max-w-sm bg-amber-50 rounded-2xl p-4 border border-amber-100 mb-8 text-left">
-                        <p className="text-[10px] font-bold text-amber-700 leading-normal flex items-start gap-2">
-                            <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                            <span>Even when locked, you can always withdraw amounts you earned above your loan value: <b>{withdrawalRule?.unlock_status?.locked_amount ? Math.max(0, balance - withdrawalRule.unlock_status.locked_amount).toLocaleString() : '0'}</b></span>
-                        </p>
-                    </div>
-                )}
-
-                <button
-                    onClick={() => router.push('/customer/loan')}
-                    className="w-full max-w-sm py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all active:scale-95 shadow-2xl shadow-indigo-100 flex items-center justify-center gap-3"
-                >
-                    Upgrade Loan Plan
-                    <ArrowRight size={18} />
-                </button>
-                <button
-                    onClick={() => setShowRestricted(false)}
-                    className="mt-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-colors"
-                >
-                    Back to Wallet
-                </button>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-slate-50 pb-safe">

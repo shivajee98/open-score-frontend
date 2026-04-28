@@ -143,23 +143,35 @@ export default function LoanStatus() {
         fetchLoan();
         fetchUserData();
         fetchTickets();
+    }, [loanId]);
 
-        // If KYC form is open, we stop refreshing to prevent form resets
-        if (showKycForm) return;
-
+    useEffect(() => {
         const handleLoanUpdate = (e: any) => {
             const updatedLoan = e.detail;
-            // Refresh if either ID matches
-            if (updatedLoan && (updatedLoan.id == loanId || updatedLoan.display_id == loanId || updatedLoan.loan_id == loanId)) {
-                console.log("[StatusClient] Refreshing due to loan update event");
-                fetchLoan();
-                fetchUserData();
-                fetchTickets();
+            if (updatedLoan && (updatedLoan.id == loanId || updatedLoan.display_id == loanId)) {
+                console.log("[StatusClient] Real-time loan update received:", updatedLoan.status);
+                // We always fetch loan data to ensure consistency, but skip if form is open to avoid flash
+                if (!showKycForm) {
+                    fetchLoan();
+                    fetchUserData();
+                }
             }
         };
 
+        const handleUserUpdate = () => {
+            console.log("[StatusClient] Real-time user update received");
+            if (!showKycForm) fetchUserData();
+        };
+
         window.addEventListener('loanStateUpdate', handleLoanUpdate);
-        return () => window.removeEventListener('loanStateUpdate', handleLoanUpdate);
+        window.addEventListener('userStateUpdate', handleUserUpdate);
+        window.addEventListener('walletStateUpdate', handleLoanUpdate); // Re-use loan update for wallet as they often go together
+
+        return () => {
+            window.removeEventListener('loanStateUpdate', handleLoanUpdate);
+            window.removeEventListener('userStateUpdate', handleUserUpdate);
+            window.removeEventListener('walletStateUpdate', handleLoanUpdate);
+        };
     }, [loanId, showKycForm]);
 
     // Multi-stage Animation Trigger Logic
@@ -279,7 +291,9 @@ export default function LoanStatus() {
             setShowKycForm(false);
             fetchLoan();
         } catch (e: any) {
-            toast.error(e.message || 'Confirmation failed');
+            console.error("Submission failed in StatusClient:", e);
+            // We re-throw so KycForm can catch it and show its internal "Re-upload" error state
+            throw e; 
         } finally {
             setSubmitting(false);
             setShowVerificationLoading(false);
@@ -371,11 +385,23 @@ export default function LoanStatus() {
                                         <p className="text-sm text-amber-700 font-bold leading-relaxed italic pl-8">
                                             "{loan.remarks || 'Admin has requested corrections for specific fields in your KYC application.'}"
                                         </p>
-                                        <div className="mt-3 pl-8 flex flex-wrap gap-2">
+                                        <div className="mt-4 pl-8 space-y-3">
                                             {loan.reupload_fields.map((field: string, i: number) => (
-                                                <span key={i} className="text-[8px] font-black bg-white/50 text-amber-800 px-2 py-0.5 rounded border border-amber-200/50 uppercase tracking-tighter">
-                                                    {field.replace(/_/g, ' ')}
-                                                </span>
+                                                <div key={i} className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                                                        <span className="text-[10px] font-black text-amber-900 uppercase tracking-tight">
+                                                            {field.replace(/_/g, ' ')}
+                                                        </span>
+                                                    </div>
+                                                    {loan.reupload_remarks?.[field] && (
+                                                        <div className="bg-white/60 p-2 rounded-lg border border-amber-200/40 ml-3.5">
+                                                            <p className="text-[11px] text-amber-700 font-medium italic">
+                                                                "{loan.reupload_remarks[field]}"
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
@@ -498,7 +524,7 @@ export default function LoanStatus() {
                                     trailColor="#f1f5f9"
                                     onComplete={() => {
                                         fetchLoan();
-                                        window.location.reload();
+                                        fetchUserData();
                                     }}
                                 >
                                     {({ remainingTime }) => (
@@ -625,8 +651,14 @@ export default function LoanStatus() {
                             <Check className="w-6 h-6" />
                         </div>
                         <div>
-                            <h3 className="text-base font-black uppercase tracking-tight">Complete Your KYC</h3>
-                            <p className="text-blue-100 text-xs font-medium mt-1">We need a few more details to finalize your application.</p>
+                            <h3 className="text-base font-black uppercase tracking-tight">
+                                {loan.reupload_fields?.length > 0 ? 'Document Correction Required' : 'Complete Your KYC'}
+                            </h3>
+                            <p className="text-blue-100 text-xs font-medium mt-1">
+                                {loan.reupload_fields?.length > 0 
+                                    ? 'Your loan is processed, all you need is to re-upload these fields required by admin.' 
+                                    : 'We need a few more details to finalize your application.'}
+                            </p>
                         </div>
                         <button
                             onClick={() => window.open(`${process.env.NEXT_PUBLIC_KYC_URL || 'https://kyc.msmeloan.sbs'}/form?token=${loan.kyc_token}`, '_blank')}
