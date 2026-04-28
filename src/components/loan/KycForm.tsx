@@ -424,10 +424,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     }, [user, initialData]);
 
 
-    const uploadToServer = async (blob: Blob, type?: string) => {
+    const uploadToServer = async (blob: Blob, type?: string, corners?: string) => {
         const fd = new FormData();
         fd.append('file', blob, 'kyc_image.jpg');
         if (type) fd.append('type', type);
+        if (corners) fd.append('corners', corners);
 
         const res = await apiFetch('/loans/upload-kyc-temp', {
             method: 'POST',
@@ -437,12 +438,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         return res;
     };
 
-    const handleCapture = async (blob: Blob) => {
+    const handleCapture = async (blob: Blob, corners?: string) => {
         if (!activeCameraCategory) return;
         setIsOcrLoading(true);
         
         try {
-            const { url, ocr_data } = await uploadToServer(blob, activeCameraCategory);
+            const { url, ocr_data } = await uploadToServer(blob, activeCameraCategory, corners);
             
             // Define which categories REQUIRE ocr_data to be present/valid
             const identityTypes = ['aadhar_front', 'aadhar_back', 'pan_card'];

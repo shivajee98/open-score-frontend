@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import { Camera as CameraIcon, RotateCw, Check, X, MapPin, Image as ImageIcon, Upload, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
+import DocumentCropper from './DocumentCropper';
 
 interface CameraProps {
-    onCapture: (blob: Blob) => void | Promise<void>;
+    onCapture: (blob: Blob, corners?: string) => void | Promise<void>;
     label: string;
 }
 
@@ -17,6 +18,12 @@ export default function Camera({ onCapture, label }: CameraProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isAligned, setIsAligned] = useState(false);
+
+    // Auto-cropping states
+    const [cornersData, setCornersData] = useState<number[][] | null>(null);
+    const [imageDimensions, setImageDimensions] = useState<{w: number, h: number} | null>(null);
+    const [showCropper, setShowCropper] = useState(false);
+    const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
 
     const startCamera = async () => {
         try {
@@ -76,19 +83,50 @@ export default function Camera({ onCapture, label }: CameraProps) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
             ctx.drawImage(video, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            setCapturedImage(dataUrl);
-            stopCamera();
+            canvas.toBlob((blob) => {
+                if (blob) processImageAndDetect(blob);
+            }, 'image/jpeg', 0.8);
         }
     };
 
-    const confirmCapture = async () => {
-        if (!capturedImage) return;
+    const processImageAndDetect = async (blob: Blob) => {
+        setLoading(true);
+        const objectUrl = URL.createObjectURL(blob);
+        
+        // Get natural dimensions
+        const img = new window.Image();
+        img.src = objectUrl;
+        await new Promise((resolve) => { img.onload = resolve; });
+        setImageDimensions({ w: img.width, h: img.height });
+        
+        // Attempt detection
+        const formData = new FormData();
+        formData.append('file', blob, 'image.jpg');
+        try {
+            const apiRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/detect-corners`, { method: 'POST', body: formData });
+            if (apiRes.ok) {
+                const apiData = await apiRes.json();
+                setCornersData(apiData.corners);
+            } else {
+                setCornersData(null);
+            }
+        } catch(e) {
+            console.error("Corner detection failed", e);
+            setCornersData(null);
+        }
+
+        setCapturedImage(objectUrl);
+        setCapturedBlob(blob);
+        setShowCropper(true);
+        setLoading(false);
+        stopCamera();
+    };
+
+    const confirmCrop = async (cornersStr: string) => {
+        if (!capturedBlob) return;
         setLoading(true);
         try {
-            const response = await fetch(capturedImage);
-            const blob = await response.blob();
-            await onCapture(blob);
+            await onCapture(capturedBlob, cornersStr);
         } catch (err) {
             console.error("Capture confirmation error:", err);
             setError("Failed to process captured image.");
@@ -96,6 +134,8 @@ export default function Camera({ onCapture, label }: CameraProps) {
             setLoading(false);
         }
     };
+
+    const confirmCapture = () => confirmCrop('[]');
 
     const resizeImage = (file: File, maxDim: number = 2000): Promise<File> => {
         return new Promise((resolve) => {
@@ -161,7 +201,7 @@ export default function Camera({ onCapture, label }: CameraProps) {
             // Resize the image before sending it to the parent
             processedFile = await resizeImage(processedFile);
 
-            await onCapture(processedFile);
+            await processImageAndDetect(processedFile);
         } catch (err) {
             console.error("Gallery upload error:", err);
             setError("Error processing image. Please try again.");
@@ -172,6 +212,8 @@ export default function Camera({ onCapture, label }: CameraProps) {
 
     const retake = () => {
         setCapturedImage(null);
+        setCapturedBlob(null);
+        setShowCropper(false);
         startCamera();
     };
 
@@ -205,16 +247,25 @@ export default function Camera({ onCapture, label }: CameraProps) {
                                 "text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full backdrop-blur-md transition-all duration-300",
                                 isAligned ? "bg-emerald-500 text-white" : "bg-white/20 text-white"
                             )}>
-                                {isAligned ? "Scanning Ready" : "Align Document"}
                             </span>
                         </div>
                     </>
+                ) : showCropper && imageDimensions ? (
+                    <DocumentCropper
+                        imageSrc={capturedImage}
+                        initialCorners={cornersData}
+                        imageWidth={imageDimensions.w}
+                        imageHeight={imageDimensions.h}
+                        onConfirm={confirmCrop}
+                        onCancel={retake}
+                    />
                 ) : (
                     <img src={capturedImage} className="w-full h-full object-cover" alt="Captured" />
                 )}
             </div>
 
-            <div className="flex justify-center gap-4">
+            {!showCropper && (
+                <div className="flex justify-center gap-4">
                 {!capturedImage ? (
                     <div className="flex items-center gap-6">
                         <label className="w-14 h-14 rounded-full bg-slate-100 flex flex-col items-center justify-center text-slate-600 shadow-lg active:scale-95 transition-all cursor-pointer">
@@ -254,6 +305,7 @@ export default function Camera({ onCapture, label }: CameraProps) {
                     </>
                 )}
             </div>
+            )}
 
             {error && <p className="text-rose-500 text-xs text-center font-bold px-4">{error}</p>}
 
