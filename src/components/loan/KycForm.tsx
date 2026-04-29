@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -79,6 +79,30 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const [referrerName, setReferrerName] = useState<string | null>(null);
     const [eligibilityError, setEligibilityError] = useState<{ message: string, step: number } | null>(null);
 
+    const activeSteps = useMemo(() => {
+        const reuploadFields = (initialData as any)?.reupload_fields || [];
+        
+        // If it's a reupload request, only show relevant steps
+        if (reuploadFields.length > 0) {
+            return STEPS.filter(step => {
+                if (step.id === 'aadhaar') return reuploadFields.includes('aadhar_front') || reuploadFields.includes('aadhar_back') || reuploadFields.includes('aadhaar_number');
+                if (step.id === 'pan') return reuploadFields.includes('pan_card') || reuploadFields.includes('pan_number');
+                if (step.id === 'personal') return reuploadFields.includes('full_name') || reuploadFields.includes('date_of_birth') || reuploadFields.includes('address_details') || reuploadFields.includes('personal_details');
+                if (step.id === 'employment') return reuploadFields.includes('employment_details') || reuploadFields.includes('bank_details');
+                if (step.id === 'consent') return true;
+                if (step.id === 'purpose') return false;
+                return true;
+            });
+        }
+
+        // Standard flow: Hide verified steps
+        return STEPS.filter(step => {
+            if (step.id === 'aadhaar' && isAadhaarVerified) return false;
+            if (step.id === 'pan' && isPanVerified) return false;
+            return true;
+        });
+    }, [isAadhaarVerified, isPanVerified, initialData]);
+
     const saveDraft = async (data: any, imageOverride?: any) => {
         if (!loanId) return;
         try {
@@ -117,7 +141,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         last_name: z.string().optional(),
         email: z.string().email('Invalid email address'),
         phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid 10-digit mobile number'),
-        annual_income: z.string().min(1, 'Income is required'),
+        annual_income: z.coerce.string().min(1, 'Income is required'),
         loan_usage: z.string().min(5, 'Please provide more detail about loan usage'),
 
         employer: z.string().min(2, 'Employer name is required'),
@@ -134,15 +158,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         street_address: z.string().min(5, 'Address is required'),
         city: z.string().min(2, 'City is required'),
         state: z.string().min(2, 'State is required'),
-        postal_code: z.string().length(6, 'Pincode must be 6 digits'),
-
-        permanent_street_address: z.string().optional(),
-        permanent_city: z.string().optional(),
-        permanent_state: z.string().optional(),
-        permanent_postal_code: z.string().optional(),
+        postal_code: z.coerce.string().nullish(),
+        permanent_street_address: z.coerce.string().nullish(),
+        permanent_city: z.coerce.string().nullish(),
+        permanent_state: z.coerce.string().nullish(),
+        permanent_postal_code: z.coerce.string().nullish(),
         is_permanent_same: z.boolean().default(true),
 
-        referral_code: z.string().min(4, 'Referral code is required'),
+        referral_code: z.coerce.string().nullish(),
         consent: z.boolean().refine(val => val === true, 'You must agree to the terms'),
     });
 
@@ -153,6 +176,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         getValues,
         watch,
         trigger,
+        reset,
         formState: { errors, isValid }
     } = useForm({
         resolver: zodResolver(kycSchema),
@@ -175,31 +199,48 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             street_address: user?.business_address || '',
             city: user?.city || '',
             state: user?.state || '',
-            postal_code: user?.pincode || '',
-            permanent_street_address: user?.permanent_street_address || '',
-            permanent_city: user?.permanent_city || '',
-            permanent_state: user?.permanent_state || '',
-            permanent_postal_code: user?.permanent_pincode || '',
+            postal_code: String(user?.pincode || ''),
+            permanent_street_address: String(user?.permanent_street_address || ''),
+            permanent_city: String(user?.permanent_city || ''),
+            permanent_state: String(user?.permanent_state || ''),
+            permanent_postal_code: String(user?.permanent_pincode || ''),
             is_permanent_same: user?.is_permanent_same ?? true,
             ...initialData
         }
     });
 
+    const hasInitializedRef = useRef(false);
+    useEffect(() => {
+        if (initialData && !hasInitializedRef.current) {
+            reset({ ...getValues(), ...initialData });
+            hasInitializedRef.current = true;
+            
+            // Sync status states as well
+            if (initialData.is_aadhar_verified) setIsAadhaarVerified(true);
+            if (initialData.is_pan_verified) setIsPanVerified(true);
+            if (initialData.aadhaar_reference_id) setAadhaarReferenceId(initialData.aadhaar_reference_id);
+            
+            // Sync images
+            if (initialData.kyc_images) {
+                setCapturedImages(prev => ({ ...prev, ...initialData.kyc_images }));
+            }
+            if (initialData.ocr_results) {
+                setOcrResults(prev => ({ ...prev, ...initialData.ocr_results }));
+            }
+        }
+    }, [initialData, reset, getValues]);
+
     useEffect(() => {
         const saved = localStorage.getItem('kyc_loan_draft');
-        if (saved) {
+        if (saved && !hasInitializedRef.current) {
             try {
                 const draft = JSON.parse(saved);
-                Object.keys(draft).forEach(key => {
-                    if (draft[key] !== undefined) {
-                        setValue(key as any, draft[key]);
-                    }
-                });
+                reset({ ...getValues(), ...draft });
             } catch (e) {
                 console.error("Failed to load draft", e);
             }
         }
-    }, [setValue]);
+    }, [reset, getValues]);
 
     useEffect(() => {
         const subscription = watch((value) => {
@@ -216,30 +257,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         return () => subscription.unsubscribe();
     }, [watch, capturedImages, ocrResults]);
 
-    useEffect(() => {
-        if (isAadhaarVerified || isPanVerified || aadhaarReferenceId) {
-            saveDraft(getValues());
-        }
-    }, [isAadhaarVerified, isPanVerified, aadhaarReferenceId]);
 
-    useEffect(() => {
-        if (initialData) {
-            Object.keys(initialData).forEach((key) => {
-                let value = (initialData as any)[key];
-
-                if (value !== undefined) {
-                    setValue(key as any, value);
-                }
-            });
-        }
-    }, [initialData, setValue]);
 
     const referralValue = watch('referral_code');
 
     useEffect(() => {
-        if (referralValue && referralValue.length >= 4) {
+        if (referralValue && String(referralValue).length >= 4) {
             const timer = setTimeout(() => {
-                checkReferral(referralValue);
+                checkReferral(String(referralValue));
             }, 600);
             return () => clearTimeout(timer);
         } else {
@@ -257,12 +282,17 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     useEffect(() => {
         if (isPermanentSame) {
-            if (permStreet) setValue('street_address', permStreet.trim());
-            if (permCity) setValue('city', permCity.trim());
-            if (permState) setValue('state', permState.trim());
-            if (permZip) setValue('postal_code', permZip.trim());
+            setValue('street_address', String(permStreet || '').trim());
+            setValue('city', String(permCity || '').trim());
+            setValue('state', String(permState || '').trim());
+            setValue('postal_code', String(permZip || '').trim());
+            
+            // Trigger validation for these fields since they changed programmatically
+            if (permZip && String(permZip).length === 6) {
+                trigger(['street_address', 'city', 'state', 'postal_code']);
+            }
         }
-    }, [isPermanentSame, permStreet, permCity, permState, permZip, setValue]);
+    }, [isPermanentSame, permStreet, permCity, permState, permZip, setValue, trigger]);
 
     const checkReferral = async (code: string) => {
         setCheckingUniqueness(prev => ({ ...prev, referral: true }));
@@ -271,7 +301,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             const res = await apiFetch('/referral/verify-code', {
                 method: 'POST',
                 body: JSON.stringify({ 
-                    code: code.toUpperCase(),
+                    code: String(code).toUpperCase(),
                     amount: loanAmount 
                 }),
                 skipAuthCheck: true
@@ -317,15 +347,18 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const isStepAutoSkippable = (stepIdx: number) => {
-        if (stepIdx === 0) { // Purpose/Referral
+        const step = activeSteps[stepIdx];
+        if (!step) return false;
+
+        if (step.id === 'purpose') { // Purpose/Referral
             return !!watch('referral_code') && !!referrerName;
         }
-        if (stepIdx === 1) { // Aadhaar
+        if (step.id === 'aadhaar') { // Aadhaar
             // Skip if verified OR if images are already present in initialData/capturedImages
             const hasAadharImages = capturedImages['aadhar_front'] && capturedImages['aadhar_back'];
             return isAadhaarVerified || (hasAadharImages && !!watch('aadhar_number'));
         }
-        if (stepIdx === 2) { // PAN
+        if (step.id === 'pan') { // PAN
             const hasPanImage = capturedImages['pan_card'];
             return isPanVerified || (hasPanImage && !!watch('pan_number'));
         }
@@ -337,14 +370,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         if (currentStep === 0 && (user || initialData)) {
             let startStep = 0;
             // Only skip if the step is actually skippable and we are not forcing a re-entry
-            while (startStep < STEPS.length - 1 && isStepAutoSkippable(startStep)) {
+            while (startStep < activeSteps.length - 1 && isStepAutoSkippable(startStep)) {
                 startStep++;
             }
             if (startStep > 0) {
                 setCurrentStep(startStep);
             }
         }
-    }, [user, initialData, currentStep]);
+    }, [user, initialData, currentStep, activeSteps.length]);
 
     const nextStep = async () => {
         // Enforce document uploads - Only if not already verified
@@ -370,29 +403,9 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         if (fieldsToValidate.length > 0) {
             const isStepValid = await trigger(fieldsToValidate as any);
             if (!isStepValid) {
-                const firstErrorField = fieldsToValidate.find(f => (errors as any)[f]);
-                const errorMessage = firstErrorField ? (errors as any)[firstErrorField]?.message : "कृपया सभी आवश्यक फ़ील्ड सही ढंग से भरें।";
-                toast.error(errorMessage);
-                return;
-            }
-        }
-
-        // Referral code is mandatory
-        if (currentStep === 0) {
-            if (!referralValue || referralValue.length < 4) {
-                setErrorPopup("रेफ़रल कोड अनिवार्य है। कृपया एजेंट का रेफ़रल कोड दर्ज करें।");
-                return;
-            }
-            if (checkingUniqueness.referral) {
-                setErrorPopup("रेफ़रल कोड की जाँच की जा रही है...");
-                return;
-            }
-            if (uniquenessErrors.referral) {
-                setErrorPopup(uniquenessErrors.referral);
-                return;
-            }
-            if (!referrerName) {
-                setErrorPopup("कृपया एक वैध रेफ़रल कोड दर्ज करें।");
+                console.error(`Step ${currentStep} Validation Failed:`, errors);
+                const firstErr = Object.values(errors)[0];
+                if (firstErr) toast.error(String(firstErr.message));
                 return;
             }
         }
@@ -436,7 +449,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         let targetStep = currentStep + 1;
 
         // Eligibility Pre-check before proceeding from Aadhaar step
-        if (currentStep === 1) {
+        if (activeSteps[currentStep].id === 'aadhaar') {
             const dob = watch('date_of_birth');
             if (dob) {
                 const age = calculateAge(dob);
@@ -458,11 +471,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
 
         // Skip steps if they are already "auto-skippable" (fully submitted previously)
-        while (targetStep < STEPS.length - 1 && isStepAutoSkippable(targetStep)) {
+        while (targetStep < activeSteps.length - 1 && isStepAutoSkippable(targetStep)) {
             targetStep++;
         }
 
-        setCurrentStep(Math.min(targetStep, STEPS.length - 1));
+        setCurrentStep(Math.min(targetStep, activeSteps.length - 1));
     };
 
 
@@ -473,6 +486,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
 
     // Effect to restore captured images and OCR results from user profile or initialData
+    // Debug: Log validation errors
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            console.log("KYC Form Validation Errors:", errors);
+        }
+    }, [errors]);
+
     useEffect(() => {
         if (user || initialData) {
             const newImages: Record<string, string> = {};
@@ -558,7 +578,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     const handleSendAadhaarOtp = async () => {
         const aadhaarNumber = watch('aadhar_number');
-        if (!aadhaarNumber || aadhaarNumber.length !== 12) {
+        if (!aadhaarNumber || String(aadhaarNumber).length !== 12) {
             toast.error('कृपया पहले आधार नंबर दर्ज करें।');
             return;
         }
@@ -591,7 +611,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const handleVerifyAadhaarOtp = async () => {
-        if (!aadhaarOtpInput || aadhaarOtpInput.length !== 6 || !aadhaarReferenceId) {
+        if (!aadhaarOtpInput || String(aadhaarOtpInput).length !== 6 || !aadhaarReferenceId) {
             toast.error('कृपया 6 अंकों का OTP दर्ज करें।');
             return;
         }
@@ -606,11 +626,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
             if (res?.code === 200 || res?.status === 200 || kyc?.name) {
                 setIsAadhaarVerified(true);
+                saveDraft(getValues()); // Save immediately on verification success
                 toast.success('आधार सत्यापन सफल!', { id: toastId });
 
                 // Auto-fill: Name
                 const kycName = kyc.name || kyc.full_name;
-                if (kycName) {
+                if (kycName && typeof kycName === 'string') {
                     const [first, ...rest] = kycName.trim().split(' ');
                     setValue('first_name', first || '');
                     setValue('last_name', rest.join(' ') || '');
@@ -618,7 +639,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
                 // Auto-fill: DOB (format: DD-MM-YYYY → YYYY-MM-DD for input[type=date])
                 const kycDob = kyc.dob || kyc.date_of_birth;
-                if (kycDob) {
+                if (kycDob && typeof kycDob === 'string') {
                     const parts = kycDob.split(/[-/]/);
                     const isoDate = parts.length === 3
                         ? (parts[2].length === 4 ? `${parts[2]}-${parts[1]}-${parts[0]}` : kycDob)
@@ -656,7 +677,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     if (watch('is_permanent_same')) setValue('state', addr.state);
                 }
 
-                const zip = addr.zip || addr.pincode || addr.zip_code;
+                const zip = String(addr.zip || addr.pincode || addr.zip_code || '');
                 if (zip) {
                     setValue('permanent_postal_code', zip);
                     if (watch('is_permanent_same')) setValue('postal_code', zip);
@@ -664,7 +685,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
                 // Father name from care_of (e.g. "S/O Ram Kumar" → "Ram Kumar")
                 const careOf = kyc.care_of || kyc.careof;
-                if (careOf) {
+                if (careOf && typeof careOf === 'string') {
                     const caretaker = careOf.replace(/^(S\/O|D\/O|W\/O)[:\s]*/i, '').trim();
                     if (caretaker) setValue('father_name', caretaker);
                 }
@@ -684,7 +705,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         const last = watch('last_name');
         const dob = watch('date_of_birth');
 
-        if (!pan || pan.length !== 10) {
+        if (!pan || String(pan).length !== 10) {
             toast.error('कृपया मान्य पैन नंबर दर्ज करें।');
             return;
         }
@@ -712,6 +733,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             const data = res?.data ?? res;
             if (res?.code === 200 || res?.status === 200 || data?.status === 'VALID' || data?.full_name) {
                 setIsPanVerified(true);
+                saveDraft(getValues()); // Save immediately on verification success
                 toast.success('पैन सत्यापन सफल!', { id: toastId });
             } else {
                 toast.error(res?.message || 'पैन सत्यापन विफल। विवरण जांचें।', { id: toastId });
@@ -728,8 +750,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const errorClasses = "text-[10px] font-bold text-rose-500 mt-1 ml-2 uppercase tracking-tight";
 
     const renderStep = () => {
-        switch (currentStep) {
-            case 0:
+        const step = activeSteps[currentStep];
+        if (!step) return null;
+
+        switch (step.id) {
+            case 'purpose':
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 mb-6">
@@ -763,7 +788,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     </div>
                 );
 
-            case 1:
+            case 'aadhaar':
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="grid grid-cols-2 gap-4">
@@ -840,7 +865,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         <button
                                             type="button"
                                             onClick={handleSendAadhaarOtp}
-                                            disabled={isAadhaarVerifying || !watch('aadhar_number') || watch('aadhar_number').length !== 12}
+                                            disabled={isAadhaarVerifying || !watch('aadhar_number') || String(watch('aadhar_number') || '').length !== 12}
                                             className="w-full py-3.5 bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-blue-100"
                                         >
                                             {isAadhaarVerifying ? 'Sending...' : 'Verify with OTP (Required)'}
@@ -859,7 +884,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                                 <button
                                                     type="button"
                                                     onClick={handleVerifyAadhaarOtp}
-                                                    disabled={isAadhaarVerifying || aadhaarOtpInput.length !== 6}
+                                                    disabled={isAadhaarVerifying || String(aadhaarOtpInput).length !== 6}
                                                     className="flex-1 py-3 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl"
                                                 >
                                                     Verify
@@ -896,7 +921,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     </div>
                 );
 
-            case 2:
+            case 'pan':
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         {DOCUMENT_CATEGORIES.filter(cat => cat.id === 'pan_card').map((cat) => {
@@ -1003,7 +1028,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         <button
                                             type="button"
                                             onClick={handleVerifyPan}
-                                            disabled={isPanVerifying || !watch('pan_number') || watch('pan_number').length !== 10}
+                                            disabled={isPanVerifying || !watch('pan_number') || String(watch('pan_number') || '').length !== 10}
                                             className="w-full py-3.5 bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-blue-100"
                                         >
                                             {isPanVerifying ? 'Verifying...' : 'Verify PAN Details'}
@@ -1015,7 +1040,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     </div>
                 );
 
-            case 3:
+            case 'personal':
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="grid grid-cols-2 gap-4">
@@ -1130,7 +1155,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     </div>
                 );
 
-            case 4:
+            case 'employment':
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                         <div className="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 space-y-6">
@@ -1152,7 +1177,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     </div>
                 );
 
-            case 5:
+            case 'consent':
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
                          <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 space-y-8 shadow-2xl">
@@ -1169,6 +1194,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <div className="p-5 bg-white/5 rounded-3xl border border-white/10 flex justify-between items-center">
                                     <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Aadhaar Number</span>
                                     <span className="text-sm font-bold text-white/80">{watch('aadhar_number')}</span>
+                                </div>
+                                <div className="p-5 bg-white/5 rounded-3xl border border-white/10 flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">PAN Number</span>
+                                    <span className="text-sm font-bold text-white/80">{watch('pan_number')}</span>
+                                </div>
+                                <div className="p-5 bg-white/5 rounded-3xl border border-white/10 flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Guardian Details</span>
+                                    <span className="text-[11px] font-bold text-white/80 text-right">{watch('father_name')} / {watch('mother_name')}</span>
                                 </div>
                             </div>
 
@@ -1232,8 +1265,33 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const handleFinalSubmit = async (data: any) => {
-        if (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'] || !capturedImages['pan_card'] || !capturedImages['applicant_selfie'] || !capturedImages['selfie_with_agent']) {
-            setErrorPopup("Please provide all required documents including Aadhaar, PAN and Selfies.");
+        console.log("handleFinalSubmit triggered with data:", data);
+        
+        // Log documents for debugging
+        console.log("Documents in state:", {
+            hasAadharFront: !!capturedImages['aadhar_front'],
+            hasAadharBack: !!capturedImages['aadhar_back'],
+            hasPan: !!capturedImages['pan_card'],
+            hasSelfie: !!capturedImages['applicant_selfie'],
+            hasAgentSelfie: !!capturedImages['selfie_with_agent'],
+            isAadhaarVerified,
+            isPanVerified
+        });
+
+        const missingDocs = [];
+        if (!isAadhaarVerified) {
+            if (!capturedImages['aadhar_front']) missingDocs.push("Aadhaar Front");
+            if (!capturedImages['aadhar_back']) missingDocs.push("Aadhaar Back");
+        }
+        if (!isPanVerified && !capturedImages['pan_card']) missingDocs.push("PAN Card");
+        if (!capturedImages['applicant_selfie']) missingDocs.push("Applicant Selfie");
+        if (!capturedImages['selfie_with_agent']) missingDocs.push("Selfie with Agent");
+
+        if (missingDocs.length > 0) {
+            const errorMsg = `Please provide: ${missingDocs.join(', ')}`;
+            console.error("Submission blocked by missing documents:", errorMsg);
+            setErrorPopup(errorMsg);
+            toast.error(errorMsg);
             return;
         }
 
@@ -1243,8 +1301,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             ocr_results: ocrResults
         };
         
+        console.log("Submitting final payload to parent onSubmit:", payload);
+        
         try {
             await onSubmit(payload);
+            console.log("onSubmit call completed successfully");
         } catch (err: any) {
             console.error("Submission error catch in KycForm:", err);
             const msg = err.message || "Submission failed";
@@ -1263,7 +1324,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         <div className="flex flex-col md:flex-row gap-8">
             {/* Vertical Steps Progress */}
             <div className="hidden md:flex flex-col gap-6 w-48 pt-4">
-                {STEPS.map((step, idx) => {
+                {activeSteps.map((step, idx) => {
                     const Icon = step.icon;
                     const isActive = idx === currentStep;
                     const isCompleted = idx < currentStep;
@@ -1293,7 +1354,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
             {/* Mobile Horizontal Progress (Minimal) */}
             <div className="flex md:hidden items-center gap-1.5 px-2 mb-4">
-                {STEPS.map((_, idx) => (
+                {activeSteps.map((_, idx) => (
                     <div
                         key={idx}
                         className={cn(
@@ -1306,6 +1367,24 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             </div>
 
             <div className="flex-1">
+                {(initialData as any)?.reupload_fields?.length > 0 && (
+                    <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-3xl animate-in fade-in slide-in-from-top-2 duration-500">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center">
+                                <Shield size={16} />
+                            </div>
+                            <div>
+                                <h4 className="text-[10px] font-black text-rose-900 uppercase tracking-widest">Correction Required</h4>
+                                <p className="text-[11px] font-bold text-rose-600/80 leading-tight">Admin has requested updates to certain fields.</p>
+                            </div>
+                        </div>
+                        {(initialData as any)?.reupload_summary && (
+                            <div className="mt-2 p-3 bg-white/50 rounded-2xl border border-rose-50/50">
+                                <p className="text-[11px] font-bold text-rose-800 italic">"{(initialData as any).reupload_summary}"</p>
+                            </div>
+                        )}
+                    </div>
+                )}
                 {renderStep()}
 
                 {/* Navigation */}
@@ -1333,7 +1412,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         {isSaving ? 'Saved' : 'Save Draft'}
                     </button>
 
-                    {currentStep < STEPS.length - 1 ? (
+                    {currentStep < activeSteps.length - 1 ? (
                         <button
                             type="button"
                             onClick={nextStep}
@@ -1343,8 +1422,29 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         </button>
                     ) : (
                         <button
-                            onClick={handleSubmit(handleFinalSubmit)}
-                            disabled={loading || !isValid}
+                            onClick={(e) => {
+                                console.log("Submit button clicked. Form state:", { 
+                                    isValid, 
+                                    errors: Object.keys(errors),
+                                    values: watch()
+                                });
+                                if (Object.keys(errors).length > 0) {
+                                    console.table(errors);
+                                }
+                                handleSubmit(handleFinalSubmit, (errs) => {
+                                    console.error("KYC Validation Failed (Callback):", errs);
+                                    const firstErrorField = Object.keys(errs)[0];
+                                    const errorObj = errs[firstErrorField as keyof typeof errs];
+                                    const firstErrorMessage = errorObj?.message;
+                                    
+                                    if (firstErrorMessage) {
+                                        toast.error(`${String(firstErrorMessage)} (${firstErrorField})`);
+                                    } else {
+                                        toast.error("कृपया सभी आवश्यक फ़ील्ड भरें।");
+                                    }
+                                })(e);
+                            }}
+                            disabled={loading}
                             className="flex-[2] py-4 bg-blue-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50"
                         >
                             {loading ? 'Processing...' : 'Submit Application'}

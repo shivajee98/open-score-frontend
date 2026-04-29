@@ -182,30 +182,28 @@ export default function LoanStatus() {
         const storageKey = `loan_${loan.id}_anim_shown`;
         const shownStages = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
-        // Stage 2: Verification (VETTING/PROCEEDED)
-        if (['VETTING', 'PROCEEDED'].includes(status) && !shownStages.stage2) {
-            const duration = timerInfo?.remaining ? timerInfo.remaining * 1000 : 30000;
+        // Step 1: Proceed (VETTING/PROCEEDED)
+        if (['VETTING', 'PROCEEDED'].includes(status) && !shownStages.proceed && !shownStages.stage2) {
+            const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 30000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
             
-            // Mark as shown
-            shownStages.stage2 = true;
+            shownStages.proceed = true;
             localStorage.setItem(storageKey, JSON.stringify(shownStages));
             
-            // For auto-pilot stages, we don't need a manual "Get Money Now" resolver 
-            // but we use a dummy one that just closes the modal and reloads
             resolveSubmissionRef.current = () => {
                 setShowVerificationLoading(false);
                 window.location.reload();
             };
         }
         
-        // Stage 3: Final Approval (APPROVED)
-        if (status === 'APPROVED' && !shownStages.stage3) {
-            setAnimationDuration(15000); // 15s for the final "wow" moment
+        // Step 2: KYC Link (KYC_SENT)
+        if (status === 'KYC_SENT' && !shownStages.kyc_link) {
+            const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 30000;
+            setAnimationDuration(duration);
             setShowVerificationLoading(true);
             
-            shownStages.stage3 = true;
+            shownStages.kyc_link = true;
             localStorage.setItem(storageKey, JSON.stringify(shownStages));
             
             resolveSubmissionRef.current = () => {
@@ -213,7 +211,24 @@ export default function LoanStatus() {
                 window.location.reload();
             };
         }
-    }, [loan?.status, timerInfo?.remaining, showKycForm]);
+
+        // Step 3: Approval / Approve (KYC_SUBMITTED / APPROVED)
+        // If auto-pilot is on, we show it during KYC_SUBMITTED (waiting for approve)
+        // If it's already APPROVED, we show the final "wow" animation
+        if ((status === 'APPROVED' || (loan.auto_pilot_enabled && status === 'KYC_SUBMITTED')) && !shownStages.approve && !shownStages.stage3) {
+            const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 15000;
+            setAnimationDuration(duration);
+            setShowVerificationLoading(true);
+            
+            shownStages.approve = true;
+            localStorage.setItem(storageKey, JSON.stringify(shownStages));
+            
+            resolveSubmissionRef.current = () => {
+                setShowVerificationLoading(false);
+                window.location.reload();
+            };
+        }
+    }, [loan?.status, timerInfo?.remaining, showKycForm, loan?.auto_pilot_enabled, loan?.id]);
 
     // Prepare initial KYC data from user profile and existing form data
     const initialKycData = useMemo(() => {
@@ -247,8 +262,14 @@ export default function LoanStatus() {
             data.state = '';
         }
 
+        if (loan) {
+            data.reupload_fields = loan.reupload_fields || [];
+            data.reupload_remarks = loan.reupload_remarks || {};
+            data.reupload_summary = loan.remarks || ''; // General remarks
+        }
+
         return data;
-    }, [userData, existingKycData]);
+    }, [userData, existingKycData, loan]);
 
     const handleConfirmClick = () => {
         // Always show KYC form before confirmation
@@ -256,9 +277,11 @@ export default function LoanStatus() {
     };
 
     const handleKycSubmit = async (kycData: any) => {
+        console.log("StatusClient: handleKycSubmit triggered with data", kycData);
         setSubmitting(true);
         try {
             // First, start the Sci-Fi loading animation (Stage 1)
+            console.log("StatusClient: Showing verification loading animation...");
             setAnimationDuration(30000);
             setShowVerificationLoading(true);
 

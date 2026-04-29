@@ -168,7 +168,7 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
 
             return response.json();
         } catch (error: any) {
-            if (error.message === 'Failed to fetch' || error.message.includes('NetworkError') || error.name === 'TypeError') {
+            if (error?.message === 'Failed to fetch' || error?.message?.includes('NetworkError') || error?.name === 'TypeError') {
                 const browserContext = typeof window !== 'undefined' ? ` on ${window.location.hostname}` : '';
                 const detailedMsg = `Network error (${error.name}: ${error.message})${browserContext}. Please check your connection.`;
                 console.error('[apiFetch Failure]', {
