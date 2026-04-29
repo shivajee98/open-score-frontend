@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { CheckCircle2, AlertCircle, Info, X, Zap } from 'lucide-react';
 
-type ToastType = 'success' | 'error' | 'info';
+type ToastType = 'success' | 'error' | 'info' | 'loading';
 
 interface Toast {
-    id: number;
+    id: string | number;
     message: string;
     type: ToastType;
     duration?: number;
@@ -14,6 +14,7 @@ interface Toast {
 
 interface ToastEvent extends CustomEvent {
     detail: {
+        id: string | number;
         message: string;
         type: ToastType;
         duration?: number;
@@ -22,14 +23,24 @@ interface ToastEvent extends CustomEvent {
 
 // Global dispatcher
 export const toast = {
-    success: (message: string, duration = 3000) => dispatchToast(message, 'success', duration),
-    error: (message: string, duration = 4000) => dispatchToast(message, 'error', duration),
-    info: (message: string, duration = 3000) => dispatchToast(message, 'info', duration),
+    success: (message: string, options?: { duration?: number, id?: string | number }) => 
+        dispatchToast(message, 'success', options?.duration ?? 3000, options?.id),
+    error: (message: string, options?: { duration?: number, id?: string | number }) => 
+        dispatchToast(message, 'error', options?.duration ?? 4000, options?.id),
+    info: (message: string, options?: { duration?: number, id?: string | number }) => 
+        dispatchToast(message, 'info', options?.duration ?? 3000, options?.id),
+    loading: (message: string, options?: { id?: string | number }): string | number => 
+        dispatchToast(message, 'loading', 60000, options?.id || Date.now()), // Long duration for loading
+    dismiss: (id: string | number) => {
+        window.dispatchEvent(new CustomEvent('toast-dismiss', { detail: { id } }));
+    }
 };
 
-function dispatchToast(message: string, type: ToastType, duration: number) {
-    const event = new CustomEvent('toast', { detail: { message, type, duration } });
+function dispatchToast(message: string, type: ToastType, duration: number, id?: string | number): string | number {
+    const toastId = id || Date.now();
+    const event = new CustomEvent('toast', { detail: { id: toastId, message, type, duration } });
     window.dispatchEvent(event);
+    return toastId;
 }
 
 export default function ToastContainer() {
@@ -40,7 +51,7 @@ export default function ToastContainer() {
         toastsRef.current = toasts;
     }, [toasts]);
 
-    const removeToast = useCallback((id: number) => {
+    const removeToast = useCallback((id: string | number) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
     }, []);
 
@@ -48,27 +59,41 @@ export default function ToastContainer() {
         const handleToast = (e: Event) => {
             const detail = (e as ToastEvent).detail;
 
-            // Rate Limiting & Deduplication: Don't show the exact same message if it's already visible
-            const isDuplicate = toastsRef.current.some(t => t.message === detail.message);
-            if (isDuplicate) return;
-
-            const id = Date.now();
-            const newToast = { id, ...detail };
-
             setToasts((prev) => {
-                // Limit to 3 toasts at any given time to prevent flooding
-                const next = [...prev, newToast];
+                // If toast with same ID exists, update it
+                const existingIndex = prev.findIndex(t => t.id === detail.id);
+                if (existingIndex !== -1) {
+                    const next = [...prev];
+                    next[existingIndex] = { ...detail };
+                    return next;
+                }
+
+                // Deduplication for same message within same type
+                if (prev.some(t => t.message === detail.message && t.type === detail.type)) return prev;
+
+                const next = [...prev, detail];
                 if (next.length > 3) return next.slice(1);
                 return next;
             });
 
-            setTimeout(() => {
-                removeToast(id);
-            }, detail.duration || 3000);
+            if (detail.duration) {
+                setTimeout(() => {
+                    removeToast(detail.id);
+                }, detail.duration);
+            }
+        };
+
+        const handleDismiss = (e: Event) => {
+            const id = (e as any).detail.id;
+            removeToast(id);
         };
 
         window.addEventListener('toast', handleToast);
-        return () => window.removeEventListener('toast', handleToast);
+        window.addEventListener('toast-dismiss', handleDismiss);
+        return () => {
+            window.removeEventListener('toast', handleToast);
+            window.removeEventListener('toast-dismiss', handleDismiss);
+        };
     }, [removeToast]);
 
     return (
@@ -83,11 +108,13 @@ export default function ToastContainer() {
                         ${t.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-900' : ''}
                         ${t.type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-900' : ''}
                         ${t.type === 'info' ? 'bg-slate-900/90 border-slate-700/50 text-white' : ''}
+                        ${t.type === 'loading' ? 'bg-indigo-900/90 border-indigo-700/50 text-white' : ''}
                     `}
                 >
                     {/* Background glow effect */}
                     <div className={`absolute top-0 left-0 w-1 h-full ${t.type === 'success' ? 'bg-emerald-500' :
-                            t.type === 'error' ? 'bg-rose-500' : 'bg-blue-500'
+                            t.type === 'error' ? 'bg-rose-500' : 
+                            t.type === 'loading' ? 'bg-indigo-500' : 'bg-blue-500'
                         }`} />
 
                     <div className={`p-1.5 rounded-xl ${t.type === 'success' ? 'bg-emerald-500/20 text-emerald-600' :
@@ -97,11 +124,12 @@ export default function ToastContainer() {
                         {t.type === 'success' && <CheckCircle2 size={18} strokeWidth={2.5} />}
                         {t.type === 'error' && <AlertCircle size={18} strokeWidth={2.5} />}
                         {t.type === 'info' && <Zap size={18} strokeWidth={2.5} className="fill-current" />}
+                        {t.type === 'loading' && <div className="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />}
                     </div>
 
                     <div className="flex-1 min-w-0">
                         <p className="text-xs font-black uppercase tracking-widest opacity-40 mb-0.5">
-                            {t.type === 'success' ? 'Confirmed' : t.type === 'error' ? 'Attention' : 'System Alert'}
+                            {t.type === 'success' ? 'Confirmed' : t.type === 'error' ? 'Attention' : t.type === 'loading' ? 'Processing' : 'System Alert'}
                         </p>
                         <p className="text-[13px] font-bold leading-tight tracking-tight">{t.message}</p>
                     </div>
@@ -114,14 +142,16 @@ export default function ToastContainer() {
                     </button>
 
                     {/* Progress bar at bottom */}
-                    <div className="absolute bottom-0 left-0 h-[2px] w-full bg-black/5">
-                        <div
-                            className={`h-full opacity-40 animate-toast-progress ${t.type === 'success' ? 'bg-emerald-500' :
-                                    t.type === 'error' ? 'bg-rose-500' : 'bg-white'
-                                }`}
-                            style={{ animationDuration: `${t.duration || 3000}ms` }}
-                        />
-                    </div>
+                    {t.type !== 'loading' && (
+                        <div className="absolute bottom-0 left-0 h-[2px] w-full bg-black/5">
+                            <div
+                                className={`h-full opacity-40 animate-toast-progress ${t.type === 'success' ? 'bg-emerald-500' :
+                                        t.type === 'error' ? 'bg-rose-500' : 'bg-white'
+                                    }`}
+                                style={{ animationDuration: `${t.duration || 3000}ms` }}
+                            />
+                        </div>
+                    )}
                 </div>
             ))}
         </div>

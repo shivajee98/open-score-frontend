@@ -223,118 +223,175 @@ export default function Camera({ onCapture, label }: CameraProps) {
     }, []);
 
     return (
-        <div className="flex flex-col gap-4 relative">
-            <p className="text-sm font-bold text-slate-700 uppercase tracking-widest">{label}</p>
+        <div className="fixed inset-0 z-[2000] bg-black flex flex-col animate-in fade-in duration-300">
+            {/* Header */}
+            <div className="px-6 pt-12 pb-6 flex items-center justify-between z-30">
+                <div className="flex flex-col">
+                    <h2 className="text-white text-lg font-black uppercase tracking-[0.2em]">{label}</h2>
+                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
+                        <MapPin size={10} className="text-blue-500" /> Auto-detection active
+                    </p>
+                </div>
+                <button 
+                    onClick={() => { stopCamera(); onCapture(new Blob(), 'CLOSE'); }}
+                    className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                >
+                    <X size={20} />
+                </button>
+            </div>
 
-            <div className="relative aspect-video bg-slate-900 rounded-3xl overflow-hidden border-4 border-white shadow-2xl">
+            {/* Main Content Area */}
+            <div className="flex-1 relative flex flex-col justify-center overflow-hidden">
                 {!capturedImage ? (
-                    <>
+                    <div className="relative w-full h-full flex flex-col items-center justify-center">
                         <video
                             ref={videoRef}
                             autoPlay
                             playsInline
                             muted
-                            className="w-full h-full object-cover"
+                            className="absolute inset-0 w-full h-full object-cover opacity-80"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        
+                        {/* Immersive Viewfinder */}
+                        <div className="relative w-[90%] aspect-[3/2] z-10 pointer-events-none">
+                            {/* Corner brackets */}
                             <div className={cn(
-                                "w-[85%] h-[70%] border-2 rounded-2xl transition-all duration-500",
-                                isAligned ? "border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]" : "border-white/30 border-dashed"
-                            )} />
-                        </div>
-                        <div className="absolute top-6 left-0 right-0 text-center pointer-events-none">
-                            <span className={cn(
-                                "text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full backdrop-blur-md transition-all duration-300",
-                                isAligned ? "bg-emerald-500 text-white" : "bg-white/20 text-white"
+                                "absolute inset-0 border-2 transition-all duration-700",
+                                isAligned ? "border-blue-500 opacity-100" : "border-white/20 border-dashed opacity-50"
                             )}>
-                            </span>
+                                {/* Corner Accents */}
+                                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-500 -translate-x-1 -translate-y-1 rounded-tl-xl" />
+                                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-500 translate-x-1 -translate-y-1 rounded-tr-xl" />
+                                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-500 -translate-x-1 translate-y-1 rounded-bl-xl" />
+                                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-500 translate-x-1 translate-y-1 rounded-br-xl" />
+                                
+                                {/* Scan line */}
+                                <div className={cn(
+                                    "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]",
+                                    isAligned ? "animate-[scanLine_2s_ease-in-out_infinite]" : "hidden"
+                                )} />
+                            </div>
+
+                            {/* Help Text */}
+                            <div className="absolute -bottom-16 left-0 right-0 text-center">
+                                <p className={cn(
+                                    "text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                                    isAligned ? "text-blue-400 opacity-100" : "text-white/40"
+                                )}>
+                                    {isAligned ? "Document Detected • Ready" : "Align document within frame"}
+                                </p>
+                            </div>
                         </div>
-                    </>
+
+                        {/* Background tint */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
+                    </div>
                 ) : showCropper && imageDimensions ? (
-                    <DocumentCropper
-                        imageSrc={capturedImage}
-                        initialCorners={cornersData}
-                        imageWidth={imageDimensions.w}
-                        imageHeight={imageDimensions.h}
-                        onConfirm={confirmCrop}
-                        onCancel={retake}
-                    />
+                    <div className="absolute inset-0 z-20 bg-slate-50 overflow-auto">
+                        <DocumentCropper
+                            imageSrc={capturedImage}
+                            initialCorners={cornersData}
+                            imageWidth={imageDimensions.w}
+                            imageHeight={imageDimensions.h}
+                            onConfirm={confirmCrop}
+                            onCancel={retake}
+                        />
+                    </div>
                 ) : (
-                    <img src={capturedImage} className="w-full h-full object-cover" alt="Captured" />
+                    <div className="absolute inset-0 bg-black flex items-center justify-center">
+                        <img src={capturedImage} className="max-w-full max-h-full object-contain" alt="Captured" />
+                    </div>
                 )}
             </div>
 
+            {/* Bottom Controls */}
             {!showCropper && (
-                <div className="flex justify-center gap-4">
-                {!capturedImage ? (
-                    <div className="flex items-center gap-6">
-                        <label className="w-14 h-14 rounded-full bg-slate-100 flex flex-col items-center justify-center text-slate-600 shadow-lg active:scale-95 transition-all cursor-pointer">
-                            <Upload size={20} />
-                            <span className="text-[8px] font-black uppercase mt-1">Gallery</span>
-                            <input type="file" className="hidden" accept="image/jpeg,image/png,image/heic,image/heif,image/webp" onChange={handleGalleryUpload} />
-                        </label>
+                <div className="px-8 pb-12 pt-8 bg-gradient-to-t from-black to-transparent z-30">
+                    {!capturedImage ? (
+                        <div className="flex items-center justify-between">
+                            <label className="group flex flex-col items-center gap-2 cursor-pointer transition-all">
+                                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:bg-white/20 transition-colors">
+                                    <Upload size={20} />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:text-white">Gallery</span>
+                                <input type="file" className="hidden" accept="image/jpeg,image/png,image/heic,image/heif,image/webp" onChange={handleGalleryUpload} />
+                            </label>
 
-                        <button
-                            onClick={capture}
-                            disabled={!isAligned}
-                            className={cn(
-                                "w-20 h-20 rounded-full border-8 flex items-center justify-center shadow-xl transition-all",
-                                isAligned ? "bg-blue-600 border-blue-100 active:scale-90" : "bg-slate-300 border-slate-200 cursor-not-allowed opacity-50"
-                            )}
-                        >
-                            <CameraIcon className="text-white w-8 h-8" />
-                        </button>
+                            <button
+                                onClick={capture}
+                                disabled={!isAligned}
+                                className={cn(
+                                    "relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300",
+                                    isAligned 
+                                        ? "bg-white scale-110 shadow-[0_0_30px_rgba(255,255,255,0.3)] active:scale-90" 
+                                        : "bg-white/20 cursor-not-allowed grayscale"
+                                )}
+                            >
+                                <div className="w-[85%] h-[85%] rounded-full border-2 border-black/10" />
+                                <div className="absolute inset-0 rounded-full border-4 border-blue-500/0 active:border-blue-500/50 transition-all" />
+                            </button>
 
-                        <div className="w-14" /> {/* Spacer */}
-                    </div>
-                ) : (
-                    <>
-                        <button
-                            onClick={retake}
-                            className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 shadow-lg active:scale-95 transition-all"
-                        >
-                            <RotateCw size={24} />
-                        </button>
-                        <button
-                            onClick={confirmCapture}
-                            disabled={loading}
-                            className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 active:scale-95 transition-all"
-                        >
-                            {loading ? <div className="w-5 h-5 border-2 border-white rounded-full animate-spin border-t-transparent" /> : <Check size={28} />}
-                        </button>
-                    </>
-                )}
-            </div>
-            )}
-
-            {error && <p className="text-rose-500 text-xs text-center font-bold px-4">{error}</p>}
-
-            {/* Local Loading Overlay */}
-            {loading && (
-                <div className="absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center rounded-3xl overflow-hidden animate-in fade-in duration-300">
-                    <div className="relative w-24 h-24 mb-6">
-                        <div className="absolute inset-0 border-2 border-blue-500/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
-                        <div className="absolute inset-2 border-2 border-blue-400/10 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <Shield className="text-blue-500/40 animate-pulse" size={32} />
+                            <div className="w-12 h-12 invisible" /> {/* Placeholder for symmetry */}
                         </div>
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_15px_rgba(96,165,250,0.8)] animate-[scan_1.5s_ease-in-out_infinite]"></div>
-                    </div>
-                    <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-2">Analyzing Image</span>
-                    <div className="flex gap-1.5">
-                        <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                        <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                        <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce"></div>
-                    </div>
-
-                    <style jsx>{`
-                        @keyframes scan {
-                            0%, 100% { top: 0%; opacity: 0; }
-                            50% { top: 100%; opacity: 1; }
-                        }
-                    `}</style>
+                    ) : (
+                        <div className="flex items-center justify-center gap-8">
+                            <button
+                                onClick={retake}
+                                className="flex flex-col items-center gap-2 group"
+                            >
+                                <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-white group-hover:bg-white/20 transition-colors shadow-lg">
+                                    <RotateCw size={24} />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Retake</span>
+                            </button>
+                            
+                            <button
+                                onClick={confirmCapture}
+                                disabled={loading}
+                                className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-[0_10px_30px_-5px_rgba(37,99,235,0.5)] active:scale-90 transition-all"
+                            >
+                                {loading ? <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={32} strokeWidth={3} />}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
+
+            {/* Processing Overlay */}
+            {loading && (
+                <div className="absolute inset-0 z-[3000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-200">
+                    <div className="relative w-24 h-32 mb-8">
+                        <div className="absolute inset-0 bg-white/5 rounded-xl border-2 border-white/10 overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,1)] animate-[scanLine_1.5s_ease-in-out_infinite]" />
+                            <div className="p-4 space-y-3 pt-8">
+                                <div className="h-1.5 bg-white/10 rounded-full w-full" />
+                                <div className="h-1.5 bg-white/10 rounded-full w-4/5" />
+                                <div className="h-1.5 bg-white/10 rounded-full w-full" />
+                                <div className="h-1.5 bg-white/10 rounded-full w-3/5" />
+                            </div>
+                        </div>
+                        <div className="absolute -bottom-3 -right-3 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                            <Shield className="text-white" size={20} />
+                        </div>
+                    </div>
+
+                    <h3 className="text-white text-sm font-black uppercase tracking-[0.3em] mb-1">Processing</h3>
+                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Optimizing identity scan</p>
+
+                    <div className="mt-8 flex gap-1.5">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" />
+                    </div>
+                </div>
+            )}
+
+            <style jsx>{`
+                @keyframes scanLine {
+                    0%, 100% { top: 10%; opacity: 0; }
+                    50% { top: 90%; opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 }

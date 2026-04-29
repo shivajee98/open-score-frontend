@@ -12,6 +12,10 @@ import { useApi } from '@/hooks/useApi';
 import TutorialPlayer from '@/components/TutorialPlayer';
 import BackButton from '@/components/BackButton';
 import ShopTimingModal, { ShopTimingData } from '@/components/ShopTimingModal';
+import CameraComponent from '@/components/loan/Camera';
+import DocumentCropper from '@/components/loan/DocumentCropper';
+import { CreditCard, IndianRupee } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function Profile() {
     const { data: user, error: userError, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
@@ -71,6 +75,31 @@ export default function Profile() {
     const [isAltOtpSending, setIsAltOtpSending] = useState(false);
     const [isAltOtpVerifying, setIsAltOtpVerifying] = useState(false);
 
+    // KYC Verification States
+    const [isAadhaarVerified, setIsAadhaarVerified] = useState(!!user?.aadhar_number);
+    const [isPanVerified, setIsPanVerified] = useState(!!user?.pan_number);
+    const [aadhaarReferenceId, setAadhaarReferenceId] = useState('');
+    const [aadhaarOtpSent, setAadhaarOtpSent] = useState(false);
+    const [aadhaarOtpInput, setAadhaarOtpInput] = useState('');
+    const [isAadhaarVerifying, setIsAadhaarVerifying] = useState(false);
+    const [isPanVerifying, setIsPanVerifying] = useState(false);
+    const [isOcrLoading, setIsOcrLoading] = useState(false);
+    const [activeCameraCategory, setActiveCameraCategory] = useState<string | null>(null);
+    const [capturedImages, setCapturedImages] = useState<Record<string, string>>({});
+
+    const DOCUMENT_CATEGORIES = [
+        { id: 'aadhar_front', label: 'Aadhaar Front', desc: 'Face side of your Aadhaar card' },
+        { id: 'aadhar_back', label: 'Aadhaar Back', desc: 'Address side of your Aadhaar card' },
+        { id: 'pan_card', label: 'PAN Card', desc: 'Front side of your PAN card' }
+    ];
+
+    useEffect(() => {
+        if (user) {
+            setIsAadhaarVerified(!!user.aadhar_number);
+            setIsPanVerified(!!user.pan_number);
+        }
+    }, [user]);
+
     useEffect(() => {
         if (user?.alternate_number?.phone) {
             setAlternatePhone(user.alternate_number.phone);
@@ -100,7 +129,7 @@ export default function Profile() {
             });
 
             if (!res.unique) {
-                setUniquenessErrors(prev => ({ ...prev, [type]: 'Apply for loan from another account' }));
+                setUniquenessErrors(prev => ({ ...prev, [type]: 'यह विवरण पहले से ही किसी अन्य खाते से लिंक है।' }));
             } else {
                 setUniquenessErrors(prev => ({ ...prev, [type]: undefined }));
             }
@@ -108,6 +137,167 @@ export default function Profile() {
             console.error('Failed to check uniqueness', e);
         } finally {
             setCheckingUniqueness(prev => ({ ...prev, [type]: false }));
+        }
+    };
+
+    const handleSendAadhaarOtp = async () => {
+        const aadhaarNumber = formData.aadhar_number;
+        if (!aadhaarNumber || aadhaarNumber.length !== 12) {
+            toast.error('कृपया पहले आधार नंबर दर्ज करें।');
+            return;
+        }
+
+        if (uniquenessErrors.aadhar) {
+            toast.error('यह आधार पहले से ही किसी अन्य खाते से लिंक है।');
+            return;
+        }
+        setIsAadhaarVerifying(true);
+        const toastId = toast.loading('OTP भेजा जा रहा है...');
+        try {
+            const res = await apiFetch('/loans/sandbox/aadhaar-otp', {
+                method: 'POST',
+                body: JSON.stringify({ aadhaar_number: aadhaarNumber }),
+            });
+            const refId = res?.data?.reference_id ?? res?.reference_id;
+            if (refId) {
+                setAadhaarReferenceId(refId);
+                setAadhaarOtpSent(true);
+                toast.success('OTP आपके आधार से लिंक्ड मोबाइल नंबर पर भेज दिया गया है।', { id: toastId });
+            } else {
+                toast.error(res?.message || 'OTP भेजने में विफल। पुनः प्रयास करें।', { id: toastId });
+            }
+        } catch (err: any) {
+            toast.error(err?.message || 'OTP अनुरोध विफल।', { id: toastId });
+        } finally {
+            setIsAadhaarVerifying(false);
+        }
+    };
+
+    const handleVerifyAadhaarOtp = async () => {
+        if (!aadhaarOtpInput || aadhaarOtpInput.length !== 6 || !aadhaarReferenceId) {
+            toast.error('कृपया 6 अंकों का OTP दर्ज करें।');
+            return;
+        }
+        setIsAadhaarVerifying(true);
+        const toastId = toast.loading('OTP सत्यापित किया जा रहा है...');
+        try {
+            const res = await apiFetch('/loans/sandbox/aadhaar-verify', {
+                method: 'POST',
+                body: JSON.stringify({ otp: aadhaarOtpInput, reference_id: String(aadhaarReferenceId) }),
+            });
+            const kyc = res?.data?.kyc_result ?? res?.data ?? {};
+
+            if (res?.code === 200 || res?.status === 200 || kyc?.name) {
+                setIsAadhaarVerified(true);
+                toast.success('आधार सत्यापन सफल!', { id: toastId });
+
+                // Auto-fill
+                const update: any = {};
+                if (kyc.name) update.name = kyc.name;
+                if (kyc.dob) {
+                    const parts = kyc.dob.split(/[-/]/);
+                    update.date_of_birth = parts.length === 3
+                        ? (parts[2].length === 4 ? `${parts[2]}-${parts[1]}-${parts[0]}` : kyc.dob)
+                        : kyc.dob;
+                }
+                if (kyc.care_of) update.father_name = kyc.care_of.replace(/^(S\/O|D\/O|W\/O)\s*/i, '').trim();
+                
+                const addr = kyc.address ?? {};
+                const street = [addr.house, addr.street, addr.landmark, addr.loc, addr.vtc].filter(Boolean).join(', ');
+                if (street) update.street_address = street;
+                if (addr.city || addr.dist) update.city = addr.city || addr.dist;
+                if (addr.state) update.state = addr.state;
+                if (addr.zip) update.postal_code = addr.zip;
+
+                setFormData(prev => ({ ...prev, ...update }));
+            } else {
+                toast.error(res?.message || 'OTP सत्यापन विफल। पुनः प्रयास करें।', { id: toastId });
+            }
+        } catch (err: any) {
+            toast.error(err?.message || 'OTP सत्यापन विफल।', { id: toastId });
+        } finally {
+            setIsAadhaarVerifying(false);
+        }
+    };
+
+    const handleVerifyPan = async () => {
+        const pan = formData.pan_number;
+        const name = formData.name;
+        const dob = formData.date_of_birth;
+
+        if (!pan || pan.length !== 10) {
+            toast.error('कृपया पहले पैन नंबर दर्ज करें।');
+            return;
+        }
+        if (!name || !dob) {
+            toast.error('पैन सत्यापन के लिए नाम और जन्म तिथि आवश्यक है।');
+            return;
+        }
+
+        setIsPanVerifying(true);
+        const toastId = toast.loading('पैन सत्यापित किया जा रहा है...');
+        try {
+            const res = await apiFetch('/loans/sandbox/pan-verify', {
+                method: 'POST',
+                body: JSON.stringify({ pan, name, dob }),
+            });
+
+            if (res?.data?.status === 'VALID' || res?.status === 'VALID' || res?.data?.name_match === true) {
+                setIsPanVerified(true);
+                toast.success('पैन सत्यापन सफल!', { id: toastId });
+            } else {
+                toast.error(res?.message || 'पैन सत्यापन विफल। विवरण जांचें।', { id: toastId });
+            }
+        } catch (err: any) {
+            toast.error(err?.message || 'पैन सत्यापन विफल।', { id: toastId });
+        } finally {
+            setIsPanVerifying(false);
+        }
+    };
+
+    const handleCapture = async (url: string) => {
+        if (url === 'CLOSE') {
+            setActiveCameraCategory(null);
+            return;
+        }
+
+        setIsOcrLoading(true);
+        try {
+            const res = await apiFetch('/kyc/detect-corners', {
+                method: 'POST',
+                body: JSON.stringify({ image: url, type: activeCameraCategory === 'pan_card' ? 'pan' : 'aadhar' }),
+            });
+
+            if (res.success && res.data) {
+                const ocr_data = res.data;
+                const update: any = {};
+
+                if (activeCameraCategory === 'aadhar_front') {
+                    if (ocr_data.aadhaar_number) update.aadhar_number = ocr_data.aadhaar_number;
+                    if (ocr_data.name) update.name = ocr_data.name;
+                    if (ocr_data.dob) {
+                        const parts = ocr_data.dob.split(/[-/]/);
+                        update.date_of_birth = parts.length === 3
+                            ? (parts[2].length === 4 ? `${parts[2]}-${parts[1]}-${parts[0]}` : ocr_data.dob)
+                            : ocr_data.dob;
+                    }
+                } else if (activeCameraCategory === 'pan_card') {
+                    if (ocr_data.pan_number) update.pan_number = ocr_data.pan_number;
+                }
+
+                setFormData(prev => ({ ...prev, ...update }));
+
+                if (update.aadhar_number) checkUniqueness('aadhar', update.aadhar_number);
+                if (update.pan_number) checkUniqueness('pan', update.pan_number);
+            }
+
+            setCapturedImages(prev => ({ ...prev, [activeCameraCategory!]: url }));
+            setActiveCameraCategory(null);
+        } catch (err: any) {
+            console.error("Capture error:", err);
+            toast.error(err.message || "Capture processing failed.");
+        } finally {
+            setIsOcrLoading(false);
         }
     };
 
@@ -1230,46 +1420,139 @@ export default function Profile() {
                                         KYC Documents
                                     </h3>
 
-                                    <div className="grid grid-cols-2 gap-4 mb-6">
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">Aadhar Number</p>
+                                    <div className="space-y-6 mb-6">
+                                        <div className="relative">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Aadhar Number</p>
+                                                {isAadhaarVerified ? (
+                                                    <div className="flex items-center gap-1 text-emerald-600">
+                                                        <ShieldCheck size={12} />
+                                                        <span className="text-[9px] font-black uppercase tracking-widest">Verified</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1 text-slate-400">
+                                                        <Lock size={12} />
+                                                        <span className="text-[9px] font-black uppercase tracking-widest">Unverified</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             {isEditing ? (
-                                                <>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.aadhar_number}
-                                                        onChange={(e) => {
-                                                            const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
-                                                            setFormData({ ...formData, aadhar_number: val });
-                                                        }}
-                                                        disabled={user?.kyc_status === 'FULL_VERIFIED'}
-                                                        className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 ${uniquenessErrors.aadhar ? 'border-red-500' : 'border-slate-200'} focus:border-${themeColor}-500 focus:outline-none w-full ${user?.kyc_status === 'FULL_VERIFIED' ? 'opacity-60 grayscale' : ''}`}
-                                                        placeholder="12 digit number"
-                                                    />
-                                                    {uniquenessErrors.aadhar && <p className="text-[9px] text-red-500 mt-1 font-bold animate-in fade-in transition-all">{uniquenessErrors.aadhar}</p>}
-                                                    {checkingUniqueness.aadhar && <p className="text-[9px] text-blue-500 mt-1 font-bold animate-pulse">Verifying...</p>}
-                                                </>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="text"
+                                                            value={formData.aadhar_number}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 12);
+                                                                setFormData({ ...formData, aadhar_number: val });
+                                                                if (val.length === 12) checkUniqueness('aadhar', val);
+                                                            }}
+                                                            disabled={isAadhaarVerified || checkingUniqueness.aadhar}
+                                                            className={`flex-1 text-sm font-black text-slate-900 bg-white border-2 rounded-xl px-4 py-2.5 transition-all focus:outline-none ${uniquenessErrors.aadhar ? 'border-rose-200 bg-rose-50' : isAadhaarVerified ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-100 focus:border-blue-500'}`}
+                                                            placeholder="0000 0000 0000"
+                                                        />
+                                                        {!isAadhaarVerified && (
+                                                            <button
+                                                                onClick={handleSendAadhaarOtp}
+                                                                disabled={isAadhaarVerifying || formData.aadhar_number?.length !== 12 || !!uniquenessErrors.aadhar}
+                                                                className="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-600/20"
+                                                            >
+                                                                {isAadhaarVerifying ? 'Sending...' : aadhaarOtpSent ? 'Resend' : 'Send OTP'}
+                                                            </button>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => setActiveCameraCategory('aadhar_front')}
+                                                            disabled={isAadhaarVerified}
+                                                            className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50"
+                                                        >
+                                                            <Camera size={18} />
+                                                        </button>
+                                                    </div>
+                                                    {uniquenessErrors.aadhar && <p className="text-[9px] text-rose-500 font-bold uppercase tracking-tight ml-1">{uniquenessErrors.aadhar}</p>}
+                                                    {checkingUniqueness.aadhar && <p className="text-[9px] text-blue-500 font-bold animate-pulse uppercase tracking-widest ml-1">Verifying Uniqueness...</p>}
+
+                                                    {aadhaarOtpSent && !isAadhaarVerified && (
+                                                        <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl space-y-3 animate-in slide-in-from-top-2 duration-300">
+                                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Enter 6-Digit Aadhaar OTP</p>
+                                                            <div className="flex gap-2">
+                                                                <input
+                                                                    type="text"
+                                                                    maxLength={6}
+                                                                    value={aadhaarOtpInput}
+                                                                    onChange={(e) => setAadhaarOtpInput(e.target.value.replace(/\D/g, ''))}
+                                                                    placeholder="000000"
+                                                                    className="flex-1 bg-white border-2 border-blue-100 rounded-xl px-4 py-2 text-center text-lg font-black tracking-[0.5em] focus:border-blue-500 focus:outline-none"
+                                                                />
+                                                                <button
+                                                                    onClick={handleVerifyAadhaarOtp}
+                                                                    disabled={isAadhaarVerifying || aadhaarOtpInput.length !== 6}
+                                                                    className="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-6 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50"
+                                                                >
+                                                                    {isAadhaarVerifying ? 'Wait...' : 'Verify'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ) : (
-                                                <p className="text-sm font-medium text-slate-900">{user.aadhar_number || 'Not Set'}</p>
+                                                <p className="text-base font-black text-slate-900 tracking-wider">
+                                                    {user.aadhar_number ? `${user.aadhar_number.slice(0, 4)} ${user.aadhar_number.slice(4, 8)} ${user.aadhar_number.slice(8, 12)}` : 'Not Linked'}
+                                                </p>
                                             )}
                                         </div>
-                                        <div>
-                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-1">PAN Number</p>
+
+                                        <div className="relative">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">PAN Number</p>
+                                                {isPanVerified ? (
+                                                    <div className="flex items-center gap-1 text-emerald-600">
+                                                        <ShieldCheck size={12} />
+                                                        <span className="text-[9px] font-black uppercase tracking-widest">Verified</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1 text-slate-400">
+                                                        <Lock size={12} />
+                                                        <span className="text-[9px] font-black uppercase tracking-widest">Unverified</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                             {isEditing ? (
-                                                <>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.pan_number}
-                                                        onChange={(e) => setFormData({ ...formData, pan_number: e.target.value.toUpperCase().slice(0, 10) })}
-                                                        disabled={user?.kyc_status === 'FULL_VERIFIED' || user?.pan_number}
-                                                        className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 ${uniquenessErrors.pan ? 'border-red-500' : 'border-slate-200'} focus:border-${themeColor}-500 focus:outline-none w-full ${(user?.kyc_status === 'FULL_VERIFIED' || user?.pan_number) ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                        placeholder="ABCDE1234F"
-                                                    />
-                                                    {uniquenessErrors.pan && <p className="text-[9px] text-red-500 mt-1 font-bold animate-in fade-in transition-all">{uniquenessErrors.pan}</p>}
-                                                    {checkingUniqueness.pan && <p className="text-[9px] text-blue-500 mt-1 font-bold animate-pulse">Verifying...</p>}
-                                                </>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="text"
+                                                            value={formData.pan_number}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value.toUpperCase().slice(0, 10);
+                                                                setFormData({ ...formData, pan_number: val });
+                                                                if (val.length === 10) checkUniqueness('pan', val);
+                                                            }}
+                                                            disabled={isPanVerified || checkingUniqueness.pan}
+                                                            className={`flex-1 text-sm font-black text-slate-900 bg-white border-2 rounded-xl px-4 py-2.5 transition-all focus:outline-none ${uniquenessErrors.pan ? 'border-rose-200 bg-rose-50' : isPanVerified ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-100 focus:border-blue-500'}`}
+                                                            placeholder="ABCDE1234F"
+                                                        />
+                                                        {!isPanVerified && (
+                                                            <button
+                                                                onClick={handleVerifyPan}
+                                                                disabled={isPanVerifying || formData.pan_number?.length !== 10 || !!uniquenessErrors.pan}
+                                                                className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-all disabled:opacity-50"
+                                                            >
+                                                                {isPanVerifying ? 'Wait...' : 'Verify'}
+                                                            </button>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => setActiveCameraCategory('pan_card')}
+                                                            disabled={isPanVerified}
+                                                            className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50"
+                                                        >
+                                                            <Camera size={18} />
+                                                        </button>
+                                                    </div>
+                                                    {uniquenessErrors.pan && <p className="text-[9px] text-rose-500 font-bold uppercase tracking-tight ml-1">{uniquenessErrors.pan}</p>}
+                                                    {checkingUniqueness.pan && <p className="text-[9px] text-blue-500 font-bold animate-pulse uppercase tracking-widest ml-1">Verifying Uniqueness...</p>}
+                                                </div>
                                             ) : (
-                                                <p className="text-sm font-medium text-slate-900 uppercase">{user.pan_number || 'Not Set'}</p>
+                                                <p className="text-base font-black text-slate-900 uppercase tracking-widest">{user.pan_number || 'Not Linked'}</p>
                                             )}
                                         </div>
                                     </div>
@@ -1972,6 +2255,70 @@ export default function Profile() {
                 }}
                 themeColor={themeColor}
             />
+
+            {/* Document Capture & Verification Modals */}
+            {activeCameraCategory && (
+                <CameraComponent
+                    category={DOCUMENT_CATEGORIES.find(c => c.id === activeCameraCategory)!}
+                    onCapture={handleCapture}
+                />
+            )}
+
+            {capturedImages[activeCameraCategory!] && (
+                <DocumentCropper
+                    imageUrl={capturedImages[activeCameraCategory!]}
+                    onCropComplete={handleCapture}
+                    onClose={() => setActiveCameraCategory(null)}
+                />
+            )}
+
+            {/* OCR Loading Overlay */}
+            {isOcrLoading && (
+                <div className="fixed inset-0 z-[3000] bg-slate-900/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+                    <div className="relative w-56 h-56 mb-10 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-blue-500/5 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" />
+                        <div className="absolute inset-10 bg-blue-500/10 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]" />
+                        <div className="absolute inset-20 bg-blue-500/15 rounded-full animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
+                        
+                        <div className="relative w-28 h-36 bg-slate-800 rounded-2xl border-[3px] border-slate-700 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900" />
+                            <div className="p-5 space-y-4 pt-10 relative z-10">
+                                <div className="h-1.5 bg-white/5 rounded-full w-full" />
+                                <div className="h-1.5 bg-white/5 rounded-full w-5/6" />
+                                <div className="h-1.5 bg-white/5 rounded-full w-4/6" />
+                                <div className="h-1.5 bg-white/5 rounded-full w-full" />
+                                <div className="h-1.5 bg-white/5 rounded-full w-3/4" />
+                            </div>
+                            <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-400 shadow-[0_0_15px_2px_rgba(59,130,246,0.8)] z-20 animate-[scanVertical_2.5s_ease-in-out_infinite]" />
+                            <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-blue-500/20 to-transparent z-10 opacity-0 animate-[scanVerticalPulse_2.5s_ease-in-out_infinite]" />
+                        </div>
+                        
+                        <div className="absolute -bottom-2 -right-2 w-14 h-14 bg-blue-600 rounded-2xl border-4 border-slate-900 flex items-center justify-center shadow-2xl animate-[bounce_2s_infinite]">
+                            <ShieldCheck className="text-white" size={24} />
+                        </div>
+                    </div>
+                    
+                    <div className="text-center space-y-3 relative z-30">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-2">
+                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Secure Processor</span>
+                        </div>
+                        <h2 className="text-white text-xl font-black uppercase tracking-[0.4em]">Analyzing</h2>
+                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Validating document authenticity</p>
+                    </div>
+
+                    <style jsx>{`
+                        @keyframes scanVertical {
+                            0%, 100% { top: 10%; }
+                            50% { top: 90%; }
+                        }
+                        @keyframes scanVerticalPulse {
+                            0%, 100% { top: -10%; opacity: 0; }
+                            50% { top: 70%; opacity: 1; }
+                        }
+                    `}</style>
+                </div>
+            )}
         </div>
     );
 }
