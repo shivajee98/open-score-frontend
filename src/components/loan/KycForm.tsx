@@ -38,6 +38,7 @@ interface KycFormProps {
     loading?: boolean;
     initialData?: Partial<any>;
     isModal?: boolean;
+    loanId?: string;
 }
 
 const STEPS = [
@@ -57,14 +58,46 @@ const DOCUMENT_CATEGORIES = [
     { id: 'selfie_with_agent', label: "Selfie with Loan Agent", icon: User, color: 'bg-rose-50 text-rose-600' },
 ];
 
-export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false }: KycFormProps) {
+export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false, loanId }: KycFormProps) {
     const { user } = useStore();
     const [currentStep, setCurrentStep] = useState(0);
+    const [isSaving, setIsSaving] = useState(false);
+    const [activeCameraCategory, setActiveCameraCategory] = useState<string | null>(null);
+    const [isOcrLoading, setIsOcrLoading] = useState(false);
+    const [ocrResults, setOcrResults] = useState<Record<string, any>>({});
+    const [capturedImages, setCapturedImages] = useState<Record<string, string>>({});
+    const [errorPopup, setErrorPopup] = useState<string | null>(null);
+    const [aadhaarOtpSent, setAadhaarOtpSent] = useState(!!initialData?.aadhaar_reference_id);
+    const [aadhaarReferenceId, setAadhaarReferenceId] = useState<string | null>(initialData?.aadhaar_reference_id || null);
+    const [aadhaarOtpInput, setAadhaarOtpInput] = useState('');
+    const [isAadhaarVerified, setIsAadhaarVerified] = useState(!!user?.aadhar_number || !!initialData?.aadhar_number || !!initialData?.is_aadhar_verified);
+    const [isAadhaarVerifying, setIsAadhaarVerifying] = useState(false);
+    const [isPanVerified, setIsPanVerified] = useState(!!user?.pan_number || !!initialData?.pan_number || !!initialData?.is_pan_verified);
+    const [isPanVerifying, setIsPanVerifying] = useState(false);
     const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string, referral?: string }>({});
     const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean, referral?: boolean }>({});
     const [referrerName, setReferrerName] = useState<string | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
     const [eligibilityError, setEligibilityError] = useState<{ message: string, step: number } | null>(null);
+
+    const saveDraft = async (data: any, imageOverride?: any) => {
+        if (!loanId) return;
+        try {
+            await apiFetch(`/loans/${loanId}/kyc-data`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    ...data,
+                    kyc_images: imageOverride || capturedImages,
+                    ocr_results: ocrResults,
+                    is_aadhar_verified: isAadhaarVerified,
+                    is_pan_verified: isPanVerified,
+                    aadhaar_reference_id: aadhaarReferenceId,
+                    is_draft: true
+                })
+            });
+        } catch (e) {
+            console.error("Draft save failed:", e);
+        }
+    };
 
     const calculateAge = (dobString: string) => {
         if (!dobString) return 0;
@@ -117,6 +150,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         register,
         handleSubmit,
         setValue,
+        getValues,
         watch,
         trigger,
         formState: { errors, isValid }
@@ -171,11 +205,22 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         const subscription = watch((value) => {
             setIsSaving(true);
             localStorage.setItem('kyc_loan_draft', JSON.stringify(value));
-            const timer = setTimeout(() => setIsSaving(false), 1000);
+            
+            // Debounced server save
+            const timer = setTimeout(() => {
+                saveDraft(value);
+                setIsSaving(false);
+            }, 1500);
             return () => clearTimeout(timer);
         });
         return () => subscription.unsubscribe();
-    }, [watch]);
+    }, [watch, capturedImages, ocrResults]);
+
+    useEffect(() => {
+        if (isAadhaarVerified || isPanVerified || aadhaarReferenceId) {
+            saveDraft(getValues());
+        }
+    }, [isAadhaarVerified, isPanVerified, aadhaarReferenceId]);
 
     useEffect(() => {
         if (initialData) {
@@ -202,6 +247,22 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             setReferrerName(null);
         }
     }, [referralValue]);
+
+    // Sync current address with permanent address if "Same as Permanent" is checked
+    const isPermanentSame = watch('is_permanent_same');
+    const permStreet = watch('permanent_street_address');
+    const permCity = watch('permanent_city');
+    const permState = watch('permanent_state');
+    const permZip = watch('permanent_postal_code');
+
+    useEffect(() => {
+        if (isPermanentSame) {
+            if (permStreet) setValue('street_address', permStreet.trim());
+            if (permCity) setValue('city', permCity.trim());
+            if (permState) setValue('state', permState.trim());
+            if (permZip) setValue('postal_code', permZip.trim());
+        }
+    }, [isPermanentSame, permStreet, permCity, permState, permZip, setValue]);
 
     const checkReferral = async (code: string) => {
         setCheckingUniqueness(prev => ({ ...prev, referral: true }));
@@ -256,17 +317,17 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const isStepAutoSkippable = (stepIdx: number) => {
+        if (stepIdx === 0) { // Purpose/Referral
+            return !!watch('referral_code') && !!referrerName;
+        }
         if (stepIdx === 1) { // Aadhaar
-            // If user already has a verified Aadhaar number AND images, skip this step
-            const val = watch('aadhar_number');
-            const hasImages = !!(capturedImages['aadhar_front'] && capturedImages['aadhar_back']);
-            return !!(val && val.length === 12 && hasImages);
+            // Skip if verified OR if images are already present in initialData/capturedImages
+            const hasAadharImages = capturedImages['aadhar_front'] && capturedImages['aadhar_back'];
+            return isAadhaarVerified || (hasAadharImages && !!watch('aadhar_number'));
         }
         if (stepIdx === 2) { // PAN
-            // If user already has a verified PAN number AND image, skip this step
-            const val = watch('pan_number');
-            const hasImage = !!capturedImages['pan_card'];
-            return !!(val && val.length === 10 && hasImage);
+            const hasPanImage = capturedImages['pan_card'];
+            return isPanVerified || (hasPanImage && !!watch('pan_number'));
         }
         return false;
     };
@@ -308,7 +369,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         const fieldsToValidate = getFieldsForStep(currentStep);
         if (fieldsToValidate.length > 0) {
             const isStepValid = await trigger(fieldsToValidate as any);
-            if (!isStepValid) return;
+            if (!isStepValid) {
+                const firstErrorField = fieldsToValidate.find(f => (errors as any)[f]);
+                const errorMessage = firstErrorField ? (errors as any)[firstErrorField]?.message : "कृपया सभी आवश्यक फ़ील्ड सही ढंग से भरें।";
+                toast.error(errorMessage);
+                return;
+            }
         }
 
         // Referral code is mandatory
@@ -342,7 +408,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
 
         // Enforce Aadhaar OKYC OTP verification
-        if (currentStep === 1 && !isAadhaarVerified && !user?.aadhar_number) {
+        if (currentStep === 1 && !isAadhaarVerified) {
             if (!aadhaarOtpSent) {
                 toast.error("कृपया आधार OTP सत्यापन पूरा करें।");
             } else {
@@ -358,6 +424,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
         if (currentStep === 2 && uniquenessErrors.pan) {
             toast.error("यह पैन कार्ड पहले से ही उपयोग किया जा चुका है।", { id: 'api-error' });
+            return;
+        }
+
+        // Enforce PAN verification
+        if (currentStep === 2 && !isPanVerified) {
+            toast.error("कृपया पैन कार्ड विवरण सत्यापित करें।");
             return;
         }
 
@@ -398,18 +470,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         setCurrentStep(prev => Math.max(prev - 1, 0));
     };
 
-    const [activeCameraCategory, setActiveCameraCategory] = useState<string | null>(null);
-    const [isOcrLoading, setIsOcrLoading] = useState(false);
-    const [ocrResults, setOcrResults] = useState<Record<string, any>>({});
-    const [capturedImages, setCapturedImages] = useState<Record<string, string>>({});
-    const [errorPopup, setErrorPopup] = useState<string | null>(null);
 
-    // Aadhaar OKYC OTP state
-    const [aadhaarOtpSent, setAadhaarOtpSent] = useState(false);
-    const [aadhaarReferenceId, setAadhaarReferenceId] = useState<string | null>(null);
-    const [aadhaarOtpInput, setAadhaarOtpInput] = useState('');
-    const [isAadhaarVerified, setIsAadhaarVerified] = useState(false);
-    const [isAadhaarVerifying, setIsAadhaarVerifying] = useState(false);
 
     // Effect to restore captured images and OCR results from user profile or initialData
     useEffect(() => {
@@ -464,148 +525,15 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         setIsOcrLoading(true);
         
         try {
-            const { url, ocr_data } = await uploadToServer(blob, activeCameraCategory, corners);
+            // We still call uploadToServer to save the image to the backend/S3
+            const { url } = await uploadToServer(blob, activeCameraCategory, corners);
             
-            // Define which categories REQUIRE ocr_data to be present/valid
-            const identityTypes = ['aadhar_front', 'aadhar_back', 'pan_card'];
-            const requiresOcr = identityTypes.includes(activeCameraCategory);
-
-            if (requiresOcr) {
-                if (!ocr_data || ocr_data.error) {
-                    console.warn("OCR failed, allowing manual entry", ocr_data?.error);
-                    // Don't return early - allow the user to use the image even if OCR fails
-                } else {
-                    // OCR Success Path
-                    let fullAddress = '';
-                    // Same Image Check (using raw_text signature)
-                    const currentText = JSON.stringify(ocr_data.raw_text);
-                    const isSameImage = Object.entries(ocrResults).some(([cat, data]) => {
-                        return cat !== activeCameraCategory && data && JSON.stringify(data.raw_text) === currentText;
-                    });
-
-                    if (isSameImage) {
-                        setErrorPopup("यह तस्वीर पहले ही किसी अन्य श्रेणी में उपयोग की जा चुकी है। कृपया सही तस्वीर अपलोड करें।");
-                        setActiveCameraCategory(null);
-                        return;
-                    }
-
-                    // Side-specific Keyword Check
-                    const rawTextStr = (ocr_data.raw_text || []).join(' ').toLowerCase();
-                    const isBackSide = rawTextStr.includes('address') || rawTextStr.includes('पता') || rawTextStr.includes('s/o') || rawTextStr.includes('w/o') || rawTextStr.includes('d/o');
-                    const isFrontSide = rawTextStr.includes('dob') || rawTextStr.includes('जन्म') || rawTextStr.includes('male') || rawTextStr.includes('female');
-
-                    if (activeCameraCategory === 'aadhar_front' && isBackSide && !isFrontSide) {
-                        setErrorPopup("आपने आधार कार्ड का पिछला हिस्सा अपलोड किया है। कृपया सामने का हिस्सा अपलोड करें।");
-                        setActiveCameraCategory(null);
-                        return;
-                    }
-
-                    if (activeCameraCategory === 'aadhar_back' && isFrontSide && !isBackSide) {
-                        setErrorPopup("आपने आधार कार्ड का सामने का हिस्सा अपलोड किया है। कृपया पिछला हिस्सा अपलोड करें।");
-                        setActiveCameraCategory(null);
-                        return;
-                    }
-
-                    // Aadhaar Consistency Check
-                    if (activeCameraCategory === 'aadhar_back') {
-                        const frontAadhar = ocrResults['aadhar_front']?.aadhaar_number || watch('aadhar_number');
-                        if (ocr_data.aadhaar_number && frontAadhar) {
-                            const frontNum = frontAadhar.replace(/\s/g, '');
-                            const backNum = ocr_data.aadhaar_number.replace(/\s/g, '');
-                            if (frontNum !== backNum) {
-                                setErrorPopup("आधार कार्ड के दोनों तरफ के नंबर अलग-अलग हैं। कृपया उसी आधार कार्ड का पिछला हिस्सा अपलोड करें।");
-                                setActiveCameraCategory(null);
-                                return; 
-                            }
-                        }
-                    }
-
-                    setOcrResults(prev => ({ ...prev, [activeCameraCategory]: ocr_data }));
-                    
-                    // Auto-fill
-                    if (activeCameraCategory === 'aadhar_front') {
-                        if (ocr_data.aadhaar_number) setValue('aadhar_number', ocr_data.aadhaar_number);
-                        checkUniqueness('aadhar', ocr_data.aadhaar_number);
-                    }
-                    
-                    if (activeCameraCategory === 'pan_card') {
-                        if (ocr_data.name) {
-                            const [first, ...rest] = ocr_data.name.split(' ');
-                            setValue('first_name', first);
-                            setValue('last_name', rest.join(' '));
-                        }
-                        if (ocr_data.dob) {
-                            const dob = ocr_data.dob.split(/[/-]/).reverse().join('-');
-                            setValue('date_of_birth', dob);
-                        }
-                        if (ocr_data.pan_number) {
-                            setValue('pan_number', ocr_data.pan_number);
-                            checkUniqueness('pan', ocr_data.pan_number);
-                        }
-                    }
-
-                    if (activeCameraCategory === 'aadhar_back') {
-                        // Robust address extraction ... [kept original logic]
-                        if (ocr_data.address && ocr_data.address.length > 20 && !ocr_data.address.toLowerCase().includes('authority')) {
-                            fullAddress = ocr_data.address;
-                        } else if (ocr_data.raw_text && Array.isArray(ocr_data.raw_text)) {
-                            const addressIndex = ocr_data.raw_text.findIndex((line: string) => 
-                                line.toLowerCase().includes('address:') || line.toLowerCase().includes('पता:')
-                            );
-                            if (addressIndex !== -1) {
-                                const addressLines = [];
-                                for (let i = addressIndex + 1; i < ocr_data.raw_text.length; i++) {
-                                    const line = ocr_data.raw_text[i].trim();
-                                    if (/^\d{4}\s\d{4}\s\d{4}$/.test(line) || line.toLowerCase().includes('vid :') || line.length < 2) {
-                                        if (addressLines.length > 0) break; 
-                                        continue;
-                                    }
-                                    addressLines.push(line);
-                                }
-                                if (addressLines.length > 0) fullAddress = addressLines.join(', ');
-                            }
-                        }
-
-                        if (fullAddress) {
-                            fullAddress = fullAddress.replace(/unique identification authority of india/gi, '').replace(/government of india/gi, '').replace(/भारत सरकार/g, '').replace(/भारतीय विशिष्ट पहचान प्राधिकरण/g, '').trim().replace(/^,|,$/g, '');
-                            setValue('permanent_street_address', fullAddress);
-                            if (watch('is_permanent_same')) setValue('street_address', fullAddress);
-                        }
-                        if (ocr_data.pincode) {
-                            setValue('permanent_postal_code', ocr_data.pincode);
-                            if (watch('is_permanent_same')) setValue('postal_code', ocr_data.pincode);
-                        }
-                    }
-                    if (ocr_data.city) {
-                        setValue('permanent_city', ocr_data.city);
-                        if (watch('is_permanent_same')) setValue('city', ocr_data.city);
-                    }
-                    if (ocr_data.state) {
-                        setValue('permanent_state', ocr_data.state);
-                        if (watch('is_permanent_same')) setValue('state', ocr_data.state);
-                    }
-                    if (ocr_data.father_name) setValue('father_name', ocr_data.father_name);
-
-                    // Relaxed Mandatory Field Check — only the document number is required
-                    const missingFields: string[] = [];
-                    if (activeCameraCategory === 'aadhar_front') {
-                        if (!ocr_data.aadhaar_number) missingFields.push('Aadhaar Number (आधार नंबर)');
-                    } else if (activeCameraCategory === 'aadhar_back') {
-                        // Address fields optional — OCR bonus, not a blocker
-                    } else if (activeCameraCategory === 'pan_card') {
-                        if (!ocr_data.pan_number) missingFields.push('PAN Number (पैन नंबर)');
-                        // Name and DOB are optional — user can fill manually or via Aadhaar OKYC
-                    }
-
-                    if (missingFields.length > 0) {
-                        setErrorPopup(`Unable to read: ${missingFields.join(', ')}. Please re-upload a clear image where the document covers 90% of the screen and background is minimized.`);
-                        setActiveCameraCategory(null);
-                        return;
-                    }
-                }
-            }
-
-            setCapturedImages(prev => ({ ...prev, [activeCameraCategory]: url }));
+            setCapturedImages(prev => {
+                const updated = { ...prev, [activeCameraCategory]: url };
+                // Also trigger a server save for the new image immediately
+                saveDraft(getValues(), updated);
+                return updated;
+            });
             setActiveCameraCategory(null);
         } catch (err: any) {
             console.error("Capture error:", err);
@@ -681,48 +609,63 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 toast.success('आधार सत्यापन सफल!', { id: toastId });
 
                 // Auto-fill: Name
-                if (kyc.name) {
-                    const [first, ...rest] = kyc.name.trim().split(' ');
+                const kycName = kyc.name || kyc.full_name;
+                if (kycName) {
+                    const [first, ...rest] = kycName.trim().split(' ');
                     setValue('first_name', first || '');
                     setValue('last_name', rest.join(' ') || '');
                 }
 
                 // Auto-fill: DOB (format: DD-MM-YYYY → YYYY-MM-DD for input[type=date])
-                if (kyc.dob) {
-                    const parts = kyc.dob.split(/[-/]/);
+                const kycDob = kyc.dob || kyc.date_of_birth;
+                if (kycDob) {
+                    const parts = kycDob.split(/[-/]/);
                     const isoDate = parts.length === 3
-                        ? (parts[2].length === 4 ? `${parts[2]}-${parts[1]}-${parts[0]}` : kyc.dob)
-                        : kyc.dob;
+                        ? (parts[2].length === 4 ? `${parts[2]}-${parts[1]}-${parts[0]}` : kycDob)
+                        : kycDob;
                     setValue('date_of_birth', isoDate);
                 }
 
-                // Auto-fill: Gender
                 // (no direct form field, but stored for reference)
 
                 // Auto-fill: Address
                 const addr = kyc.address ?? {};
-                const streetParts = [addr.house, addr.street, addr.landmark, addr.loc, addr.vtc].filter(Boolean);
+                const streetParts = [
+                    addr.house, 
+                    addr.street, 
+                    addr.landmark, 
+                    addr.loc, 
+                    addr.vtc,
+                    addr.subdistrict || addr.sub_dist
+                ].filter(Boolean);
                 const street = streetParts.join(', ');
+                
                 if (street) {
                     setValue('permanent_street_address', street);
                     if (watch('is_permanent_same')) setValue('street_address', street);
                 }
-                if (addr.dist) {
-                    setValue('permanent_city', addr.dist);
-                    if (watch('is_permanent_same')) setValue('city', addr.dist);
+
+                const city = addr.dist || addr.district || addr.city;
+                if (city) {
+                    setValue('permanent_city', city);
+                    if (watch('is_permanent_same')) setValue('city', city);
                 }
+
                 if (addr.state) {
                     setValue('permanent_state', addr.state);
                     if (watch('is_permanent_same')) setValue('state', addr.state);
                 }
-                if (addr.zip) {
-                    setValue('permanent_postal_code', addr.zip);
-                    if (watch('is_permanent_same')) setValue('postal_code', addr.zip);
+
+                const zip = addr.zip || addr.pincode || addr.zip_code;
+                if (zip) {
+                    setValue('permanent_postal_code', zip);
+                    if (watch('is_permanent_same')) setValue('postal_code', zip);
                 }
 
                 // Father name from care_of (e.g. "S/O Ram Kumar" → "Ram Kumar")
-                if (kyc.care_of) {
-                    const caretaker = kyc.care_of.replace(/^(S\/O|D\/O|W\/O)\s*/i, '').trim();
+                const careOf = kyc.care_of || kyc.careof;
+                if (careOf) {
+                    const caretaker = careOf.replace(/^(S\/O|D\/O|W\/O)[:\s]*/i, '').trim();
                     if (caretaker) setValue('father_name', caretaker);
                 }
             } else {
@@ -732,6 +675,51 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             toast.error(err?.message || 'OTP सत्यापन विफल।', { id: toastId });
         } finally {
             setIsAadhaarVerifying(false);
+        }
+    };
+
+    const handleVerifyPan = async () => {
+        const pan = watch('pan_number');
+        const first = watch('first_name');
+        const last = watch('last_name');
+        const dob = watch('date_of_birth');
+
+        if (!pan || pan.length !== 10) {
+            toast.error('कृपया मान्य पैन नंबर दर्ज करें।');
+            return;
+        }
+        if (!first || !last || !dob) {
+            toast.error('पैन सत्यापन के लिए नाम और जन्म तिथि आवश्यक है।');
+            return;
+        }
+        if (uniquenessErrors.pan) {
+            toast.error('यह पैन पहले से ही किसी अन्य खाते से लिंक है।');
+            return;
+        }
+
+        setIsPanVerifying(true);
+        const toastId = toast.loading('पैन सत्यापित किया जा रहा है...');
+        try {
+            const res = await apiFetch('/loans/sandbox/pan-verify', {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    pan, 
+                    name: `${first} ${last}`.trim(), 
+                    dob 
+                }),
+            });
+
+            const data = res?.data ?? res;
+            if (res?.code === 200 || res?.status === 200 || data?.status === 'VALID' || data?.full_name) {
+                setIsPanVerified(true);
+                toast.success('पैन सत्यापन सफल!', { id: toastId });
+            } else {
+                toast.error(res?.message || 'पैन सत्यापन विफल। विवरण जांचें।', { id: toastId });
+            }
+        } catch (err: any) {
+            toast.error(err?.message || 'पैन सत्यापन विफल।', { id: toastId });
+        } finally {
+            setIsPanVerifying(false);
         }
     };
 
@@ -778,7 +766,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             case 1:
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                             {DOCUMENT_CATEGORIES.filter(cat => cat.id.startsWith('aadhar')).map((cat) => {
                                 const isCaptured = !!capturedImages[cat.id];
                                 return (
@@ -786,13 +774,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         key={cat.id}
                                         type="button"
                                         onClick={() => {
-                                            if (user?.aadhar_number) return; // Locked once verified
+                                            if (user?.aadhar_number && isAadhaarVerified) return; // Locked once verified
                                             setActiveCameraCategory(cat.id);
                                         }}
                                         className={cn(
                                             "relative p-6 rounded-[2.5rem] border-2 border-dashed transition-all flex flex-col items-center text-center group",
                                             isCaptured ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white",
-                                            user?.aadhar_number && "opacity-60 cursor-not-allowed border-emerald-200 bg-emerald-50/20"
+                                            (user?.aadhar_number && isAadhaarVerified) && "opacity-60 cursor-not-allowed border-emerald-200 bg-emerald-50/20"
                                         )}
                                     >
 
@@ -810,113 +798,99 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             })}
                         </div>
 
-                        {/* Aadhaar OKYC Section */}
-                        {capturedImages['aadhar_front'] && (
-                            <div className="space-y-4">
-                                {/* Number confirmation / entry */}
-                                {!isAadhaarVerified && (
-                                    <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <Shield className="text-blue-500" size={15} />
-                                            <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Aadhaar Verification via OTP</h4>
+                        {/* Manual Entry Section */}
+                        <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
+                            <div className="flex items-center gap-3 mb-1">
+                                <Shield className={cn("transition-colors", isAadhaarVerified ? "text-emerald-500" : "text-blue-500")} size={15} />
+                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                                    {isAadhaarVerified ? 'Aadhaar Verified' : 'Aadhaar Information'}
+                                </h4>
+                            </div>
+                            
+                            <div>
+                                <label className={labelClasses}>Aadhaar Number</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        maxLength={12}
+                                        placeholder="12-digit Aadhaar number"
+                                        {...register('aadhar_number', {
+                                            onChange: (e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                setValue('aadhar_number', val);
+                                                if (val.length === 12) checkUniqueness('aadhar', val);
+                                            }
+                                        })}
+                                        className={cn(inputClasses, isAadhaarVerified && "bg-emerald-50/50 border-emerald-200 text-emerald-900")}
+                                        disabled={isAadhaarVerified}
+                                    />
+                                    {isAadhaarVerified && (
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-emerald-500 text-white p-1 rounded-full">
+                                            <Check size={12} />
                                         </div>
-                                        <div>
-                                            <label className={labelClasses}>Aadhaar Number</label>
+                                    )}
+                                </div>
+                                {errors.aadhar_number && <p className={errorClasses}>{errors.aadhar_number.message as string}</p>}
+                                {uniquenessErrors.aadhar && <p className={errorClasses}>{uniquenessErrors.aadhar}</p>}
+                            </div>
+
+                            {!isAadhaarVerified && (
+                                <div className="pt-2">
+                                    {!aadhaarOtpSent ? (
+                                        <button
+                                            type="button"
+                                            onClick={handleSendAadhaarOtp}
+                                            disabled={isAadhaarVerifying || !watch('aadhar_number') || watch('aadhar_number').length !== 12}
+                                            className="w-full py-3.5 bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-blue-100"
+                                        >
+                                            {isAadhaarVerifying ? 'Sending...' : 'Verify with OTP (Required)'}
+                                        </button>
+                                    ) : (
+                                        <div className="space-y-3 animate-in slide-in-from-bottom-2 duration-300">
                                             <input
                                                 type="text"
-                                                maxLength={12}
-                                                placeholder="12-digit Aadhaar number"
-                                                {...register('aadhar_number')}
+                                                maxLength={6}
+                                                placeholder="6-digit OTP"
+                                                value={aadhaarOtpInput}
+                                                onChange={e => setAadhaarOtpInput(e.target.value.replace(/\D/g, ''))}
                                                 className={inputClasses}
-                                                disabled={aadhaarOtpSent}
                                             />
-                                            {errors.aadhar_number && <p className={errorClasses}>{errors.aadhar_number.message as string}</p>}
-                                            {uniquenessErrors.aadhar && <p className={errorClasses}>{uniquenessErrors.aadhar}</p>}
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleVerifyAadhaarOtp}
+                                                    disabled={isAadhaarVerifying || aadhaarOtpInput.length !== 6}
+                                                    className="flex-1 py-3 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl"
+                                                >
+                                                    Verify
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAadhaarOtpSent(false)}
+                                                    className="px-4 py-3 bg-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-xl"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
                                         </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
-                                        {!aadhaarOtpSent ? (
-                                            <button
-                                                type="button"
-                                                onClick={handleSendAadhaarOtp}
-                                                disabled={isAadhaarVerifying || !watch('aadhar_number') || watch('aadhar_number').length !== 12}
-                                                className="w-full py-3.5 bg-blue-600 text-white text-xs font-black uppercase tracking-[0.15em] rounded-2xl hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                            >
-                                                {isAadhaarVerifying
-                                                    ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Sending...</>
-                                                    : 'Get OTP on Linked Mobile'}
-                                            </button>
-                                        ) : (
-                                            <div className="space-y-3 animate-in slide-in-from-bottom-2 duration-300">
-                                                <div>
-                                                    <label className={labelClasses}>Enter OTP <span className="text-rose-500">*</span></label>
-                                                    <input
-                                                        type="text"
-                                                        maxLength={6}
-                                                        placeholder="6-digit OTP"
-                                                        value={aadhaarOtpInput}
-                                                        onChange={e => setAadhaarOtpInput(e.target.value.replace(/\D/g, ''))}
-                                                        className={inputClasses}
-                                                    />
-                                                </div>
-                                                <div className="flex gap-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleVerifyAadhaarOtp}
-                                                        disabled={isAadhaarVerifying || aadhaarOtpInput.length !== 6}
-                                                        className="flex-1 py-3.5 bg-emerald-600 text-white text-xs font-black uppercase tracking-[0.15em] rounded-2xl hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                                    >
-                                                        {isAadhaarVerifying
-                                                            ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Verifying...</>
-                                                            : 'Verify OTP'}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { setAadhaarOtpSent(false); setAadhaarOtpInput(''); setAadhaarReferenceId(null); }}
-                                                        className="px-4 py-3.5 bg-slate-100 text-slate-600 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-all"
-                                                    >
-                                                        Resend
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
+                        {/* Verified Details Summary (Only if OKYC was used and successful) */}
+                        {isAadhaarVerified && watch('first_name') && (
+                            <div className="bg-emerald-50/30 rounded-3xl p-5 border border-emerald-100/50">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-0.5">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Verified Name</p>
+                                        <p className="text-xs font-black text-slate-700">{watch('first_name')} {watch('last_name')}</p>
                                     </div>
-                                )}
-
-                                {/* Success Panel */}
-                                {isAadhaarVerified && (
-                                    <div className="bg-emerald-50/60 rounded-3xl p-6 border border-emerald-200 space-y-3 animate-in slide-in-from-bottom-2 duration-300">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                                <Check size={16} className="text-white" />
-                                            </div>
-                                            <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Aadhaar OKYC Verified</h4>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-0.5">
-                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Aadhaar Number</p>
-                                                <p className="text-sm font-black text-slate-700 tracking-wider">{watch('aadhar_number')}</p>
-                                            </div>
-                                            {watch('first_name') && (
-                                                <div className="space-y-0.5">
-                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Name</p>
-                                                    <p className="text-sm font-black text-slate-700">{watch('first_name')} {watch('last_name')}</p>
-                                                </div>
-                                            )}
-                                            {watch('date_of_birth') && (
-                                                <div className="space-y-0.5">
-                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Date of Birth</p>
-                                                    <p className="text-sm font-black text-slate-700">{watch('date_of_birth')}</p>
-                                                </div>
-                                            )}
-                                            {watch('permanent_street_address') && (
-                                                <div className="col-span-2 space-y-0.5">
-                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Address</p>
-                                                    <p className="text-xs font-bold text-slate-600 leading-relaxed">{watch('permanent_street_address')}, {watch('permanent_city')} - {watch('permanent_postal_code')}</p>
-                                                </div>
-                                            )}
-                                        </div>
+                                    <div className="space-y-0.5">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Verified DOB</p>
+                                        <p className="text-xs font-black text-slate-700">{watch('date_of_birth')}</p>
                                     </div>
-                                )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -925,7 +899,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             case 2:
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
-                         {DOCUMENT_CATEGORIES.filter(cat => cat.id === 'pan_card').map((cat) => {
+                        {DOCUMENT_CATEGORIES.filter(cat => cat.id === 'pan_card').map((cat) => {
                             const isCaptured = !!capturedImages[cat.id];
                             return (
                                 <button
@@ -955,29 +929,89 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             );
                         })}
 
-                        {watch('pan_number') && (
-                            <div className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100 space-y-4">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Shield className="text-emerald-500" size={16} />
-                                    <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">PAN Data Verified</h4>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">PAN Card Number</p>
-                                        <p className="text-sm font-black text-slate-700 tracking-wider">{watch('pan_number')}</p>
-                                    </div>
-                                    <div className="space-y-1 mt-auto">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight mb-1">DOB</p>
-                                        <input 
-                                            type="date" 
-                                            {...register('date_of_birth')} 
-                                            className="w-full p-2 bg-white/80 border border-emerald-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm"
-                                        />
-                                        {errors.date_of_birth && <p className={errorClasses}>{errors.date_of_birth.message as string}</p>}
-                                    </div>
-                                </div>
+                        <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
+                            <div className="flex items-center gap-3 mb-1">
+                                <Shield className="text-blue-500" size={15} />
+                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">PAN Card Details</h4>
                             </div>
-                        )}
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className={labelClasses}>PAN Number</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="ABCDE1234F"
+                                            maxLength={10}
+                                            {...register('pan_number', {
+                                                onChange: (e) => {
+                                                    const val = e.target.value.toUpperCase().trim();
+                                                    setValue('pan_number', val);
+                                                    if (val.length === 10) checkUniqueness('pan', val);
+                                                }
+                                            })}
+                                            className={cn(inputClasses, "uppercase tracking-widest", isPanVerified && "bg-emerald-50/50 border-emerald-200 text-emerald-900")}
+                                            disabled={isPanVerified}
+                                        />
+                                        {isPanVerified && (
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-emerald-500 text-white p-1 rounded-full">
+                                                <Check size={12} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    {errors.pan_number && <p className={errorClasses}>{errors.pan_number.message as string}</p>}
+                                    {uniquenessErrors.pan && <p className={errorClasses}>{uniquenessErrors.pan}</p>}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>First Name on PAN</label>
+                                        <input
+                                            type="text"
+                                            placeholder="First Name"
+                                            {...register('first_name')}
+                                            className={inputClasses}
+                                            disabled={isPanVerified || isAadhaarVerified}
+                                        />
+                                        {errors.first_name && <p className={errorClasses}>{errors.first_name.message as string}</p>}
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Last Name on PAN</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Last Name"
+                                            {...register('last_name')}
+                                            className={inputClasses}
+                                            disabled={isPanVerified || isAadhaarVerified}
+                                        />
+                                        {errors.last_name && <p className={errorClasses}>{errors.last_name.message as string}</p>}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>DOB on PAN</label>
+                                    <input
+                                        type="date"
+                                        {...register('date_of_birth')}
+                                        className={inputClasses}
+                                        disabled={isPanVerified || isAadhaarVerified}
+                                    />
+                                    {errors.date_of_birth && <p className={errorClasses}>{errors.date_of_birth.message as string}</p>}
+                                </div>
+
+                                {!isPanVerified && (
+                                    <div className="pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={handleVerifyPan}
+                                            disabled={isPanVerifying || !watch('pan_number') || watch('pan_number').length !== 10}
+                                            className="w-full py-3.5 bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-blue-100"
+                                        >
+                                            {isPanVerifying ? 'Verifying...' : 'Verify PAN Details'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 );
 
@@ -987,12 +1021,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={labelClasses}>First Name</label>
-                                <input placeholder="John" {...register('first_name')} className={inputClasses} disabled={!!user?.name || !!ocrResults['pan_card']?.name || isAadhaarVerified} />
+                                <input placeholder="John" {...register('first_name')} className={inputClasses} disabled={!!user?.name || isAadhaarVerified} />
                                 {errors.first_name && <p className={errorClasses}>{errors.first_name.message}</p>}
                             </div>
                             <div>
                                 <label className={labelClasses}>Last Name</label>
-                                <input placeholder="Doe" {...register('last_name')} className={inputClasses} disabled={!!user?.name || !!ocrResults['pan_card']?.name || isAadhaarVerified} />
+                                <input placeholder="Doe" {...register('last_name')} className={inputClasses} disabled={!!user?.name || isAadhaarVerified} />
                                 {errors.last_name && <p className={errorClasses}>{errors.last_name.message}</p>}
                             </div>
 
@@ -1015,7 +1049,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={labelClasses}>Father Name</label>
-                                <input placeholder="Father's Full Name" {...register('father_name')} className={inputClasses} disabled={!!user?.family_detail?.father_name || !!ocrResults['aadhar_back']?.father_name || !!ocrResults['aadhar_front']?.father_name} />
+                                <input placeholder="Father's Full Name" {...register('father_name')} className={inputClasses} disabled={!!user?.family_detail?.father_name} />
                                 {errors.father_name && <p className={errorClasses}>{errors.father_name.message}</p>}
                             </div>
                             <div>
@@ -1040,21 +1074,21 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Permanent Address (From Aadhaar)</h4>
                                 <div>
                                     <label className={labelClasses}>Street Address</label>
-                                    <input placeholder="Street Address" {...register('permanent_street_address')} className={inputClasses} disabled={!!user?.permanent_street_address || !!ocrResults['aadhar_back']} />
+                                    <input placeholder="Street Address" {...register('permanent_street_address')} className={inputClasses} disabled={!!user?.permanent_street_address || isAadhaarVerified} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className={labelClasses}>City</label>
-                                        <input placeholder="City" {...register('permanent_city')} className={inputClasses} disabled={!!user?.permanent_city || !!ocrResults['aadhar_back']} />
+                                        <input placeholder="City" {...register('permanent_city')} className={inputClasses} disabled={!!user?.permanent_city || isAadhaarVerified} />
                                     </div>
                                     <div>
                                         <label className={labelClasses}>Pincode</label>
-                                        <input placeholder="Pincode" maxLength={6} {...register('permanent_postal_code')} className={inputClasses} disabled={!!user?.permanent_pincode || !!ocrResults['aadhar_back']} />
+                                        <input placeholder="Pincode" maxLength={6} {...register('permanent_postal_code')} className={inputClasses} disabled={!!user?.permanent_pincode || isAadhaarVerified} />
                                     </div>
                                 </div>
                                 <div>
                                     <label className={labelClasses}>State</label>
-                                    <input placeholder="State" {...register('permanent_state')} className={inputClasses} disabled={!!user?.permanent_state || !!ocrResults['aadhar_back']} />
+                                    <input placeholder="State" {...register('permanent_state')} className={inputClasses} disabled={!!user?.permanent_state || isAadhaarVerified} />
                                 </div>
                             </div>
 
@@ -1073,22 +1107,22 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
                                     <div>
                                         <label className={labelClasses}>Current Street Address</label>
-                                        <input placeholder="Current House No, Street" {...register('street_address')} className={inputClasses} disabled={!!user?.business_address || (watch('is_permanent_same') && !!ocrResults['aadhar_back'])} />
+                                        <input placeholder="Current House No, Street" {...register('street_address')} className={inputClasses} disabled={!!user?.business_address || (watch('is_permanent_same') && isAadhaarVerified)} />
                                         {errors.street_address && <p className={errorClasses}>{errors.street_address.message}</p>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className={labelClasses}>City</label>
-                                            <input placeholder="City" {...register('city')} className={inputClasses} disabled={!!user?.city || (watch('is_permanent_same') && !!ocrResults['aadhar_back'])} />
+                                            <input placeholder="City" {...register('city')} className={inputClasses} disabled={!!user?.city || (watch('is_permanent_same') && isAadhaarVerified)} />
                                         </div>
                                         <div>
                                             <label className={labelClasses}>Pincode</label>
-                                            <input placeholder="Pincode" maxLength={6} {...register('postal_code')} className={inputClasses} disabled={!!user?.pincode || (watch('is_permanent_same') && !!ocrResults['aadhar_back'])} />
+                                            <input placeholder="Pincode" maxLength={6} {...register('postal_code')} className={inputClasses} disabled={!!user?.pincode || (watch('is_permanent_same') && isAadhaarVerified)} />
                                         </div>
                                     </div>
                                     <div>
                                         <label className={labelClasses}>State</label>
-                                        <input placeholder="State" {...register('state')} className={inputClasses} disabled={!!user?.state || (watch('is_permanent_same') && !!ocrResults['aadhar_back'])} />
+                                        <input placeholder="State" {...register('state')} className={inputClasses} disabled={!!user?.state || (watch('is_permanent_same') && isAadhaarVerified)} />
                                     </div>
                                 </div>
                             )}
@@ -1411,7 +1445,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
             {/* OCR Loading Overlay */}
             {isOcrLoading && (
-                <div className="fixed inset-0 z-[3000] bg-slate-900/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+                <div className="fixed inset-0 z-[3000] bg-slate-900/98 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+                    {/* Tech circuit background */}
+                    <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/circuit-board.png")'}} />
+                    
                     <div className="relative w-56 h-56 mb-10 flex items-center justify-center">
                         {/* High-fidelity pulse */}
                         <div className="absolute inset-0 bg-blue-500/5 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" />
@@ -1419,26 +1456,25 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <div className="absolute inset-20 bg-blue-500/15 rounded-full animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
                         
                         {/* Premium Document Verification Icon */}
-                        <div className="relative w-28 h-36 bg-slate-800 rounded-2xl border-[3px] border-slate-700 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                        <div className="relative w-32 h-40 bg-slate-800 rounded-2xl border-2 border-white/20 overflow-hidden shadow-2xl">
                             {/* Inner gradient */}
                             <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900" />
                             
                             {/* Document structure lines */}
-                            <div className="p-5 space-y-4 pt-10 relative z-10">
-                                <div className="h-1.5 bg-white/5 rounded-full w-full" />
-                                <div className="h-1.5 bg-white/5 rounded-full w-5/6" />
-                                <div className="h-1.5 bg-white/5 rounded-full w-4/6" />
-                                <div className="h-1.5 bg-white/5 rounded-full w-full" />
-                                <div className="h-1.5 bg-white/5 rounded-full w-3/4" />
+                            <div className="p-6 space-y-4 pt-12 relative z-10 opacity-30">
+                                <div className="h-1 bg-white/20 rounded-full w-full" />
+                                <div className="h-1 bg-white/20 rounded-full w-5/6" />
+                                <div className="h-1 bg-white/20 rounded-full w-4/6" />
+                                <div className="h-1 bg-white/20 rounded-full w-full" />
                             </div>
 
                             {/* Sophisticated Scan Bar */}
-                            <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-400 shadow-[0_0_15px_2px_rgba(59,130,246,0.8)] z-20 animate-[scanVertical_2.5s_ease-in-out_infinite]" />
-                            <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-blue-500/20 to-transparent z-10 opacity-0 animate-[scanVerticalPulse_2.5s_ease-in-out_infinite]" />
+                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-blue-500 shadow-[0_0_30px_rgba(59,130,246,1)] z-20 animate-[scanVertical_2s_cubic-bezier(0.4,0,0.2,1)_infinite]" />
+                            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-blue-500/20 to-transparent z-10 opacity-0 animate-[scanVerticalPulse_2s_cubic-bezier(0.4,0,0.2,1)_infinite]" />
                         </div>
                         
                         {/* Status Badge */}
-                        <div className="absolute -bottom-2 -right-2 w-14 h-14 bg-blue-600 rounded-2xl border-4 border-slate-900 flex items-center justify-center shadow-2xl animate-[bounce_2s_infinite]">
+                        <div className="absolute -bottom-3 -right-3 w-14 h-14 bg-blue-600 rounded-2xl border-4 border-slate-900 flex items-center justify-center shadow-2xl animate-pulse">
                             <Shield className="text-white" size={24} />
                         </div>
                     </div>
@@ -1448,8 +1484,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
                             <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Secure Processor</span>
                         </div>
-                        <h2 className="text-white text-xl font-black uppercase tracking-[0.4em]">Analyzing</h2>
-                        <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Validating document authenticity</p>
+                        <h2 className="text-white text-xl font-black uppercase tracking-[0.4em] bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 to-white">Authenticating</h2>
+                        <p className="text-blue-500 font-black uppercase tracking-[0.2em] text-[10px]">Neural Identity Engine Active</p>
                         
                         <div className="flex items-center justify-center gap-4 pt-10">
                             <div className="flex gap-1.5">

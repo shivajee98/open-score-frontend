@@ -151,18 +151,17 @@ export default function DocumentCropper({
                                 <rect width="100%" height="100%" fill="rgba(15, 23, 42, 0.75)" mask="url(#crop-mask-v2)" className="backdrop-blur-[2px]" />
 
                                 {/* The crop boundary line - animated dashed line */}
-                                <polygon
+                                 <polygon
                                     points={corners.map(c => {
                                         const rect = containerRef.current!.getBoundingClientRect();
                                         const scaleX = rect.width / imageWidth;
                                         const scaleY = rect.height / imageHeight;
                                         return `${c[0] * scaleX},${c[1] * scaleY}`;
                                     }).join(' ')}
-                                    fill="transparent"
+                                    fill="rgba(59, 130, 246, 0.15)"
                                     stroke="#3B82F6"
-                                    strokeWidth="2"
-                                    strokeDasharray="6 4"
-                                    className="animate-[dash_20s_linear_infinite]"
+                                    strokeWidth="3"
+                                    className="drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] animate-[pulse_3s_ease-in-out_infinite]"
                                 />
                             </>
                         )}
@@ -178,10 +177,10 @@ export default function DocumentCropper({
 
                         // TL (0), TR (1), BR (2), BL (3)
                         const bracketClasses = [
-                            "border-t-[3px] border-l-[3px] rounded-tl-sm translate-x-2 translate-y-2", // TL
-                            "border-t-[3px] border-r-[3px] rounded-tr-sm -translate-x-2 translate-y-2", // TR
-                            "border-b-[3px] border-r-[3px] rounded-br-sm -translate-x-2 -translate-y-2", // BR
-                            "border-b-[3px] border-l-[3px] rounded-bl-sm translate-x-2 -translate-y-2"  // BL
+                            "border-t-[4px] border-l-[4px] rounded-tl-lg", // TL
+                            "border-t-[4px] border-r-[4px] rounded-tr-lg", // TR
+                            "border-b-[4px] border-r-[4px] rounded-br-lg", // BR
+                            "border-b-[4px] border-l-[4px] rounded-bl-lg"  // BL
                         ][i];
 
                         return (
@@ -191,7 +190,7 @@ export default function DocumentCropper({
                                     e.preventDefault();
                                     handlePointerDown(i);
                                 }}
-                                className="absolute w-20 h-20 -ml-10 -mt-10 flex items-center justify-center cursor-move z-20 touch-none group"
+                                className="absolute w-24 h-24 -ml-12 -mt-12 flex items-center justify-center cursor-move z-20 touch-none group"
                                 style={{ left: `${left}px`, top: `${top}px` }}
                             >
                                 {/* Magnifier / Active state indicator */}
@@ -218,9 +217,9 @@ export default function DocumentCropper({
 
                                 {/* Brackets */}
                                 <div className={cn(
-                                    "w-10 h-10 border-blue-500 bg-transparent transition-all duration-150",
+                                    "w-12 h-12 border-blue-500 bg-white/5 backdrop-blur-[1px] transition-all duration-150 shadow-xl",
                                     bracketClasses,
-                                    draggingIdx === i ? "scale-110 border-blue-400 drop-shadow-[0_0_12px_rgba(59,130,246,1)]" : "drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+                                    draggingIdx === i ? "scale-125 border-white bg-blue-500/20 drop-shadow-[0_0_20px_rgba(59,130,246,1)]" : "drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
                                 )} />
                                 
                                 {/* Center dot for precision */}

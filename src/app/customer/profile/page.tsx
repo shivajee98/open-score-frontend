@@ -255,21 +255,26 @@ export default function Profile() {
         }
     };
 
-    const handleCapture = async (url: string) => {
-        if (url === 'CLOSE') {
+    const handleCapture = async (blob: Blob, corners?: string) => {
+        if (corners === 'CLOSE') {
             setActiveCameraCategory(null);
             return;
         }
 
         setIsOcrLoading(true);
+        const toastId = toast.loading('Neural Identity Engine active...');
         try {
-            const res = await apiFetch('/kyc/detect-corners', {
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', blob, 'identity.jpg');
+            uploadFormData.append('type', activeCameraCategory === 'pan_card' ? 'pan' : 'aadhar');
+
+            const res = await apiFetch('/kyc/extract-ocr', {
                 method: 'POST',
-                body: JSON.stringify({ image: url, type: activeCameraCategory === 'pan_card' ? 'pan' : 'aadhar' }),
+                body: uploadFormData,
             });
 
-            if (res.success && res.data) {
-                const ocr_data = res.data;
+            if (res && !res.error) {
+                const ocr_data = res;
                 const update: any = {};
 
                 if (activeCameraCategory === 'aadhar_front') {
@@ -289,13 +294,19 @@ export default function Profile() {
 
                 if (update.aadhar_number) checkUniqueness('aadhar', update.aadhar_number);
                 if (update.pan_number) checkUniqueness('pan', update.pan_number);
+                
+                toast.success('Document scanned successfully', { id: toastId });
+            } else {
+                toast.error(res?.error || 'Extraction failed', { id: toastId });
             }
 
+            // Create a preview URL for the captured image if needed
+            const url = URL.createObjectURL(blob);
             setCapturedImages(prev => ({ ...prev, [activeCameraCategory!]: url }));
             setActiveCameraCategory(null);
         } catch (err: any) {
             console.error("Capture error:", err);
-            toast.error(err.message || "Capture processing failed.");
+            toast.error(err.message || "Capture processing failed.", { id: toastId });
         } finally {
             setIsOcrLoading(false);
         }
@@ -2259,16 +2270,8 @@ export default function Profile() {
             {/* Document Capture & Verification Modals */}
             {activeCameraCategory && (
                 <CameraComponent
-                    category={DOCUMENT_CATEGORIES.find(c => c.id === activeCameraCategory)!}
+                    label={DOCUMENT_CATEGORIES.find(c => c.id === activeCameraCategory)?.label || 'Document Capture'}
                     onCapture={handleCapture}
-                />
-            )}
-
-            {capturedImages[activeCameraCategory!] && (
-                <DocumentCropper
-                    imageUrl={capturedImages[activeCameraCategory!]}
-                    onCropComplete={handleCapture}
-                    onClose={() => setActiveCameraCategory(null)}
                 />
             )}
 

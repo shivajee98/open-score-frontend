@@ -228,8 +228,9 @@ export default function Camera({ onCapture, label }: CameraProps) {
             <div className="px-6 pt-12 pb-6 flex items-center justify-between z-30">
                 <div className="flex flex-col">
                     <h2 className="text-white text-lg font-black uppercase tracking-[0.2em]">{label}</h2>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 flex items-center gap-2">
-                        <MapPin size={10} className="text-blue-500" /> Auto-detection active
+                    <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] mt-1 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,1)]" />
+                        AI Recognition Active
                     </p>
                 </div>
                 <button 
@@ -267,8 +268,12 @@ export default function Camera({ onCapture, label }: CameraProps) {
                                 
                                 {/* Scan line */}
                                 <div className={cn(
-                                    "absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.8)]",
-                                    isAligned ? "animate-[scanLine_2s_ease-in-out_infinite]" : "hidden"
+                                    "absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_25px_rgba(59,130,246,1)] z-20",
+                                    isAligned ? "animate-[scanLine_1.5s_cubic-bezier(0.4,0,0.2,1)_infinite]" : "hidden"
+                                )} />
+                                <div className={cn(
+                                    "absolute inset-0 bg-gradient-to-b from-blue-500/5 via-blue-500/20 to-transparent h-1/2 opacity-0",
+                                    isAligned ? "animate-[scanPulse_1.5s_cubic-bezier(0.4,0,0.2,1)_infinite]" : "hidden"
                                 )} />
                             </div>
 
@@ -359,24 +364,32 @@ export default function Camera({ onCapture, label }: CameraProps) {
 
             {/* Processing Overlay */}
             {loading && (
-                <div className="absolute inset-0 z-[3000] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-200">
-                    <div className="relative w-24 h-32 mb-8">
-                        <div className="absolute inset-0 bg-white/5 rounded-xl border-2 border-white/10 overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,1)] animate-[scanLine_1.5s_ease-in-out_infinite]" />
-                            <div className="p-4 space-y-3 pt-8">
-                                <div className="h-1.5 bg-white/10 rounded-full w-full" />
-                                <div className="h-1.5 bg-white/10 rounded-full w-4/5" />
-                                <div className="h-1.5 bg-white/10 rounded-full w-full" />
-                                <div className="h-1.5 bg-white/10 rounded-full w-3/5" />
+                <div className="absolute inset-0 z-[3000] bg-slate-900/98 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300">
+                    {/* Tech circuit background */}
+                    <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/circuit-board.png")'}} />
+                    
+                    <div className="relative w-32 h-40 mb-10">
+                        {/* Glow behind the document */}
+                        <div className="absolute -inset-10 bg-blue-500/20 blur-[60px] animate-pulse" />
+                        
+                        <div className="absolute inset-0 bg-slate-800 rounded-2xl border-2 border-white/20 overflow-hidden shadow-2xl">
+                            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
+                            
+                            {/* Document structure dummy lines */}
+                            <div className="p-6 space-y-4 pt-12 relative z-10 opacity-30">
+                                <div className="h-1 bg-white/20 rounded-full w-full" />
+                                <div className="h-1 bg-white/20 rounded-full w-5/6" />
+                                <div className="h-1 bg-white/20 rounded-full w-4/6" />
+                                <div className="h-1 bg-white/20 rounded-full w-full" />
                             </div>
-                        </div>
-                        <div className="absolute -bottom-3 -right-3 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                            <Shield className="text-white" size={20} />
+
+                            <div className="absolute top-0 left-0 w-full h-1.5 bg-blue-500 shadow-[0_0_30px_rgba(59,130,246,1)] z-20 animate-[processingScan_2s_cubic-bezier(0.4,0,0.2,1)_infinite]" />
+                            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-transparent h-1/2 opacity-0 animate-[processingPulse_2s_cubic-bezier(0.4,0,0.2,1)_infinite]" />
                         </div>
                     </div>
 
-                    <h3 className="text-white text-sm font-black uppercase tracking-[0.3em] mb-1">Processing</h3>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Optimizing identity scan</p>
+                    <h3 className="text-white text-base font-black uppercase tracking-[0.5em] mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 to-white">Authenticating</h3>
+                    <p className="text-blue-500 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Neural Identity Engine Active</p>
 
                     <div className="mt-8 flex gap-1.5">
                         <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -388,8 +401,26 @@ export default function Camera({ onCapture, label }: CameraProps) {
 
             <style jsx>{`
                 @keyframes scanLine {
-                    0%, 100% { top: 10%; opacity: 0; }
-                    50% { top: 90%; opacity: 1; }
+                    0% { top: 0%; opacity: 0; }
+                    10% { opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { top: 100%; opacity: 0; }
+                }
+                @keyframes scanPulse {
+                    0% { top: -50%; opacity: 0; }
+                    50% { opacity: 0.5; }
+                    100% { top: 100%; opacity: 0; }
+                }
+                @keyframes processingScan {
+                    0% { top: 0%; opacity: 0; }
+                    20% { opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { top: 100%; opacity: 0; }
+                }
+                @keyframes processingPulse {
+                    0% { top: -50%; opacity: 0; }
+                    50% { opacity: 0.8; }
+                    100% { top: 100%; opacity: 0; }
                 }
             `}</style>
         </div>

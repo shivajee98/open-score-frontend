@@ -778,6 +778,7 @@ export default function LoanStatus() {
                         onCancel={handleKycCancel}
                         loading={submitting}
                         initialData={initialKycData}
+                        loanId={loan.id}
                     />
                 )
             }
