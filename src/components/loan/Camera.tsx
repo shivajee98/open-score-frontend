@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Camera as CameraIcon, RotateCw, Check, X, MapPin, Image as ImageIcon, Upload, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
+import { apiFetch } from '@/lib/api';
 import DocumentCropper from './DocumentCropper';
 
 interface CameraProps {
@@ -103,9 +104,8 @@ export default function Camera({ onCapture, label }: CameraProps) {
         const formData = new FormData();
         formData.append('file', blob, 'image.jpg');
         try {
-            const apiRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/detect-corners`, { method: 'POST', body: formData });
-            if (apiRes.ok) {
-                const apiData = await apiRes.json();
+            const apiData = await apiFetch('/kyc/detect-corners', { method: 'POST', body: formData });
+            if (apiData && apiData.corners) {
                 setCornersData(apiData.corners);
             } else {
                 setCornersData(null);

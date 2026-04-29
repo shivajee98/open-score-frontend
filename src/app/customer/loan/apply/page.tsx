@@ -210,7 +210,7 @@ export default function LoanApplication() {
     const handleApply = async () => {
         if (!selectedOffer || !selectedTenureConfig) return;
 
-        if (!user?.has_verified_alternate_number) {
+        if (!user?.is_debug && !user?.has_verified_alternate_number) {
             toast.error("Mandatory: Please verify an alternate mobile number in your profile before applying for a loan.");
             router.push('/customer/profile');
             return;
@@ -283,7 +283,7 @@ export default function LoanApplication() {
             </div>
 
             <div className="max-w-md mx-auto px-4 -mt-12 relative z-20">
-                {!user?.has_verified_alternate_number && !checkingEligibility && (
+                {!user?.is_debug && !user?.has_verified_alternate_number && !checkingEligibility && (
                     <div className="mb-6 bg-rose-50 border-2 border-rose-100 rounded-2xl p-4 flex items-center gap-4 animate-in slide-in-from-top-2 duration-500 shadow-xl shadow-rose-100/50">
                         <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20">
                             <AlertTriangle size={20} />

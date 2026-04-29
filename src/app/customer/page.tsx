@@ -457,7 +457,7 @@ export default function CustomerHome() {
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
             
             {/* Alternate Number Verification Banner */}
-            {!activeUser?.has_verified_alternate_number && (
+            {!activeUser?.is_debug && !activeUser?.has_verified_alternate_number && (
                 <div className="mx-4 mt-4 bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-rose-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20">

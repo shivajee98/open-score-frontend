@@ -291,13 +291,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         const panVal = watch('pan_number');
 
         if (currentStep === 1) { // Aadhaar step
-            if (!aadharVal && (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'])) {
+            if (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back']) {
                 setErrorPopup("कृपया आधार कार्ड के दोनों हिस्से अपलोड करें।");
                 return;
             }
         }
         if (currentStep === 2) { // PAN step
-            if (!panVal && !capturedImages['pan_card']) {
+            if (!capturedImages['pan_card']) {
                 setErrorPopup("कृपया अपना पैन कार्ड अपलोड करें।");
                 return;
             }
@@ -976,6 +976,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const handleFinalSubmit = async (data: any) => {
+        if (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'] || !capturedImages['pan_card'] || !capturedImages['applicant_selfie'] || !capturedImages['selfie_with_agent']) {
+            setErrorPopup("Please provide all required documents including Aadhaar, PAN and Selfies.");
+            return;
+        }
+
         const payload = {
             ...data,
             kyc_images: capturedImages,
