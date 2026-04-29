@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode, Search, Info, CreditCard } from 'lucide-react';
+import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode, Search, Info, CreditCard, Loader2, Landmark, CheckCircle2 } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import { useStore } from '@/store/useStore';
@@ -19,6 +19,7 @@ export default function TeamEarningsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [copied, setCopied] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
+    const [withdrawalTab, setWithdrawalTab] = useState<'request' | 'history'>('request');
     const [transferAmount, setTransferAmount] = useState('');
     const [activeTab, setActiveTab] = useState<'QR' | 'LOAN' | 'CARD' | 'DECLINED'>('QR');
     const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +30,58 @@ export default function TeamEarningsPage() {
     const [cardCustomer, setCardCustomer] = useState<any>(null);
     const [cardLoading, setCardLoading] = useState(false);
     const { data: cardRequests, mutate: mutateCardRequests } = useApi(activeTab === 'CARD' ? '/vault-cards' : null);
+
+    // Withdrawal History State (Agent Transfer History)
+    const [withdrawals, setWithdrawals] = useState<any[]>([]);
+    const [pageW, setPageW] = useState(1);
+    const [hasMoreW, setHasMoreW] = useState(true);
+    const [fetchingMoreW, setFetchingMoreW] = useState(false);
+    const [initialLoadingW, setInitialLoadingW] = useState(true);
+
+    const fetchWithdrawals = useCallback(async (pageNum: number, isNew = false) => {
+        try {
+            if (!pageNum || pageNum < 1) return;
+            const res = await apiFetch(`/auth/team/transfer-history?page=${pageNum}`);
+            const newWithdrawals = res.data || [];
+
+            if (isNew) {
+                setWithdrawals(newWithdrawals);
+            } else {
+                setWithdrawals(prev => [...prev, ...newWithdrawals]);
+            }
+
+            setHasMoreW(res.current_page < res.last_page);
+        } catch (error) {
+            console.error("Failed to fetch history:", error);
+        } finally {
+            setInitialLoadingW(false);
+            setFetchingMoreW(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchWithdrawals(1, true);
+    }, [fetchWithdrawals]);
+
+    // Observer for infinite scroll
+    const observerW = useRef<IntersectionObserver | null>(null);
+    const lastWithdrawalRef = useCallback((node: HTMLDivElement) => {
+        if (fetchingMoreW || !hasMoreW) return;
+        if (observerW.current) observerW.current.disconnect();
+
+        observerW.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMoreW) {
+                setFetchingMoreW(true);
+                setPageW(prev => {
+                    const next = prev + 1;
+                    fetchWithdrawals(next);
+                    return next;
+                });
+            }
+        });
+
+        if (node) observerW.current.observe(node);
+    }, [fetchingMoreW, hasMoreW, fetchWithdrawals]);
 
     const handleCheckCustomer = async () => {
         if (cardMobile.length !== 10) return toast.error("Mobile number must be 10 digits");
@@ -113,6 +166,7 @@ export default function TeamEarningsPage() {
         if (available <= 0) return toast.error("No earnings available for transfer");
         if (timeLeft.locked) return toast.error("Transfer is locked by time rules.");
         setTransferAmount('');
+        setWithdrawalTab('request');
         setShowTransferModal(true);
     };
 
@@ -137,6 +191,7 @@ export default function TeamEarningsPage() {
             setShowTransferModal(false);
             setTransferAmount('');
             mutateStats();
+            fetchWithdrawals(1, true);
         } catch (e: any) {
             toast.error(e.message || "Transfer failed");
         } finally {
@@ -696,49 +751,131 @@ export default function TeamEarningsPage() {
                         )}
                     </div>
                 </div>
+
             </div>
 
             {/* Transfer Modal */}
             {showTransferModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-black text-xl text-slate-900 tracking-tight">Withdraw Earnings</h3>
+                            <h3 className="font-black text-xl text-slate-900 tracking-tight">Withdrawal</h3>
                             <button onClick={() => setShowTransferModal(false)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
                                 <X size={18} />
                             </button>
                         </div>
 
-                        {stats?.transfer_min_amount > 0 && (
-                            <div className="bg-amber-50 text-amber-700 p-3 rounded-xl text-xs font-bold flex items-start gap-2 mb-6 border border-amber-200/50">
-                                <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                                <span>Minimum allowed withdraw amount is {stats.transfer_min_amount.toLocaleString()}.</span>
-                            </div>
-                        )}
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available to withdraw: {stats?.available?.toLocaleString()}</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <span className="text-slate-400 font-bold text-lg"></span>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        value={transferAmount}
-                                        onChange={(e) => setTransferAmount(e.target.value)}
-                                        placeholder="Enter amount"
-                                        className="w-full bg-white border-2 border-indigo-500 rounded-2xl py-4 pl-10 pr-4 font-black text-2xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all shadow-sm"
-                                    />
-                                </div>
-                            </div>
+                        {/* Tabs Switcher */}
+                        <div className="flex p-1 bg-slate-100 rounded-2xl mb-6">
                             <button
-                                onClick={submitTransfer}
-                                disabled={submitting || !transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > stats?.available}
-                                className="w-full py-4 bg-indigo-400 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                onClick={() => setWithdrawalTab('request')}
+                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    withdrawalTab === 'request' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                }`}
                             >
-                                {submitting ? 'Processing...' : 'Confirm Withdrawal'}
+                                Request
                             </button>
+                            <button
+                                onClick={() => setWithdrawalTab('history')}
+                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    withdrawalTab === 'history' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                            >
+                                History
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto pr-1 -mr-1">
+                            {withdrawalTab === 'request' ? (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    {stats?.transfer_min_amount > 0 && (
+                                        <div className="bg-amber-50 text-amber-700 p-3 rounded-xl text-xs font-bold flex items-start gap-2 mb-2 border border-amber-200/50">
+                                            <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                                            <span>Minimum withdrawal: ₹{stats.transfer_min_amount.toLocaleString()}</span>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available: ₹{stats?.available?.toLocaleString()}</label>
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                value={transferAmount}
+                                                onChange={(e) => setTransferAmount(e.target.value)}
+                                                placeholder="Enter amount"
+                                                className="w-full bg-white border-2 border-indigo-500 rounded-2xl py-4 px-4 font-black text-2xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all shadow-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={submitTransfer}
+                                        disabled={submitting || !transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > stats?.available}
+                                        className="w-full py-4 bg-indigo-600 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {submitting ? 'Processing...' : 'Confirm Withdrawal'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-4">
+                                    {withdrawals?.map((w: any, idx) => (
+                                        <div
+                                            key={w.id}
+                                            ref={idx === withdrawals.length - 1 ? lastWithdrawalRef : null}
+                                            className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center justify-between group hover:border-slate-200 transition-all"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${w.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' :
+                                                    w.status === 'FAILED' ? 'bg-rose-100 text-rose-600' :
+                                                        'bg-amber-100 text-amber-600'
+                                                    }`}>
+                                                    <Landmark size={18} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-slate-900">
+                                                        ₹{parseFloat(w.amount).toLocaleString('en-IN')}
+                                                    </p>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                                                        {new Date(w.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} • #{w.id}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider ${w.status === 'COMPLETED' ? 'bg-emerald-500 text-white' :
+                                                    w.status === 'FAILED' ? 'bg-rose-500 text-white' :
+                                                        'bg-amber-500 text-white'
+                                                    }`}>
+                                                    {w.status === 'COMPLETED' ? 'PAID' : w.status === 'FAILED' ? 'REJECTED' : w.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {initialLoadingW && withdrawals.length === 0 && (
+                                        <div className="space-y-3">
+                                            {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-50 border border-slate-100 rounded-2xl animate-pulse"></div>)}
+                                        </div>
+                                    )}
+
+                                    {fetchingMoreW && (
+                                        <div className="flex justify-center py-4">
+                                            <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+                                        </div>
+                                    )}
+
+                                    {!initialLoadingW && withdrawals.length === 0 && (
+                                        <div className="py-12 text-center">
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">No transactions</p>
+                                            <p className="text-[10px] text-slate-400 font-medium">Your history will appear here.</p>
+                                        </div>
+                                    )}
+
+                                    {!hasMoreW && withdrawals.length > 0 && (
+                                        <div className="text-center py-4">
+                                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">End of history</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
