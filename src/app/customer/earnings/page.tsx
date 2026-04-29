@@ -21,7 +21,7 @@ export default function TeamEarningsPage() {
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [withdrawalTab, setWithdrawalTab] = useState<'request' | 'history'>('request');
     const [transferAmount, setTransferAmount] = useState('');
-    const [activeTab, setActiveTab] = useState<'QR' | 'LOAN' | 'CARD' | 'DECLINED'>('QR');
+    const [activeTab, setActiveTab] = useState<'QR' | 'LOAN' | 'CARD' | 'DECLINED' | 'WITHDRAWAL'>('QR');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRemark, setSelectedRemark] = useState<string | null>(null);
 
@@ -261,7 +261,7 @@ export default function TeamEarningsPage() {
                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Loans Applied</p>
                                 <p className="text-base font-black">{(stats?.loan_onboard_count || 0).toLocaleString()}</p>
                             </div>
-                             <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
+                            <div className="bg-white/10 rounded-xl px-3 py-2 border border-white/10">
                                 <p className="text-[8px] font-black text-violet-200 uppercase tracking-widest">Verified</p>
                                 <p className="text-base font-black">{(stats?.qr_verified_count || 0).toLocaleString()}</p>
                             </div>
@@ -312,12 +312,12 @@ export default function TeamEarningsPage() {
                         {/* QR Mapping Milestone Restriction */}
                         {stats?.min_qr_onboard_for_transfer > 0 && (
                             <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-4 transition-all ${(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer
-                                    ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                                    : 'bg-amber-50 border-amber-100 text-amber-700'
+                                ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                                : 'bg-amber-50 border-amber-100 text-amber-700'
                                 }`}>
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer
-                                        ? 'bg-emerald-500 text-white'
-                                        : 'bg-amber-500 text-white'
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'bg-amber-500 text-white'
                                     }`}>
                                     {(stats?.qr_onboard_count || 0) >= stats.min_qr_onboard_for_transfer ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
                                 </div>
@@ -337,15 +337,15 @@ export default function TeamEarningsPage() {
                             onClick={handleTransferClick}
                             disabled={submitting || (stats?.available || 0) <= 0 || (stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)}
                             className={`w-full py-4 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 ${(stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
-                                    ? 'bg-slate-300 cursor-not-allowed shadow-none'
-                                    : 'bg-slate-900 hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
+                                ? 'bg-slate-300 cursor-not-allowed shadow-none'
+                                : 'bg-slate-900 hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
                                 }`}
                         >
                             {(stats?.min_qr_onboard_for_transfer > 0 && (stats?.qr_onboard_count || 0) < stats.min_qr_onboard_for_transfer)
-                                    ? 'Locked: Milestone '
-                                    : (stats?.available || 0) <= 0
-                                        ? 'No Earnings Available'
-                                        : 'Transfer to Wallet'
+                                ? 'Locked: Milestone '
+                                : (stats?.available || 0) <= 0
+                                    ? 'No Earnings Available'
+                                    : 'Transfer to Wallet'
                             }
                             <ArrowUpRight size={16} />
                         </button>
@@ -443,52 +443,57 @@ export default function TeamEarningsPage() {
                         <div className="flex p-1 bg-slate-200/50 rounded-xl mb-3 flex-wrap sm:flex-nowrap gap-1">
                             <button
                                 onClick={() => setActiveTab('QR')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${
-                                    activeTab === 'QR' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${activeTab === 'QR' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
                             >
                                 <QrCode size={14} />
                                 QR
                             </button>
                             <button
                                 onClick={() => setActiveTab('LOAN')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${
-                                    activeTab === 'LOAN' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${activeTab === 'LOAN' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
                             >
                                 <History size={14} />
                                 Credit
                             </button>
                             <button
                                 onClick={() => setActiveTab('CARD')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${
-                                    activeTab === 'CARD' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${activeTab === 'CARD' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
                             >
                                 <CreditCard size={14} />
                                 Card
                             </button>
                             <button
                                 onClick={() => setActiveTab('DECLINED')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${
-                                    activeTab === 'DECLINED' ? 'bg-white text-rose-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
-                                }`}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${activeTab === 'DECLINED' ? 'bg-white text-rose-600 shadow-sm font-black' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
                             >
                                 <X size={14} />
                                 Decline ({stats?.declined_count || 0})
                             </button>
+                            <button
+                                onClick={() => setActiveTab('WITHDRAWAL')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all min-w-[80px] ${activeTab === 'WITHDRAWAL' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                <History size={14} />
+                                Payouts
+                            </button>
                         </div>
-                        
+
                         <div className="flex items-center justify-between mt-3">
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                {activeTab === 'QR' ? 'Mappings' : activeTab === 'LOAN' ? 'Referrals' : activeTab === 'CARD' ? 'Requests' : 'Declined Leads'} (
-                                    {activeTab === 'QR' ? (stats?.history?.filter((f:any) => f.status !== 'DECLINED' && (f.type !== 'LOAN')).length || 0) : 
-                                     activeTab === 'LOAN' ? (stats?.history?.filter((f:any) => f.status !== 'DECLINED' && f.type === 'LOAN').length || 0) : 
-                                     activeTab === 'CARD' ? (cardRequests?.length || 0) :
-                                     (stats?.declined_count || 0)}
+                                {activeTab === 'QR' ? 'Mappings' : activeTab === 'LOAN' ? 'Referrals' : activeTab === 'CARD' ? 'Requests' : activeTab === 'WITHDRAWAL' ? 'Transfer History' : 'Declined Leads'} (
+                                {activeTab === 'QR' ? (stats?.history?.filter((f: any) => f.status !== 'DECLINED' && (f.type !== 'LOAN')).length || 0) :
+                                    activeTab === 'LOAN' ? (stats?.history?.filter((f: any) => f.status !== 'DECLINED' && f.type === 'LOAN').length || 0) :
+                                        activeTab === 'CARD' ? (cardRequests?.length || 0) :
+                                            activeTab === 'WITHDRAWAL' ? (withdrawals?.length || 0) :
+                                                (stats?.declined_count || 0)}
                                 )
                             </p>
-                            {activeTab !== 'CARD' && (
+                            {activeTab !== 'CARD' && activeTab !== 'WITHDRAWAL' && (
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Search size={14} className="text-slate-400" />
@@ -505,61 +510,119 @@ export default function TeamEarningsPage() {
                         </div>
                     </div>
 
-                    <div className="space-y-3 p-4">
-                        {activeTab === 'CARD' && (
-                            <div className="mb-4">
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-4 shadow-sm">
-                                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <CreditCard size={14} /> New Card Activation
-                                    </h4>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="tel"
-                                            placeholder="Enter 10-digit mobile"
-                                            value={cardMobile}
-                                            onChange={(e) => {
-                                                const val = e.target.value.replace(/\D/g, '');
-                                                if (val.length <= 10) setCardMobile(val);
-                                            }}
-                                            className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-400"
-                                            disabled={cardCustomer !== null || submitting}
-                                        />
-                                        {cardCustomer ? (
-                                            <button
-                                                onClick={() => { setCardCustomer(null); setCardMobile(''); }}
-                                                className="px-3 py-2 bg-slate-200 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-300"
-                                                disabled={submitting}
-                                            >
-                                                Clear
-                                            </button>
-                                        ) : (
+                    <div className="space-y-4 pt-2">
+                        {activeTab === 'WITHDRAWAL' ? (
+                            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300 p-4">
+                                {withdrawals?.map((w: any, idx) => (
+                                    <div
+                                        key={w.id}
+                                        ref={idx === withdrawals.length - 1 ? lastWithdrawalRef : null}
+                                        className="bg-white rounded-[22px] p-4 border border-slate-100 shadow-sm flex items-center justify-between group hover:border-slate-200 transition-all"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${w.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600' :
+                                                w.status === 'FAILED' ? 'bg-rose-50 text-rose-600' :
+                                                    'bg-amber-50 text-amber-600'
+                                                }`}>
+                                                <Landmark size={18} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black text-slate-900">
+                                                    ₹{parseFloat(w.amount).toLocaleString('en-IN')}
+                                                </p>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                                                    {new Date(w.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} • #{w.id}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider ${w.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
+                                                w.status === 'FAILED' ? 'bg-rose-100 text-rose-700' :
+                                                    'bg-amber-100 text-amber-700'
+                                                }`}>
+                                                {w.status === 'COMPLETED' ? 'PAID' : w.status === 'FAILED' ? 'REJECTED' : w.status}
+                                            </span>
+                                            {w.description && (
+                                                <p className="text-[7px] font-bold text-slate-400 mt-1 italic line-clamp-1">{w.description}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {initialLoadingW && withdrawals.length === 0 && (
+                                    <div className="space-y-3">
+                                        {[1, 2, 3].map(i => <div key={i} className="h-16 bg-white border border-slate-100 rounded-2xl animate-pulse"></div>)}
+                                    </div>
+                                )}
+
+                                {fetchingMoreW && (
+                                    <div className="flex justify-center py-4">
+                                        <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+                                    </div>
+                                )}
+
+                                {!initialLoadingW && withdrawals.length === 0 && (
+                                    <div className="py-12 text-center bg-white rounded-[2rem] border border-slate-100 border-dashed">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">No transactions</p>
+                                        <p className="text-[10px] text-slate-400 font-medium">Your payout history will appear here.</p>
+                                    </div>
+                                )}
+
+                                {!hasMoreW && withdrawals.length > 0 && (
+                                    <div className="text-center py-4">
+                                        <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">End of history</p>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="p-4 space-y-3">
+                                {activeTab === 'CARD' && (
+                                    <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm mb-4">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                                <CreditCard size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-black text-slate-900 tracking-tight">Request Vault Card</h3>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Earn on card activations</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="tel"
+                                                maxLength={10}
+                                                value={cardMobile}
+                                                onChange={(e) => setCardMobile(e.target.value.replace(/\D/g, ''))}
+                                                placeholder="Customer Mobile"
+                                                className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-black text-slate-900 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                            />
                                             <button
                                                 onClick={handleCheckCustomer}
-                                                disabled={cardMobile.length !== 10 || cardLoading}
-                                                className="px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700 disabled:opacity-50"
+                                                disabled={cardLoading || cardMobile.length !== 10}
+                                                className="bg-slate-900 text-white px-5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 transition-all"
                                             >
-                                                {cardLoading ? 'Checking...' : 'Check'}
-                                            </button>
-                                        )}
-                                    </div>
-                                    {cardCustomer && (
-                                        <div className="mt-3 bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex items-center justify-between">
-                                            <div>
-                                                <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mb-0.5">Customer Name</p>
-                                                <p className="font-black text-indigo-900 text-sm">{cardCustomer.name}</p>
-                                            </div>
-                                            <button
-                                                onClick={handleRequestCard}
-                                                disabled={submitting}
-                                                className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase shadow-md active:scale-95 disabled:opacity-50"
-                                            >
-                                                {submitting ? 'Requesting...' : 'Request Card'}
+                                                {cardLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Check'}
                                             </button>
                                         </div>
-                                    )}
-                                </div>
+                                        {cardCustomer && (
+                                            <div className="mt-3 bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mb-0.5">Customer Name</p>
+                                                    <p className="font-black text-indigo-900 text-sm">{cardCustomer.name}</p>
+                                                </div>
+                                                <button
+                                                    onClick={handleRequestCard}
+                                                    disabled={submitting}
+                                                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase shadow-md active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {submitting ? 'Requesting...' : 'Request Card'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
-                                {cardRequests?.map((req: any) => (
+                                {activeTab === 'CARD' && cardRequests?.map((req: any) => (
                                     <div key={req.id} className="bg-white px-3 py-3 rounded-[22px] border border-slate-100 shadow-sm mb-3">
                                         <div className="flex justify-between items-center mb-2">
                                             <div>
@@ -568,12 +631,11 @@ export default function TeamEarningsPage() {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                                                    req.status === 'ACTIVATED' ? 'bg-emerald-100 text-emerald-700' :
+                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${req.status === 'ACTIVATED' ? 'bg-emerald-100 text-emerald-700' :
                                                     req.status === 'REJECTED' ? 'bg-rose-100 text-rose-700' :
-                                                    req.status === 'PENDING_PAYMENT' ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-blue-100 text-blue-700'
-                                                }`}>
+                                                        req.status === 'PENDING_PAYMENT' ? 'bg-amber-100 text-amber-700' :
+                                                            'bg-blue-100 text-blue-700'
+                                                    }`}>
                                                     {req.status.replace('_', ' ')}
                                                 </span>
                                             </div>
@@ -597,156 +659,147 @@ export default function TeamEarningsPage() {
                                     </div>
                                 ))}
 
-                                {(!cardRequests || cardRequests.length === 0) && (
+                                {activeTab === 'CARD' && (!cardRequests || cardRequests.length === 0) && (
                                     <div className="p-8 text-center border border-dashed border-slate-200 rounded-2xl">
                                         <CreditCard className="w-10 h-10 text-slate-200 mx-auto mb-3" />
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No card requests yet</p>
                                     </div>
                                 )}
-                            </div>
-                        )}
-                        {stats?.history?.filter((f: any) => {
-                            if (activeTab === 'DECLINED') return f.status === 'DECLINED';
-                            if (f.status === 'DECLINED') return false; 
-                            
-                            const matchTab = activeTab === 'QR' ? (f.type !== 'LOAN') : (f.type === 'LOAN');
-                            const matchSearch = (() => {
-                                if (!searchQuery) return true;
-                                const q = searchQuery.toLowerCase();
-                                return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
-                            })();
-                            return matchTab && matchSearch;
-                        }).map((friend: any) => {
-                            const isVerified = friend.is_field_verified;
-                            const isDeclined = friend.status === 'DECLINED';
-                            const verifiedText = isDeclined ? 'Declined' : (friend.type === 'LOAN' ? 'Disbursed' : 'Txn Complete');
-                            
-                            return (
-                                <div key={friend.id} className="bg-white px-3 py-2 rounded-[22px] border border-slate-100 shadow-sm relative overflow-hidden">
-                                    <div className="flex justify-between items-start mb-1.5">
-                                        <div>
-                                            <h4 className="text-sm font-black text-slate-900">{friend.name}</h4>
-                                            <p className="text-[10px] font-bold text-slate-400 font-mono tracking-tighter">{friend.mobile}</p>
-                                        </div>
-                                        <div className="flex gap-4 text-right">
-                                            {activeTab === 'QR' ? (
-                                                <div>
-                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">QR Mapped Earn</p>
-                                                    <p className={`text-xs font-black ${isVerified ? 'text-emerald-600' : 'text-slate-300'}`}>{Number(friend.signup_bonus || 0).toFixed(0)}</p>
+
+                                {activeTab !== 'CARD' && stats?.history?.filter((f: any) => {
+                                    if (activeTab === 'DECLINED') return f.status === 'DECLINED';
+                                    if (f.status === 'DECLINED') return false;
+
+                                    const matchTab = activeTab === 'QR' ? (f.type !== 'LOAN') : (f.type === 'LOAN');
+                                    const matchSearch = (() => {
+                                        if (!searchQuery) return true;
+                                        const q = searchQuery.toLowerCase();
+                                        return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
+                                    })();
+                                    return matchTab && matchSearch;
+                                }).map((friend: any) => {
+                                    const isVerified = friend.is_field_verified;
+                                    const isDeclined = friend.status === 'DECLINED';
+                                    const verifiedText = isDeclined ? 'Declined' : (friend.type === 'LOAN' ? 'Disbursed' : 'Txn Complete');
+
+                                    return (
+                                        <div key={friend.id} className="bg-white px-3 py-2 rounded-[22px] border border-slate-100 shadow-sm relative overflow-hidden">
+                                            <div className="flex justify-between items-start mb-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-black text-[10px]">
+                                                        {friend.name?.charAt(0) || 'U'}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-[11px] font-black text-slate-900 leading-none mb-1">{friend.name || 'Anonymous'}</h4>
+                                                        <p className="text-[8px] font-bold text-slate-400 font-mono">{friend.mobile || 'No Mobile'}</p>
+                                                    </div>
                                                 </div>
-                                            ) : activeTab === 'LOAN' ? (
-                                                <div>
-                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Credit Disbursed Earn</p>
-                                                    <p className={`text-xs font-black ${isVerified ? 'text-indigo-600' : 'text-slate-300'}`}>{Number(friend.loan_bonus || 0).toFixed(0)}</p>
+                                                <div className="text-right">
+                                                    <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Earned</p>
+                                                    <p className="text-[11px] font-black text-indigo-600">₹{parseFloat(friend.amount || 0).toLocaleString()}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 relative">
+                                                <div className="flex items-center gap-1.5 z-10 w-full justify-between">
+                                                    <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                                        <div className="flex items-center gap-1 mb-1">
+                                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Lead Type</p>
+                                                            {isDeclined && (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setSelectedRemark(friend.rejection_reason || 'Information provided was inaccurate or incomplete.'); }}
+                                                                    className="w-4 h-4 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-colors"
+                                                                    title="View Remark"
+                                                                >
+                                                                    <Info size={8} strokeWidth={3} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-[7px] font-black text-slate-900 uppercase">{friend.type === 'LOAN' ? 'LOAN' : 'QR Mapping'}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${(friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN')
+                                                            ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100'
+                                                            : 'bg-white border-slate-200 text-slate-300'
+                                                            }`}>
+                                                            {friend.type === 'LOAN' ? <History size={11} /> : <QrCode size={11} />}
+                                                        </div>
+                                                        <span className={`text-[7px] font-black uppercase ${(friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN') ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                                            {friend.type === 'LOAN' ? 'Applied' : 'Onboarded'}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                                        <button
+                                                            onClick={() => {
+                                                                if (isDeclined) {
+                                                                    setSelectedRemark(friend.rejection_reason || 'Information provided was inaccurate or incomplete.');
+                                                                }
+                                                            }}
+                                                            className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-transform active:scale-95 ${isVerified
+                                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100'
+                                                                : isDeclined ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-100' : 'bg-white border-amber-300 text-amber-500 animate-pulse'
+                                                                }`}
+                                                        >
+                                                            {isVerified ? <Check size={11} /> : isDeclined ? <X size={11} /> : <Clock size={11} />}
+                                                        </button>
+                                                        <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-emerald-500' : isDeclined ? 'text-rose-500' : 'text-amber-500'}`}>{verifiedText}</span>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-center gap-1 z-10 text-center">
+                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${isVerified
+                                                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                                            : 'bg-white border-slate-200 text-slate-300'
+                                                            }`}>
+                                                            <Trophy size={11} />
+                                                        </div>
+                                                        <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-indigo-600' : 'text-slate-400'}`}>Paid</span>
+                                                    </div>
+                                                    {!isDeclined && (
+                                                        <div className="absolute top-[18px] left-[15%] right-[15%] h-[1px] bg-slate-100 -z-0"></div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {activeTab !== 'CARD' && stats?.history?.filter((f: any) => {
+                                    if (activeTab === 'DECLINED') return f.status === 'DECLINED';
+                                    if (f.status === 'DECLINED') return false;
+
+                                    const matchTab = activeTab === 'QR' ? (f.type !== 'LOAN') : (f.type === 'LOAN');
+                                    const matchSearch = (() => {
+                                        if (!searchQuery) return true;
+                                        const q = searchQuery.toLowerCase();
+                                        return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
+                                    })();
+                                    return matchTab && matchSearch;
+                                }).length === 0 && (
+                                        <div className="p-12 text-center">
+                                            {activeTab === 'DECLINED' ? (
+                                                <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                                                    <CheckCircle size={32} />
                                                 </div>
                                             ) : (
-                                                <div className="flex flex-col items-end">
-                                                    <div className="flex items-center gap-1 mb-1">
-                                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Lead Type</p>
-                                                        {isDeclined && (
-                                                            <button 
-                                                                onClick={(e) => { e.stopPropagation(); setSelectedRemark(friend.rejection_reason || 'Information provided was inaccurate or incomplete.'); }} 
-                                                                className="w-4 h-4 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 hover:bg-rose-100 transition-colors"
-                                                                title="View Remark"
-                                                            >
-                                                                <Info size={10} strokeWidth={3} />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-xs font-black text-rose-500 uppercase">{friend.type === 'SIGNUP' ? 'QR MAP' : friend.type}</p>
-                                                </div>
+                                                <TrendingUp className="w-12 h-12 text-slate-100 mx-auto mb-4" />
+                                            )}
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                {activeTab === 'DECLINED' ? 'Great! No declined leads' : 'No referral earnings yet'}
+                                            </p>
+                                            {activeTab !== 'DECLINED' && (
+                                                <button
+                                                    onClick={() => router.push('/customer/referral')}
+                                                    className="mt-4 text-xs font-black text-indigo-600 uppercase tracking-widest hover:underline"
+                                                >
+                                                    Start Referring Now
+                                                </button>
                                             )}
                                         </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-4 gap-0.5 relative pt-0.5 mb-1 text-[10px]">
-                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100`}>
-                                                <Users size={12} />
-                                            </div>
-                                            <span className="text-[7px] font-black uppercase text-emerald-500">Joined</span>
-                                        </div>
-
-                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                                (friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN')
-                                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
-                                                : 'bg-white border-slate-200 text-slate-300'
-                                            }`}>
-                                                {friend.type === 'LOAN' ? <History size={11} /> : <QrCode size={11} />}
-                                            </div>
-                                            <span className={`text-[7px] font-black uppercase ${(friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN') ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                                {friend.type === 'LOAN' ? 'Applied' : 'Mapped'}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                            <button 
-                                                onClick={() => {
-                                                    if (isDeclined) {
-                                                        setSelectedRemark(friend.rejection_reason || 'Information provided was inaccurate or incomplete.');
-                                                    }
-                                                }}
-                                                className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-transform active:scale-95 ${
-                                                    isVerified 
-                                                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100' 
-                                                    : isDeclined ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-100' : 'bg-white border-amber-300 text-amber-500 animate-pulse'
-                                                }`}
-                                            >
-                                                {isVerified ? <Check size={11} /> : isDeclined ? <X size={11} /> : <Clock size={11} />}
-                                            </button>
-                                            <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-emerald-500' : isDeclined ? 'text-rose-500' : 'text-amber-500'}`}>{verifiedText}</span>
-                                        </div>
-
-                                        <div className="flex flex-col items-center gap-1 z-10 text-center">
-                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                                                isVerified 
-                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
-                                                : 'bg-white border-slate-200 text-slate-300'
-                                            }`}>
-                                                <Trophy size={11} />
-                                            </div>
-                                            <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-indigo-600' : 'text-slate-400'}`}>Paid</span>
-                                        </div>
-                                        {!isDeclined && (
-                                            <div className="absolute top-[18px] left-[15%] right-[15%] h-[1px] bg-slate-100 -z-0"></div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-
-                        {stats?.history?.filter((f: any) => {
-                            if (activeTab === 'DECLINED') return f.status === 'DECLINED';
-                            if (f.status === 'DECLINED') return false; 
-                            
-                            const matchTab = activeTab === 'QR' ? (f.type !== 'LOAN') : (f.type === 'LOAN');
-                            const matchSearch = (() => {
-                                if (!searchQuery) return true;
-                                const q = searchQuery.toLowerCase();
-                                return (f.name && f.name.toLowerCase().includes(q)) || (f.mobile && f.mobile.includes(q));
-                            })();
-                            return matchTab && matchSearch;
-                        }).length === 0 && (
-                            <div className="p-12 text-center">
-                                {activeTab === 'DECLINED' ? (
-                                    <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                                        <CheckCircle size={32} />
-                                    </div>
-                                ) : (
-                                    <TrendingUp className="w-12 h-12 text-slate-100 mx-auto mb-4" />
-                                )}
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                    {activeTab === 'DECLINED' ? 'Great! No declined leads' : 'No referral earnings yet'}
-                                </p>
-                                {activeTab !== 'DECLINED' && (
-                                    <button
-                                        onClick={() => router.push('/customer/referral')}
-                                        className="mt-4 text-xs font-black text-indigo-600 uppercase tracking-widest hover:underline"
-                                    >
-                                        Start Referring Now
-                                    </button>
-                                )}
+                                    )}
                             </div>
                         )}
                     </div>
@@ -759,123 +812,39 @@ export default function TeamEarningsPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-black text-xl text-slate-900 tracking-tight">Withdrawal</h3>
+                            <h3 className="font-black text-xl text-slate-900 tracking-tight">Withdraw Earnings</h3>
                             <button onClick={() => setShowTransferModal(false)} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
                                 <X size={18} />
                             </button>
                         </div>
 
-                        {/* Tabs Switcher */}
-                        <div className="flex p-1 bg-slate-100 rounded-2xl mb-6">
-                            <button
-                                onClick={() => setWithdrawalTab('request')}
-                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    withdrawalTab === 'request' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                                }`}
-                            >
-                                Request
-                            </button>
-                            <button
-                                onClick={() => setWithdrawalTab('history')}
-                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                    withdrawalTab === 'history' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                                }`}
-                            >
-                                History
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto pr-1 -mr-1">
-                            {withdrawalTab === 'request' ? (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                    {stats?.transfer_min_amount > 0 && (
-                                        <div className="bg-amber-50 text-amber-700 p-3 rounded-xl text-xs font-bold flex items-start gap-2 mb-2 border border-amber-200/50">
-                                            <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                                            <span>Minimum withdrawal: ₹{stats.transfer_min_amount.toLocaleString()}</span>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available: ₹{stats?.available?.toLocaleString()}</label>
-                                        <div className="relative">
-                                            <input
-                                                type="number"
-                                                value={transferAmount}
-                                                onChange={(e) => setTransferAmount(e.target.value)}
-                                                placeholder="Enter amount"
-                                                className="w-full bg-white border-2 border-indigo-500 rounded-2xl py-4 px-4 font-black text-2xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all shadow-sm"
-                                            />
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={submitTransfer}
-                                        disabled={submitting || !transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > stats?.available}
-                                        className="w-full py-4 bg-indigo-600 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {submitting ? 'Processing...' : 'Confirm Withdrawal'}
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-4">
-                                    {withdrawals?.map((w: any, idx) => (
-                                        <div
-                                            key={w.id}
-                                            ref={idx === withdrawals.length - 1 ? lastWithdrawalRef : null}
-                                            className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center justify-between group hover:border-slate-200 transition-all"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${w.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' :
-                                                    w.status === 'FAILED' ? 'bg-rose-100 text-rose-600' :
-                                                        'bg-amber-100 text-amber-600'
-                                                    }`}>
-                                                    <Landmark size={18} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black text-slate-900">
-                                                        ₹{parseFloat(w.amount).toLocaleString('en-IN')}
-                                                    </p>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                                                        {new Date(w.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} • #{w.id}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider ${w.status === 'COMPLETED' ? 'bg-emerald-500 text-white' :
-                                                    w.status === 'FAILED' ? 'bg-rose-500 text-white' :
-                                                        'bg-amber-500 text-white'
-                                                    }`}>
-                                                    {w.status === 'COMPLETED' ? 'PAID' : w.status === 'FAILED' ? 'REJECTED' : w.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    {initialLoadingW && withdrawals.length === 0 && (
-                                        <div className="space-y-3">
-                                            {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-50 border border-slate-100 rounded-2xl animate-pulse"></div>)}
-                                        </div>
-                                    )}
-
-                                    {fetchingMoreW && (
-                                        <div className="flex justify-center py-4">
-                                            <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
-                                        </div>
-                                    )}
-
-                                    {!initialLoadingW && withdrawals.length === 0 && (
-                                        <div className="py-12 text-center">
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">No transactions</p>
-                                            <p className="text-[10px] text-slate-400 font-medium">Your history will appear here.</p>
-                                        </div>
-                                    )}
-
-                                    {!hasMoreW && withdrawals.length > 0 && (
-                                        <div className="text-center py-4">
-                                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">End of history</p>
-                                        </div>
-                                    )}
+                        <div className="space-y-4">
+                            {stats?.transfer_min_amount > 0 && (
+                                <div className="bg-amber-50 text-amber-700 p-3 rounded-xl text-xs font-bold flex items-start gap-2 mb-2 border border-amber-200/50">
+                                    <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                                    <span>Minimum allowed withdraw amount is {stats.transfer_min_amount.toLocaleString()}.</span>
                                 </div>
                             )}
+
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available to withdraw: {stats?.available?.toLocaleString()}</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={transferAmount}
+                                        onChange={(e) => setTransferAmount(e.target.value)}
+                                        placeholder="Enter amount"
+                                        className="w-full bg-white border-2 border-indigo-500 rounded-2xl py-4 px-4 font-black text-2xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all shadow-sm"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                onClick={submitTransfer}
+                                disabled={submitting || !transferAmount || Number(transferAmount) <= 0 || Number(transferAmount) > stats?.available || (stats?.transfer_min_amount > 0 && Number(transferAmount) < stats?.transfer_min_amount)}
+                                className="w-full py-4 bg-indigo-600 text-white font-black uppercase tracking-widest text-sm rounded-2xl shadow-xl hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {submitting ? 'Processing...' : 'Confirm Withdrawal'}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -894,7 +863,7 @@ export default function TeamEarningsPage() {
                         <p className="text-[11px] font-bold text-slate-600 leading-relaxed max-h-[150px] overflow-y-auto pr-1">
                             {selectedRemark}
                         </p>
-                        <button 
+                        <button
                             onClick={() => setSelectedRemark(null)}
                             className="mt-4 w-full py-2.5 bg-slate-50 text-slate-700 hover:bg-slate-100 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors active:scale-95"
                         >
