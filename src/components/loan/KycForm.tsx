@@ -70,9 +70,9 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const [aadhaarOtpSent, setAadhaarOtpSent] = useState(!!initialData?.aadhaar_reference_id);
     const [aadhaarReferenceId, setAadhaarReferenceId] = useState<string | null>(initialData?.aadhaar_reference_id || null);
     const [aadhaarOtpInput, setAadhaarOtpInput] = useState('');
-    const [isAadhaarVerified, setIsAadhaarVerified] = useState(!!user?.aadhar_number || !!initialData?.aadhar_number || !!initialData?.is_aadhar_verified);
+    const [isAadhaarVerified, setIsAadhaarVerified] = useState(!!user?.is_aadhar_verified || !!initialData?.is_aadhar_verified);
     const [isAadhaarVerifying, setIsAadhaarVerifying] = useState(false);
-    const [isPanVerified, setIsPanVerified] = useState(!!user?.pan_number || !!initialData?.pan_number || !!initialData?.is_pan_verified);
+    const [isPanVerified, setIsPanVerified] = useState(!!user?.is_pan_verified || !!initialData?.is_pan_verified);
     const [isPanVerifying, setIsPanVerifying] = useState(false);
     const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string, referral?: string }>({});
     const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean, referral?: boolean }>({});
@@ -446,6 +446,21 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             return;
         }
 
+        // Final Image Check for ID steps
+        if (activeSteps[currentStep].id === 'aadhaar' && (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'])) {
+            setErrorPopup("कृपया आधार कार्ड के दोनों हिस्से अपलोड करें।");
+            return;
+        }
+        if (activeSteps[currentStep].id === 'pan' && !capturedImages['pan_card']) {
+            setErrorPopup("कृपया अपना पैन कार्ड अपलोड करें।");
+            return;
+        }
+
+        // Save progress at every stage transition
+        setIsSaving(true);
+        await saveDraft(getValues());
+        setTimeout(() => setIsSaving(false), 800);
+
         let targetStep = currentStep + 1;
 
         // Eligibility Pre-check before proceeding from Aadhaar step
@@ -480,7 +495,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
 
     const prevStep = () => {
-        setCurrentStep(prev => Math.max(prev - 1, 0));
+        if (currentStep > 0) {
+            saveDraft(getValues(), capturedImages);
+            setCurrentStep(prev => prev - 1);
+        }
     };
 
 
@@ -497,6 +515,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         if (user || initialData) {
             const newImages: Record<string, string> = {};
             const newOcr: Record<string, any> = {};
+
+            // Check if verified in user record
+            if (user?.is_aadhar_verified || initialData?.is_aadhar_verified) {
+                setIsAadhaarVerified(true);
+            }
+            if (user?.is_pan_verified || initialData?.is_pan_verified) {
+                setIsPanVerified(true);
+            }
 
             // Map from user profile (Verified documents)
             if (user?.aadhar_image) newImages['aadhar_front'] = user.aadhar_image;
@@ -739,7 +765,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 saveDraft(getValues()); // Save immediately on verification success
                 toast.success('पैन सत्यापन सफल!', { id: toastId });
             } else {
-                toast.error(res?.message || 'पैन सत्यापन विफल। विवरण जांचें।', { id: toastId });
+                toast.error(res?.message || 'PAN number is incorrect or invalid.', { id: toastId });
             }
         } catch (err: any) {
             toast.error(err?.message || 'पैन सत्यापन विफल।', { id: toastId });
@@ -1382,7 +1408,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
                 {/* Navigation */}
                 <div className="flex gap-3 pt-8 mt-4 border-t border-slate-50">
-                    {currentStep > 0 && (
+                    {/* Back Button - Visible on all pages except first */}
+                    {currentStep > 0 && currentStep < activeSteps.length - 1 && (
                         <button
                             type="button"
                             onClick={prevStep}
@@ -1392,44 +1419,28 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         </button>
                     )}
 
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setIsSaving(true);
-                            localStorage.setItem('kyc_loan_draft', JSON.stringify(watch()));
-                            setTimeout(() => setIsSaving(false), 1500);
-                        }}
-                        className="flex-1 py-4 bg-white border-2 border-slate-100 text-slate-400 rounded-3xl font-black text-[10px] uppercase tracking-widest hover:border-slate-200 hover:text-slate-600 transition-all flex items-center justify-center gap-2"
-                    >
-                        {isSaving ? <Check size={16} className="text-emerald-500" /> : <Shield size={16} />}
-                        {isSaving ? 'Saved' : 'Save Draft'}
-                    </button>
-
+                    {/* Continue Button - Only visible before final page */}
                     {currentStep < activeSteps.length - 1 ? (
                         <button
                             type="button"
                             onClick={nextStep}
-                            className="flex-[2] py-4 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10"
+                            disabled={
+                                (activeSteps[currentStep].id === 'aadhaar' && (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'] || !isAadhaarVerified)) ||
+                                (activeSteps[currentStep].id === 'pan' && (!capturedImages['pan_card'] || !isPanVerified))
+                            }
+                            className="flex-[2] py-4 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            Continue <ChevronRight size={18} />
+                            Next Step <ChevronRight size={18} />
                         </button>
                     ) : (
                         <button
+                            type="button"
                             onClick={(e) => {
-                                console.log("Submit button clicked. Form state:", {
-                                    isValid,
-                                    errors: Object.keys(errors),
-                                    values: watch()
-                                });
-                                if (Object.keys(errors).length > 0) {
-                                    console.table(errors);
-                                }
                                 handleSubmit(handleFinalSubmit, (errs) => {
                                     console.error("KYC Validation Failed (Callback):", errs);
                                     const firstErrorField = Object.keys(errs)[0];
                                     const errorObj = errs[firstErrorField as keyof typeof errs];
                                     const firstErrorMessage = errorObj?.message;
-
                                     if (firstErrorMessage) {
                                         toast.error(`${String(firstErrorMessage)} (${firstErrorField})`);
                                     } else {
@@ -1437,10 +1448,22 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     }
                                 })(e);
                             }}
-                            disabled={loading}
-                            className="flex-[2] py-4 bg-blue-600 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50"
+                            disabled={
+                                !isValid || 
+                                (!isAadhaarVerified && (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'])) ||
+                                (!isPanVerified && !capturedImages['pan_card']) ||
+                                !capturedImages['applicant_selfie'] || 
+                                !capturedImages['selfie_with_agent'] ||
+                                loading
+                            }
+                            className={cn(
+                                "flex-[2] py-4 rounded-3xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-xl disabled:opacity-40 disabled:cursor-not-allowed",
+                                (isValid && (isAadhaarVerified || (capturedImages['aadhar_front'] && capturedImages['aadhar_back'])) && (isPanVerified || capturedImages['pan_card']) && capturedImages['applicant_selfie'] && capturedImages['selfie_with_agent'])
+                                    ? "bg-emerald-600 text-white shadow-emerald-900/20 hover:bg-emerald-700" 
+                                    : "bg-slate-900 text-white shadow-slate-900/10"
+                            )}
                         >
-                            {loading ? 'Processing...' : 'Submit Application'}
+                            {loading ? 'Submitting...' : 'Submit Application'}
                             {!loading && <Check size={18} />}
                         </button>
                     )}

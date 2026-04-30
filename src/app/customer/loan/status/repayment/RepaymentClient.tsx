@@ -33,7 +33,8 @@ import {
     Upload,
     X,
     Menu,
-    QrCode
+    QrCode,
+    Camera
 } from 'lucide-react';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
 import { QRCodeSVG } from 'qrcode.react';

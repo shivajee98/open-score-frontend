@@ -174,7 +174,7 @@ export default function LoanStatus() {
         };
     }, [loanId, showKycForm]);
 
-    // Multi-stage Animation Trigger Logic
+    // Multi-stage Animation Trigger Logic - Ensure it only reflects ONE TIME per loan
     useEffect(() => {
         if (!loan || showKycForm || showVerificationLoading || submitting) return;
 
@@ -182,8 +182,12 @@ export default function LoanStatus() {
         const storageKey = `loan_${loan.id}_anim_shown`;
         const shownStages = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
+        // Check if ANY animation has already been shown for this loan
+        const hasShownAny = Object.values(shownStages).some(val => val === true);
+        if (hasShownAny) return;
+
         // Step 1: Proceed (VETTING/PROCEEDED)
-        if (['VETTING', 'PROCEEDED'].includes(status) && !shownStages.proceed && !shownStages.stage2) {
+        if (['VETTING', 'PROCEEDED'].includes(status) && !shownStages.proceed) {
             const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 30000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
@@ -195,6 +199,7 @@ export default function LoanStatus() {
                 setShowVerificationLoading(false);
                 window.location.reload();
             };
+            return; // Exit after triggering once
         }
 
         // Step 2: KYC Link (KYC_SENT)
@@ -210,12 +215,11 @@ export default function LoanStatus() {
                 setShowVerificationLoading(false);
                 window.location.reload();
             };
+            return; // Exit after triggering once
         }
 
         // Step 3: Approval / Approve (KYC_SUBMITTED / APPROVED)
-        // If auto-pilot is on, we show it during KYC_SUBMITTED (waiting for approve)
-        // If it's already APPROVED, we show the final "wow" animation
-        if ((status === 'APPROVED' || (loan.auto_pilot_enabled && status === 'KYC_SUBMITTED')) && !shownStages.approve && !shownStages.stage3) {
+        if ((status === 'APPROVED' || (loan.auto_pilot_enabled && status === 'KYC_SUBMITTED')) && !shownStages.approve) {
             const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 15000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
@@ -227,6 +231,7 @@ export default function LoanStatus() {
                 setShowVerificationLoading(false);
                 window.location.reload();
             };
+            return; // Exit after triggering once
         }
     }, [loan?.status, timerInfo?.remaining, showKycForm, loan?.auto_pilot_enabled, loan?.id]);
 

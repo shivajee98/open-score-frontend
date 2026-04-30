@@ -27,6 +27,18 @@ export default function PayoutPage() {
         finally { setVaultLoading(false); }
     };
     useEffect(() => { fetchVault(); }, []);
+    
+    // Vault Logs (Settlements)
+    const [vaultLogs, setVaultLogs] = useState<any[]>([]);
+    const [vaultLogsLoading, setVaultLogsLoading] = useState(true);
+    const fetchVaultLogs = async () => {
+        try {
+            const data = await apiFetch('/vault/logs');
+            setVaultLogs(data.logs || []);
+        } catch (e) { console.error(e); }
+        finally { setVaultLogsLoading(false); }
+    };
+    useEffect(() => { fetchVaultLogs(); }, []);
 
     // Pagination for withdrawals
     const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -134,6 +146,7 @@ export default function PayoutPage() {
             setVaultDepositTenure(null);
             mutateWallet();
             fetchVault();
+            fetchVaultLogs();
         } catch (e: any) { toast.error(e.message || 'Deposit failed'); }
         finally { setIsVaultSubmitting(false); }
     };
@@ -151,6 +164,7 @@ export default function PayoutPage() {
             setSettlementTenureDays(null);
             mutateWallet();
             fetchVault();
+            fetchVaultLogs();
         } catch (e: any) { toast.error(e.message || 'Failed to set tenure'); }
         finally { setIsVaultSubmitting(false); }
     };
@@ -168,6 +182,7 @@ export default function PayoutPage() {
             setVaultWithdrawAmount('');
             mutateWallet();
             fetchVault();
+            fetchVaultLogs();
         } catch (e: any) { toast.error(e.message || 'Withdrawal failed'); }
         finally { setIsVaultSubmitting(false); }
     };
@@ -525,72 +540,6 @@ export default function PayoutPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     {/* Input Side */}
                     <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            {/* Main Balance Card */}
-                            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-900 via-teal-950 to-emerald-900' : 'from-slate-900 via-indigo-950 to-indigo-900'} rounded-2xl p-4 text-white shadow-lg shadow-slate-900/10 relative overflow-hidden group h-32 flex flex-col justify-between`}>
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
-                                <div className="flex items-center gap-2 mb-1 opacity-60">
-                                    <Wallet size={12} />
-                                    <span className="text-[8px] font-black uppercase tracking-[0.2em]">{isMerchant ? 'Settlement' : 'Available'}</span>
-                                </div>
-                                <div className="mb-2">
-                                    <span className="text-sm opacity-40 font-black mr-1"></span>
-                                    <span className="text-2xl font-black tracking-tighter">
-                                        {balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
-                                        {[100, 500, 1000].map(val => (
-                                            <button
-                                                key={val}
-                                                onClick={() => setAmount(val.toString())}
-                                                className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-md text-[7px] font-black transition-colors whitespace-nowrap"
-                                            >
-                                                +{val}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    {isMerchant && vaultData?.vault && (
-                                        <button
-                                            onClick={() => setIsSettlementTenureOpen(true)}
-                                            className="p-1.5 text-white hover:bg-white/10 rounded-xl transition-all active:scale-90 flex items-center justify-center border border-white/5 shadow-inner"
-                                            title="Set Settlement Tenure"
-                                        >
-                                            <ArrowRightLeft size={16} strokeWidth={3} />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Cashback Card */}
-                            <div className="bg-gradient-to-br from-amber-500 via-orange-600 to-amber-600 rounded-2xl p-4 text-white shadow-lg shadow-orange-900/10 relative overflow-hidden group h-32 flex flex-col justify-between">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
-                                <div className="flex items-center gap-2 mb-1 opacity-60">
-                                    <Gift size={12} strokeWidth={3} />
-                                    <span className="text-[8px] font-black uppercase tracking-[0.2em]">Incremental</span>
-                                </div>
-                                <div className="mb-1">
-                                    <span className="text-sm opacity-40 font-black mr-1"></span>
-                                    <span className="text-2xl font-black tracking-tighter drop-shadow-md">
-                                        {cashbackBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="bg-white/10 backdrop-blur-md rounded-lg py-1 px-2 border border-white/10 w-fit">
-                                        <p className="text-[7px] font-black uppercase tracking-widest text-white/80 leading-tight">Reward Holdings</p>
-                                    </div>
-                                    <button
-                                        onClick={handleTransferToWallet}
-                                        disabled={isSubmitting}
-                                        className="p-1.5 text-white hover:bg-white/10 rounded-xl transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center border border-white/5 shadow-inner"
-                                    >
-                                        <ArrowRightLeft size={18} strokeWidth={3} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Vault Card — 3D Flip & Privacy Toggles */}
                         {vaultData?.vault && (
                             <div className="relative mb-6">
@@ -732,6 +681,81 @@ export default function PayoutPage() {
                                 </div>
                             </div>
                         )}
+
+                        <div className="grid grid-cols-2 gap-3">
+                            {/* Main Balance Card */}
+                            <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-900 via-teal-950 to-emerald-900' : 'from-slate-900 via-indigo-950 to-indigo-900'} rounded-2xl p-4 text-white shadow-lg shadow-slate-900/10 relative overflow-hidden group h-32 flex flex-col justify-between`}>
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
+                                <div className="flex items-center gap-2 mb-1 opacity-60">
+                                    <Wallet size={12} />
+                                    <span className="text-[8px] font-black uppercase tracking-[0.2em]">{isMerchant ? 'Settlement' : 'Available'}</span>
+                                </div>
+                                <div className="mb-2">
+                                    <span className="text-sm opacity-40 font-black mr-1"></span>
+                                    <span className="text-2xl font-black tracking-tighter">
+                                        {balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+                                        {[100, 500, 1000].map(val => (
+                                            <button
+                                                key={val}
+                                                onClick={() => setAmount(val.toString())}
+                                                className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-md text-[7px] font-black transition-colors whitespace-nowrap"
+                                            >
+                                                +{val}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {isMerchant && vaultData?.vault && (
+                                        <button
+                                            onClick={() => {
+                                                const hasActiveSettlement = vaultData?.deposits?.some((d: any) => parseFloat(d.interest_rate) === 0);
+                                                if (hasActiveSettlement) {
+                                                    toast.error("Settlement tenure is locked. You cannot change it while a tenure is active.");
+                                                    return;
+                                                }
+                                                setIsSettlementTenureOpen(true);
+                                            }}
+                                            className={`p-1.5 text-white hover:bg-white/10 rounded-xl transition-all active:scale-90 flex items-center justify-center border border-white/5 shadow-inner ${vaultData?.deposits?.some((d: any) => parseFloat(d.interest_rate) === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            title={vaultData?.deposits?.some((d: any) => parseFloat(d.interest_rate) === 0) ? "Tenure Locked" : "Set Settlement Tenure"}
+                                        >
+                                            <ArrowRightLeft size={16} strokeWidth={3} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Cashback Card */}
+                            <div className="bg-gradient-to-br from-amber-500 via-orange-600 to-amber-600 rounded-2xl p-4 text-white shadow-lg shadow-orange-900/10 relative overflow-hidden group h-32 flex flex-col justify-between">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
+                                <div className="flex items-center gap-2 mb-1 opacity-60">
+                                    <Gift size={12} strokeWidth={3} />
+                                    <span className="text-[8px] font-black uppercase tracking-[0.2em]">Incremental</span>
+                                </div>
+                                <div className="mb-1">
+                                    <span className="text-sm opacity-40 font-black mr-1"></span>
+                                    <span className="text-2xl font-black tracking-tighter drop-shadow-md">
+                                        {cashbackBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="bg-white/10 backdrop-blur-md rounded-lg py-1 px-2 border border-white/10 w-fit">
+                                        <p className="text-[7px] font-black uppercase tracking-widest text-white/80 leading-tight">Reward Holdings</p>
+                                    </div>
+                                    <button
+                                        onClick={handleTransferToWallet}
+                                        disabled={isSubmitting}
+                                        className="p-1.5 text-white hover:bg-white/10 rounded-xl transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center border border-white/5 shadow-inner"
+                                    >
+                                        <ArrowRightLeft size={18} strokeWidth={3} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+
 
                         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden">
                             <div className="flex items-start justify-between mb-4">
@@ -926,6 +950,74 @@ export default function PayoutPage() {
                         )}
                     </div>
                 </div>
+
+                {/* Vault Logs (Settlements) Section */}
+                {vaultData?.vault && (
+                    <div className="mt-10 animate-in slide-in-from-bottom duration-700">
+                        <div className="flex items-center justify-between px-4 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 shadow-sm border border-amber-100">
+                                    <ReceiptIndianRupee size={16} strokeWidth={3} />
+                                </div>
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Settlement Logs</h3>
+                            </div>
+                            <div className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[9px] font-black text-slate-400 uppercase shadow-sm">
+                                Settlement Tracker
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {vaultLogsLoading ? (
+                                [1, 2].map(i => <div key={i} className="h-20 bg-white border border-slate-50 rounded-3xl animate-pulse"></div>)
+                            ) : vaultLogs.length > 0 ? (
+                                vaultLogs.map((log: any) => {
+                                    const isUpcoming = log.status === 'ACTIVE';
+                                    const isDone = log.status === 'MATURED' || log.status === 'WITHDRAWN';
+                                    
+                                    return (
+                                        <div 
+                                            key={log.id} 
+                                            className={`bg-white rounded-3xl p-5 border shadow-sm flex items-center justify-between transition-all hover:border-slate-300 ${isUpcoming ? 'border-amber-100' : 'border-slate-100'}`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${isUpcoming ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-400'}`}>
+                                                    {isUpcoming ? <Clock size={20} strokeWidth={3} /> : <CheckCircle2 size={20} strokeWidth={3} />}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black text-slate-900">
+                                                        {parseFloat(log.amount).toLocaleString('en-IN')}
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                                        {isUpcoming ? 'Expected ' : 'Settled '} 
+                                                        {new Date(log.cycle_start_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                                        {' • ' + log.tenure_days + 'D Settlement'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${
+                                                    isUpcoming ? 'bg-amber-100 text-amber-700' : 
+                                                    log.status === 'MATURED' ? 'bg-emerald-100 text-emerald-700' :
+                                                    'bg-slate-100 text-slate-500'
+                                                }`}>
+                                                    {isUpcoming ? 'Upcoming' : log.status === 'MATURED' ? 'Settled' : log.status}
+                                                </span>
+                                                <p className="text-[8px] font-bold text-slate-300 mt-1 uppercase tracking-widest">
+                                                    #{log.id}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">No Vault Logs</p>
+                                    <p className="text-[10px] text-slate-400 font-medium">Your settlement timeline will appear here.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* History Section */}
                 <div className="mt-10 mb-20 animate-in slide-in-from-bottom duration-700">
@@ -1291,7 +1383,7 @@ export default function PayoutPage() {
                         </div>
 
                         <div className="mb-4">
-                            <label className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Select Tenure</label>
+                            <label className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Select Setllement</label>
                             <div className="grid grid-cols-1 gap-1.5">
                                 {[
                                     { days: 3, label: 'T3', range: '60 - 120' },
