@@ -1094,7 +1094,7 @@ export default function Profile() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Alternate Mobile Number</p>
-                                    <div className="flex items-center gap-2 mt-1">
+                                    <div className="mt-1">
                                         <input
                                             type="tel"
                                             value={alternatePhone}
@@ -1103,39 +1103,41 @@ export default function Profile() {
                                             disabled={user?.has_verified_alternate_number || altOtpSent}
                                             className={`text-sm font-bold text-slate-900 bg-transparent border-b-2 ${user?.has_verified_alternate_number ? 'border-transparent' : 'border-slate-200 focus:border-indigo-500'} focus:outline-none w-full disabled:opacity-70`}
                                         />
-                                        {!user?.has_verified_alternate_number && !altOtpSent && (
-                                            <button
-                                                onClick={handleRequestAltOtp}
-                                                disabled={isAltOtpSending || alternatePhone.length !== 10}
-                                                className="shrink-0 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg disabled:opacity-50 active:scale-95 transition-all"
-                                            >
-                                                {isAltOtpSending ? 'Sending...' : 'Verify'}
-                                            </button>
-                                        )}
                                     </div>
+                                    {!user?.has_verified_alternate_number && !altOtpSent && (
+                                        <button
+                                            onClick={handleRequestAltOtp}
+                                            disabled={isAltOtpSending || alternatePhone.length !== 10}
+                                            className="mt-3 w-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.15em] py-2.5 rounded-xl disabled:opacity-50 active:scale-[0.98] transition-all shadow-lg shadow-slate-900/10"
+                                        >
+                                            {isAltOtpSending ? 'Sending OTP...' : 'Verify Number'}
+                                        </button>
+                                    )}
                                     {altOtpSent && (
                                         <div className="mt-4 p-3 bg-white rounded-xl border border-indigo-100 animate-in zoom-in-95 duration-200">
                                             <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-2">Enter 6-Digit OTP</p>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={altOtp}
-                                                    onChange={(e) => setAltOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                                    placeholder="000 000"
-                                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-black tracking-[0.3em] text-center focus:outline-none focus:border-indigo-500"
-                                                />
+                                            <div className="space-y-3">
+                                                <div className="relative">
+                                                    <input
+                                                        type="text"
+                                                        value={altOtp}
+                                                        onChange={(e) => setAltOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                        placeholder="000 000"
+                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-black tracking-[0.5em] text-center focus:outline-none focus:border-indigo-500"
+                                                    />
+                                                    <button 
+                                                        onClick={() => setAltOtpSent(false)}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-rose-500"
+                                                    >
+                                                        <X size={20} />
+                                                    </button>
+                                                </div>
                                                 <button
                                                     onClick={handleVerifyAltOtp}
                                                     disabled={isAltOtpVerifying || altOtp.length !== 6}
-                                                    className="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-indigo-700 transition-all"
+                                                    className="w-full bg-indigo-600 text-white text-[11px] font-black uppercase tracking-[0.2em] py-3 rounded-xl disabled:opacity-50 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
                                                 >
-                                                    {isAltOtpVerifying ? 'Wait...' : 'Confirm'}
-                                                </button>
-                                                <button 
-                                                    onClick={() => setAltOtpSent(false)}
-                                                    className="p-2 text-slate-400 hover:text-rose-500"
-                                                >
-                                                    <X size={16} />
+                                                    {isAltOtpVerifying ? 'Verifying...' : 'Confirm Verification'}
                                                 </button>
                                             </div>
                                         </div>

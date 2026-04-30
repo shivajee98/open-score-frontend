@@ -456,6 +456,27 @@ export default function CustomerHome() {
             )}
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
             
+            {/* Payment Proof Re-upload Blocker */}
+            {activeUser?.has_pending_reupload && (
+                <div className="mx-4 mt-4 bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-amber-500/10 animate-in fade-in slide-in-from-top-4 duration-500 border-l-4 border-l-amber-500">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-amber-500/20">
+                            <Upload size={20} strokeWidth={2.5} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-0.5">Payment Issue Detected</p>
+                            <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">Re-upload Proof Required</h4>
+                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Account is in View-Only mode until resolved</p>
+                        </div>
+                    </div>
+                    <Link href="/customer/loan">
+                        <button className="bg-slate-900 text-white px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-slate-800 transition-all active:scale-95">
+                            Fix Now <ArrowRight size={12} />
+                        </button>
+                    </Link>
+                </div>
+            )}
+            
             {/* Alternate Number Verification Banner */}
             {!activeUser?.is_debug && !activeUser?.has_verified_alternate_number && (
                 <div className="mx-4 mt-4 bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
@@ -923,16 +944,40 @@ export default function CustomerHome() {
                             },
                             { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-amber-200', show: true },
                             { label: 'Repay', icon: <CreditCard size={20} strokeWidth={2.5} />, href: `/customer/loan/status/repayment?id=${activeLoan?.id}`, color: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-200', show: hasActiveLoan },
-                        ].filter(item => item.show).map((item, i) => (
-                            <div key={i} className="flex flex-col items-center gap-1 transition-all active:scale-95 cursor-pointer" onClick={item.onClick}>
-                                <Link href={item.href} prefetch={false} className="contents">
-                                    <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1`}>
-                                        {item.icon}
-                                    </div>
-                                    <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.1em] text-center">{item.label}</span>
-                                </Link>
-                            </div>
-                        ))}
+                        ].filter(item => item.show).map((item, i) => {
+                            const isDisabled = activeUser?.has_pending_reupload && (item.label === 'Scan QR' || item.label === 'Pay ID');
+                            
+                            return (
+                                <div 
+                                    key={i} 
+                                    className={cn(
+                                        "flex flex-col items-center gap-1 transition-all active:scale-95",
+                                        isDisabled ? "opacity-50 grayscale cursor-not-allowed" : "cursor-pointer"
+                                    )}
+                                    onClick={() => {
+                                        if (isDisabled) {
+                                            toast.error("Account Restricted. Please fix the payment issue first.");
+                                            return;
+                                        }
+                                        item.onClick?.();
+                                    }}
+                                >
+                                    <Link 
+                                        href={isDisabled ? '#' : item.href} 
+                                        prefetch={false} 
+                                        className={cn("contents", isDisabled && "pointer-events-none")}
+                                    >
+                                        <div className={cn(
+                                            `w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1`,
+                                            isDisabled && "bg-slate-400 text-slate-100 shadow-none border-none"
+                                        )}>
+                                            {item.icon}
+                                        </div>
+                                        <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.1em] text-center">{item.label}</span>
+                                    </Link>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

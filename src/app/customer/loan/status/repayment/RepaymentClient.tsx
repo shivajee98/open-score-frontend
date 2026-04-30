@@ -215,7 +215,7 @@ export default function RepaymentDashboard() {
     if (!loan) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400">Application not found</div>;
 
     const paidEmis = repayments.filter(r => r.status === 'PAID');
-    const pendingEmi = repayments.find(r => r.status === 'PENDING' || r.status === 'PENDING_VERIFICATION' || r.status === 'MANUAL_VERIFICATION');
+    const pendingEmi = repayments.find(r => r.status === 'PENDING' || r.status === 'PENDING_VERIFICATION' || r.status === 'MANUAL_VERIFICATION' || r.status === 'REASK_PROOF');
     
     // Dynamic UPI URL for QR and Button
     const upiUrl = pendingEmi ? `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${pendingEmi.amount}&tn=${encodeURIComponent(`EMI Payment for Loan #${loanId}`)}` : '';
@@ -338,9 +338,28 @@ export default function RepaymentDashboard() {
                                 </h4>
                                 <p className="text-3xl font-black text-slate-800 tracking-tighter">{Number(pendingEmi.amount).toLocaleString()}</p>
                             </div>
+                            {pendingEmi.status === 'REASK_PROOF' && (
+                                <div className="p-2 bg-amber-50 rounded-xl border border-amber-100 flex items-center gap-2 animate-pulse">
+                                    <AlertCircle size={14} className="text-amber-600" />
+                                    <span className="text-[8px] font-black text-amber-600 uppercase tracking-widest">Re-upload Required</span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-3 relative z-10">
+                            {pendingEmi.status === 'REASK_PROOF' && (
+                                <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 mb-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-6 h-6 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
+                                            <FileText size={12} />
+                                        </div>
+                                        <h5 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Admin Feedback</h5>
+                                    </div>
+                                    <p className="text-xs font-bold text-amber-700 leading-relaxed italic">
+                                        "{pendingEmi.admin_note || 'Please re-upload a clear screenshot of your payment.'}"
+                                    </p>
+                                </div>
+                            )}
                             {!showManualPay ? (
                                 <>
                                     <button
@@ -358,33 +377,46 @@ export default function RepaymentDashboard() {
                                                     <ShieldCheck size={16} className="text-amber-400" /> Under Verification
                                                 </>
                                             )
+                                        ) : pendingEmi.status === 'REASK_PROOF' ? (
+                                            <>
+                                                <Upload size={16} /> Re-upload Payment Proof
+                                            </>
                                         ) : (
                                             <>
                                                 <Smartphone size={16} /> Pay via UPI App
                                             </>
                                         )}
                                     </button>
-                                    {pendingEmi && pendingEmi.status === 'PENDING' && (
+                                    {pendingEmi && (pendingEmi.status === 'PENDING' || pendingEmi.status === 'REASK_PROOF') && (
                                     <div className="flex flex-col items-center mt-4 animate-in fade-in zoom-in-95 duration-500">
-                                        <div className="p-1 bg-white rounded-lg border border-slate-100 shadow-sm mb-2">
-                                            <QRCodeSVG 
-                                                value={upiUrl} 
-                                                size={130}
-                                                level="M"
-                                                includeMargin={false}
-                                            />
-                                        </div>
-                                        <div className="flex items-center gap-1 opacity-50 mb-4">
-                                            <QrCode size={10} className="text-slate-800" />
-                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.1em]">Scan to Pay Instantly</p>
-                                        </div>
+                                        {pendingEmi.status === 'PENDING' && (
+                                            <>
+                                                <div className="p-1 bg-white rounded-lg border border-slate-100 shadow-sm mb-2">
+                                                    <QRCodeSVG 
+                                                        value={upiUrl} 
+                                                        size={130}
+                                                        level="M"
+                                                        includeMargin={false}
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-1 opacity-50 mb-4">
+                                                    <QrCode size={10} className="text-slate-800" />
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.1em]">Scan to Pay Instantly</p>
+                                                </div>
+                                            </>
+                                        )}
 
                                         <button 
                                             onClick={() => setShowManualPay(true)}
-                                            className="w-full py-3.5 bg-slate-900 border border-slate-100 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-100 transition-all active:scale-95"
+                                            className={cn(
+                                                "w-full py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95",
+                                                pendingEmi.status === 'REASK_PROOF' 
+                                                    ? "bg-amber-600 text-white shadow-lg shadow-amber-600/20" 
+                                                    : "bg-slate-900 text-white border border-slate-100 hover:bg-slate-100"
+                                            )}
                                         >
-                                            <Upload size={14} className="text-blue-500" />
-                                            I've Paid, Upload Screenshot
+                                            <Upload size={14} className={pendingEmi.status === 'REASK_PROOF' ? "text-white" : "text-blue-500"} />
+                                            {pendingEmi.status === 'REASK_PROOF' ? "Re-upload Now" : "I've Paid, Upload Screenshot"}
                                         </button>
                                     </div>
                                 )}
@@ -451,10 +483,11 @@ export default function RepaymentDashboard() {
                                                 <div className={cn(
                                                     "inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest mb-1.5",
                                                     emi.status === 'PAID' ? "bg-emerald-50 text-emerald-600" :
-                                                        new Date(emi.due_date) < new Date() && emi.status !== 'PAID' ? "bg-rose-50 text-rose-600" :
-                                                            "bg-[#EEF2FF] text-blue-600"
+                                                        emi.status === 'REASK_PROOF' ? "bg-amber-50 text-amber-600" :
+                                                            new Date(emi.due_date) < new Date() && emi.status !== 'PAID' ? "bg-rose-50 text-rose-600" :
+                                                                "bg-[#EEF2FF] text-blue-600"
                                                 )}>
-                                                    {emi.status === 'PAID' ? 'PAID' : new Date(emi.due_date) < new Date() ? 'OVERDUE' : 'UPCOMING'}
+                                                    {emi.status === 'PAID' ? 'PAID' : emi.status === 'REASK_PROOF' ? 'RE-UPLOAD' : new Date(emi.due_date) < new Date() ? 'OVERDUE' : 'UPCOMING'}
                                                 </div>
                                                 <p className="text-[11px] font-black text-slate-700">Due: {new Date(emi.due_date).toLocaleDateString('en-GB')}</p>
                                             </div>
@@ -464,12 +497,19 @@ export default function RepaymentDashboard() {
                                             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.05em]">Installment {index + 1} of {regularEmis.length}</p>
                                         </div>
                                     </div>
-                                    {emi.admin_note && emi.status === 'PENDING' && (
+                                    {(emi.admin_note && (emi.status === 'PENDING' || emi.status === 'REASK_PROOF')) && (
                                         <div className="px-3 py-2 bg-rose-50 border border-rose-100 rounded-xl animate-in fade-in slide-in-from-top-1">
-                                            <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-1.5 mb-1">
-                                                <AlertCircle size={10} /> Payment Rejected
+                                            <p className={cn(
+                                                "text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 mb-1",
+                                                emi.status === 'REASK_PROOF' ? "text-amber-600" : "text-rose-600"
+                                            )}>
+                                                {emi.status === 'REASK_PROOF' ? <Camera size={10} /> : <AlertCircle size={10} />}
+                                                {emi.status === 'REASK_PROOF' ? "Re-upload Requested" : "Payment Rejected"}
                                             </p>
-                                            <p className="text-[10px] font-medium text-rose-500 leading-relaxed">
+                                            <p className={cn(
+                                                "text-[10px] font-medium leading-relaxed",
+                                                emi.status === 'REASK_PROOF' ? "text-amber-700" : "text-rose-500"
+                                            )}>
                                                 {emi.admin_note}
                                             </p>
                                         </div>

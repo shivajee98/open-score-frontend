@@ -81,7 +81,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     const activeSteps = useMemo(() => {
         const reuploadFields = (initialData as any)?.reupload_fields || [];
-        
+
         // If it's a reupload request, only show relevant steps
         if (reuploadFields.length > 0) {
             return STEPS.filter(step => {
@@ -137,8 +137,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     // Dynamic schema based on role
     const kycSchema = z.object({
-        first_name: z.string().min(2, 'First name is too short'),
-        last_name: z.string().optional(),
+        first_name: z.string().min(2, 'Full name is too short'),
+        last_name: z.string().nullish(),
         email: z.string().email('Invalid email address'),
         phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid 10-digit mobile number'),
         annual_income: z.coerce.string().min(1, 'Income is required'),
@@ -150,7 +150,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         aadhar_number: z.string().length(12, 'Aadhaar number must be 12 digits'),
         pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format'),
         date_of_birth: z.string().min(1, 'Date of birth is required'),
-        
+
         father_name: z.string().min(2, 'Father name is required'),
         mother_name: z.string().min(2, 'Mother name is required'),
         marital_status: z.enum(['Single', 'Married', 'Divorced', 'Widowed']),
@@ -184,8 +184,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         defaultValues: {
             consent: false,
             referral_code: '',
-            first_name: user?.name?.split(' ')[0] || '',
-            last_name: user?.name?.split(' ').slice(1).join(' ') || '',
+            first_name: user?.name || '',
+            last_name: '',
             email: user?.email || '',
             phone: user?.mobile_number || '',
             employer: user?.role === 'STUDENT' ? (user?.student_profile?.school_name || '') : (user?.business_name || ''),
@@ -214,12 +214,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         if (initialData && !hasInitializedRef.current) {
             reset({ ...getValues(), ...initialData });
             hasInitializedRef.current = true;
-            
+
             // Sync status states as well
             if (initialData.is_aadhar_verified) setIsAadhaarVerified(true);
             if (initialData.is_pan_verified) setIsPanVerified(true);
             if (initialData.aadhaar_reference_id) setAadhaarReferenceId(initialData.aadhaar_reference_id);
-            
+
             // Sync images
             if (initialData.kyc_images) {
                 setCapturedImages(prev => ({ ...prev, ...initialData.kyc_images }));
@@ -246,7 +246,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         const subscription = watch((value) => {
             setIsSaving(true);
             localStorage.setItem('kyc_loan_draft', JSON.stringify(value));
-            
+
             // Debounced server save
             const timer = setTimeout(() => {
                 saveDraft(value);
@@ -286,7 +286,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             setValue('city', String(permCity || '').trim());
             setValue('state', String(permState || '').trim());
             setValue('postal_code', String(permZip || '').trim());
-            
+
             // Trigger validation for these fields since they changed programmatically
             if (permZip && String(permZip).length === 6) {
                 trigger(['street_address', 'city', 'state', 'postal_code']);
@@ -300,16 +300,16 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         try {
             const res = await apiFetch('/referral/verify-code', {
                 method: 'POST',
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     code: String(code).toUpperCase(),
-                    amount: loanAmount 
+                    amount: loanAmount
                 }),
                 skipAuthCheck: true
             });
             if (!res.valid) {
                 setUniquenessErrors(prev => ({ ...prev, referral: res.message || 'invalid refer code' }));
                 setReferrerName(null);
-                
+
                 // If it's a vendor code with insufficient funds/limit, discard it
                 if (res.dismiss_code) {
                     setValue('referral_code', '');
@@ -414,7 +414,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             toast.loading("Fetching Aadhaar data... please wait", { id: 'api-loading' });
             return;
         }
-        
+
         if (currentStep === 1 && uniquenessErrors.aadhar) {
             toast.error("यह आधार कार्ड पहले से ही उपयोग किया जा चुका है।", { id: 'api-error' });
             return;
@@ -497,13 +497,18 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         if (user || initialData) {
             const newImages: Record<string, string> = {};
             const newOcr: Record<string, any> = {};
-            
+
             // Map from user profile (Verified documents)
             if (user?.aadhar_image) newImages['aadhar_front'] = user.aadhar_image;
             if (user?.aadhar_back_image) newImages['aadhar_back'] = user.aadhar_back_image;
             if (user?.pan_image) newImages['pan_card'] = user.pan_image;
             if (user?.profile_image) newImages['applicant_selfie'] = user.profile_image;
-            
+
+            // Map from user.kyc_images if available
+            if (user?.kyc_images) {
+                Object.assign(newImages, user.kyc_images);
+            }
+
             // Map from initialData (Precedence)
             if (initialData?.kyc_images) {
                 Object.assign(newImages, initialData.kyc_images);
@@ -511,7 +516,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             if (initialData?.ocr_results) {
                 Object.assign(newOcr, initialData.ocr_results);
             }
-            
+
             if (Object.keys(newImages).length > 0) {
                 setCapturedImages(prev => ({ ...prev, ...newImages }));
             }
@@ -543,11 +548,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
         if (!activeCameraCategory) return;
         setIsOcrLoading(true);
-        
+
         try {
             // We still call uploadToServer to save the image to the backend/S3
             const { url } = await uploadToServer(blob, activeCameraCategory, corners);
-            
+
             setCapturedImages(prev => {
                 const updated = { ...prev, [activeCameraCategory]: url };
                 // Also trigger a server save for the new image immediately
@@ -569,7 +574,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             case 0: return ['annual_income', 'loan_usage', 'referral_code'];
             case 1: return ['aadhar_number'];
             case 2: return ['pan_number', 'date_of_birth'];
-            case 3: return ['first_name', 'last_name', 'email', 'phone', 'father_name', 'mother_name', 'marital_status', 'street_address', 'city', 'state', 'postal_code'];
+            case 3: return ['first_name', 'email', 'phone', 'father_name', 'mother_name', 'marital_status', 'street_address', 'city', 'state', 'postal_code'];
             case 4: return ['employer', 'occupation'];
             case 5: return ['consent'];
             default: return [];
@@ -632,9 +637,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 // Auto-fill: Name
                 const kycName = kyc.name || kyc.full_name;
                 if (kycName && typeof kycName === 'string') {
-                    const [first, ...rest] = kycName.trim().split(' ');
-                    setValue('first_name', first || '');
-                    setValue('last_name', rest.join(' ') || '');
+                    setValue('first_name', kycName.trim());
+                    setValue('last_name', '');
                 }
 
                 // Auto-fill: DOB (format: DD-MM-YYYY → YYYY-MM-DD for input[type=date])
@@ -652,15 +656,15 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 // Auto-fill: Address
                 const addr = kyc.address ?? {};
                 const streetParts = [
-                    addr.house, 
-                    addr.street, 
-                    addr.landmark, 
-                    addr.loc, 
+                    addr.house,
+                    addr.street,
+                    addr.landmark,
+                    addr.loc,
                     addr.vtc,
                     addr.subdistrict || addr.sub_dist
                 ].filter(Boolean);
                 const street = streetParts.join(', ');
-                
+
                 if (street) {
                     setValue('permanent_street_address', street);
                     if (watch('is_permanent_same')) setValue('street_address', street);
@@ -702,14 +706,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const handleVerifyPan = async () => {
         const pan = watch('pan_number');
         const first = watch('first_name');
-        const last = watch('last_name');
         const dob = watch('date_of_birth');
 
         if (!pan || String(pan).length !== 10) {
             toast.error('कृपया मान्य पैन नंबर दर्ज करें।');
             return;
         }
-        if (!first || !last || !dob) {
+        if (!first || !dob) {
             toast.error('पैन सत्यापन के लिए नाम और जन्म तिथि आवश्यक है।');
             return;
         }
@@ -723,10 +726,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         try {
             const res = await apiFetch('/loans/sandbox/pan-verify', {
                 method: 'POST',
-                body: JSON.stringify({ 
-                    pan, 
-                    name: `${first} ${last}`.trim(), 
-                    dob 
+                body: JSON.stringify({
+                    pan,
+                    name: first.trim(),
+                    dob
                 }),
             });
 
@@ -831,7 +834,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     {isAadhaarVerified ? 'Aadhaar Verified' : 'Aadhaar Information'}
                                 </h4>
                             </div>
-                            
+
                             <div>
                                 <label className={labelClasses}>Aadhaar Number</label>
                                 <div className="relative">
@@ -909,7 +912,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-0.5">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Verified Name</p>
-                                        <p className="text-xs font-black text-slate-700">{watch('first_name')} {watch('last_name')}</p>
+                                        <p className="text-xs font-black text-slate-700">{watch('first_name')}</p>
                                     </div>
                                     <div className="space-y-0.5">
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Verified DOB</p>
@@ -988,29 +991,16 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     {uniquenessErrors.pan && <p className={errorClasses}>{uniquenessErrors.pan}</p>}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className={labelClasses}>First Name on PAN</label>
-                                        <input
-                                            type="text"
-                                            placeholder="First Name"
-                                            {...register('first_name')}
-                                            className={inputClasses}
-                                            disabled={isPanVerified || isAadhaarVerified}
-                                        />
-                                        {errors.first_name && <p className={errorClasses}>{errors.first_name.message as string}</p>}
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Last Name on PAN</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Last Name"
-                                            {...register('last_name')}
-                                            className={inputClasses}
-                                            disabled={isPanVerified || isAadhaarVerified}
-                                        />
-                                        {errors.last_name && <p className={errorClasses}>{errors.last_name.message as string}</p>}
-                                    </div>
+                                <div>
+                                    <label className={labelClasses}>Name on PAN</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Full Name as on PAN"
+                                        {...register('first_name')}
+                                        className={inputClasses}
+                                        disabled={isPanVerified || isAadhaarVerified}
+                                    />
+                                    {errors.first_name && <p className={errorClasses}>{errors.first_name.message as string}</p>}
                                 </div>
                                 <div>
                                     <label className={labelClasses}>DOB on PAN</label>
@@ -1043,18 +1033,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             case 'personal':
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className={labelClasses}>First Name</label>
-                                <input placeholder="John" {...register('first_name')} className={inputClasses} disabled={!!user?.name || isAadhaarVerified} />
-                                {errors.first_name && <p className={errorClasses}>{errors.first_name.message}</p>}
-                            </div>
-                            <div>
-                                <label className={labelClasses}>Last Name</label>
-                                <input placeholder="Doe" {...register('last_name')} className={inputClasses} disabled={!!user?.name || isAadhaarVerified} />
-                                {errors.last_name && <p className={errorClasses}>{errors.last_name.message}</p>}
-                            </div>
-
+                        <div>
+                            <label className={labelClasses}>Full Name</label>
+                            <input placeholder="John Doe" {...register('first_name')} className={inputClasses} disabled={!!user?.name || isAadhaarVerified} />
+                            {errors.first_name && <p className={errorClasses}>{errors.first_name.message}</p>}
                         </div>
 
                         <div className="grid grid-cols-1 gap-4">
@@ -1095,7 +1077,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         </div>
 
                         <div className="space-y-4 pt-6 border-t border-slate-100">
-                             <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-4">
+                            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-4">
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Permanent Address (From Aadhaar)</h4>
                                 <div>
                                     <label className={labelClasses}>Street Address</label>
@@ -1180,7 +1162,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             case 'consent':
                 return (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
-                         <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 space-y-8 shadow-2xl">
+                        <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 space-y-8 shadow-2xl">
                             <div>
                                 <h3 className="text-2xl font-black tracking-tight mb-2">Almost there!</h3>
                                 <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Review your details and submit</p>
@@ -1208,7 +1190,18 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div className="pt-4 space-y-4">
                                 <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] px-2">Final Verification Photos</h4>
                                 <div className="grid grid-cols-2 gap-4">
-                                    {DOCUMENT_CATEGORIES.filter(cat => ['applicant_selfie', 'selfie_with_agent'].includes(cat.id)).map((cat) => {
+                                    {DOCUMENT_CATEGORIES.filter(cat => {
+                                        const isSelfie = ['applicant_selfie', 'selfie_with_agent'].includes(cat.id);
+                                        if (!isSelfie) return false;
+
+                                        // If it's already captured AND not a reupload request for this specific field, we can hide it 
+                                        // OR show it as captured. The user wants to "hide that field".
+                                        const isCaptured = !!capturedImages[cat.id];
+                                        const isReupload = (initialData as any)?.reupload_fields?.includes(cat.id);
+
+                                        if (isCaptured && !isReupload) return false;
+                                        return true;
+                                    }).map((cat) => {
                                         const img = capturedImages[cat.id];
                                         return (
                                             <button
@@ -1266,7 +1259,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
     const handleFinalSubmit = async (data: any) => {
         console.log("handleFinalSubmit triggered with data:", data);
-        
+
         // Log documents for debugging
         console.log("Documents in state:", {
             hasAadharFront: !!capturedImages['aadhar_front'],
@@ -1300,16 +1293,16 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             kyc_images: capturedImages,
             ocr_results: ocrResults
         };
-        
+
         console.log("Submitting final payload to parent onSubmit:", payload);
-        
+
         try {
             await onSubmit(payload);
             console.log("onSubmit call completed successfully");
         } catch (err: any) {
             console.error("Submission error catch in KycForm:", err);
             const msg = err.message || "Submission failed";
-            
+
             if (msg.toLowerCase().includes('eligib') || msg.toLowerCase().includes('age') || msg.toLowerCase().includes('requirement')) {
                 setEligibilityError({ message: msg, step: 1 });
             } else if (msg.toLowerCase().includes('aadhar') || msg.toLowerCase().includes('pan')) {
@@ -1423,8 +1416,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     ) : (
                         <button
                             onClick={(e) => {
-                                console.log("Submit button clicked. Form state:", { 
-                                    isValid, 
+                                console.log("Submit button clicked. Form state:", {
+                                    isValid,
                                     errors: Object.keys(errors),
                                     values: watch()
                                 });
@@ -1436,7 +1429,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     const firstErrorField = Object.keys(errs)[0];
                                     const errorObj = errs[firstErrorField as keyof typeof errs];
                                     const firstErrorMessage = errorObj?.message;
-                                    
+
                                     if (firstErrorMessage) {
                                         toast.error(`${String(firstErrorMessage)} (${firstErrorField})`);
                                     } else {
@@ -1496,7 +1489,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                                 <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Draft Saved</span>
-                            </div>
+                                in-fro                  </div>
                         </div>
                     )}
                     <div className="mb-10">
@@ -1526,7 +1519,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 </p>
                             </div>
                         </div>
-                        <button 
+                        <button
                             onClick={() => setActiveCameraCategory(null)}
                             className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
                         >
@@ -1547,19 +1540,19 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             {isOcrLoading && (
                 <div className="fixed inset-0 z-[3000] bg-slate-900/98 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
                     {/* Tech circuit background */}
-                    <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{backgroundImage: 'url("https://www.transparenttextures.com/patterns/circuit-board.png")'}} />
-                    
+                    <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/circuit-board.png")' }} />
+
                     <div className="relative w-56 h-56 mb-10 flex items-center justify-center">
                         {/* High-fidelity pulse */}
                         <div className="absolute inset-0 bg-blue-500/5 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" />
                         <div className="absolute inset-10 bg-blue-500/10 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]" />
                         <div className="absolute inset-20 bg-blue-500/15 rounded-full animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
-                        
+
                         {/* Premium Document Verification Icon */}
                         <div className="relative w-32 h-40 bg-slate-800 rounded-2xl border-2 border-white/20 overflow-hidden shadow-2xl">
                             {/* Inner gradient */}
                             <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900" />
-                            
+
                             {/* Document structure lines */}
                             <div className="p-6 space-y-4 pt-12 relative z-10 opacity-30">
                                 <div className="h-1 bg-white/20 rounded-full w-full" />
@@ -1572,13 +1565,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             <div className="absolute top-0 left-0 right-0 h-1.5 bg-blue-500 shadow-[0_0_30px_rgba(59,130,246,1)] z-20 animate-[scanVertical_2s_cubic-bezier(0.4,0,0.2,1)_infinite]" />
                             <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-blue-500/20 to-transparent z-10 opacity-0 animate-[scanVerticalPulse_2s_cubic-bezier(0.4,0,0.2,1)_infinite]" />
                         </div>
-                        
+
                         {/* Status Badge */}
                         <div className="absolute -bottom-3 -right-3 w-14 h-14 bg-blue-600 rounded-2xl border-4 border-slate-900 flex items-center justify-center shadow-2xl animate-pulse">
                             <Shield className="text-white" size={24} />
                         </div>
                     </div>
-                    
+
                     <div className="text-center space-y-3 relative z-30">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-2">
                             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
@@ -1586,7 +1579,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         </div>
                         <h2 className="text-white text-xl font-black uppercase tracking-[0.4em] bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 to-white">Authenticating</h2>
                         <p className="text-blue-500 font-black uppercase tracking-[0.2em] text-[10px]">Neural Identity Engine Active</p>
-                        
+
                         <div className="flex items-center justify-center gap-4 pt-10">
                             <div className="flex gap-1.5">
                                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -1623,9 +1616,9 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         <p className="text-center text-slate-500 text-sm font-bold leading-relaxed mb-8 px-2">
                             {eligibilityError ? eligibilityError.message : errorPopup}
                         </p>
-                        
+
                         <div className="flex flex-col gap-3">
-                            <button 
+                            <button
                                 onClick={() => {
                                     if (eligibilityError) {
                                         setCurrentStep(eligibilityError.step);
@@ -1638,9 +1631,9 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             >
                                 {eligibilityError ? "Re-upload Documents" : "Try Again"}
                             </button>
-                            
+
                             {eligibilityError && (
-                                <button 
+                                <button
                                     onClick={() => setEligibilityError(null)}
                                     className="w-full py-4 bg-slate-50 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-[0.98]"
                                 >

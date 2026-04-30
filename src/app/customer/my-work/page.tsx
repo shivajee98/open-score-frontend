@@ -8,7 +8,7 @@ import { ArrowLeft, Briefcase, FileText, CheckCircle, Clock, XCircle, ShieldChec
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import QrStatusStepper from '@/components/qr/QrStatusStepper';
-import { Package, Truck, Home, CreditCard, ScanBarcode, History, User, MessageSquare, Search } from 'lucide-react';
+import { Package, Truck, Home, CreditCard, ScanBarcode, History, User, MessageSquare, Search, Copy, ExternalLink } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import SupportTicketScreen from '@/components/support/SupportTicketScreen';
 import DirectSupportChat from '@/components/support/DirectSupportChat';
@@ -253,18 +253,32 @@ export default function MyWorkDashboard() {
                             </p>
 
                             {!isKycApproved && (
-                                <button
-                                    onClick={() => {
-                                        if (user?.latest_loan?.reupload_fields?.length > 0) {
-                                            window.open(user.latest_loan.kyc_url, '_blank');
-                                        } else {
-                                            setActiveTab('kyc');
-                                        }
-                                    }}
-                                    className={`mt-6 w-full py-4 font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all active:scale-95 ${user?.latest_loan?.reupload_fields?.length > 0 ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
-                                >
-                                    {user?.latest_loan?.reupload_fields?.length > 0 ? 'Update Your Details' : 'Complete KYC Now'}
-                                </button>
+                                <div className="flex w-full gap-2 mt-6">
+                                    <button
+                                        onClick={() => {
+                                            if (user?.latest_loan?.reupload_fields?.length > 0) {
+                                                window.open(user.latest_loan.kyc_url, '_blank');
+                                            } else {
+                                                setActiveTab('kyc');
+                                            }
+                                        }}
+                                        className={`flex-1 py-4 font-black uppercase tracking-widest text-xs rounded-xl shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${user?.latest_loan?.reupload_fields?.length > 0 ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
+                                    >
+                                        {user?.latest_loan?.reupload_fields?.length > 0 ? <><ExternalLink size={14} /> Update Your Details</> : 'Complete KYC Now'}
+                                    </button>
+                                    {user?.latest_loan?.reupload_fields?.length > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(user.latest_loan.kyc_url);
+                                                toast.success('Update link copied!');
+                                            }}
+                                            className="px-4 py-4 bg-rose-100 text-rose-600 rounded-xl font-black text-sm hover:bg-rose-200 transition-all flex items-center justify-center shadow-sm"
+                                            title="Copy Update Link"
+                                        >
+                                            <Copy size={16} />
+                                        </button>
+                                    )}
+                                </div>
                             )}
                             {user?.latest_loan?.reupload_fields?.length > 0 && (
                                 <p className="mt-5 text-[9px] font-black text-rose-500 uppercase tracking-[0.15em] animate-pulse">

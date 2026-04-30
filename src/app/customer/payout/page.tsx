@@ -1118,11 +1118,24 @@ export default function PayoutPage() {
                         <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tighter leading-tight">
                             {showWithin24hMessage ? 'Activation in Progress' : 'Verification Pending'}
                         </h3>
-                        <p className="text-slate-400 font-bold text-[10px] leading-relaxed uppercase tracking-widest mb-8">
+                        <p className="text-slate-400 font-bold text-[10px] leading-relaxed uppercase tracking-widest mb-6">
                             {showWithin24hMessage 
                                 ? 'Your profile has been verified successfully. Your payout will be activated within 24 hours.'
                                 : 'Your merchant profile is under review. Field verification is required to enable bank settlements.'}
                         </p>
+
+                        {!showWithin24hMessage && (
+                            <div className="mb-8 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50 text-left animate-in slide-in-from-top-2 duration-500">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                                        <Info className="w-3 h-3 text-blue-600" />
+                                    </div>
+                                    <p className="text-[10px] font-bold text-blue-700 leading-relaxed">
+                                        Tip: Collect at least ₹1,000 in your wallet to automatically trigger account verification within 7 to 15 days.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 flex items-center gap-4 mb-8 text-left">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${user?.is_qr_mapped ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>

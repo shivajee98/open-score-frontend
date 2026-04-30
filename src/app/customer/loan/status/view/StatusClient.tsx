@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, MessageSquare, Copy, ExternalLink } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
 import { CountdownCircleTimer } from 'react-countdown-circle-timer';
@@ -113,7 +113,7 @@ export default function LoanStatus() {
         const start = new Date(loan.updated_at).getTime();
         const target = new Date(loan.auto_pilot_next_step_at).getTime();
         const total = Math.max(1, Math.floor((target - start) / 1000));
-        
+
         const updateTimer = () => {
             const now = new Date().getTime();
             const remaining = Math.max(0, Math.floor((target - now) / 1000));
@@ -176,7 +176,7 @@ export default function LoanStatus() {
 
     // Multi-stage Animation Trigger Logic
     useEffect(() => {
-        if (!loan || showKycForm || showVerificationLoading) return;
+        if (!loan || showKycForm || showVerificationLoading || submitting) return;
 
         const status = loan.status;
         const storageKey = `loan_${loan.id}_anim_shown`;
@@ -187,25 +187,25 @@ export default function LoanStatus() {
             const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 30000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
-            
+
             shownStages.proceed = true;
             localStorage.setItem(storageKey, JSON.stringify(shownStages));
-            
+
             resolveSubmissionRef.current = () => {
                 setShowVerificationLoading(false);
                 window.location.reload();
             };
         }
-        
+
         // Step 2: KYC Link (KYC_SENT)
         if (status === 'KYC_SENT' && !shownStages.kyc_link) {
             const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 30000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
-            
+
             shownStages.kyc_link = true;
             localStorage.setItem(storageKey, JSON.stringify(shownStages));
-            
+
             resolveSubmissionRef.current = () => {
                 setShowVerificationLoading(false);
                 window.location.reload();
@@ -219,10 +219,10 @@ export default function LoanStatus() {
             const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 15000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
-            
+
             shownStages.approve = true;
             localStorage.setItem(storageKey, JSON.stringify(shownStages));
-            
+
             resolveSubmissionRef.current = () => {
                 setShowVerificationLoading(false);
                 window.location.reload();
@@ -305,6 +305,14 @@ export default function LoanStatus() {
                 })
             });
 
+            // Mark stage as shown BEFORE confirm/fetch to prevent useEffect re-trigger
+            if (loan.auto_pilot_enabled) {
+                const storageKey = `loan_${loan.id}_anim_shown`;
+                const shownStages = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                shownStages.approve = true; // Prevents the auto-pilot trigger for KYC_SUBMITTED
+                localStorage.setItem(storageKey, JSON.stringify(shownStages));
+            }
+
             // Then confirm the application
             await apiFetch(`/loans/${loan.id}/confirm`, {
                 method: 'POST'
@@ -316,7 +324,7 @@ export default function LoanStatus() {
         } catch (e: any) {
             console.error("Submission failed in StatusClient:", e);
             // We re-throw so KycForm can catch it and show its internal "Re-upload" error state
-            throw e; 
+            throw e;
         } finally {
             setSubmitting(false);
             setShowVerificationLoading(false);
@@ -369,7 +377,7 @@ export default function LoanStatus() {
                                         loan.status === 'REJECTED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
                                             (loan.status === 'KYC_SENT' || loan.status === 'PROCEEDED' || loan.status === 'VETTING') ? 'bg-amber-50 border-amber-100 text-amber-600' :
                                                 (loan.status === 'FORM_SUBMITTED' || loan.status === 'KYC_SUBMITTED') ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
-                                                (loan.status === 'APPLIED' || loan.status === 'PENDING' || loan.status === 'PREVIEW') ? 'bg-blue-50 border-blue-100 text-blue-600' :
+                                                    (loan.status === 'APPLIED' || loan.status === 'PENDING' || loan.status === 'PREVIEW') ? 'bg-blue-50 border-blue-100 text-blue-600' :
                                                         'bg-slate-50 border-slate-100 text-slate-600'
                                     }`}>{(loan.status === 'CLOSED' || (loan.status === 'DISBURSED' && Number(loan.paid_amount || 0) >= netPayableAmount)) ? 'COMPLETED' : loan.status.replace('_', ' ')}</span>
 
@@ -533,7 +541,7 @@ export default function LoanStatus() {
                     {loan?.auto_pilot_enabled && timerInfo && timerInfo.remaining > 0 && (
                         <div className="mb-8 flex flex-col items-center justify-center p-6 bg-slate-50/50 border border-slate-100 rounded-[2rem] animate-in fade-in zoom-in duration-500 relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 to-transparent pointer-events-none" />
-                            
+
                             <div className="relative z-10 flex flex-col items-center gap-4">
                                 <CountdownCircleTimer
                                     key={`${loan.status}-${loan.auto_pilot_next_step_at}`}
@@ -548,6 +556,7 @@ export default function LoanStatus() {
                                     onComplete={() => {
                                         fetchLoan();
                                         fetchUserData();
+                                        window.location.reload();
                                     }}
                                 >
                                     {({ remainingTime }) => (
@@ -678,17 +687,30 @@ export default function LoanStatus() {
                                 {loan.reupload_fields?.length > 0 ? 'Document Correction Required' : 'Complete Your KYC'}
                             </h3>
                             <p className="text-blue-100 text-xs font-medium mt-1">
-                                {loan.reupload_fields?.length > 0 
-                                    ? 'Your loan is processed, all you need is to re-upload these fields required by admin.' 
+                                {loan.reupload_fields?.length > 0
+                                    ? 'Your loan is processed, all you need is to re-upload these fields required by admin.'
                                     : 'We need a few more details to finalize your application.'}
                             </p>
                         </div>
-                        <button
-                            onClick={() => window.open(`${process.env.NEXT_PUBLIC_KYC_URL || 'https://kyc.msmeloan.sbs'}/form?token=${loan.kyc_token}`, '_blank')}
-                            className="w-full py-3 bg-white text-blue-600 rounded-lg font-black text-sm hover:bg-blue-50 transition-all uppercase tracking-widest shadow-lg"
-                        >
-                            Open Application Form
-                        </button>
+                        <div className="flex w-full gap-2">
+                            <button
+                                onClick={() => window.open(`${process.env.NEXT_PUBLIC_KYC_URL || 'https://kyc.msmeloan.sbs'}/form?token=${loan.kyc_token}`, '_blank')}
+                                className="flex-1 py-3 bg-white text-blue-600 rounded-lg font-black text-sm hover:bg-blue-50 transition-all uppercase tracking-widest shadow-lg flex items-center justify-center gap-2"
+                            >
+                                <ExternalLink size={14} /> Open Form
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const url = `${process.env.NEXT_PUBLIC_KYC_URL || 'https://kyc.msmeloan.sbs'}/form?token=${loan.kyc_token}`;
+                                    navigator.clipboard.writeText(url);
+                                    toast.success('Application link copied!');
+                                }}
+                                className="px-4 py-3 bg-blue-700/50 text-white rounded-lg font-black text-sm hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center"
+                                title="Copy Link"
+                            >
+                                <Copy size={16} />
+                            </button>
+                        </div>
                     </div>
                 )}
 

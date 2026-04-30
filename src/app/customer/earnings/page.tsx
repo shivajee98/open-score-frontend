@@ -682,6 +682,15 @@ export default function TeamEarningsPage() {
                                     const isDeclined = friend.status === 'DECLINED';
                                     const verifiedText = isDeclined ? 'Declined' : (friend.type === 'LOAN' ? 'Disbursed' : 'Txn Complete');
 
+                                    const v = friend.validation;
+                                    let progress = 0;
+                                    if (v && v.thresholds) {
+                                        const p1 = v.thresholds.min_tx > 0 ? (v.tx_count / v.thresholds.min_tx) : 1;
+                                        const p2 = v.thresholds.min_amount > 0 ? (v.tx_amount / v.thresholds.min_amount) : 1;
+                                        const p3 = v.thresholds.min_unique > 0 ? (v.unique_payers / v.thresholds.min_unique) : 1;
+                                        progress = Math.min(1, Math.min(p1, p2, p3));
+                                    }
+
                                     return (
                                         <div key={friend.id} className="bg-white px-3 py-2 rounded-[22px] border border-slate-100 shadow-sm relative overflow-hidden">
                                             <div className="flex justify-between items-start mb-1.5">
@@ -739,12 +748,45 @@ export default function TeamEarningsPage() {
                                                                     setSelectedRemark(friend.rejection_reason || 'Information provided was inaccurate or incomplete.');
                                                                 }
                                                             }}
-                                                            className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-transform active:scale-95 ${isVerified
+                                                            className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-transform active:scale-95 relative ${isVerified
                                                                 ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100'
-                                                                : isDeclined ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-100' : 'bg-white border-amber-300 text-amber-500 animate-pulse'
+                                                                : isDeclined ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-100' : 'bg-white border-amber-300 text-amber-500'
                                                                 }`}
                                                         >
-                                                            {isVerified ? <Check size={11} /> : isDeclined ? <X size={11} /> : <Clock size={11} />}
+                                                            {isVerified ? (
+                                                                <Check size={11} />
+                                                            ) : isDeclined ? (
+                                                                <X size={11} />
+                                                            ) : (
+                                                                <>
+                                                                    <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                                                        <circle
+                                                                            cx="10"
+                                                                            cy="10"
+                                                                            r="8"
+                                                                            fill="none"
+                                                                            stroke="currentColor"
+                                                                            strokeWidth="2"
+                                                                            strokeDasharray={2 * Math.PI * 8}
+                                                                            strokeDashoffset={2 * Math.PI * 8 * (1 - progress)}
+                                                                            className="opacity-20"
+                                                                            style={{ transform: 'translate(1px, 1px)' }}
+                                                                        />
+                                                                        <circle
+                                                                            cx="10"
+                                                                            cy="10"
+                                                                            r="8"
+                                                                            fill="none"
+                                                                            stroke="currentColor"
+                                                                            strokeWidth="2"
+                                                                            strokeDasharray={2 * Math.PI * 8}
+                                                                            strokeDashoffset={2 * Math.PI * 8 * (1 - progress)}
+                                                                            style={{ transform: 'translate(1px, 1px)' }}
+                                                                        />
+                                                                    </svg>
+                                                                    <Clock size={8} className="relative z-10" />
+                                                                </>
+                                                            )}
                                                         </button>
                                                         <span className={`text-[7px] font-black uppercase ${isVerified ? 'text-emerald-500' : isDeclined ? 'text-rose-500' : 'text-amber-500'}`}>{verifiedText}</span>
                                                     </div>
