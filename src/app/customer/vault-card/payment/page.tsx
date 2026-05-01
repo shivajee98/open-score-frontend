@@ -37,7 +37,8 @@ function VaultCardPaymentContent() {
     const fetchRequest = async () => {
         try {
             const res = await apiFetch('/vault-cards');
-            const req = res.find((r: any) => r.id.toString() === id);
+            const requests = res.data || [];
+            const req = requests.find((r: any) => r.id.toString() === id);
             if (!req) {
                 toast.error("Request not found");
                 router.push('/customer/earnings');
@@ -75,9 +76,10 @@ function VaultCardPaymentContent() {
         setUploading(true);
         try {
             const formData = new FormData();
-            formData.append('payment_screenshot', screenshot);
+            formData.append('proof_image', screenshot);
+            formData.append('payment_mode', 'UPI');
 
-            await apiFetch(`/vault-cards/${id}/pay`, {
+            await apiFetch(`/vault-cards/${id}/activate`, {
                 method: 'POST',
                 body: formData
             });

@@ -87,9 +87,9 @@ export default function TeamEarningsPage() {
         if (cardMobile.length !== 10) return toast.error("Mobile number must be 10 digits");
         setCardLoading(true);
         try {
-            const res = await apiFetch(`/auth/check-user/${cardMobile}`);
-            if (res.exists) {
-                setCardCustomer(res.user);
+            const res = await apiFetch(`/vault-cards/check-user?mobile=${cardMobile}`);
+            if (res.user_id) {
+                setCardCustomer(res);
             } else {
                 toast.error("Customer not found. Have them sign up first.");
                 setCardCustomer(null);
@@ -488,7 +488,7 @@ export default function TeamEarningsPage() {
                                 {activeTab === 'QR' ? 'Mappings' : activeTab === 'LOAN' ? 'Referrals' : activeTab === 'CARD' ? 'Requests' : activeTab === 'WITHDRAWAL' ? 'Transfer History' : 'Declined Leads'} (
                                 {activeTab === 'QR' ? (stats?.history?.filter((f: any) => f.status !== 'DECLINED' && (f.type !== 'LOAN')).length || 0) :
                                     activeTab === 'LOAN' ? (stats?.history?.filter((f: any) => f.status !== 'DECLINED' && f.type === 'LOAN').length || 0) :
-                                        activeTab === 'CARD' ? (cardRequests?.length || 0) :
+                                        activeTab === 'CARD' ? (cardRequests?.data?.length || 0) :
                                             activeTab === 'WITHDRAWAL' ? (withdrawals?.length || 0) :
                                                 (stats?.declined_count || 0)}
                                 )
@@ -622,7 +622,7 @@ export default function TeamEarningsPage() {
                                     </div>
                                 )}
 
-                                {activeTab === 'CARD' && cardRequests?.map((req: any) => (
+                                {activeTab === 'CARD' && cardRequests?.data?.map((req: any) => (
                                     <div key={req.id} className="bg-white px-3 py-3 rounded-[22px] border border-slate-100 shadow-sm mb-3">
                                         <div className="flex justify-between items-center mb-2">
                                             <div>
@@ -659,7 +659,7 @@ export default function TeamEarningsPage() {
                                     </div>
                                 ))}
 
-                                {activeTab === 'CARD' && (!cardRequests || cardRequests.length === 0) && (
+                                {activeTab === 'CARD' && (!cardRequests?.data || cardRequests.data.length === 0) && (
                                     <div className="p-8 text-center border border-dashed border-slate-200 rounded-2xl">
                                         <CreditCard className="w-10 h-10 text-slate-200 mx-auto mb-3" />
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No card requests yet</p>

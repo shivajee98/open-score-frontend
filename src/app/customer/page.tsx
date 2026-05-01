@@ -503,28 +503,6 @@ export default function CustomerHome() {
 
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} user={activeUser} />
 
-            {/* Virtual Card Available Notification */}
-            {pendingCardRequest && (
-                <div className="mx-4 mt-4 bg-gradient-to-r from-indigo-600 to-indigo-900 border border-white/20 rounded-3xl p-6 flex items-center justify-between shadow-2xl shadow-indigo-500/20 animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-                    <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:rotate-12 transition-transform">
-                            <CreditCard size={24} />
-                        </div>
-                        <div>
-                            <p className="text-[9px] font-black text-indigo-200 uppercase tracking-widest mb-1">Exclusive Opportunity</p>
-                            <h4 className="text-sm font-black text-white uppercase tracking-tight">Virtual Card Available</h4>
-                            <p className="text-[9px] font-bold text-indigo-100 uppercase tracking-tighter opacity-80">Click here to preview & activate now</p>
-                        </div>
-                    </div>
-                    <Link href="/customer/virtual-card">
-                        <button className="bg-white text-indigo-900 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-indigo-50 transition-all active:scale-95 shadow-xl">
-                            Activate <ArrowRight size={14} />
-                        </button>
-                    </Link>
-                </div>
-            )}
-
             <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-3 items-end">
                 {activeUser?.sub_user_id && (
                     <Link href="/customer/my-work">
@@ -1006,6 +984,88 @@ export default function CustomerHome() {
                     </div>
                 </div>
             </div>
+
+            {/* Virtual Card Redesigned Center Banner */}
+            {pendingCardRequest && (
+                <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    <Link href="/customer/virtual-card" prefetch={false}>
+                        <div className="bg-gradient-to-br from-[#064e3b] via-[#065f46] to-[#047857] rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-900/20 border border-white/10 relative overflow-hidden group active:scale-[0.98] transition-all">
+                            {/* Circuit Pattern Overlay */}
+                            <div className="absolute inset-0 opacity-10 pointer-events-none">
+                                <svg width="100%" height="100%">
+                                    <pattern id="circuit-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                                        <path d="M0 40 h 30 v 30 h 30" fill="none" stroke="white" strokeWidth="1" />
+                                        <circle cx="60" cy="70" r="2" fill="white" />
+                                    </pattern>
+                                    <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
+                                </svg>
+                            </div>
+                            
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/20 rounded-full blur-[80px] -mr-24 -mt-24 group-hover:scale-125 transition-transform duration-1000"></div>
+                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-[60px] -ml-16 -mb-16"></div>
+
+                            <div className="relative z-10 flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[2rem] flex items-center justify-center border border-white/20 mb-6 shadow-2xl group-hover:rotate-[360deg] transition-transform duration-1000">
+                                    <Zap size={32} className="text-emerald-400 fill-emerald-400" />
+                                </div>
+                                
+                                <div className="space-y-1 mb-6">
+                                    <span className="text-[10px] font-black text-emerald-300 uppercase tracking-[0.3em]">Exclusive Asset Ready</span>
+                                    <h3 className="text-2xl font-black text-white tracking-tight leading-none uppercase">
+                                        Activate Your <span className="text-emerald-400 italic">Platinum</span> Card
+                                    </h3>
+                                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest pt-1">Unlock merchant benefits & instant cashback</p>
+                                </div>
+
+                                <div className="bg-white/10 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/10 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl group-hover:bg-white/20 transition-all flex items-center gap-3">
+                                    Start Activation <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+            )}
+
+            {/* Virtual Card Redesigned Center Banner */}
+            {pendingCardRequest && (
+                <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    <Link href="/customer/virtual-card" prefetch={false}>
+                        <div className="bg-gradient-to-br from-[#064e3b] via-[#065f46] to-[#047857] rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-900/20 border border-white/10 relative overflow-hidden group active:scale-[0.98] transition-all">
+                            {/* Circuit Pattern Overlay */}
+                            <div className="absolute inset-0 opacity-10 pointer-events-none">
+                                <svg width="100%" height="100%">
+                                    <pattern id="circuit-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                                        <path d="M0 40 h 30 v 30 h 30" fill="none" stroke="white" strokeWidth="1" />
+                                        <circle cx="60" cy="70" r="2" fill="white" />
+                                    </pattern>
+                                    <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
+                                </svg>
+                            </div>
+                            
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/20 rounded-full blur-[80px] -mr-24 -mt-24 group-hover:scale-125 transition-transform duration-1000"></div>
+                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-[60px] -ml-16 -mb-16"></div>
+
+                            <div className="relative z-10 flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[2rem] flex items-center justify-center border border-white/20 mb-6 shadow-2xl group-hover:rotate-[360deg] transition-transform duration-1000">
+                                    <Zap size={32} className="text-emerald-400 fill-emerald-400" />
+                                </div>
+                                
+                                <div className="space-y-1 mb-6">
+                                    <span className="text-[10px] font-black text-emerald-300 uppercase tracking-[0.3em]">Exclusive Asset Ready</span>
+                                    <h3 className="text-2xl font-black text-white tracking-tight leading-none uppercase">
+                                        Activate Your <span className="text-emerald-400 italic">Platinum</span> Card
+                                    </h3>
+                                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest pt-1">Unlock merchant benefits & instant cashback</p>
+                                </div>
+
+                                <div className="bg-white/10 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/10 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl group-hover:bg-white/20 transition-all flex items-center gap-3">
+                                    Start Activation <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+            )}
 
             {/* Merchant Loan Milestone Progress Bar */}
             {isMerchant && (
