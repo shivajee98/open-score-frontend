@@ -37,6 +37,7 @@ interface KycFormProps {
     loanAmount: number;
     loading?: boolean;
     initialData?: Partial<any>;
+    user?: any;
     isModal?: boolean;
     loanId?: string;
 }
@@ -58,8 +59,9 @@ const DOCUMENT_CATEGORIES = [
     { id: 'selfie_with_agent', label: "Selfie with Loan Agent", icon: User, color: 'bg-rose-50 text-rose-600' },
 ];
 
-export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, isModal = false, loanId }: KycFormProps) {
-    const { user } = useStore();
+export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initialData, user: userProp, isModal = false, loanId }: KycFormProps) {
+    const { user: storeUser } = useStore();
+    const user = userProp || storeUser;
     const [currentStep, setCurrentStep] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
     const [activeCameraCategory, setActiveCameraCategory] = useState<string | null>(null);
@@ -97,11 +99,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
         // Standard flow: Hide verified steps
         return STEPS.filter(step => {
-            if (step.id === 'aadhaar' && isAadhaarVerified) return false;
-            if (step.id === 'pan' && isPanVerified) return false;
+            if (step.id === 'aadhaar' && isAadhaarVerified && capturedImages['aadhar_front'] && capturedImages['aadhar_back']) return false;
+            if (step.id === 'pan' && isPanVerified && capturedImages['pan_card']) return false;
             return true;
         });
-    }, [isAadhaarVerified, isPanVerified, initialData]);
+    }, [isAadhaarVerified, isPanVerified, capturedImages, initialData]);
 
     const saveDraft = async (data: any, imageOverride?: any) => {
         if (!loanId) return;
@@ -148,7 +150,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         occupation: z.string().min(2, 'Occupation is required'),
 
         aadhar_number: z.string().length(12, 'Aadhaar number must be 12 digits'),
-        pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN number format'),
+        pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i, 'Invalid PAN number format').transform(v => v.toUpperCase().trim()),
         date_of_birth: z.string().min(1, 'Date of birth is required'),
 
         father_name: z.string().min(2, 'Father name is required'),
@@ -828,13 +830,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         key={cat.id}
                                         type="button"
                                         onClick={() => {
-                                            if (user?.aadhar_number && isAadhaarVerified) return; // Locked once verified
+                                            if (user?.aadhar_number && isAadhaarVerified && isCaptured) return; // Locked once verified AND captured
                                             setActiveCameraCategory(cat.id);
                                         }}
                                         className={cn(
                                             "relative p-6 rounded-[2.5rem] border-2 border-dashed transition-all flex flex-col items-center text-center group",
                                             isCaptured ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white",
-                                            (user?.aadhar_number && isAadhaarVerified) && "opacity-60 cursor-not-allowed border-emerald-200 bg-emerald-50/20"
+                                            (user?.aadhar_number && isAadhaarVerified && isCaptured) && "opacity-60 cursor-not-allowed border-emerald-200 bg-emerald-50/20"
                                         )}
                                     >
 
@@ -853,12 +855,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                         </div>
 
                         {/* Manual Entry Section */}
-                        <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
-                            <div className="flex items-center gap-3 mb-1">
-                                <Shield className={cn("transition-colors", isAadhaarVerified ? "text-emerald-500" : "text-blue-500")} size={15} />
-                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                        <div className="space-y-6">
+                            <div className="px-1">
+                                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">
                                     {isAadhaarVerified ? 'Aadhaar Verified' : 'Aadhaar Information'}
                                 </h4>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+                                    {isAadhaarVerified ? 'Identity successfully confirmed' : 'Required for identity verification'}
+                                </p>
                             </div>
 
                             <div>
@@ -960,13 +964,13 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     key={cat.id}
                                     type="button"
                                     onClick={() => {
-                                        if (user?.pan_number) return; // Locked once verified
+                                        if (user?.pan_number && isCaptured) return; // Locked once verified AND captured
                                         setActiveCameraCategory(cat.id);
                                     }}
                                     className={cn(
                                         "relative p-8 rounded-[2.5rem] border-2 border-dashed transition-all flex flex-col items-center text-center group w-full",
                                         isCaptured ? "border-emerald-500 bg-emerald-50/30" : "border-slate-100 bg-slate-50 hover:border-blue-200 hover:bg-white",
-                                        user?.pan_number && "opacity-60 cursor-not-allowed border-emerald-200 bg-emerald-50/20"
+                                        (user?.pan_number && isCaptured) && "opacity-60 cursor-not-allowed border-emerald-200 bg-emerald-50/20"
                                     )}
                                 >
 
@@ -983,10 +987,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             );
                         })}
 
-                        <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 space-y-4">
-                            <div className="flex items-center gap-3 mb-1">
-                                <Shield className="text-blue-500" size={15} />
-                                <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">PAN Card Details</h4>
+                        <div className="space-y-6">
+                            <div className="px-1">
+                                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">PAN Card Details</h4>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Verification required for loan processing</p>
                             </div>
 
                             <div className="space-y-4">
@@ -999,12 +1003,18 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                             maxLength={10}
                                             {...register('pan_number', {
                                                 onChange: (e) => {
-                                                    const val = e.target.value.toUpperCase().trim();
-                                                    setValue('pan_number', val);
+                                                    const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                                                    e.target.value = val;
+                                                    setValue('pan_number', val, { shouldValidate: true });
                                                     if (val.length === 10) checkUniqueness('pan', val);
                                                 }
                                             })}
-                                            className={cn(inputClasses, "uppercase tracking-widest", isPanVerified && "bg-emerald-50/50 border-emerald-200 text-emerald-900")}
+                                            className={cn(
+                                                inputClasses, 
+                                                "uppercase tracking-widest", 
+                                                isPanVerified && "bg-emerald-50/50 border-emerald-200 text-emerald-900",
+                                                (!isPanVerified && !errors.pan_number && watch('pan_number')?.length === 10) && "bg-blue-50/50 border-blue-200"
+                                            )}
                                             disabled={isPanVerified}
                                         />
                                         {isPanVerified && (
@@ -1013,8 +1023,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                             </div>
                                         )}
                                     </div>
-                                    {errors.pan_number && <p className={errorClasses}>{errors.pan_number.message as string}</p>}
-                                    {uniquenessErrors.pan && <p className={errorClasses}>{uniquenessErrors.pan}</p>}
+                                    {errors.pan_number && <p className={errorClasses + " mt-1.5"}>{errors.pan_number.message as string}</p>}
+                                    {uniquenessErrors.pan && <p className={errorClasses + " mt-1.5"}>{uniquenessErrors.pan}</p>}
                                 </div>
 
                                 <div>
@@ -1212,6 +1222,24 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     <span className="text-[11px] font-bold text-white/80 text-right">{watch('father_name')} / {watch('mother_name')}</span>
                                 </div>
                             </div>
+                            
+                            {/* Missing Details Warning */}
+                            {Object.keys(errors).length > 0 && (
+                                <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] space-y-3 animate-in slide-in-from-top-2">
+                                    <div className="flex items-center gap-2 text-rose-400">
+                                        <Shield size={14} strokeWidth={3} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Incomplete Details</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-1.5">
+                                        {Object.entries(errors).map(([field, err]) => (
+                                            <div key={field} className="flex items-center gap-2 text-[10px] font-bold text-rose-200/60 uppercase tracking-tight">
+                                                <div className="w-1 h-1 rounded-full bg-rose-500" />
+                                                <span>{String(err?.message)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="pt-4 space-y-4">
                                 <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] px-2">Final Verification Photos</h4>
@@ -1409,7 +1437,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 {/* Navigation */}
                 <div className="flex gap-3 pt-8 mt-4 border-t border-slate-50">
                     {/* Back Button - Visible on all pages except first */}
-                    {currentStep > 0 && currentStep < activeSteps.length - 1 && (
+                    {currentStep > 0 && (
                         <button
                             type="button"
                             onClick={prevStep}

@@ -138,24 +138,12 @@ export default function RepaymentDashboard() {
         }
 
         try {
-            const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.msmeloan.sbs/api';
-
-            // 1. Submit Manual Repayment Proof
-            const res = await fetch(`${apiUrl}/loans/${loanId}/manual-repay`, {
+            // Use apiFetch for consistent header injection and error handling
+            const data = await apiFetch(`/loans/${loanId}/manual-repay`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
                 body: formData
             });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || data.message || "Upload failed");
-
-            // The backend now creates the ticket automatically in submitManualRepayment
-            // We just need to redirect to the support page.
-            // If the backend returns the created ticket, we can use it.
             const createdTicket = data.ticket;
 
             if (createdTicket?.id) {
@@ -171,6 +159,7 @@ export default function RepaymentDashboard() {
             }
 
         } catch (e: any) {
+            console.error("[ManualRepay Error]", e);
             toast.error(e.message || "Failed to submit proof");
         } finally {
             setPaying(false);

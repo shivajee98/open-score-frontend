@@ -260,6 +260,8 @@ export default function LoanStatus() {
             if (!data.employer) data.employer = userData.business_name || '';
             if (!data.aadhar_number) data.aadhar_number = userData.aadhar_number || '';
             if (!data.pan_number) data.pan_number = userData.pan_number || '';
+            data.is_aadhar_verified = !!userData.is_aadhar_verified;
+            data.is_pan_verified = !!userData.is_pan_verified;
         }
 
         // Cleanup: If state accidentally contains an email (known legacy mapping bug)
@@ -828,6 +830,7 @@ export default function LoanStatus() {
                         onCancel={handleKycCancel}
                         loading={submitting}
                         initialData={initialKycData}
+                        user={userData}
                         loanId={loan.id}
                     />
                 )
