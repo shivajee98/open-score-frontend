@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import { apiFetch, clearAuthState } from '@/lib/api';
-import { User, Mail, Briefcase, Phone, Smartphone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info, Check, X, Clock } from 'lucide-react';
+import { User, Mail, Briefcase, Phone, Smartphone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info, Check, X, Clock, Landmark, Hash } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -62,6 +62,10 @@ export default function Profile() {
     const [isTutorialOpen, setIsTutorialOpen] = useState(false);
     const [isPortalOpen, setIsPortalOpen] = useState(false);
     const [dynamicButtons, setDynamicButtons] = useState<any[]>([]);
+    const [bankSuggestions, setBankSuggestions] = useState<any[]>([]);
+    const [showBankSuggestions, setShowBankSuggestions] = useState(false);
+    const [ifscSuggestions, setIfscSuggestions] = useState<any[]>([]);
+    const [showIfscSuggestions, setShowIfscSuggestions] = useState(false);
     const [uniquenessErrors, setUniquenessErrors] = useState<{ aadhar?: string, pan?: string, account?: string }>({});
     const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean, account?: boolean }>({});
     const [uploadingImages, setUploadingImages] = useState<Record<string, boolean>>({});
@@ -118,6 +122,21 @@ export default function Profile() {
             setIsAppPinMissing(false);
         }
     }, [pinData]);
+
+    const fetchSuggestions = async (search: string, type: 'bank' | 'ifsc') => {
+        try {
+            const data = await apiFetch(`/wallet/banks?search=${search}&type=${type}`);
+            if (type === 'bank') {
+                setBankSuggestions(data || []);
+                setShowBankSuggestions(data?.length > 0);
+            } else {
+                setIfscSuggestions(data || []);
+                setShowIfscSuggestions(data?.length > 0);
+            }
+        } catch (error) {
+            console.error('Failed to fetch suggestions:', error);
+        }
+    };
 
     const checkUniqueness = async (type: 'aadhar' | 'pan' | 'account', value: string, ifsc?: string) => {
         setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
@@ -480,6 +499,45 @@ export default function Profile() {
             setUniquenessErrors(prev => ({ ...prev, account: undefined }));
         }
     }, [formData.account_number, formData.ifsc_code, isEditing, user?.account_number, user?.ifsc_code]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (isEditing && formData.bank_name.trim().length > 1 && formData.bank_name !== user?.bank_name) {
+                fetchSuggestions(formData.bank_name, 'bank');
+            } else {
+                setBankSuggestions([]);
+                setShowBankSuggestions(false);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [formData.bank_name, user?.bank_name, isEditing]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (isEditing && formData.ifsc_code.trim().length > 1 && formData.ifsc_code !== user?.ifsc_code) {
+                fetchSuggestions(formData.ifsc_code, 'ifsc');
+            } else {
+                setIfscSuggestions([]);
+                setShowIfscSuggestions(false);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [formData.ifsc_code, user?.ifsc_code, isEditing]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (showBankSuggestions || showIfscSuggestions) {
+                const target = event.target as HTMLElement;
+                if (!target.closest('#bank-details-section')) {
+                    setShowBankSuggestions(false);
+                    setShowIfscSuggestions(false);
+                }
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [showBankSuggestions, showIfscSuggestions]);
 
     const toggleNotifications = async () => {
         if (typeof window === 'undefined') return;
@@ -1916,17 +1974,44 @@ export default function Profile() {
                                 </div>
                             )}
                             <div className="space-y-4">
-                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 relative">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Bank Name</p>
                                         {isEditing && !user.account_number ? (
-                                            <input
-                                                type="text"
-                                                value={formData.bank_name}
-                                                onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                                                className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                placeholder="e.g. HDFC Bank"
-                                            />
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={formData.bank_name}
+                                                    onChange={(e) => {
+                                                        setFormData({ ...formData, bank_name: e.target.value });
+                                                        setShowBankSuggestions(true);
+                                                    }}
+                                                    onFocus={() => setShowBankSuggestions(true)}
+                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="e.g. HDFC Bank"
+                                                />
+                                                {showBankSuggestions && bankSuggestions.length > 0 && (
+                                                    <div className="absolute z-[60] left-0 right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl max-h-[160px] overflow-y-auto">
+                                                        {bankSuggestions.map((name: string, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                onClick={() => {
+                                                                    setFormData({ ...formData, bank_name: name });
+                                                                    setShowBankSuggestions(false);
+                                                                }}
+                                                                className="p-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
+                                                            >
+                                                                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                                                                    <Landmark size={14} />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-[9px] font-bold text-slate-800">{name}</div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </>
                                         ) : (
                                             <p className="text-sm font-medium text-slate-900 truncate">{user.bank_name || 'Not Set'}</p>
                                         )}
@@ -1958,16 +2043,44 @@ export default function Profile() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 relative">
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">IFSC Code</p>
                                         {isEditing && !user.account_number ? (
-                                            <input
-                                                type="text"
-                                                value={formData.ifsc_code}
-                                                onChange={(e) => setFormData({ ...formData, ifsc_code: e.target.value.toUpperCase() })}
-                                                className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
-                                                placeholder="HDFC0001234"
-                                            />
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={formData.ifsc_code}
+                                                    onChange={(e) => {
+                                                        setFormData({ ...formData, ifsc_code: e.target.value.toUpperCase() });
+                                                        setShowIfscSuggestions(true);
+                                                    }}
+                                                    onFocus={() => setShowIfscSuggestions(true)}
+                                                    className={`text-sm font-medium text-slate-900 bg-transparent border-b-2 border-slate-200 focus:border-${themeColor}-500 focus:outline-none w-full`}
+                                                    placeholder="HDFC0001234"
+                                                />
+                                                {showIfscSuggestions && ifscSuggestions.length > 0 && (
+                                                    <div className="absolute z-[60] left-0 right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl max-h-[160px] overflow-y-auto">
+                                                        {ifscSuggestions.map((item: any, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                onClick={() => {
+                                                                    setFormData({ ...formData, ifsc_code: item.ifsc });
+                                                                    setShowIfscSuggestions(false);
+                                                                }}
+                                                                className="p-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 border-b border-slate-50 last:border-0"
+                                                            >
+                                                                <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 shrink-0">
+                                                                    <Hash size={14} />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-[10px] font-black text-slate-900">{item.ifsc}</div>
+                                                                    <div className="text-[8px] font-bold text-slate-400">{item.bank_name} - {item.branch_name}</div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </>
                                         ) : (
                                             <p className="text-sm font-medium text-slate-900 uppercase truncate">{user.ifsc_code || 'Not Set'}</p>
                                         )}

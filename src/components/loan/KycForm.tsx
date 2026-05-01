@@ -336,7 +336,11 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 body: JSON.stringify({ type, value })
             });
 
-            if (!res.unique) {
+            if (res.already_verified) {
+                if (type === 'aadhar') setIsAadhaarVerified(true);
+                if (type === 'pan') setIsPanVerified(true);
+                setUniquenessErrors(prev => ({ ...prev, [type]: undefined }));
+            } else if (!res.unique) {
                 setUniquenessErrors(prev => ({ ...prev, [type]: `This ${type === 'aadhar' ? 'Aadhaar' : 'PAN'} is already linked with another account. Please use your own document.` }));
             } else {
                 setUniquenessErrors(prev => ({ ...prev, [type]: undefined }));
@@ -610,6 +614,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const handleSendAadhaarOtp = async () => {
+        if (isAadhaarVerified) return;
         const aadhaarNumber = watch('aadhar_number');
         if (!aadhaarNumber || String(aadhaarNumber).length !== 12) {
             toast.error('कृपया पहले आधार नंबर दर्ज करें।');
@@ -659,7 +664,6 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
             if (res?.code === 200 || res?.status === 200 || kyc?.name) {
                 setIsAadhaarVerified(true);
-                saveDraft(getValues()); // Save immediately on verification success
                 toast.success('आधार सत्यापन सफल!', { id: toastId });
 
                 // Auto-fill: Name
@@ -695,24 +699,20 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
                 if (street) {
                     setValue('permanent_street_address', street);
-                    if (watch('is_permanent_same')) setValue('street_address', street);
                 }
 
                 const city = addr.dist || addr.district || addr.city;
                 if (city) {
                     setValue('permanent_city', city);
-                    if (watch('is_permanent_same')) setValue('city', city);
                 }
 
                 if (addr.state) {
                     setValue('permanent_state', addr.state);
-                    if (watch('is_permanent_same')) setValue('state', addr.state);
                 }
 
                 const zip = String(addr.zip || addr.pincode || addr.zip_code || '');
                 if (zip) {
                     setValue('permanent_postal_code', zip);
-                    if (watch('is_permanent_same')) setValue('postal_code', zip);
                 }
 
                 // Father name from care_of (e.g. "S/O Ram Kumar" → "Ram Kumar")
@@ -721,6 +721,9 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                     const caretaker = careOf.replace(/^(S\/O|D\/O|W\/O)[:\s]*/i, '').trim();
                     if (caretaker) setValue('father_name', caretaker);
                 }
+
+                // Save draft AFTER all setValues to ensure backend gets the latest data
+                saveDraft(getValues()); 
             } else {
                 toast.error(res?.message || 'OTP सत्यापन विफल। पुनः प्रयास करें।', { id: toastId });
             }
@@ -732,6 +735,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const handleVerifyPan = async () => {
+        if (isPanVerified) return;
         const pan = watch('pan_number');
         const first = watch('first_name');
         const dob = watch('date_of_birth');
