@@ -244,7 +244,7 @@ export default function TeamEarningsPage() {
                                 <p className="text-[9px] font-black text-violet-200 uppercase tracking-widest">Upcoming Earning</p>
                                 <h3 className="text-3xl font-black mt-1">
                                     {/* {((stats?.qr_earning || 0) + (stats?.loan_earning || 0) + (stats?.bonus_earned || 0)).toLocaleString('en-IN', { minimumFractionDigits: 0 })} */}
-                                    {stats.unverified_held.toLocaleString()}
+                                    {(stats?.unverified_held ?? 0).toLocaleString()}
                                 </h3>
                                 <p className="text-[10px] text-violet-200 font-medium mt-1">Total Earnings</p>
                             </div>

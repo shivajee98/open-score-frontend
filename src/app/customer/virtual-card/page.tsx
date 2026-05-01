@@ -83,12 +83,93 @@ export default function VirtualCardActivationPage() {
         }
     };
 
-    if (!activeRequest) {
+    const history = requests || [];
+    const hasActiveRequest = activeRequest && ['INITIATED', 'PENDING_CHARGE', 'PENDING_PAYMENT', 'PENDING_APPROVAL'].includes(activeRequest.status);
+
+    if (history.length === 0) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
-                <div className="text-center animate-pulse">
-                    <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Checking available cards...</p>
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-20 h-20 bg-white rounded-3xl border border-slate-100 flex items-center justify-center text-slate-300 mb-6 shadow-sm">
+                    <CreditCard size={32} />
+                </div>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight mb-2">No Active Cards</h2>
+                <p className="text-xs font-medium text-slate-400 max-w-[240px] mx-auto leading-relaxed mb-8">
+                    You don't have any virtual card requests yet. Please contact an agent to start your activation.
+                </p>
+                <button 
+                    onClick={() => router.push('/customer')}
+                    className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+                >
+                    Back to Dashboard
+                </button>
+            </div>
+        );
+    }
+
+    // If there is no "actionable" request, show history
+    if (!hasActiveRequest) {
+        return (
+            <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
+                <div className="px-6 pt-12 pb-6 flex items-center justify-between sticky top-0 bg-slate-50/80 backdrop-blur-md z-50">
+                    <button onClick={() => router.back()} className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-600 shadow-sm"><ArrowLeft size={20} /></button>
+                    <h1 className="text-sm font-black uppercase tracking-widest text-slate-900">Card History</h1>
+                    <div className="w-10"></div>
+                </div>
+
+                <div className="px-6 max-w-md mx-auto space-y-6">
+                    <div className="bg-emerald-500 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16" />
+                        <div className="relative z-10">
+                            <h2 className="text-2xl font-black tracking-tight mb-1">Vault Status</h2>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-100 opacity-80">Payment & Activation Log</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        {history.map((req: any) => (
+                            <div key={req.id} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center",
+                                            req.status === 'ACTIVATED' ? "bg-emerald-50 text-emerald-600" : 
+                                            req.status === 'REJECTED' ? "bg-rose-50 text-rose-600" : "bg-blue-50 text-blue-600"
+                                        )}>
+                                            <CreditCard size={18} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Request ID</p>
+                                            <p className="text-sm font-black text-slate-900">#{req.id}</p>
+                                        </div>
+                                    </div>
+                                    <div className={cn(
+                                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                        req.status === 'ACTIVATED' ? "bg-emerald-500 text-white" : 
+                                        req.status === 'REJECTED' ? "bg-rose-500 text-white" : 
+                                        req.status === 'PENDING_APPROVAL' ? "bg-amber-500 text-white" : "bg-blue-500 text-white"
+                                    )}>
+                                        {req.status.replace('_', ' ')}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Date</p>
+                                        <p className="text-[10px] font-bold text-slate-900">{new Date(req.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Fee</p>
+                                        <p className="text-[10px] font-bold text-slate-900">₹{req.activation_charge || '999'}</p>
+                                    </div>
+                                </div>
+                                {req.rejection_reason && (
+                                    <div className="mt-4 p-3 bg-rose-50 rounded-2xl border border-rose-100">
+                                        <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest mb-1">Rejection Reason</p>
+                                        <p className="text-[10px] font-bold text-rose-600 leading-relaxed">{req.rejection_reason}</p>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );

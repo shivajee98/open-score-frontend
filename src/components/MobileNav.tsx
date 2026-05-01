@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Zap, User, LayoutDashboard, QrCode, Landmark, History } from 'lucide-react';
+import { Zap, User, LayoutDashboard, QrCode, Landmark, History, CreditCard } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 
@@ -108,6 +108,11 @@ export default function MobileNav() {
             </Link>
 
 
+
+            <Link href="/customer/vault-card" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${pathname.includes('/vault-card') ? activeClass : 'text-slate-400'}`}>
+                <CreditCard size={20} className={pathname.includes('/vault-card') ? 'scale-110' : ''} strokeWidth={2} />
+                <span className="text-[8px] font-black uppercase tracking-widest">Vault</span>
+            </Link>
 
             <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isProfile ? activeClass : 'text-slate-400'}`}>
                 <User size={20} className={isProfile ? 'scale-110' : ''} strokeWidth={isProfile ? 3 : 2} />
