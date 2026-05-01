@@ -25,6 +25,7 @@ export default function CustomerHome() {
     const { data: loans, isLoading: loansLoading, mutate: mutateLoans, isValidating: loansValidating } = useApi((user?.role === 'CUSTOMER' || user?.role === 'MERCHANT' || user?.role === 'STUDENT') ? '/loans' : null);
     const { data: vaultSetupData } = useApi('/vault/me');
     const { data: adminMessages, mutate: mutateAdminMessages } = useApi(user ? '/admin-messages' : null);
+    const { data: cardRequests } = useApi('/vault-cards/my-requests');
 
     // Sync SWR data to Zustand Store for persistent caching
     useEffect(() => { if (user) setUser(user); }, [user, setUser]);
@@ -185,6 +186,8 @@ export default function CustomerHome() {
     const activeLoan = loansList?.find((l: any) => l.status === 'DISBURSED' || l.status === 'OVERDUE');
     const hasActiveLoan = !!activeLoan;
     const loading = !activeUser && (userLoading || walletLoading);
+
+    const pendingCardRequest = cardRequests?.find((r: any) => r.status === 'INITIATED');
 
 
     // Fetch Cashback Settings
@@ -499,6 +502,28 @@ export default function CustomerHome() {
             )}
 
             <MerchantClaimModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} onSuccess={handleClaimSuccess} bonusAmount={merchantBonus} user={activeUser} />
+
+            {/* Virtual Card Available Notification */}
+            {pendingCardRequest && (
+                <div className="mx-4 mt-4 bg-gradient-to-r from-indigo-600 to-indigo-900 border border-white/20 rounded-3xl p-6 flex items-center justify-between shadow-2xl shadow-indigo-500/20 animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:rotate-12 transition-transform">
+                            <CreditCard size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[9px] font-black text-indigo-200 uppercase tracking-widest mb-1">Exclusive Opportunity</p>
+                            <h4 className="text-sm font-black text-white uppercase tracking-tight">Virtual Card Available</h4>
+                            <p className="text-[9px] font-bold text-indigo-100 uppercase tracking-tighter opacity-80">Click here to preview & activate now</p>
+                        </div>
+                    </div>
+                    <Link href="/customer/virtual-card">
+                        <button className="bg-white text-indigo-900 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:bg-indigo-50 transition-all active:scale-95 shadow-xl">
+                            Activate <ArrowRight size={14} />
+                        </button>
+                    </Link>
+                </div>
+            )}
 
             <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-3 items-end">
                 {activeUser?.sub_user_id && (

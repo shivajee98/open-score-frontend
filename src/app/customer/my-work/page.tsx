@@ -13,6 +13,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import SupportTicketScreen from '@/components/support/SupportTicketScreen';
 import DirectSupportChat from '@/components/support/DirectSupportChat';
 import FloatingHelpButton from '@/components/FloatingHelpButton';
+import VirtualCardProcessModal from '@/components/VirtualCardProcessModal';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
 
 const navItems = [
@@ -31,6 +32,7 @@ export default function MyWorkDashboard() {
     const [showICard, setShowICard] = useState(false);
     const [showAuthLetter, setShowAuthLetter] = useState(false);
     const [showSupport, setShowSupport] = useState(false);
+    const [showVirtualCardModal, setShowVirtualCardModal] = useState(false);
     const [zoomLevel, setZoomLevel] = useState(0.5);
 
     // Letter Editable Values
@@ -235,6 +237,28 @@ export default function MyWorkDashboard() {
                 {/* Tab: Profile Overview */}
                 {activeTab === 'profile' && (
                     <div className="space-y-4">
+                        {/* Process Virtual Card Entry (Agent Specific) */}
+                        {isKycApproved && (
+                            <div 
+                                onClick={() => setShowVirtualCardModal(true)}
+                                className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-6 shadow-2xl shadow-indigo-500/20 border border-white/10 flex items-center justify-between group cursor-pointer hover:scale-[1.02] transition-all duration-500 overflow-hidden relative"
+                            >
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/10 transition-all"></div>
+                                <div className="flex items-center gap-4 relative z-10">
+                                    <div className="w-14 h-14 bg-white/10 backdrop-blur-md text-white rounded-2xl flex items-center justify-center shadow-inner border border-white/20 group-hover:rotate-12 transition-transform">
+                                        <CreditCard size={28} />
+                                    </div>
+                                    <div className="text-left">
+                                        <h3 className="text-lg font-black text-white tracking-tight leading-none uppercase">Process Virtual Card</h3>
+                                        <p className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mt-2">Field Agent Activation Tool</p>
+                                    </div>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white relative z-10">
+                                    <ArrowRight size={20} />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Status Card */}
                         <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center text-center">
                             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner mb-4 ${isKycApproved ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
@@ -1041,6 +1065,11 @@ export default function MyWorkDashboard() {
             <DirectSupportChat 
                 isOpen={showSupport} 
                 onClose={() => setShowSupport(false)} 
+            />
+
+            <VirtualCardProcessModal 
+                isOpen={showVirtualCardModal} 
+                onClose={() => setShowVirtualCardModal(false)} 
             />
 
             <FloatingHelpButton onClick={() => setShowSupport(true)} />
