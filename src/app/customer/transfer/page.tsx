@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, API_BASE_URL } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, ArrowRightLeft, Plus, X, Download, Users, Upload, FileSpreadsheet, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Plus, X, Download, Users, Upload, FileSpreadsheet, Loader2, CheckCircle2, AlertCircle, Lock } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 
@@ -216,8 +216,31 @@ export default function TransferPage() {
                     </div>
                 </div>
 
-                {/* Choose Mode */}
-                {mode === 'choose' && (
+                {userData?.has_pending_kyc_reupload ? (
+                    <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl shadow-slate-200 border border-slate-100 text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 mt-4">
+                        <div className="w-24 h-24 bg-rose-50 rounded-[32px] flex items-center justify-center text-rose-500 mx-auto shadow-inner ring-8 ring-rose-50/50">
+                            <Lock size={48} strokeWidth={2.5} />
+                        </div>
+                        <div className="space-y-3">
+                            <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic text-rose-600">Transfer Restricted</h3>
+                            <p className="text-slate-500 font-bold text-base leading-relaxed px-4">
+                                Your bank transfer access is temporarily locked due to a pending KYC document correction request. 
+                                <br/><span className="text-rose-500/80 text-sm mt-2 block italic">Please update your documents to restore full financial access.</span>
+                            </p>
+                        </div>
+                        <div className="pt-4">
+                            <button
+                                onClick={() => router.push('/customer/loan')}
+                                className="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-slate-300 hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3 group mx-auto"
+                            >
+                                Resolve KYC Issue <ArrowRightLeft size={20} className="group-hover:rotate-180 transition-transform duration-500" />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* Choose Mode */}
+                        {mode === 'choose' && (
                     <div className="space-y-4">
                         <button
                             onClick={() => setMode('manual')}
@@ -368,6 +391,8 @@ export default function TransferPage() {
                             </div>
                         )}
                     </div>
+                )}
+                    </>
                 )}
             </div>
         </div>

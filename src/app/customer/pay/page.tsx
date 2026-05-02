@@ -447,7 +447,25 @@ function CustomerPayPage() {
 
                 {error && <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold text-center border border-red-100">{error}</div>}
 
-                {(!user?.account_number || !user?.ifsc_code) ? (
+                {user?.has_pending_kyc_reupload ? (
+                    <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-slate-200 border border-slate-100 text-center space-y-6">
+                        <div className="w-20 h-20 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto shadow-inner">
+                            <Lock size={40} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 uppercase">Payment Restricted</h3>
+                            <p className="text-slate-500 font-medium text-sm leading-relaxed px-4">
+                                Your payment access is temporarily restricted due to a pending KYC document re-upload request. Please re-upload the required documents and wait for admin approval to restore access.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => router.push('/customer/loan')}
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                        >
+                            Complete KYC Re-upload <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                    </div>
+                ) : (!user?.account_number || !user?.ifsc_code) ? (
                     <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-slate-200 border border-slate-100 text-center space-y-6">
                         <div className="w-20 h-20 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto shadow-inner">
                             <Landmark size={40} />

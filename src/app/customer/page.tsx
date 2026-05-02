@@ -480,6 +480,7 @@ export default function CustomerHome() {
                 </div>
             )}
             
+            
             {/* Alternate Number Verification Banner */}
             {!activeUser?.is_debug && !activeUser?.has_verified_alternate_number && (
                 <div className="mx-4 mt-4 bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
@@ -948,7 +949,7 @@ export default function CustomerHome() {
                             { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-amber-200', show: true },
                             { label: 'Repay', icon: <CreditCard size={20} strokeWidth={2.5} />, href: `/customer/loan/status/repayment?id=${activeLoan?.id}`, color: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-200', show: hasActiveLoan },
                         ].filter(item => item.show).map((item, i) => {
-                            const isDisabled = activeUser?.has_pending_reupload && (item.label === 'Scan QR' || item.label === 'Pay ID');
+                            const isDisabled = (activeUser?.has_pending_reupload || activeUser?.has_pending_kyc_reupload) && (item.label === 'Scan QR' || item.label === 'Pay ID' || item.label === 'Show QR');
                             
                             return (
                                 <div 
@@ -984,6 +985,36 @@ export default function CustomerHome() {
                     </div>
                 </div>
             </div>
+
+            {/* KYC Document Re-upload Blocker */}
+            {activeUser?.has_pending_kyc_reupload && (
+                <div className="px-4 mb-4">
+                    <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 shadow-lg shadow-rose-500/5 animate-in fade-in slide-in-from-bottom-4 duration-500 border-l-4 border-l-rose-500 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-rose-200/10 rounded-full blur-2xl -mr-12 -mt-12"></div>
+                        
+                        <div className="flex items-center justify-between gap-4 relative z-10">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20 group-hover:scale-105 transition-transform">
+                                    <Lock size={22} strokeWidth={2.5} />
+                                </div>
+                                <div className="space-y-0.5">
+                                    <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest leading-none mb-1">Account Restricted</p>
+                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">KYC Action Required</h4>
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter opacity-80 italic">
+                                        Payments currently locked
+                                    </p>
+                                </div>
+                            </div>
+                            <Link href="/customer/loan" className="shrink-0">
+                                <button className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 group/btn">
+                                    FIX KYC <ArrowRight size={14} strokeWidth={3} className="group-hover/btn:translate-x-1 transition-transform" />
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
 
             {activeVaultRequest && (
                 <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -1041,7 +1072,7 @@ export default function CustomerHome() {
             )}
 
             {/* Marketing Banner - Get Needs Done */}
-            <div className="px-1 mb-1">
+            <div className={`px-1 mb-1 ${activeUser?.has_pending_reupload || activeUser?.has_pending_kyc_reupload ? 'opacity-30 grayscale cursor-not-allowed pointer-events-none' : ''}`}>
                 <div onClick={() => router.push('/customer/pay?scan=true')} className="cursor-pointer group">
                     <div className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 p-0.5 rounded-2xl shadow-xl shadow-amber-500/20 active:scale-[0.98] transition-transform">
                         <div className="bg-slate-900 rounded-[0.9rem] px-4 py-1 relative overflow-hidden">

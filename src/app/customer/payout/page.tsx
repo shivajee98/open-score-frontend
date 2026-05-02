@@ -619,8 +619,31 @@ export default function PayoutPage() {
                     </div>
                 </div>
 
-                {/* Main Card */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                {user?.has_pending_kyc_reupload ? (
+                    <div className="bg-white rounded-[40px] p-12 shadow-2xl shadow-slate-200 border border-slate-100 text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        <div className="w-24 h-24 bg-rose-50 rounded-[32px] flex items-center justify-center text-rose-500 mx-auto shadow-inner ring-8 ring-rose-50/50">
+                            <Lock size={48} strokeWidth={2.5} />
+                        </div>
+                        <div className="space-y-3">
+                            <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Payout Restricted</h3>
+                            <p className="text-slate-500 font-bold text-base leading-relaxed px-8">
+                                Your bank settlement access is temporarily locked due to a pending KYC document correction request. 
+                                <br/><span className="text-rose-500/80 text-sm mt-2 block">Please update your documents to restore full financial access.</span>
+                            </p>
+                        </div>
+                        <div className="pt-4">
+                            <button
+                                onClick={() => router.push('/customer/loan')}
+                                className="w-full max-w-sm py-5 bg-slate-900 text-white rounded-[24px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-slate-300 hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-3 group mx-auto"
+                            >
+                                Complete Re-upload <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* Main Card */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     {/* Input Side */}
                     <div className="space-y-4">
                         {/* Vault Card — 3D Flip & Privacy Toggles */}
@@ -1304,8 +1327,9 @@ export default function PayoutPage() {
                             </div>
                         )}
                     </div>
-                </div>
-            </div >
+                    </div>
+                </>
+            )}
             {/* Amount Input Modal */}
             {
                 isTransferModalOpen && (
@@ -1754,6 +1778,7 @@ export default function PayoutPage() {
                     </div>
                 </div>
             )}
+            </div>
         </div>
     );
 }

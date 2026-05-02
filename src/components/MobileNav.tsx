@@ -73,6 +73,7 @@ export default function MobileNav() {
     if (!['admin', 'merchant', 'customer'].includes(baseRole)) return null;
 
     const isMerchant = user?.role === 'MERCHANT';
+    const isRestricted = !!(user?.has_pending_kyc_reupload || user?.has_pending_reupload);
 
     // Helper: active class
     const activeClass = isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50';
@@ -97,22 +98,23 @@ export default function MobileNav() {
                 <span className="text-[8px] font-black uppercase tracking-widest">Loans</span>
             </Link>
 
-            <Link href="/customer/qr" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isQR ? activeClass : 'text-slate-400'}`}>
+            <Link href={isRestricted ? '#' : "/customer/qr"} prefetch={false} 
+                className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isRestricted ? 'opacity-30 grayscale cursor-not-allowed' : (isQR ? activeClass : 'text-slate-400')}`}
+                onClick={(e) => { if (isRestricted) { e.preventDefault(); } }}
+            >
                 <QrCode size={20} className={isQR ? 'scale-110' : ''} strokeWidth={2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">My QR</span>
             </Link>
 
-            <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isCredOut ? activeClass : 'text-slate-400'}`}>
+            <Link href={isRestricted ? '#' : "/customer/payout"} prefetch={false} 
+                className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isRestricted ? 'opacity-30 grayscale cursor-not-allowed' : (isCredOut ? activeClass : 'text-slate-400')}`}
+                onClick={(e) => { if (isRestricted) { e.preventDefault(); } }}
+            >
                 <Landmark size={20} className={isCredOut ? 'scale-110' : ''} strokeWidth={2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">Cred-Out</span>
             </Link>
 
 
-
-            <Link href="/customer/vault-card" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${pathname.includes('/vault-card') ? activeClass : 'text-slate-400'}`}>
-                <CreditCard size={20} className={pathname.includes('/vault-card') ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Vault</span>
-            </Link>
 
             <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isProfile ? activeClass : 'text-slate-400'}`}>
                 <User size={20} className={isProfile ? 'scale-110' : ''} strokeWidth={isProfile ? 3 : 2} />
