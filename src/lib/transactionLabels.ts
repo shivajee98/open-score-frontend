@@ -19,6 +19,7 @@ export function getTransactionLabel(tx: any): string {
     if (srcType === 'CASHBACK_REFUND') return 'Cashback Credited';
     if (srcType === 'WITHDRAWAL_REFUND') return 'Amount Revert';
     if (srcType === 'WITHDRAWAL_REQUEST') return 'Withdrawal';
+    if (srcType === 'AUDIT_CORRECTION') return 'Amount Reversal';
 
     if (desc.includes('cashback')) return 'Cashback Reward';
 
@@ -91,6 +92,7 @@ export function getTransactionSubtitle(tx: any): string {
         if (srcType === 'MAINTENANCE_CHARGE') return 'Administrative';
         if (srcType === 'PLATFORM_FEE') return 'System Fee';
         
+        if (srcType === 'AUDIT_CORRECTION') return 'Wallet Recovery';
         if (tx.type === 'DEBIT') return 'Withdrawal';
         return 'Increment Value';
     }

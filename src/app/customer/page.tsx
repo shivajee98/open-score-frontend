@@ -244,7 +244,7 @@ export default function CustomerHome() {
         const now = new Date().getTime();
         const isWithin24Hours = now - launchTime < 24 * 60 * 60 * 1000;
         const isDismissed = localStorage.getItem('loan_banner_dismissed_15k') === 'true';
-        
+
         if (isWithin24Hours && !isDismissed) {
             setShowLoanBanner(true);
         }
@@ -331,16 +331,16 @@ export default function CustomerHome() {
         dismissVaultSetupPopup();
         router.push('/customer/payout');
     };
- 
+
     if (activeUser?.status === 'SUSPENDED' || (userError as any)?.code === 'ACCOUNT_SUSPENDED') {
         return (
             <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
                 <div className="w-24 h-24 bg-rose-50 rounded-[2.5rem] flex items-center justify-center text-rose-500 mb-10 shadow-2xl shadow-rose-500/10 border border-rose-100/50">
                     <ShieldCheck size={48} strokeWidth={1.5} />
                 </div>
-                
+
                 <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-6 uppercase">Access Restricted</h1>
-                
+
                 <div className="max-w-md bg-slate-50 border border-slate-100 p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 mb-10">
                     <p className="text-slate-600 font-bold leading-relaxed mb-8 italic">
                         "Your account has been suspended following a review of your recent onboarding/KYC process."
@@ -351,13 +351,13 @@ export default function CustomerHome() {
                 </div>
 
                 <div className="flex flex-col gap-5 w-full max-w-xs">
-                    <button 
+                    <button
                         onClick={() => window.location.href = 'https://wa.me/910000000000'}
                         className="w-full bg-slate-900 text-white font-black text-xs uppercase tracking-[0.25em] py-6 rounded-2xl shadow-2xl hover:scale-[1.02] active:scale-95 transition-all"
                     >
                         Contact Support Team
                     </button>
-                    <button 
+                    <button
                         onClick={async () => {
                             await clearAuthState();
                             window.location.replace('/');
@@ -412,7 +412,7 @@ export default function CustomerHome() {
                             New Loan of 15,000 Launched! <span className="ml-1 opacity-80">🚀 Apply Now</span>
                         </p>
                     </div>
-                    <button 
+                    <button
                         onClick={dismissLoanBanner}
                         className="p-1 hover:bg-white/10 rounded-md transition-colors"
                     >
@@ -458,7 +458,7 @@ export default function CustomerHome() {
                 </div>
             )}
             <HomeBannerCarousel isOpen={showPromotionalBanner} onClose={() => setShowPromotionalBanner(false)} />
-            
+
             {/* Payment Proof Re-upload Blocker */}
             {activeUser?.has_pending_reupload && (
                 <div className="mx-4 mt-4 bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-amber-500/10 animate-in fade-in slide-in-from-top-4 duration-500 border-l-4 border-l-amber-500">
@@ -479,8 +479,8 @@ export default function CustomerHome() {
                     </Link>
                 </div>
             )}
-            
-            
+
+
             {/* Alternate Number Verification Banner */}
             {!activeUser?.is_debug && !activeUser?.has_verified_alternate_number && (
                 <div className="mx-4 mt-4 bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
@@ -567,7 +567,7 @@ export default function CustomerHome() {
                                     <span className="text-[9px] font-black uppercase tracking-wider">Incremental Value</span>
                                 </div>
                                 <span className="text-sm font-black text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
-                                     {showBalance ? Number(activeWallet?.cashback_balance || 0).toLocaleString() : '••••••'}
+                                    {showBalance ? Number(activeWallet?.cashback_balance || 0).toLocaleString() : '••••••'}
                                 </span>
                             </div>
                         )}
@@ -655,12 +655,27 @@ export default function CustomerHome() {
                                 </div>
                                 <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
                                     <p className={`${isVaultEnabledByAdmin ? 'text-[15px]' : 'text-[18px]'} font-black text-white tracking-tighter drop-shadow-sm truncate`}>
-                                         {showBalance ? Number(balance).toLocaleString() : '••••••'}
+                                        {showBalance ? Number(balance).toLocaleString() : '••••••'}
                                     </p>
                                     {Number(lockedBalance) > 0 && showBalance && (
                                         <div onClick={() => toast.info("Funds are locked.")} className="flex items-center gap-1 bg-black/20 px-1 py-0.5 rounded-sm border border-white/10 shrink-0 cursor-pointer">
                                             <Lock size={8} className="text-yellow-400" />
                                             <span className="text-[8px] font-black text-white tracking-tight">{Number(lockedBalance).toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                    {Number(activeWallet?.held_balance) > 0 && showBalance && (
+                                        <div 
+                                            onClick={() => router.push('/customer/transactions')}
+                                            className="flex flex-col gap-0.5 bg-blue-600/20 px-2 py-1 rounded-lg border border-blue-400/30 shrink-0 cursor-pointer hover:bg-blue-600/30 transition-all active:scale-95 group/held"
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                <Clock size={8} className="text-blue-300" />
+                                                <span className="text-[7px] font-black text-blue-200 uppercase tracking-tighter">Amount Reversal</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-0.5">
+                                                <span className="text-[10px] font-black text-white tracking-tighter">₹{Number(activeWallet.held_balance).toLocaleString()}</span>
+                                                <span className="text-[6px] font-bold text-blue-300/80 uppercase">Recovery</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -670,7 +685,7 @@ export default function CustomerHome() {
 
                     {/* Mini Vault Card */}
                     {isVaultEnabledByAdmin && (
-                        <div 
+                        <div
                             className="relative group w-full h-[60px] cursor-pointer active:scale-[0.98] transition-transform"
                             onClick={() => setIsBigVaultOpen(true)}
                         >
@@ -697,7 +712,7 @@ export default function CustomerHome() {
                                             <div className="flex items-baseline gap-0.5">
                                                 <span className="text-[8px] font-['Noto_Serif'] text-[#f9e37a]">₹</span>
                                                 <span className="text-[14px] font-black tracking-tighter text-[#fef9f3] truncate max-w-[60px]">
-                                                    {parseFloat(vaultSetupData?.vault?.balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                                                    {parseFloat(vaultSetupData?.vault?.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         </div>
@@ -715,7 +730,7 @@ export default function CustomerHome() {
 
                 {/* BIG VAULT OVERLAY MODAL */}
                 {isVaultEnabledByAdmin && (
-                    <div 
+                    <div
                         className={`fixed inset-0 z-[200] flex items-center justify-center transition-all duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)] ${isBigVaultOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                         onClick={() => setIsBigVaultOpen(false)}
                     >
@@ -724,16 +739,16 @@ export default function CustomerHome() {
 
                         {/* Animated 3D Card Container */}
                         <div className="relative w-full max-w-[340px] px-4 perspective-[2000px] h-[191px]">
-                            <div 
+                            <div
                                 className={`w-full h-full transition-all duration-[1000ms] ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer
-                                  ${isBigVaultOpen 
-                                    ? 'opacity-100 [transform:translateY(0)_scale(1)_rotateY(360deg)]'
-                                    : 'opacity-0 [transform:translateY(20vh)_scale(0.5)_rotateY(0deg)]'
-                                  }`}
+                                  ${isBigVaultOpen
+                                        ? 'opacity-100 [transform:translateY(0)_scale(1)_rotateY(360deg)]'
+                                        : 'opacity-0 [transform:translateY(20vh)_scale(0.5)_rotateY(0deg)]'
+                                    }`}
                                 onClick={(e) => { e.stopPropagation(); setIsVaultFlipped(!isVaultFlipped); }}
                             >
                                 {/* Close Button above card */}
-                                <button 
+                                <button
                                     className={`absolute -top-12 right-0 w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all duration-700 ${isBigVaultOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                                     onClick={(e) => { e.stopPropagation(); setIsBigVaultOpen(false); }}
                                 >
@@ -741,139 +756,139 @@ export default function CustomerHome() {
                                 </button>
 
                                 <div className={`relative w-full h-full transition-transform duration-[800ms] preserve-3d ease-[cubic-bezier(0.23,1,0.32,1)] ${isVaultFlipped ? 'rotate-y-180' : ''}`}>
-                                    
+
                                     {/* FRONT SIDE */}
                                     <div className="absolute inset-0 backface-hidden">
-                                    <div className="bg-[#121417] rounded-xl px-4 py-3.5 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-between group">
-                                        {/* Matte Finish & Grain */}
-                                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                                        <div className="bg-[#121417] rounded-xl px-4 py-3.5 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-between group">
+                                            {/* Matte Finish & Grain */}
+                                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
                                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}>
-                                        </div>
-                                        <div className="absolute inset-0 opacity-5 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
-
-                                        <div className="relative z-10 flex flex-col h-full justify-between">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-4 h-4 bg-gradient-to-br from-[#f9e37a] to-[#a8924a] rounded-sm flex items-center justify-center text-[#121417] font-black text-[8px] shadow-sm transform -rotate-6 group-hover:rotate-0 transition-transform">OS</div>
-                                                        <span className="text-[9px] font-['Noto_Serif'] italic tracking-[0.2em] text-[#f9e37a]">VAULT</span>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                                    <button 
-                                                        onClick={() => router.push('/customer/payout?deposit=true')}
-                                                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
-                                                        title="Deposit to Vault"
-                                                    >
-                                                        <ArrowDownToLine size={10} className="text-[#f9e37a]" />
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => router.push('/customer/payout?withdraw=true')}
-                                                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
-                                                        title="Withdraw from Vault"
-                                                    >
-                                                        <ArrowUpFromLine size={10} className="text-[#f9e37a]" />
-                                                    </button>
-                                                </div>
                                             </div>
+                                            <div className="absolute inset-0 opacity-5 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
 
-                                            {/* Card Number with Hide Toggle */}
-                                            <div className="py-2 flex items-center justify-center gap-3 group/number" onClick={(e) => e.stopPropagation()}>
-                                                <p className="font-mono text-[13px] tracking-[0.25em] text-white/80 text-center pl-4">
-                                                    {showVaultCardNumber 
-                                                        ? vaultSetupData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim() 
-                                                        : '••••  ••••  ••••  ' + vaultSetupData.vault.card_number?.slice(-4)}
-                                                </p>
-                                                <button 
-                                                    onClick={() => setShowVaultCardNumber(!showVaultCardNumber)}
-                                                    className="p-1 hover:bg-white/10 rounded-md transition-all opacity-0 group-hover/number:opacity-100"
-                                                >
-                                                    <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-white/30'} />
-                                                </button>
-                                            </div>
+                                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-4 h-4 bg-gradient-to-br from-[#f9e37a] to-[#a8924a] rounded-sm flex items-center justify-center text-[#121417] font-black text-[8px] shadow-sm transform -rotate-6 group-hover:rotate-0 transition-transform">OS</div>
+                                                            <span className="text-[9px] font-['Noto_Serif'] italic tracking-[0.2em] text-[#f9e37a]">VAULT</span>
+                                                        </div>
+                                                    </div>
 
-                                            <div className="flex items-end justify-between border-t border-white/[0.03] pt-2 pb-0.5">
-                                                <div>
-                                                    <span className="text-[6px] font-bold uppercase tracking-widest text-[#a8924a] block opacity-60 mb-0.5">Asset Value</span>
-                                                    <div className="flex items-baseline gap-1">
-                                                        <span className="text-[10px] font-['Noto_Serif'] text-[#f9e37a]">₹</span>
-                                                        <span className="text-lg font-black tracking-tighter text-[#fef9f3]">
-                                                            {parseFloat(vaultSetupData.vault.balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
-                                                        </span>
+                                                    <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                                        <button
+                                                            onClick={() => router.push('/customer/payout?deposit=true')}
+                                                            className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
+                                                            title="Deposit to Vault"
+                                                        >
+                                                            <ArrowDownToLine size={10} className="text-[#f9e37a]" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => router.push('/customer/payout?withdraw=true')}
+                                                            className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
+                                                            title="Withdraw from Vault"
+                                                        >
+                                                            <ArrowUpFromLine size={10} className="text-[#f9e37a]" />
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                
-                                                <div className="flex gap-4 text-[8px] font-mono text-white/30 mb-0.5" onClick={(e) => e.stopPropagation()}>
-                                                    <div className="text-right border-r border-white/5 pr-3 flex flex-col items-end group/exp">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="block text-[5px] uppercase tracking-widest text-[#a8924a] opacity-60">Valid Thru</span>
-                                                            <button onClick={() => setShowVaultExpiry(!showVaultExpiry)} className="opacity-0 group-hover/exp:opacity-100 transition-opacity">
-                                                                <Eye size={8} />
-                                                            </button>
+
+                                                {/* Card Number with Hide Toggle */}
+                                                <div className="py-2 flex items-center justify-center gap-3 group/number" onClick={(e) => e.stopPropagation()}>
+                                                    <p className="font-mono text-[13px] tracking-[0.25em] text-white/80 text-center pl-4">
+                                                        {showVaultCardNumber
+                                                            ? vaultSetupData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()
+                                                            : '••••  ••••  ••••  ' + vaultSetupData.vault.card_number?.slice(-4)}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => setShowVaultCardNumber(!showVaultCardNumber)}
+                                                        className="p-1 hover:bg-white/10 rounded-md transition-all opacity-0 group-hover/number:opacity-100"
+                                                    >
+                                                        <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-white/30'} />
+                                                    </button>
+                                                </div>
+
+                                                <div className="flex items-end justify-between border-t border-white/[0.03] pt-2 pb-0.5">
+                                                    <div>
+                                                        <span className="text-[6px] font-bold uppercase tracking-widest text-[#a8924a] block opacity-60 mb-0.5">Asset Value</span>
+                                                        <div className="flex items-baseline gap-1">
+                                                            <span className="text-[10px] font-['Noto_Serif'] text-[#f9e37a]">₹</span>
+                                                            <span className="text-lg font-black tracking-tighter text-[#fef9f3]">
+                                                                {parseFloat(vaultSetupData.vault.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                                            </span>
                                                         </div>
-                                                        <span className="text-white/50">{showVaultExpiry ? (vaultSetupData.vault.expiry_date || '—') : '••/••'}</span>
                                                     </div>
-                                                    <div className="text-right flex flex-col items-end group/cvc">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="block text-[5px] uppercase tracking-widest text-[#a8924a] opacity-60">Secure</span>
-                                                            <button onClick={() => setShowVaultCvc(!showVaultCvc)} className="opacity-0 group-hover/cvc:opacity-100 transition-opacity">
-                                                                <Eye size={8} />
-                                                            </button>
+
+                                                    <div className="flex gap-4 text-[8px] font-mono text-white/30 mb-0.5" onClick={(e) => e.stopPropagation()}>
+                                                        <div className="text-right border-r border-white/5 pr-3 flex flex-col items-end group/exp">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="block text-[5px] uppercase tracking-widest text-[#a8924a] opacity-60">Valid Thru</span>
+                                                                <button onClick={() => setShowVaultExpiry(!showVaultExpiry)} className="opacity-0 group-hover/exp:opacity-100 transition-opacity">
+                                                                    <Eye size={8} />
+                                                                </button>
+                                                            </div>
+                                                            <span className="text-white/50">{showVaultExpiry ? (vaultSetupData.vault.expiry_date || '—') : '••/••'}</span>
                                                         </div>
-                                                        <span className="text-white/50">{showVaultCvc ? (vaultSetupData.vault.cvc || '•••') : '•••'}</span>
+                                                        <div className="text-right flex flex-col items-end group/cvc">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="block text-[5px] uppercase tracking-widest text-[#a8924a] opacity-60">Secure</span>
+                                                                <button onClick={() => setShowVaultCvc(!showVaultCvc)} className="opacity-0 group-hover/cvc:opacity-100 transition-opacity">
+                                                                    <Eye size={8} />
+                                                                </button>
+                                                            </div>
+                                                            <span className="text-white/50">{showVaultCvc ? (vaultSetupData.vault.cvc || '•••') : '•••'}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* BACK SIDE — Yield Matrix */}
-                                <div className="absolute inset-0 backface-hidden rotate-y-180">
-                                    <div className="bg-[#121417] rounded-xl text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col group">
-                                        {/* Black Magnetic Strip */}
-                                        <div className="w-full h-8 bg-[#000] mt-5 shadow-inner" />
-                                        
-                                        <div className="px-5 py-4 flex-1 flex flex-col">
-                                            <div className="flex justify-between items-center mb-3">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[8px] font-black tracking-[0.2em] text-[#f9e37a] uppercase leading-none">Yield Matrix</span>
-                                                    <span className="text-[5px] font-black tracking-[0.4em] text-white/20 uppercase mt-1">Cycle Intelligence</span>
-                                                </div>
-                                                <div className="flex items-center gap-1 opacity-20">
-                                                    <Lock size={10} />
-                                                    <span className="text-[6px] font-black uppercase tracking-widest">ENCRYPTED</span>
-                                                </div>
-                                            </div>
+                                    {/* BACK SIDE — Yield Matrix */}
+                                    <div className="absolute inset-0 backface-hidden rotate-y-180">
+                                        <div className="bg-[#121417] rounded-xl text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col group">
+                                            {/* Black Magnetic Strip */}
+                                            <div className="w-full h-8 bg-[#000] mt-5 shadow-inner" />
 
-                                            {/* Internal Rates Grid */}
-                                            <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto scrollbar-hide py-1" onClick={(e) => e.stopPropagation()}>
-                                                {vaultSetupData.rates?.map((r: any) => (
-                                                    <div key={r.id} className="bg-white/[0.03] border border-white/[0.04] p-2 rounded-lg flex flex-col justify-center hover:bg-white/[0.07] transition-all">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="text-[6px] font-black text-white/40 uppercase tracking-widest">{r.tenure_days}D</span>
-                                                            <TrendingUp size={8} className="text-emerald-500/40" />
-                                                        </div>
-                                                        <span className="text-sm font-black text-[#f9e37a] leading-none">{r.interest_rate}%</span>
-                                                        <span className="text-[5px] font-bold text-white/20 uppercase mt-1 tracking-tighter">Annual Yield</span>
+                                            <div className="px-5 py-4 flex-1 flex flex-col">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[8px] font-black tracking-[0.2em] text-[#f9e37a] uppercase leading-none">Yield Matrix</span>
+                                                        <span className="text-[5px] font-black tracking-[0.4em] text-white/20 uppercase mt-1">Cycle Intelligence</span>
                                                     </div>
-                                                ))}
-                                            </div>
+                                                    <div className="flex items-center gap-1 opacity-20">
+                                                        <Lock size={10} />
+                                                        <span className="text-[6px] font-black uppercase tracking-widest">ENCRYPTED</span>
+                                                    </div>
+                                                </div>
 
-                                            <div className="mt-2 flex items-center justify-between border-t border-white/[0.03] pt-2">
-                                                <div className="flex gap-[1px] h-3 items-end opacity-20">
-                                                    {[1,3,1,5,2,4,1,6,2,3,1,7,4,1].map((w, i) => (
-                                                        <div key={i} className="bg-white" style={{ width: `${w}px`, height: '100%' }} />
+                                                {/* Internal Rates Grid */}
+                                                <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto scrollbar-hide py-1" onClick={(e) => e.stopPropagation()}>
+                                                    {vaultSetupData.rates?.map((r: any) => (
+                                                        <div key={r.id} className="bg-white/[0.03] border border-white/[0.04] p-2 rounded-lg flex flex-col justify-center hover:bg-white/[0.07] transition-all">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <span className="text-[6px] font-black text-white/40 uppercase tracking-widest">{r.tenure_days}D</span>
+                                                                <TrendingUp size={8} className="text-emerald-500/40" />
+                                                            </div>
+                                                            <span className="text-sm font-black text-[#f9e37a] leading-none">{r.interest_rate}%</span>
+                                                            <span className="text-[5px] font-bold text-white/20 uppercase mt-1 tracking-tighter">Annual Yield</span>
+                                                        </div>
                                                     ))}
                                                 </div>
-                                                <span className="text-[6px] font-serif italic text-white/10 uppercase tracking-widest">OPEN SCORE BRANDED ASSET</span>
+
+                                                <div className="mt-2 flex items-center justify-between border-t border-white/[0.03] pt-2">
+                                                    <div className="flex gap-[1px] h-3 items-end opacity-20">
+                                                        {[1, 3, 1, 5, 2, 4, 1, 6, 2, 3, 1, 7, 4, 1].map((w, i) => (
+                                                            <div key={i} className="bg-white" style={{ width: `${w}px`, height: '100%' }} />
+                                                        ))}
+                                                    </div>
+                                                    <span className="text-[6px] font-serif italic text-white/10 uppercase tracking-widest">OPEN SCORE BRANDED ASSET</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
                         </div>
                     </div>
                 )}
@@ -931,8 +946,8 @@ export default function CustomerHome() {
                         {[
                             { label: 'Scan QR', icon: <ScanBarcode size={20} strokeWidth={2.5} />, href: '/customer/pay?scan=true', color: 'bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-rose-200', show: true },
                             { label: 'Pay ID', icon: <Send size={20} strokeWidth={2.5} />, href: '/customer/pay', color: 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-indigo-200', show: true },
-                            { 
-                                label: 'Inbox', 
+                            {
+                                label: 'Inbox',
                                 icon: (
                                     <div className="relative">
                                         <MessageSquare size={20} strokeWidth={2.5} />
@@ -940,20 +955,20 @@ export default function CustomerHome() {
                                             <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full animate-bounce" />
                                         )}
                                     </div>
-                                ), 
-                                href: '#', 
-                                color: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-purple-200', 
-                                show: allAdminMessages.length > 0, 
-                                onClick: () => setShowAdminMessageHistory(true) 
+                                ),
+                                href: '#',
+                                color: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-purple-200',
+                                show: allAdminMessages.length > 0,
+                                onClick: () => setShowAdminMessageHistory(true)
                             },
                             { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-amber-200', show: true },
                             { label: 'Repay', icon: <CreditCard size={20} strokeWidth={2.5} />, href: `/customer/loan/status/repayment?id=${activeLoan?.id}`, color: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-200', show: hasActiveLoan },
                         ].filter(item => item.show).map((item, i) => {
                             const isDisabled = (activeUser?.has_pending_reupload || activeUser?.has_pending_kyc_reupload) && (item.label === 'Scan QR' || item.label === 'Pay ID' || item.label === 'Show QR');
-                            
+
                             return (
-                                <div 
-                                    key={i} 
+                                <div
+                                    key={i}
                                     className={cn(
                                         "flex flex-col items-center gap-1 transition-all active:scale-95",
                                         isDisabled ? "opacity-50 grayscale cursor-not-allowed" : "cursor-pointer"
@@ -966,9 +981,9 @@ export default function CustomerHome() {
                                         item.onClick?.();
                                     }}
                                 >
-                                    <Link 
-                                        href={isDisabled ? '#' : item.href} 
-                                        prefetch={false} 
+                                    <Link
+                                        href={isDisabled ? '#' : item.href}
+                                        prefetch={false}
                                         className={cn("contents", isDisabled && "pointer-events-none")}
                                     >
                                         <div className={cn(
@@ -991,7 +1006,7 @@ export default function CustomerHome() {
                 <div className="px-4 mb-4">
                     <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 shadow-lg shadow-rose-500/5 animate-in fade-in slide-in-from-bottom-4 duration-500 border-l-4 border-l-rose-500 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-rose-200/10 rounded-full blur-2xl -mr-12 -mt-12"></div>
-                        
+
                         <div className="flex items-center justify-between gap-4 relative z-10">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20 group-hover:scale-105 transition-transform">
@@ -1014,7 +1029,7 @@ export default function CustomerHome() {
                     </div>
                 </div>
             )}
-            
+
 
             {activeVaultRequest && (
                 <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -1029,7 +1044,7 @@ export default function CustomerHome() {
                                     <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
                                 </svg>
                             </div>
-                            
+
                             <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/20 rounded-full blur-[80px] -mr-24 -mt-24 group-hover:scale-125 transition-transform duration-1000"></div>
                             <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-[60px] -ml-16 -mb-16"></div>
 
@@ -1037,7 +1052,7 @@ export default function CustomerHome() {
                                 <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[2rem] flex items-center justify-center border border-white/20 mb-6 shadow-2xl group-hover:rotate-[360deg] transition-transform duration-1000">
                                     <Zap size={32} className="text-emerald-400 fill-emerald-400" />
                                 </div>
-                                
+
                                 <div className="space-y-1 mb-6">
                                     <span className="text-[10px] font-black text-emerald-300 uppercase tracking-[0.3em]">
                                         {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Verification in Progress' : 'Exclusive Asset Ready'}
@@ -1125,8 +1140,8 @@ export default function CustomerHome() {
                         <Link href={`/customer/loan/status/view?id=${kycLoan.id}`} prefetch={false}>
                             <div className={cn(
                                 "py-3 px-4 rounded-2xl shadow-xl border-2 flex flex-col gap-2 group active:scale-[0.98] transition-all overflow-hidden relative",
-                                kycLoan.reupload_fields?.length > 0 
-                                    ? "bg-rose-50 border-rose-500 shadow-rose-900/10 ring-4 ring-rose-500/10" 
+                                kycLoan.reupload_fields?.length > 0
+                                    ? "bg-rose-50 border-rose-500 shadow-rose-900/10 ring-4 ring-rose-500/10"
                                     : "bg-yellow-400 border-white shadow-yellow-900/20"
                             )}>
                                 <div className="flex items-center justify-between relative z-10 w-full">
@@ -1355,11 +1370,11 @@ export default function CustomerHome() {
             {showAdminMessage && unreadAdminMessages.length > 0 && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowAdminMessage(false)} />
-                    
+
                     <div className="bg-white w-full max-w-[320px] rounded-[2rem] shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-500 border border-slate-100 italic-selection">
                         {/* Header - More Professional & Compact */}
                         <div className="bg-slate-900 p-6 text-white relative">
-                            <button 
+                            <button
                                 onClick={() => setShowAdminMessage(false)}
                                 className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors group"
                             >
@@ -1372,7 +1387,7 @@ export default function CustomerHome() {
                                 </div>
                                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-300">Correspondence</span>
                             </div>
-                            
+
                             <h3 className="text-lg font-black tracking-tight uppercase leading-none mt-2">
                                 {unreadAdminMessages[currentMsgIndex]?.title || 'New Notification'}
                             </h3>
@@ -1389,7 +1404,7 @@ export default function CustomerHome() {
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <div className="bg-slate-50 border border-slate-100 p-5 rounded-2xl mb-6 min-h-[120px] flex flex-col justify-center shadow-inner">
                                 <p className="text-[13px] font-medium text-slate-700 leading-relaxed uppercase italic text-center">
                                     {unreadAdminMessages[currentMsgIndex]?.message}
@@ -1412,14 +1427,14 @@ export default function CustomerHome() {
             {showAdminMessageHistory && (
                 <div className="fixed inset-0 z-[100] flex flex-col justify-end">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowAdminMessageHistory(false)} />
-                    
+
                     <div className="bg-white w-full rounded-t-[2.5rem] shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[85vh] animate-in slide-in-from-bottom duration-500 border-t border-slate-100">
                         <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
                             <div>
                                 <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Messages</h3>
                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Interaction History</p>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => setShowAdminMessageHistory(false)}
                                 className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-sm transition-all"
                             >

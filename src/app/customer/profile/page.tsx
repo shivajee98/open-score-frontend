@@ -1331,6 +1331,11 @@ export default function Profile() {
                                         ) : (
                                             <p className="text-base font-semibold text-slate-900">{user.daily_turnover || 'Not Set'}</p>
                                         )}
+                                        {user?.mobile_number === '6260028290' && (
+                                            <p className="text-[10px] font-black text-amber-600 uppercase tracking-tight mt-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 inline-block animate-pulse">
+                                                Daily limit downgrade is in process.
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
