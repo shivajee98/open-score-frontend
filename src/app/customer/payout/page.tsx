@@ -1586,7 +1586,7 @@ export default function PayoutPage() {
                                 className="py-3.5 bg-rose-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
                             >
                                 <AlertCircle size={14} />
-                                Confirm
+                                {withdrawalRule?.late_withdrawal_message || 'Confirm'}
                             </button>
                             <button
                                 onClick={() => setIsConfirmModalOpen(false)}
