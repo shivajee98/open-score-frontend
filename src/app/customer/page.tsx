@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare, ArrowDownToLine, ArrowUpFromLine, X, Clock, Upload } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare, ArrowDownToLine, ArrowUpFromLine, X, Clock, Upload, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ import HomeBannerCarousel from '@/components/HomeBannerCarousel';
 import { cn } from '@/lib/loanUtils';
 import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
 import MerchantLoanMilestone from '@/components/MerchantLoanMilestone';
+import OutgoingCallModal from '@/components/OutgoingCallModal';
 
 export default function CustomerHome() {
     const { user: cachedUser, wallet: cachedWallet, loans: cachedLoans, setUser, setWallet, setLoans } = useStore();
@@ -235,6 +236,9 @@ export default function CustomerHome() {
     const [showVaultCardNumber, setShowVaultCardNumber] = useState(false);
     const [showVaultExpiry, setShowVaultExpiry] = useState(false);
     const [showVaultCvc, setShowVaultCvc] = useState(false);
+
+    // Call Modal State
+    const [isCallModalOpen, setIsCallModalOpen] = useState(false);
 
     // New Loan Launch Banner State
     const [showLoanBanner, setShowLoanBanner] = useState(false);
@@ -612,6 +616,15 @@ export default function CustomerHome() {
                                     </button>
                                 </Link>
                             )}
+                            {activeUser?.can_make_calls && (
+                                <button
+                                    onClick={() => setIsCallModalOpen(true)}
+                                    className="w-6 h-6 rounded-lg bg-emerald-500 border border-emerald-400 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-emerald-600 font-black animate-pulse"
+                                    title="Call Support Agent"
+                                >
+                                    <Phone size={12} strokeWidth={2.5} />
+                                </button>
+                            )}
                             <Link href="/customer/support" prefetch={false}>
                                 <button
                                     className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"
@@ -623,6 +636,8 @@ export default function CustomerHome() {
                         </div>
                     </div>
                 </div>
+
+                <OutgoingCallModal isOpen={isCallModalOpen} onClose={() => setIsCallModalOpen(false)} userId={activeUser?.id || 0} />
 
                 {/* Balance and Vault Section */}
                 <div className={`relative group z-10 mx-auto max-w-sm mb-4 grid gap-2 ${isVaultEnabledByAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
