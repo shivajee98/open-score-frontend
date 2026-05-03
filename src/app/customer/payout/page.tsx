@@ -114,6 +114,7 @@ export default function PayoutPage() {
     const [lastRequestTime, setLastRequestTime] = useState<number | null>(null);
     const [isRefundInfoOpen, setIsRefundInfoOpen] = useState(false);
     const [isBenefitAlertOpen, setIsBenefitAlertOpen] = useState(false);
+    const [lateWithdrawalError, setLateWithdrawalError] = useState<string | null>(null);
 
     // Vault & Settlement modals
     const [isVaultDepositOpen, setIsVaultDepositOpen] = useState(false);
@@ -357,29 +358,13 @@ export default function PayoutPage() {
         const payoutAmount = parseFloat(amount);
         setShowWithdrawalLimits(true);
 
-        // Check absolute minimum
         if (payoutAmount < (withdrawalRule.min_charge_amount || 0)) {
             toast.error(`Min settlement: ${(withdrawalRule.min_charge_amount || 0).toLocaleString()}`);
             return;
         }
 
-        // High tier logic
-        const isHighTier = payoutAmount > (withdrawalRule.max_charge_amount || 0);
-        const isPaidRange = payoutAmount >= (withdrawalRule.min_charge_amount || 0) &&
-            payoutAmount <= (withdrawalRule.max_charge_amount || 0);
-
-        if (!isHighTier && !isPaidRange) {
-            toast.error(`Minimum payout is ${withdrawalRule.min_charge_amount}`);
-            return;
-        }
-
-        // Check limits
         if (withdrawalRule.max_withdrawal && payoutAmount > withdrawalRule.max_withdrawal) {
             toast.error(`Max: ${withdrawalRule.max_withdrawal.toLocaleString()}`);
-            return;
-        }
-        if (dailyTxnLimit && usedTxnsToday !== null && usedTxnsToday >= dailyTxnLimit) {
-            toast.error("Daily request limit reached");
             return;
         }
 
@@ -388,80 +373,39 @@ export default function PayoutPage() {
             return;
         }
 
-        if (accountNumber !== confirmAccountNumber) {
-            toast.error("Account numbers do not match");
-            return;
-        }
-
-
-        // 2. Fetch latest user data to check verification status
+        setIsProcessing(true);
         setIsSubmitting(true);
-        let currentMerchantUnverified = isMerchantUnverified;
+
         try {
-            const freshUser = await mutateUser();
-            if (freshUser) {
-                const freshVerifiedTime = Math.max(
-                    freshUser.field_verified_at ? new Date(freshUser.field_verified_at).getTime() : 0,
-                    freshUser.admin_verified_at ? new Date(freshUser.admin_verified_at).getTime() : 0
-                );
-                const fresh24hPassed = freshVerifiedTime > 0 && (freshUser.kyc_status === 'FULL_VERIFIED' || !!freshUser.admin_verified_at || (Date.now() - freshVerifiedTime > 24 * 60 * 60 * 1000));
-                const isFreshMerchantVerified = freshUser.role === 'MERCHANT' && freshUser.is_qr_mapped && freshUser.kyc_status === 'FULL_VERIFIED' && fresh24hPassed;
-                currentMerchantUnverified = freshUser.role === 'MERCHANT' && !isFreshMerchantVerified;
+            // Simulated delay for animation
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            if (withdrawalRule?.late_withdrawal_message) {
+                setIsProcessing(false);
+                setIsSubmitting(false);
+                setLateWithdrawalError(withdrawalRule.late_withdrawal_message);
+                return;
             }
-        } catch (e) {
-            console.error("Failed to refresh user status", e);
-        }
 
-        // 3. Verification Pending check
-        if (currentMerchantUnverified) {
-            setIsSubmitting(false);
-            setIsVerificationModalOpen(true);
-            return;
-        }
-
-        // 4. API Request Execution
-        setIsSubmitting(true);
-        setIsProcessing(true); // Start simulated processing UI
-
-        try {
-            // Start both API call and Timer in parallel
-            // We ensure at least 30 seconds of processing time for UX as requested
-            const minDelayPromise = new Promise(resolve => setTimeout(resolve, 30000));
-
-            const apiPromise = apiFetch('/wallet/request-withdrawal', {
+            const res = await apiFetch('/wallet/withdrawal-request', {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: payoutAmount,
                     bank_name: bankName,
                     account_number: accountNumber,
                     ifsc_code: ifscCode,
-                    account_holder_name: accountHolderName
+                    account_holder_name: accountHolderName,
+                    account_number_confirmation: confirmAccountNumber
                 })
             });
-
-            // Wait for both
-            const [_, apiResult] = await Promise.allSettled([minDelayPromise, apiPromise]);
-
-            if (apiResult.status === 'fulfilled') {
-                // Success
-                await Promise.all([mutateWallet(), mutateWithdrawals(), mutateRules()]); // Refresh balance, history and rules
-                setIsSuccess(true);
-                toast.success("Cred-out request submitted!");
-            } else {
-                // Failed - Check if it was because of restriction logic (simulated or real)
-                const error = apiResult.reason;
-                const errorMsg = error?.message || "";
-
-                if (errorMsg.toLowerCase().includes('limit') || errorMsg.toLowerCase().includes('unlock')) {
-                    toast.error(errorMsg || "Withdrawal restricted");
-                } else {
-                    toast.error(errorMsg || "Failed to submit request");
-                }
-            }
+            
+            await Promise.all([mutateWallet(), mutateWithdrawals(), mutateRules()]);
+            setIsSuccess(true);
+            toast.success("Cred-out request submitted!");
 
         } catch (e: any) {
             console.error(e);
-            toast.error("An unexpected error occurred");
+            toast.error(e.message || "An unexpected error occurred");
         } finally {
             setIsSubmitting(false);
             setIsProcessing(false);
@@ -1115,7 +1059,7 @@ export default function PayoutPage() {
                         <button
                             onClick={handlePayout}
                             disabled={isSubmitting || !amount || parseFloat(amount) < (withdrawalRule?.min_charge_amount || 0) || parseFloat(amount) > balance}
-                            className={`w-full py-4 ${isMerchant ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-black text-sm disabled:bg-slate-100 disabled:text-slate-300 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-slate-200 mt-2`}
+                            className={`w-full py-4 ${isMerchant ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-black text-sm disabled:bg-slate-100 disabled:text-slate-300 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-slate-200 mt-2 group`}
                         >
                             {isSubmitting ? (
                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1586,7 +1530,7 @@ export default function PayoutPage() {
                                 className="py-3.5 bg-rose-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2"
                             >
                                 <AlertCircle size={14} />
-                                {withdrawalRule?.late_withdrawal_message || 'Confirm'}
+                                Confirm
                             </button>
                             <button
                                 onClick={() => setIsConfirmModalOpen(false)}
@@ -1779,6 +1723,31 @@ export default function PayoutPage() {
                 </div>
             )}
             </div>
+
+            {/* Late Withdrawal Error Minimalist Dialogue */}
+            {lateWithdrawalError && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-[280px] rounded-2xl p-5 shadow-2xl shadow-slate-900/20 border border-slate-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex flex-col items-center text-center gap-3">
+                            <div className="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+                                <AlertCircle size={20} strokeWidth={2.5} />
+                            </div>
+                            <div className="space-y-1">
+                                <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">Request Could Not Be Completed</h4>
+                                <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+                                    {lateWithdrawalError}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setLateWithdrawalError(null)}
+                                className="mt-2 w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
+                            >
+                                Understood
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
