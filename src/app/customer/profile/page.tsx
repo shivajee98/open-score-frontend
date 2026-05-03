@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
-import { apiFetch, clearAuthState } from '@/lib/api';
+import { apiFetch, clearAuthState, getStorageUrl } from '@/lib/api';
 import { User, Mail, Briefcase, Phone, Smartphone, ArrowLeft, Shield, Edit2, Lock, Headphones, Bell, ArrowRight, LogOut, ShieldCheck, FileText, Lightbulb, HelpCircle, Share, Trophy, AlertTriangle, Camera, Image as ImageIcon, Plus, Info, Check, X, Clock, Landmark, Hash } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import PinModal from '@/components/PinModal';
@@ -1055,8 +1055,8 @@ export default function Profile() {
                                         <p className="text-[10px] font-bold uppercase text-white tracking-widest">Saving...</p>
                                     </div>
                                 )}
-                                {user.profile_image && !user.profile_image.includes('blob:') ? (
-                                    <img src={user.profile_image} className={`w-full h-full object-cover ${uploadingImages.profile_image ? 'blur-sm' : ''}`} alt={user.name} />
+                                {user.profile_image ? (
+                                    <img src={getStorageUrl(user.profile_image) || ''} className={`w-full h-full object-cover ${uploadingImages.profile_image ? 'blur-sm' : ''}`} alt={user.name} />
                                 ) : (
                                     <span>{user.name?.[0]}</span>
                                 )}
@@ -1465,7 +1465,7 @@ export default function Profile() {
 
                                             return images.map((img: string, idx: number) => (
                                                 <div key={idx} className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-slate-200">
-                                                    <img src={img} className="w-full h-full object-cover" alt="Shop" />
+                                                    <img src={getStorageUrl(img) || ''} className="w-full h-full object-cover" alt="Shop" />
                                                     {isEditing && (
                                                         <button
                                                             onClick={() => {
@@ -1679,7 +1679,7 @@ export default function Profile() {
                                                 {(newAadharImage || user.aadhar_image) ? (
                                                     <>
                                                         <img
-                                                            src={newAadharImage ? URL.createObjectURL(newAadharImage) : (user.aadhar_image?.includes('blob:') ? '' : user.aadhar_image)}
+                                                            src={newAadharImage ? URL.createObjectURL(newAadharImage) : getStorageUrl(user.aadhar_image)}
                                                             alt="Aadhar Front"
                                                             className={`w-full h-full object-cover ${uploadingImages.aadhar_image ? 'blur-[2px]' : ''}`}
                                                         />
@@ -1730,7 +1730,7 @@ export default function Profile() {
                                                 {(newAadharBackImage || user.aadhar_back_image) ? (
                                                     <>
                                                         <img
-                                                            src={newAadharBackImage ? URL.createObjectURL(newAadharBackImage) : (user.aadhar_back_image?.includes('blob:') ? '' : user.aadhar_back_image)}
+                                                            src={newAadharBackImage ? URL.createObjectURL(newAadharBackImage) : getStorageUrl(user.aadhar_back_image)}
                                                             alt="Aadhar Back"
                                                             className={`w-full h-full object-cover ${uploadingImages.aadhar_back_image ? 'blur-[2px]' : ''}`}
                                                         />
@@ -1789,7 +1789,7 @@ export default function Profile() {
                                                     {(newPanImage || user.pan_image) ? (
                                                         <>
                                                             <img
-                                                                src={newPanImage ? URL.createObjectURL(newPanImage) : (user.pan_image?.includes('blob:') ? '' : user.pan_image)}
+                                                                src={newPanImage ? URL.createObjectURL(newPanImage) : getStorageUrl(user.pan_image)}
                                                                 alt="PAN Card"
                                                                 className={`w-full h-full object-cover ${uploadingImages.pan_image ? 'blur-sm' : ''}`}
                                                             />

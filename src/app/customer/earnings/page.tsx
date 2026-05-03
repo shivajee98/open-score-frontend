@@ -644,8 +644,8 @@ export default function TeamEarningsPage() {
                                             <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
                                                 <p className="text-xs font-bold text-slate-600">Charge: <span className="text-amber-600 font-black">₹{req.activation_charge}</span></p>
                                                 <button
-                                                    onClick={() => router.push(`/customer/vault-card/payment?id=${req.id}`)}
-                                                    className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest"
+                                                    onClick={() => router.push(`/customer/virtual-card`)}
+                                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-900/20 active:scale-95 transition-all"
                                                 >
                                                     Pay Now
                                                 </button>

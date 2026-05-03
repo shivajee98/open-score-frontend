@@ -4,6 +4,22 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ||
         ? 'http://localhost:8000/api'
         : 'https://api.msmeloan.sbs/api');
 
+export const getStorageUrl = (path: string | null | undefined): string => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('blob:')) return path;
+    if (path.startsWith('data:')) return path;
+
+    // Normalize API_BASE_URL by removing trailing slashes and the /api suffix
+    const apiHost = API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+
+    // Remove 'storage/' prefix if it exists to avoid duplication
+    const cleanPath = path.replace(/^storage\//, '').replace(/^\//, '');
+
+    return `${apiHost}/storage/${cleanPath}`;
+};
+
+
 import { getDeviceHeaders } from './device';
 
 // Loop Prevention

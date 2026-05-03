@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare, ArrowDownToLine, ArrowUpFromLine, X, Clock, Upload } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare, ArrowDownToLine, ArrowUpFromLine, X, Clock, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -682,43 +682,47 @@ export default function CustomerHome() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Mini Vault Card */}
+                    {/* Mini Vault Card Trigger */}
                     {isVaultEnabledByAdmin && (
                         <div
                             className="relative group w-full h-[60px] cursor-pointer active:scale-[0.98] transition-transform"
                             onClick={() => setIsBigVaultOpen(true)}
                         >
                             {/* Vault Outer Glow */}
-                            <div className="absolute -inset-[2px] rounded-[1.4rem] bg-[#f9e37a]/30 blur-md group-hover:blur-lg animate-pulse transition-all"></div>
+                            <div className="absolute -inset-[2px] rounded-[1.4rem] bg-[#c5a059]/30 blur-md group-hover:blur-lg animate-pulse transition-all"></div>
 
-                            {/* Mini Vault UI Container */}
-                            <div className="relative w-full h-full bg-gradient-to-br from-[#121417] to-[#1c1e22] backdrop-blur-xl rounded-[1.2rem] py-1.5 px-3 flex flex-col justify-center border-[1.5px] border-[#a8924a]/30 shadow-inner overflow-hidden group-hover:border-[#f9e37a]/50 transition-colors">
-                                {/* Gold Shine */}
-                                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#f9e37a]/50 to-transparent"></div>
+                            {/* Mini Vault UI Container - Metal/Gold Theme */}
+                            <div className="relative w-full h-full bg-[#0f1113] backdrop-blur-xl rounded-[1.2rem] py-1.5 px-3 flex flex-col justify-center border-[1.5px] border-[#c5a059]/30 shadow-inner overflow-hidden group-hover:border-[#c5a059]/50 transition-colors">
                                 <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}></div>
-
+                                
                                 <div className="relative z-10 w-full flex flex-col gap-1">
                                     <div className="flex items-center justify-between w-full">
                                         <div className="flex items-center gap-1.5">
-                                            <div className="w-4 h-4 bg-gradient-to-br from-[#f9e37a] to-[#a8924a] rounded-[4px] flex items-center justify-center text-[#121417] font-black text-[7px] shadow-sm transform -rotate-12 group-hover:rotate-0 transition-transform duration-300">OS</div>
-                                            <span className="text-[7px] font-['Noto_Serif'] italic tracking-[0.2em] text-[#f9e37a]">VAULT</span>
+                                            <div className="w-4 h-4 rounded-full border border-[#c5a059] flex items-center justify-center p-0.5">
+                                                <div className="w-full h-full bg-[#c5a059] rounded-full flex items-center justify-center">
+                                                    <CheckCircle2 size={8} className="text-[#0f1113]" strokeWidth={4} />
+                                                </div>
+                                            </div>
+                                            <span className="text-[7px] font-black tracking-[0.2em] text-[#c5a059] uppercase">Vault Card</span>
                                         </div>
-                                        <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-1 h-1 rounded-full bg-[#c5a059] animate-pulse"></div>
+                                            <span className="text-[5px] font-black text-[#c5a059]/40 uppercase tracking-widest">Metal Asset</span>
+                                        </div>
                                     </div>
                                     <div className="flex items-end justify-between mt-auto border-t border-white/5 pt-0.5">
                                         <div>
-                                            <span className="text-[5px] font-bold uppercase tracking-widest text-[#a8924a] block opacity-60">Asset Value</span>
+                                            <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block opacity-60">Asset Value</span>
                                             <div className="flex items-baseline gap-0.5">
-                                                <span className="text-[8px] font-['Noto_Serif'] text-[#f9e37a]">₹</span>
+                                                <span className="text-[8px] font-black text-[#c5a059]">₹</span>
                                                 <span className="text-[14px] font-black tracking-tighter text-[#fef9f3] truncate max-w-[60px]">
                                                     {parseFloat(vaultSetupData?.vault?.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="bg-[#f9e37a]/10 p-0.5 rounded-[3px]">
-                                                <ArrowUpFromLine size={8} className="text-[#f9e37a]" />
+                                            <div className="bg-[#c5a059]/10 p-0.5 rounded-[3px]">
+                                                <ArrowRight size={8} className="text-[#c5a059]" />
                                             </div>
                                         </div>
                                     </div>
@@ -728,17 +732,15 @@ export default function CustomerHome() {
                     )}
                 </div>
 
-                {/* BIG VAULT OVERLAY MODAL */}
+                {/* BIG VAULT OVERLAY MODAL - Premium Metal Design */}
                 {isVaultEnabledByAdmin && (
                     <div
                         className={`fixed inset-0 z-[200] flex items-center justify-center transition-all duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)] ${isBigVaultOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                         onClick={() => setIsBigVaultOpen(false)}
                     >
-                        {/* Backdrop */}
-                        <div className={`absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-700 ${isBigVaultOpen ? 'opacity-100' : 'opacity-0'}`} />
+                        <div className={`absolute inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity duration-700 ${isBigVaultOpen ? 'opacity-100' : 'opacity-0'}`} />
 
-                        {/* Animated 3D Card Container */}
-                        <div className="relative w-full max-w-[340px] px-4 perspective-[2000px] h-[191px]">
+                        <div className="relative w-full max-w-[340px] px-4 perspective-[2000px] h-[175px]">
                             <div
                                 className={`w-full h-full transition-all duration-[1000ms] ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer
                                   ${isBigVaultOpen
@@ -747,7 +749,6 @@ export default function CustomerHome() {
                                     }`}
                                 onClick={(e) => { e.stopPropagation(); setIsVaultFlipped(!isVaultFlipped); }}
                             >
-                                {/* Close Button above card */}
                                 <button
                                     className={`absolute -top-12 right-0 w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all duration-700 ${isBigVaultOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                                     onClick={(e) => { e.stopPropagation(); setIsBigVaultOpen(false); }}
@@ -757,45 +758,73 @@ export default function CustomerHome() {
 
                                 <div className={`relative w-full h-full transition-transform duration-[800ms] preserve-3d ease-[cubic-bezier(0.23,1,0.32,1)] ${isVaultFlipped ? 'rotate-y-180' : ''}`}>
 
-                                    {/* FRONT SIDE */}
+                                    {/* FRONT SIDE - Premium Metal */}
                                     <div className="absolute inset-0 backface-hidden">
-                                        <div className="bg-[#121417] rounded-xl px-4 py-3.5 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-between group">
-                                            {/* Matte Finish & Grain */}
-                                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}>
+                                        <div className="bg-[#0f1113] rounded-xl px-5 py-4 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col justify-between group">
+                                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+                                                <div className="absolute inset-0 bg-gradient-to-tr from-black via-[#1a1d21] to-[#2a2d33]" />
+                                                <div className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
+                                                    style={{ backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.1) 1px, rgba(255,255,255,0.1) 2px)` }}>
+                                                </div>
+                                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                                                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}>
+                                                </div>
+                                                <div className="absolute -right-16 -bottom-16 w-48 h-48 rounded-full border-[12px] border-[#c5a059]/10 flex items-center justify-center">
+                                                    <div className="w-32 h-32 rounded-full border-[1px] border-[#c5a059]/5" />
+                                                </div>
                                             </div>
-                                            <div className="absolute inset-0 opacity-5 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
 
                                             <div className="relative z-10 flex flex-col h-full justify-between">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex flex-col gap-0.5">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex flex-col gap-0">
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-4 h-4 bg-gradient-to-br from-[#f9e37a] to-[#a8924a] rounded-sm flex items-center justify-center text-[#121417] font-black text-[8px] shadow-sm transform -rotate-6 group-hover:rotate-0 transition-transform">OS</div>
-                                                            <span className="text-[9px] font-['Noto_Serif'] italic tracking-[0.2em] text-[#f9e37a]">VAULT</span>
+                                                            <div className="w-5 h-5 rounded-full border-2 border-[#c5a059] flex items-center justify-center p-0.5">
+                                                                <div className="w-full h-full bg-[#c5a059] rounded-full flex items-center justify-center">
+                                                                    <CheckCircle2 size={10} className="text-[#0f1113]" strokeWidth={4} />
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[11px] font-black tracking-[0.1em] text-[#c5a059] uppercase leading-none">Open Score</span>
+                                                                <span className="text-[5px] font-bold text-[#c5a059]/60 uppercase tracking-widest mt-0.5">Smart Credit For Daily Needs</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-
                                                     <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
                                                         <button
                                                             onClick={() => router.push('/customer/payout?deposit=true')}
                                                             className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
-                                                            title="Deposit to Vault"
                                                         >
-                                                            <ArrowDownToLine size={10} className="text-[#f9e37a]" />
+                                                            <ArrowDownToLine size={10} className="text-[#c5a059]" />
                                                         </button>
                                                         <button
                                                             onClick={() => router.push('/customer/payout?withdraw=true')}
                                                             className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
-                                                            title="Withdraw from Vault"
                                                         >
-                                                            <ArrowUpFromLine size={10} className="text-[#f9e37a]" />
+                                                            <ArrowUpFromLine size={10} className="text-[#c5a059]" />
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                {/* Card Number with Hide Toggle */}
-                                                <div className="py-2 flex items-center justify-center gap-3 group/number" onClick={(e) => e.stopPropagation()}>
-                                                    <p className="font-mono text-[13px] tracking-[0.25em] text-white/80 text-center pl-4">
+                                                <div className="flex items-center justify-between mt-1">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-7 bg-gradient-to-br from-[#e6c07b] via-[#c5a059] to-[#8e6e36] rounded-md shadow-inner relative overflow-hidden border border-[#8e6e36]/30">
+                                                            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30">
+                                                                {[...Array(9)].map((_, i) => <div key={i} className="border-[0.5px] border-black/20" />)}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-[2px]">
+                                                            <div className="w-[1px] h-3 bg-[#c5a059]/40" />
+                                                            <div className="w-[1px] h-3 bg-[#c5a059]/30" />
+                                                            <div className="w-[1px] h-3 bg-[#c5a059]/20" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-[6px] font-black text-[#c5a059]/80 uppercase tracking-[0.2em]">Premium Metal Card</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="py-1 flex items-center justify-start gap-4 group/number" onClick={(e) => e.stopPropagation()}>
+                                                    <p className="font-mono text-base tracking-[0.15em] text-[#fef9f3] drop-shadow-sm font-medium">
                                                         {showVaultCardNumber
                                                             ? vaultSetupData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()
                                                             : '••••  ••••  ••••  ' + vaultSetupData.vault.card_number?.slice(-4)}
@@ -804,85 +833,83 @@ export default function CustomerHome() {
                                                         onClick={() => setShowVaultCardNumber(!showVaultCardNumber)}
                                                         className="p-1 hover:bg-white/10 rounded-md transition-all opacity-0 group-hover/number:opacity-100"
                                                     >
-                                                        <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-white/30'} />
+                                                        <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/50'} />
                                                     </button>
                                                 </div>
 
-                                                <div className="flex items-end justify-between border-t border-white/[0.03] pt-2 pb-0.5">
-                                                    <div>
-                                                        <span className="text-[6px] font-bold uppercase tracking-widest text-[#a8924a] block opacity-60 mb-0.5">Asset Value</span>
-                                                        <div className="flex items-baseline gap-1">
-                                                            <span className="text-[10px] font-['Noto_Serif'] text-[#f9e37a]">₹</span>
-                                                            <span className="text-lg font-black tracking-tighter text-[#fef9f3]">
-                                                                {parseFloat(vaultSetupData.vault.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                                <div className="flex items-end justify-between pt-1">
+                                                    <div className="space-y-1">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60">Valid Thru</span>
+                                                            <span className="text-[10px] font-mono text-[#fef9f3] mt-0.5">
+                                                                {showVaultExpiry ? (vaultSetupData.vault.expiry_date || '12/29') : '••/••'}
                                                             </span>
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] font-black uppercase tracking-[0.05em] text-[#fef9f3]/90">
+                                                                {activeUser?.name || 'Rahul Kumar'}
+                                                            </span>
+                                                            <span className="text-[6px] font-black text-[#c5a059] uppercase tracking-[0.1em] mt-0.5">0% Interest Credit</span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex gap-4 text-[8px] font-mono text-white/30 mb-0.5" onClick={(e) => e.stopPropagation()}>
-                                                        <div className="text-right border-r border-white/5 pr-3 flex flex-col items-end group/exp">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="block text-[5px] uppercase tracking-widest text-[#a8924a] opacity-60">Valid Thru</span>
-                                                                <button onClick={() => setShowVaultExpiry(!showVaultExpiry)} className="opacity-0 group-hover/exp:opacity-100 transition-opacity">
-                                                                    <Eye size={8} />
-                                                                </button>
-                                                            </div>
-                                                            <span className="text-white/50">{showVaultExpiry ? (vaultSetupData.vault.expiry_date || '—') : '••/••'}</span>
-                                                        </div>
-                                                        <div className="text-right flex flex-col items-end group/cvc">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="block text-[5px] uppercase tracking-widest text-[#a8924a] opacity-60">Secure</span>
-                                                                <button onClick={() => setShowVaultCvc(!showVaultCvc)} className="opacity-0 group-hover/cvc:opacity-100 transition-opacity">
-                                                                    <Eye size={8} />
-                                                                </button>
-                                                            </div>
-                                                            <span className="text-white/50">{showVaultCvc ? (vaultSetupData.vault.cvc || '•••') : '•••'}</span>
-                                                        </div>
+                                                    <div className="text-right">
+                                                        <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block mb-0.5">Powered By</span>
+                                                        <span className="text-[8px] font-black tracking-[0.1em] text-[#fef9f3] uppercase">Open Score</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* BACK SIDE — Yield Matrix */}
+                                    {/* BACK SIDE - Yield Matrix */}
                                     <div className="absolute inset-0 backface-hidden rotate-y-180">
-                                        <div className="bg-[#121417] rounded-xl text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col group">
-                                            {/* Black Magnetic Strip */}
-                                            <div className="w-full h-8 bg-[#000] mt-5 shadow-inner" />
+                                        <div className="bg-[#0f1113] rounded-xl text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col group">
+                                            <div className="w-full h-8 bg-[#000] mt-4 shadow-inner" />
 
                                             <div className="px-5 py-4 flex-1 flex flex-col">
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[8px] font-black tracking-[0.2em] text-[#f9e37a] uppercase leading-none">Yield Matrix</span>
-                                                        <span className="text-[5px] font-black tracking-[0.4em] text-white/20 uppercase mt-1">Cycle Intelligence</span>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="space-y-1">
+                                                        <div className="w-16 h-4 bg-white/5 rounded-sm border border-white/5 flex items-center justify-center">
+                                                            <span className="text-[5px] font-black text-white/30 uppercase tracking-widest italic">Authorized Signature</span>
+                                                        </div>
+                                                        <div className="w-24 h-6 bg-white/10 rounded flex items-center justify-end px-2 border border-white/10">
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-[4px] font-bold text-[#c5a059] uppercase leading-none mb-0.5">CVV / Secure</span>
+                                                                <span className="text-[10px] font-mono text-[#f9e37a] tracking-widest">
+                                                                    {showVaultCvc ? (vaultSetupData.vault.cvc || '•••') : '•••'}
+                                                                </span>
+                                                            </div>
+                                                            <button onClick={(e) => { e.stopPropagation(); setShowVaultCvc(!showVaultCvc); }} className="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
+                                                                <Eye size={8} className={showVaultCvc ? 'text-amber-400' : 'text-white/30'} />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1 opacity-20">
-                                                        <Lock size={10} />
-                                                        <span className="text-[6px] font-black uppercase tracking-widest">ENCRYPTED</span>
+                                                    <div className="text-right">
+                                                        <span className="text-[7px] font-black tracking-[0.2em] text-[#c5a059] uppercase leading-none">Vault Matrix</span>
+                                                        <div className="flex items-center gap-1 opacity-20 justify-end mt-1">
+                                                            <Lock size={8} />
+                                                            <span className="text-[5px] font-black uppercase tracking-widest">Encrypted</span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                {/* Internal Rates Grid */}
-                                                <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto scrollbar-hide py-1" onClick={(e) => e.stopPropagation()}>
-                                                    {vaultSetupData.rates?.map((r: any) => (
-                                                        <div key={r.id} className="bg-white/[0.03] border border-white/[0.04] p-2 rounded-lg flex flex-col justify-center hover:bg-white/[0.07] transition-all">
-                                                            <div className="flex items-center justify-between mb-1">
-                                                                <span className="text-[6px] font-black text-white/40 uppercase tracking-widest">{r.tenure_days}D</span>
-                                                                <TrendingUp size={8} className="text-emerald-500/40" />
-                                                            </div>
-                                                            <span className="text-sm font-black text-[#f9e37a] leading-none">{r.interest_rate}%</span>
-                                                            <span className="text-[5px] font-bold text-white/20 uppercase mt-1 tracking-tighter">Annual Yield</span>
+                                                <div className="grid grid-cols-2 gap-1.5 flex-1 overflow-y-auto scrollbar-hide py-1" onClick={(e) => e.stopPropagation()}>
+                                                    {vaultSetupData.rates?.slice(0, 4).map((r: any) => (
+                                                        <div key={r.id} className="bg-white/[0.03] border border-white/[0.04] px-2 py-1.5 rounded-md flex flex-col hover:bg-white/[0.07] transition-all">
+                                                            <span className="text-[5px] font-black text-white/40 uppercase tracking-widest">{r.tenure_days} Days</span>
+                                                            <span className="text-[10px] font-black text-[#c5a059] leading-none">{r.interest_rate}%</span>
                                                         </div>
                                                     ))}
                                                 </div>
 
-                                                <div className="mt-2 flex items-center justify-between border-t border-white/[0.03] pt-2">
-                                                    <div className="flex gap-[1px] h-3 items-end opacity-20">
-                                                        {[1, 3, 1, 5, 2, 4, 1, 6, 2, 3, 1, 7, 4, 1].map((w, i) => (
+                                                <div className="mt-1 flex items-center justify-between border-t border-white/[0.03] pt-2">
+                                                    <div className="flex gap-[1px] h-2 items-end opacity-10">
+                                                        {[1, 3, 1, 5, 2, 4, 1, 6, 2].map((w, i) => (
                                                             <div key={i} className="bg-white" style={{ width: `${w}px`, height: '100%' }} />
                                                         ))}
                                                     </div>
-                                                    <span className="text-[6px] font-serif italic text-white/10 uppercase tracking-widest">OPEN SCORE BRANDED ASSET</span>
+                                                    <span className="text-[6px] font-serif italic text-white/10 uppercase tracking-widest">Secured by Open Score</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1033,42 +1060,56 @@ export default function CustomerHome() {
 
             {activeVaultRequest && (
                 <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                    <Link href="/customer/vault-card" prefetch={false}>
-                        <div className="bg-gradient-to-br from-[#064e3b] via-[#065f46] to-[#047857] rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-900/20 border border-white/10 relative overflow-hidden group active:scale-[0.98] transition-all">
-                            <div className="absolute inset-0 opacity-10 pointer-events-none">
+                    <Link href="/customer/virtual-card" prefetch={false}>
+                        <div className="bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#1e293b] rounded-[2rem] p-6 shadow-2xl shadow-slate-900/40 border border-white/10 relative overflow-hidden group active:scale-[0.98] transition-all">
+                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                                 <svg width="100%" height="100%">
-                                    <pattern id="circuit-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                                    <pattern id="circuit-pattern-alt" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
                                         <path d="M0 40 h 30 v 30 h 30" fill="none" stroke="white" strokeWidth="1" />
                                         <circle cx="60" cy="70" r="2" fill="white" />
                                     </pattern>
-                                    <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
+                                    <rect width="100%" height="100%" fill="url(#circuit-pattern-alt)" />
                                 </svg>
                             </div>
 
-                            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/20 rounded-full blur-[80px] -mr-24 -mt-24 group-hover:scale-125 transition-transform duration-1000"></div>
-                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-[60px] -ml-16 -mb-16"></div>
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-[60px] -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
+                            
+                            <div className="relative z-10 flex items-center justify-between gap-6">
+                                <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center border border-emerald-500/20">
+                                            <Zap size={16} fill="currentColor" />
+                                        </div>
+                                        <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em]">
+                                            {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Verifying Proof' : 'Elite Asset Ready'}
+                                        </span>
+                                    </div>
+                                    
+                                    <div>
+                                        <h3 className="text-lg font-black text-white tracking-tight leading-none uppercase">
+                                            {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Activation in Progress' : (
+                                                <>Claim Your <span className="text-indigo-400 italic">Titanium Elite</span> Card</>
+                                            )}
+                                        </h3>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 leading-relaxed">
+                                            {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Our security team is reviewing your payment' : 'Unlock global merchant benefits & Titanium rewards'}
+                                        </p>
+                                    </div>
 
-                            <div className="relative z-10 flex flex-col items-center text-center">
-                                <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[2rem] flex items-center justify-center border border-white/20 mb-6 shadow-2xl group-hover:rotate-[360deg] transition-transform duration-1000">
-                                    <Zap size={32} className="text-emerald-400 fill-emerald-400" />
+                                    <div className="pt-2">
+                                        <div className="inline-flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-widest group/link">
+                                            {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'View Details' : 'Start Activation'} 
+                                            <ArrowRight size={14} className="text-indigo-400 group-hover/link:translate-x-1 transition-transform" />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-1 mb-6">
-                                    <span className="text-[10px] font-black text-emerald-300 uppercase tracking-[0.3em]">
-                                        {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Verification in Progress' : 'Exclusive Asset Ready'}
-                                    </span>
-                                    <h3 className="text-2xl font-black text-white tracking-tight leading-none uppercase">
-                                        {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Verifying Your Payment' : (
-                                            <>Activate Your <span className="text-emerald-400 italic">Platinum</span> Card</>
-                                        )}
-                                    </h3>
-                                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest pt-1">
-                                        {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Our team is reviewing your proof' : 'Unlock merchant benefits & instant cashback'}
-                                    </p>
-                                </div>
-
-                                <div className="bg-white/10 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/10 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl group-hover:bg-white/20 transition-all flex items-center gap-3">
-                                    {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'View Status' : 'Start Activation'} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                <div className="relative shrink-0 hidden sm:block">
+                                    <div className="w-24 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-white/10 shadow-2xl rotate-12 group-hover:rotate-0 transition-all duration-700 relative overflow-hidden">
+                                        <div className="absolute top-2 left-2 w-4 h-3 bg-amber-400/20 rounded-sm border border-amber-400/30"></div>
+                                        <div className="absolute bottom-2 right-2 w-8 h-1 bg-white/5 rounded-full"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

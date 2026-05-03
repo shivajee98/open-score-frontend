@@ -44,8 +44,18 @@ export default function VirtualCardActivationPage() {
     useEffect(() => {
         if (requests && requests.length === 0) {
             router.push('/customer');
+            return;
         }
-    }, [requests, router]);
+
+        if (activeRequest) {
+            if (activeRequest.status === 'PENDING_APPROVAL') {
+                setStep(4);
+                setPaymentMode('UPI'); // Assuming UPI if pending approval
+            } else if (activeRequest.status === 'PENDING_PAYMENT') {
+                setStep(3);
+            }
+        }
+    }, [requests, activeRequest, router]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -73,9 +83,9 @@ export default function VirtualCardActivationPage() {
                 body: fd
             });
 
-            toast.success(paymentMode === 'WALLET' ? 'Card activated! Awaiting final approval.' : 'Payment proof uploaded! Awaiting approval.');
+            toast.success(paymentMode === 'WALLET' ? 'Card activated! Your exclusive asset is ready.' : 'Payment proof submitted! Awaiting verification.');
             mutate();
-            router.push('/customer');
+            setStep(4);
         } catch (err: any) {
             toast.error(err.message || 'Activation failed');
         } finally {
@@ -202,67 +212,72 @@ export default function VirtualCardActivationPage() {
                     </div>
                 </div>
                 <div className="w-10"></div>
-            </div>
-
-            <div className="px-6 max-w-md mx-auto">
+            </div>            <div className="px-6 max-w-md mx-auto">
                 {step === 1 && (
                     <div className="space-y-8 flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <div className="pt-4">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 border border-emerald-100 animate-pulse">
-                                <Sparkles size={12} fill="currentColor" /> Ready to Unlock
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 border border-indigo-500/20 animate-pulse">
+                                <Sparkles size={12} fill="currentColor" /> Premium Reservation
                             </div>
                             <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight mb-2">
-                                YOUR <span className="text-emerald-500">ELITE CARD</span> IS READY
+                                YOUR <span className="text-indigo-600">TITANIUM</span> ELITE
                             </h2>
                             <p className="text-xs font-medium text-slate-500 max-w-[280px] mx-auto leading-relaxed">
-                                Access seamless payments and exclusive merchant benefits instantly.
+                                Experience the future of credit with our most exclusive asset.
                             </p>
                         </div>
 
-                        {/* Card Preview - Redesigned & Centered */}
-                        <div className="relative group perspective-[1000px] w-full max-w-[320px]">
-                            <div className="absolute -inset-4 bg-emerald-500/10 blur-[60px] rounded-full animate-pulse"></div>
+                        {/* Card Preview - Premium Metal Redesign */}
+                        <div className="relative group perspective-[2000px] w-full max-w-[280px] py-6">
+                            <div className="absolute inset-0 bg-indigo-500/5 blur-[60px] rounded-full animate-pulse"></div>
                             
-                            <div className="relative aspect-[1.586/1] w-full bg-gradient-to-br from-[#064e3b] via-[#065f46] to-[#047857] rounded-3xl p-6 text-white shadow-2xl overflow-hidden border border-white/10 [transform:rotateX(10deg)_rotateY(-5deg)] hover:[transform:rotateX(0deg)_rotateY(0deg)] transition-all duration-700">
-                                {/* Circuit Texture */}
-                                <div className="absolute inset-0 opacity-[0.05] pointer-events-none">
-                                    <svg width="100%" height="100%">
-                                        <pattern id="circuit-card" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-                                            <path d="M0 50 h 40 v 40 h 40" fill="none" stroke="white" strokeWidth="1" />
-                                            <circle cx="80" cy="90" r="2" fill="white" />
-                                        </pattern>
-                                        <rect width="100%" height="100%" fill="url(#circuit-card)" />
-                                    </svg>
-                                </div>
+                            <div className="relative aspect-[1.586/1] w-full bg-[#1a1c1e] rounded-2xl p-6 text-white shadow-2xl overflow-hidden border border-white/5 transition-all duration-700 hover:scale-105">
+                                {/* Brushed Titanium Pattern */}
+                                <div className="absolute inset-0 opacity-[0.1] bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]"></div>
+                                
+                                {/* Refined Shine */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1500"></div>
 
                                 <div className="relative z-10 flex flex-col h-full justify-between">
                                     <div className="flex justify-between items-start">
-                                        <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                                                    <Shield size={18} className="text-emerald-300" />
-                                                </div>
-                                                <span className="text-xs font-black tracking-widest italic">VAULT</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center border border-white/10">
+                                                <Zap size={16} className="text-indigo-400" fill="currentColor" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-black tracking-[0.2em] leading-none">VAULT</span>
+                                                <span className="text-[6px] font-bold text-indigo-400 uppercase tracking-widest mt-0.5">Titanium Series</span>
                                             </div>
                                         </div>
-                                        <div className="px-2 py-1 bg-white/10 backdrop-blur-md rounded-md border border-white/10">
-                                            <p className="text-[8px] font-black uppercase tracking-widest text-emerald-200">Platinum</p>
+                                        <div className="px-2 py-0.5 bg-indigo-500/20 rounded-md border border-indigo-500/30">
+                                            <p className="text-[7px] font-black uppercase tracking-widest text-indigo-300">Elite</p>
                                         </div>
                                     </div>
 
-                                    <div className="mt-8">
+                                    <div className="flex justify-center">
+                                        <div className="w-10 h-8 bg-gradient-to-br from-amber-200 via-yellow-500 to-amber-300 rounded-md relative overflow-hidden shadow-inner border border-amber-600/20">
+                                            <div className="absolute inset-0 grid grid-cols-2 grid-rows-3 gap-[1px] p-1">
+                                                {[...Array(6)].map((_, i) => (
+                                                    <div key={i} className="bg-black/5 rounded-[0.5px]"></div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
                                         <div className="flex gap-3 mb-1">
-                                            {[1, 2, 3, 4].map((i) => (
-                                                <div key={i} className="text-lg font-black tracking-[0.2em] opacity-40">••••</div>
+                                            {[1, 2, 3].map((i) => (
+                                                <div key={i} className="text-sm font-black tracking-widest opacity-20">••••</div>
                                             ))}
+                                            <div className="text-sm font-black tracking-widest opacity-60">8840</div>
                                         </div>
                                         <div className="flex justify-between items-end">
-                                            <div>
-                                                <p className="text-[8px] font-bold text-emerald-200/60 uppercase tracking-widest mb-1">Card Holder</p>
-                                                <p className="text-sm font-black tracking-tight uppercase">{user?.name || 'VALUED CUSTOMER'}</p>
+                                            <div className="min-w-0">
+                                                <p className="text-[6px] font-bold text-indigo-300/40 uppercase tracking-widest mb-0.5 leading-none">Card Holder</p>
+                                                <p className="text-[10px] font-black tracking-tight uppercase truncate">{user?.name || 'VALUED CUSTOMER'}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[10px] font-black tracking-tighter opacity-80">DEBIT</p>
+                                                <p className="text-[8px] font-black tracking-widest opacity-40 leading-none">DEBIT</p>
                                             </div>
                                         </div>
                                     </div>
@@ -273,9 +288,9 @@ export default function VirtualCardActivationPage() {
                         <div className="w-full pt-4">
                             <button
                                 onClick={() => setStep(2)}
-                                className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group"
+                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/40 hover:bg-slate-800 active:scale-95 transition-all flex items-center justify-center gap-3 group"
                             >
-                                Continue <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                Secure My Access <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
                     </div>
@@ -284,42 +299,40 @@ export default function VirtualCardActivationPage() {
                 {step === 2 && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                         <div className="text-center pt-4">
-                            <div className="w-16 h-16 bg-emerald-100 rounded-[2rem] flex items-center justify-center text-emerald-600 mx-auto mb-6 shadow-xl shadow-emerald-500/10">
+                            <div className="w-16 h-16 bg-indigo-50 rounded-[2.2rem] flex items-center justify-center text-indigo-600 mx-auto mb-6 shadow-xl shadow-indigo-500/10 border border-indigo-100">
                                 <Trophy size={32} />
                             </div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Activation Offer</h2>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Limited Period Reward</p>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Activation Perks</h2>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Lifetime Premium Membership</p>
                         </div>
 
-                        <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-50 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
+                        <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.06)] border border-slate-100 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
                             
                             <div className="relative z-10 flex flex-col items-center text-center">
                                 <div className="flex items-baseline gap-1 mb-2">
                                     <span className="text-lg font-black text-slate-400">₹</span>
                                     <span className="text-5xl font-black text-slate-900 tracking-tighter">999</span>
                                 </div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">One-Time Lifetime Fee</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8">One-Time Asset Charge</p>
                                 
-                                <div className="w-full h-[1px] bg-slate-100 mb-6"></div>
-
                                 <div className="space-y-4 w-full text-left">
-                                    <div className="flex items-center gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100/50">
-                                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-500 shadow-sm">
+                                    <div className="flex items-center gap-4 p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 group-hover:scale-[1.02] transition-transform">
+                                        <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-100">
                                             <Gift size={20} />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black text-slate-900">Upto ₹300 Cashback</p>
-                                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">On your first transaction</p>
+                                            <p className="text-xs font-black text-slate-900 leading-none mb-1">Instant Cashback</p>
+                                            <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-tight">Flat ₹300 on first merchant tap</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-100/50">
-                                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-blue-500 shadow-sm">
+                                    <div className="flex items-center gap-4 p-5 bg-indigo-50/50 rounded-2xl border border-indigo-100/50 group-hover:scale-[1.02] transition-transform delay-75">
+                                        <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-100">
                                             <TrendingUp size={20} />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black text-slate-900">Boost Credit Limit</p>
-                                            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">Instant limit increment after activation</p>
+                                            <p className="text-xs font-black text-slate-900 leading-none mb-1">Credit Multiplier</p>
+                                            <p className="text-[9px] font-bold text-indigo-600 uppercase tracking-tight">Unlock higher daily transfer limits</p>
                                         </div>
                                     </div>
                                 </div>
@@ -328,9 +341,9 @@ export default function VirtualCardActivationPage() {
 
                         <button
                             onClick={() => setStep(3)}
-                            className="w-full py-5 bg-emerald-500 text-white rounded-3xl font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+                            className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-indigo-600/30 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3"
                         >
-                            Activate Now <Zap size={18} fill="currentColor" />
+                            Proceed to Payment <Zap size={18} fill="currentColor" />
                         </button>
                     </div>
                 )}
@@ -459,7 +472,7 @@ export default function VirtualCardActivationPage() {
                                 onClick={handleActivate}
                                 disabled={!paymentMode || (paymentMode === 'UPI' && !proofImage) || isSubmitting}
                                 className={cn(
-                                    "w-full py-5 rounded-3xl font-black text-sm uppercase tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-3",
+                                    "w-full py-5 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-3",
                                     paymentMode === 'WALLET' ? "bg-slate-900 text-white shadow-slate-900/20" : "bg-emerald-500 text-white shadow-emerald-500/20"
                                 )}
                             >
@@ -471,6 +484,36 @@ export default function VirtualCardActivationPage() {
                             </button>
                             <p className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest mt-6">
                                 <ShieldCheck size={10} className="inline mr-1" /> Secure 256-bit Encrypted Transaction
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {step === 4 && (
+                    <div className="py-12 flex flex-col items-center text-center animate-in zoom-in-95 duration-500">
+                        <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-8 shadow-xl shadow-emerald-500/10 animate-bounce">
+                            <CheckCircle2 size={48} />
+                        </div>
+                        
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase mb-4">
+                            {paymentMode === 'WALLET' ? 'Card Activated!' : 'Payment Received!'}
+                        </h2>
+                        
+                        <p className="text-sm font-bold text-slate-500 max-w-[280px] mx-auto leading-relaxed mb-10">
+                            {paymentMode === 'WALLET' 
+                                ? 'Your exclusive Titanium Elite card is now live. Experience the future of global credit.' 
+                                : 'Your payment is being verified by our security team. Your Titanium Elite card will be activated and visible on your dashboard within the next 24 hours.'}
+                        </p>
+
+                        <div className="w-full space-y-4">
+                            <button
+                                onClick={() => router.push('/customer')}
+                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/40 active:scale-95 transition-all"
+                            >
+                                Back to Dashboard
+                            </button>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                {paymentMode === 'WALLET' ? 'Instant Access Enabled' : 'Verification in Progress'}
                             </p>
                         </div>
                     </div>
