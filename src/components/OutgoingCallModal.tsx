@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Phone, PhoneOff, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
-import { createEcho } from '@/lib/echo';
+import { createPhoenixSocket } from '@/lib/phoenix';
+import { Socket, Channel } from 'phoenix';
 
 interface CallSession {
     id: number;
@@ -31,7 +32,8 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localStream = useRef<MediaStream | null>(null);
-    const echoInstance = useRef<any>(null);
+    const socketRef = useRef<Socket | null>(null);
+    const signalingChannelRef = useRef<Channel | null>(null);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -40,10 +42,14 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
         
         const initiateCall = async () => {
             try {
-                // 1. Get Microphone access
-                localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-                if (localAudioRef.current) {
-                    localAudioRef.current.srcObject = localStream.current;
+                // 1. Get Microphone access (non-fatal - call can still be initiated)
+                try {
+                    localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    if (localAudioRef.current) {
+                        localAudioRef.current.srcObject = localStream.current;
+                    }
+                } catch (micError: any) {
+                    console.warn('Microphone access failed, proceeding without local audio:', micError.message);
                 }
 
                 // 2. Initialize WebRTC
@@ -51,9 +57,11 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
                     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
                 });
 
-                localStream.current.getTracks().forEach(track => {
-                    peerConnection.current?.addTrack(track, localStream.current!);
-                });
+                if (localStream.current) {
+                    localStream.current.getTracks().forEach(track => {
+                        peerConnection.current?.addTrack(track, localStream.current!);
+                    });
+                }
 
                 peerConnection.current.ontrack = (event) => {
                     if (remoteAudioRef.current && event.streams[0]) {
@@ -77,32 +85,83 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
                 setCallStatus('ringing');
                 toast.success(`Calling ${response.agent_name}...`);
 
-                // 5. Listen for Signaling via Laravel Echo
+                // 5. Listen for Signaling via Phoenix
                 const token = localStorage.getItem('token');
-                echoInstance.current = createEcho(token || '');
+                if (!token) throw new Error('Auth token missing');
                 
-                const channel = echoInstance.current.channel(`user.${userId}.calls`);
+                const socket = createPhoenixSocket(token);
+                socketRef.current = socket;
                 
-                channel.listen('.CallAnswered', async (e: any) => {
-                    console.log('Call answered:', e);
+                const channel = socket.channel(`user:${userId}`, {});
+                signalingChannelRef.current = channel;
+
+                channel.join()
+                    .receive("ok", () => console.log("Joined Phoenix signaling"))
+                    .receive("error", (e: any) => console.error("Phoenix join error", e));
+                
+                const iceBuffer: RTCIceCandidateInit[] = [];
+                
+                channel.on('call_accepted', async (e: any) => {
+                    console.log('Call answered via Phoenix:', e);
                     setCallStatus('connected');
                     startTimer();
-                    await peerConnection.current?.setRemoteDescription(new RTCSessionDescription(e.answer));
                 });
 
-                channel.listen('.IceCandidate', async (e: any) => {
-                    await peerConnection.current?.addIceCandidate(new RTCIceCandidate(e.candidate));
+                channel.on('media_event', async (payload: any) => {
+                    const e = payload.data;
+                    console.log('Media event via Phoenix:', e.type || 'ICE');
+                    
+                    if (e.type === 'answer' && peerConnection.current) {
+                        try {
+                            const rawSdp = e.sdp;
+                            const sanitizedSdp = rawSdp
+                                .replace(/\\r\\n/g, '\n')
+                                .replace(/\\n/g, '\n')
+                                .split('\n')
+                                .map((line: string) => line.trim())
+                                .filter((line: string) => line.length > 0)
+                                .join('\r\n') + '\r\n';
+
+                            await peerConnection.current.setRemoteDescription(new RTCSessionDescription({
+                                type: e.type,
+                                sdp: sanitizedSdp
+                            }));
+
+                            // Process buffered candidates
+                            while (iceBuffer.length > 0) {
+                                const cand = iceBuffer.shift();
+                                if (cand) await peerConnection.current.addIceCandidate(new RTCIceCandidate(cand));
+                            }
+                        } catch (err) {
+                            console.error('Failed to set remote description:', err);
+                        }
+                    } else if (e.candidate) {
+                        if (peerConnection.current?.remoteDescription) {
+                            await peerConnection.current.addIceCandidate(new RTCIceCandidate(e.candidate));
+                        } else {
+                            iceBuffer.push(e.candidate);
+                        }
+                    }
                 });
 
-                channel.listen('.EndCall', () => {
+                channel.on('call_ended', () => {
                     handleCallEnd(false);
                 });
 
+                // 6. Notify Elixir of new call
+                channel.push('initiate_call', { 
+                    to: response.agent_id, 
+                    room_id: response.call_id,
+                    offer: offer,
+                    from_name: localStorage.getItem('user_name') || 'Customer',
+                    from_mobile: localStorage.getItem('user_mobile') || ''
+                });
+
                 peerConnection.current.onicecandidate = async (event) => {
-                    if (event.candidate && response.agent_id) {
-                        await apiFetch('/call/ice-candidate', {
-                            method: 'POST',
-                            body: JSON.stringify({ candidate: event.candidate, to: response.agent_id })
+                    if (event.candidate && response.agent_id && signalingChannelRef.current) {
+                        signalingChannelRef.current.push('media_event', { 
+                            to: response.agent_id, 
+                            data: { candidate: event.candidate } 
                         });
                     }
                 };
@@ -110,7 +169,7 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
             } catch (error: any) {
                 console.error('Call initiation failed:', error);
                 if (error.message) toast.error(error.message);
-                else toast.error('Failed to initiate call. No agents available.');
+                else toast.error('No agents available in your area');
                 setCallStatus('failed');
                 setTimeout(() => handleCallEnd(false), 3000);
             }
@@ -133,8 +192,8 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
         if (timerRef.current) clearInterval(timerRef.current);
         localStream.current?.getTracks().forEach(t => t.stop());
         peerConnection.current?.close();
-        if (echoInstance.current && session) {
-            echoInstance.current.leave(session.channel_name);
+        if (socketRef.current) {
+            (socketRef.current as any).disconnect();
         }
     };
 

@@ -5,6 +5,9 @@ export interface CallInfo {
     from: string;
     fromRole: string;
     roomId: string;
+    fromName?: string;
+    fromMobile?: string;
+    offer?: any;
 }
 
 class VoiceService {
@@ -24,16 +27,31 @@ class VoiceService {
         this.socket = new Socket(voiceUrl, { params: { token } });
         this.socket.connect();
 
-        this.signalingChannel = this.socket.channel('signaling:lobby', {});
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userId = user.id;
+        if (!userId) {
+            console.error('User ID missing for voice signaling');
+            return;
+        }
+
+        this.signalingChannel = this.socket.channel(`user:${userId}`, {});
         this.signalingChannel.join()
             .receive('ok', () => {
-                console.log('Joined signaling channel');
+                console.log(`Joined private signaling channel: user:${userId}`);
                 this.isInitialized = true;
             })
-            .receive('error', (resp: any) => console.error('Unable to join signaling', resp));
+            .receive('error', (resp: any) => console.error('Unable to join private signaling', resp));
 
-        this.signalingChannel.on('incoming_call', (payload: CallInfo) => {
-            this.notify('incoming_call', payload);
+        this.signalingChannel.on('incoming_call', (payload: any) => {
+            console.log('Incoming call via Phoenix:', payload);
+            this.notify('incoming_call', {
+                from: payload.from,
+                fromRole: payload.from_role,
+                roomId: payload.room_id,
+                fromName: payload.from_name,
+                fromMobile: payload.from_mobile,
+                offer: payload.offer
+            });
         });
 
         // Initialize WebRTC Endpoint
