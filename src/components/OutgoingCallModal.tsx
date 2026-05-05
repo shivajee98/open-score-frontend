@@ -101,7 +101,16 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
                 
                 const iceBuffer: RTCIceCandidateInit[] = [];
                 
+                // Ringing timeout (60 seconds)
+                const timeoutId = setTimeout(() => {
+                    if (isCleanedUp) return;
+                    toast.error('No answer from agent');
+                    handleCallEnd(true);
+                }, 60000);
+                (window as any)._ringTimeoutId = timeoutId;
+                
                 channel.on('call_accepted', async (e: any) => {
+                    if ((window as any)._ringTimeoutId) clearTimeout((window as any)._ringTimeoutId);
                     console.log('Call answered via Phoenix:', e);
                     setCallStatus('connected');
                     startTimer();
@@ -190,6 +199,7 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
 
     const cleanupCall = () => {
         if (timerRef.current) clearInterval(timerRef.current);
+        if ((window as any)._ringTimeoutId) clearTimeout((window as any)._ringTimeoutId);
         localStream.current?.getTracks().forEach(t => t.stop());
         peerConnection.current?.close();
         if (socketRef.current) {
@@ -198,13 +208,24 @@ export default function OutgoingCallModal({ isOpen, onClose, userId }: OutgoingC
     };
 
     const handleCallEnd = async (notifyBackend = true) => {
+        // 1. Notify signaling channel so the other side (agent) updates their UI
+        if (signalingChannelRef.current && session) {
+            console.log("Notifying signaling channel about end_call");
+            signalingChannelRef.current.push('end_call', { 
+                to: session.agent_id, 
+                room_id: session.id 
+            });
+        }
+
+        // 2. Notify Laravel backend for logging and session status
         if (notifyBackend && session) {
             try {
                 await apiFetch(`/call/${session.id}/end`, { method: 'POST' });
             } catch (e) {
-                console.error(e);
+                console.error("Backend end call notification failed:", e);
             }
         }
+        
         setCallStatus('ended');
         cleanupCall();
         setTimeout(onClose, 1500);

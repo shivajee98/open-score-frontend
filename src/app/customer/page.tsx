@@ -679,7 +679,7 @@ export default function CustomerHome() {
                                         </div>
                                     )}
                                     {Number(activeWallet?.held_balance) > 0 && showBalance && (
-                                        <div 
+                                        <div
                                             onClick={() => router.push('/customer/transactions')}
                                             className="flex flex-col gap-0.5 bg-blue-600/20 px-2 py-1 rounded-lg border border-blue-400/30 shrink-0 cursor-pointer hover:bg-blue-600/30 transition-all active:scale-95 group/held"
                                         >
@@ -709,7 +709,7 @@ export default function CustomerHome() {
                             {/* Mini Vault UI Container - Metal/Gold Theme */}
                             <div className="relative w-full h-full bg-[#0f1113] backdrop-blur-xl rounded-[1.2rem] py-1.5 px-3 flex flex-col justify-center border-[1.5px] border-[#c5a059]/30 shadow-inner overflow-hidden group-hover:border-[#c5a059]/50 transition-colors">
                                 <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}></div>
-                                
+
                                 <div className="relative z-10 w-full flex flex-col gap-1">
                                     <div className="flex items-center justify-between w-full">
                                         <div className="flex items-center gap-1.5">
@@ -1074,61 +1074,88 @@ export default function CustomerHome() {
 
 
             {activeVaultRequest && (
-                <div className="px-6 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                    <Link href="/customer/virtual-card" prefetch={false}>
-                        <div className="bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#1e293b] rounded-[2rem] p-6 shadow-2xl shadow-slate-900/40 border border-white/10 relative overflow-hidden group active:scale-[0.98] transition-all">
-                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                                <svg width="100%" height="100%">
-                                    <pattern id="circuit-pattern-alt" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-                                        <path d="M0 40 h 30 v 30 h 30" fill="none" stroke="white" strokeWidth="1" />
-                                        <circle cx="60" cy="70" r="2" fill="white" />
-                                    </pattern>
-                                    <rect width="100%" height="100%" fill="url(#circuit-pattern-alt)" />
-                                </svg>
+                <div className="px-6 mb-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    <div className="relative w-full bg-[#0A0A12] rounded-[24px] p-4 flex flex-row items-center gap-3 shadow-[0_15px_40px_rgba(0,0,0,0.6)] border border-[#1f2030] overflow-hidden group">
+                        
+                        {/* Background Ambient Glows - Subtle */}
+                        <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-blue-600/5 rounded-full blur-[60px] pointer-events-none z-0"></div>
+
+                        {/* Left Content Section - 65% width */}
+                        <div className="flex-[1.8] flex flex-col justify-center relative z-10 py-1">
+                            
+                            {/* Top Tag - Very Small */}
+                            <div className="flex items-center gap-2 mb-1">
+                                <Zap size={12} className="text-[#FFD600] fill-[#FFD600]" />
+                                <span className="italic font-bold text-[10px] tracking-[0.1em] text-[#A855F7] uppercase">
+                                    {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Verifying' : 'Limited Offer'}
+                                </span>
                             </div>
 
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-[60px] -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
-                            
-                            <div className="relative z-10 flex items-center justify-between gap-6">
-                                <div className="flex-1 space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center border border-emerald-500/20">
-                                            <Zap size={16} fill="currentColor" />
-                                        </div>
-                                        <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em]">
-                                            {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Verifying Proof' : 'Elite Asset Ready'}
-                                        </span>
-                                    </div>
-                                    
-                                    <div>
-                                        <h3 className="text-lg font-black text-white tracking-tight leading-none uppercase">
-                                            {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Activation in Progress' : (
-                                                <>Claim Your <span className="text-indigo-400 italic">Titanium Elite</span> Card</>
-                                            )}
-                                        </h3>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 leading-relaxed">
-                                            {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Our security team is reviewing your payment' : 'Unlock global merchant benefits & Titanium rewards'}
-                                        </p>
-                                    </div>
+                            {/* Main Headline - Compact */}
+                            <h2 className="italic font-black text-[22px] sm:text-[28px] leading-tight tracking-wide text-white mb-1 whitespace-nowrap">
+                                {activeVaultRequest.status === 'PENDING_APPROVAL' ? (
+                                    <>Proof <span className="text-[#FFD600]">Verifying</span></>
+                                ) : (
+                                    <>Get <span className="text-[#FFD600]">500</span> Instantly</>
+                                )}
+                            </h2>
 
-                                    <div className="pt-2">
-                                        <div className="inline-flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-widest group/link">
-                                            {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'View Details' : 'Start Activation'} 
-                                            <ArrowRight size={14} className="text-indigo-400 group-hover/link:translate-x-1 transition-transform" />
-                                        </div>
-                                    </div>
-                                </div>
+                            {/* Sub Headline - Minimal */}
+                            <p className="italic text-[#9ca3af] text-[12px] font-semibold tracking-wide mb-3">
+                                {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Securing Reward...' : 'On Your Titanium Card'}
+                            </p>
 
-                                <div className="relative shrink-0 hidden sm:block">
-                                    <div className="w-24 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-white/10 shadow-2xl rotate-12 group-hover:rotate-0 transition-all duration-700 relative overflow-hidden">
-                                        <div className="absolute top-2 left-2 w-4 h-3 bg-amber-400/20 rounded-sm border border-amber-400/30"></div>
-                                        <div className="absolute bottom-2 right-2 w-8 h-1 bg-white/5 rounded-full"></div>
-                                        <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                                    </div>
-                                </div>
+                            {/* Info Tag - Ultra Compact */}
+                            <div className="flex items-center gap-2">
+                                <Gift size={12} className="text-[#FFD600]/60" />
+                                <span className="text-[#9ca3af] text-[9px] font-medium tracking-widest uppercase opacity-60">
+                                    {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Security Check' : 'Rewards Ready'}
+                                </span>
                             </div>
                         </div>
-                    </Link>
+
+                        {/* Right Section: Graphics + Button - 35% width */}
+                        <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+                            
+                            {/* 3D Graphics - Scaled for 16:9 thinness */}
+                            <div className="relative w-full h-[90px] flex justify-center items-center transform -translate-y-1">
+                                {/* Ring & Plate */}
+                                <div className="absolute w-[140px] h-[40px] bottom-[5px]">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-[#181E3D] to-[#0B0D1E] rounded-lg border-t-[1px] border-[#4b6bfb]/20 shadow-lg z-10 overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-[0.5px] bg-blue-400/20"></div>
+                                        <span className="absolute bottom-1 right-2 text-[#8892b0] text-[8px] font-bold tracking-[0.1em] opacity-40">CASHBACK</span>
+                                    </div>
+                                    <div className="absolute inset-[-6px] border-[1.5px] border-[#3B82F6] rounded-[100%] shadow-[0_0_10px_#3B82F6] transform -rotate-[8deg] z-0 opacity-40"></div>
+                                </div>
+
+                                {/* 3D "500" - Small */}
+                                <div 
+                                    className="italic font-black text-[#FFD600] text-[54px] sm:text-[64px] leading-none tracking-tighter relative z-30 transform translate-x-2 -translate-y-1 animate-float"
+                                    style={{
+                                        textShadow: `
+                                            -1px 1px 0px #cc9900,
+                                            -2px 2px 0px #cc9900,
+                                            -3px 3px 0px #cc9900,
+                                            -4px 4px 0px #cc9900,
+                                            -6px 8px 12px rgba(0, 0, 0, 0.8)
+                                        `
+                                    }}
+                                >
+                                    500
+                                </div>
+                            </div>
+
+                            {/* Button - Thin & Wide */}
+                            <Link href="/customer/virtual-card" className="w-full">
+                                <button className="relative z-30 w-full h-[38px] rounded-[10px] bg-gradient-to-r from-[#8B5CF6] to-[#3B82F6] flex items-center justify-center gap-2 text-white font-bold text-[12px] tracking-wider shadow-lg active:scale-95 transition-all">
+                                    <ArrowRight size={12} strokeWidth={4} />
+                                    <span className="uppercase">
+                                        {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Status' : 'Claim'}
+                                    </span>
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             )}
 
