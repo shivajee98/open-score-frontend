@@ -41,7 +41,7 @@ export default function VirtualCardActivationPage() {
     const router = useRouter();
     const { data: user } = useApi('/auth/me');
     const { data: requests, mutate } = useApi('/vault-cards/my-requests');
-    
+
     const [step, setStep] = useState(1);
     const [paymentMode, setPaymentMode] = useState<'WALLET' | 'UPI' | null>(null);
     const [proofImage, setProofImage] = useState<File | null>(null);
@@ -59,7 +59,7 @@ export default function VirtualCardActivationPage() {
         if (activeRequest) {
             if (activeRequest.status === 'PENDING_APPROVAL') {
                 setStep(4);
-                setPaymentMode('UPI'); 
+                setPaymentMode('UPI');
             }
         }
     }, [requests, activeRequest, router]);
@@ -110,7 +110,7 @@ export default function VirtualCardActivationPage() {
                     <CreditCard size={32} />
                 </div>
                 <h2 className="text-xl font-black text-white tracking-tight mb-2">No Active Cards</h2>
-                <button 
+                <button
                     onClick={() => router.push('/customer')}
                     className="px-8 py-4 bg-white text-[#020617] rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all"
                 >
@@ -156,7 +156,7 @@ export default function VirtualCardActivationPage() {
         );
     }
 
-    const upiId = "9161168840@uboi";
+    const upiId = "flipflops@upi";
     const upiUrl = `upi://pay?pa=${upiId}&pn=Flip%20Flops&am=999&tn=Vault%20Card%20Activation`;
 
     const copyToClipboard = (text: string) => {
@@ -187,7 +187,7 @@ export default function VirtualCardActivationPage() {
 
                     {/* Content Container - Compact and non-scrolling if possible */}
                     <div className="flex-1 flex flex-col justify-between px-6 pb-6 pt-2 overflow-hidden">
-                        
+
                         {/* Hero Headline */}
                         <div className="text-center mb-4">
                             <h1 className="text-3xl font-black italic tracking-tighter leading-none mb-1">
@@ -200,7 +200,7 @@ export default function VirtualCardActivationPage() {
                         {/* Visual Card Pedestal Section */}
                         <div className="relative flex flex-col items-center justify-center flex-1 min-h-0 scale-90 sm:scale-100">
                             <div className="absolute w-[300px] h-12 bg-blue-600/10 bottom-[15%] rounded-[100%] blur-3xl" />
-                            
+
                             {/* Floating "CLAIM NOW" Badge */}
                             <div className="absolute top-[5%] left-0 z-20 animate-bounce">
                                 <div className="bg-[#0A0D1E] rounded-xl px-4 py-2 border border-[#FFD600]/30 shadow-[0_0_20px_rgba(255,214,0,0.3)] shadow-2xl rotate-[-4deg]">
@@ -248,7 +248,7 @@ export default function VirtualCardActivationPage() {
 
                             {/* Pedestal Top */}
                             <div className="absolute bottom-[5%] w-[260px] h-16 bg-gradient-to-b from-blue-900/40 to-[#020617] border-t border-blue-600/30 rounded-[100%] z-0" />
-                            
+
                             <div className="absolute bottom-[-10px] flex items-center gap-2">
                                 <Sparkles size={10} className="text-[#FFD600]" />
                                 <p className="text-[10px] font-bold text-white italic">Better Hai Pehle Cashback Lo!</p>
@@ -307,7 +307,7 @@ export default function VirtualCardActivationPage() {
                                     <Clock size={10} className="text-black" />
                                     <span className="text-[8px] font-black text-black uppercase tracking-widest italic">LIMITED OFFER – TODAY ONLY</span>
                                 </div>
-                                
+
                                 {/* Floating Coins Decoration */}
                                 <div className="absolute -top-4 -right-2 w-6 h-6 bg-yellow-500 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.6)] animate-bounce z-0 flex items-center justify-center border border-yellow-300">
                                     <Coins size={12} className="text-yellow-900" />
@@ -332,7 +332,7 @@ export default function VirtualCardActivationPage() {
                                 <ShieldCheck size={12} className="text-emerald-500" />
                                 <p className="text-[9px] font-bold text-emerald-500 italic tracking-wide">Safe. Secure. 100% Yours.</p>
                             </div>
-                            
+
                             {/* Trust Footer - Micro */}
                             <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/5 opacity-30">
                                 <div className="flex items-center gap-1.5">
@@ -369,7 +369,7 @@ export default function VirtualCardActivationPage() {
                     </header>
 
                     <main className="max-w-xl mx-auto px-6 flex-1">
-                        
+
                         {/* Hero Section */}
                         <section className="text-center mt-4 relative mb-12">
                             <h2 className="text-3xl italic font-black leading-tight tracking-tight text-white">
@@ -379,7 +379,7 @@ export default function VirtualCardActivationPage() {
                                     CASHBACK!
                                 </span>
                             </h2>
-                            
+
                             <div className="flex items-center justify-center gap-2 mt-4 text-[9px] text-purple-200/60 uppercase tracking-widest font-black italic">
                                 <Zap className="w-3 h-3 fill-purple-400 text-purple-400" />
                                 More Rewards. More Savings. Every Day.
@@ -391,7 +391,7 @@ export default function VirtualCardActivationPage() {
                                 {/* The Pedestal */}
                                 <div className="absolute left-1/2 -bottom-10 -translate-x-1/2 w-56 h-14 bg-purple-900/40 rounded-full blur-2xl animate-pulse" />
                                 <div className="absolute left-1/2 -bottom-6 -translate-x-1/2 w-64 h-14 bg-gradient-to-b from-purple-600/40 to-transparent rounded-[50%] border-t border-purple-500/30 shadow-[0_-15px_30px_rgba(168,85,247,0.2)]" />
-                                
+
                                 {/* The Badge on Pedestal */}
                                 <div className="absolute left-1/2 -bottom-8 -translate-x-1/2 z-20 bg-[#020617] border border-purple-500/50 px-5 py-1.5 rounded-full flex items-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.5)]">
                                     <Crown className="w-3 h-3 text-yellow-400 fill-yellow-400" />
@@ -403,7 +403,7 @@ export default function VirtualCardActivationPage() {
                                     {/* Card Texture Overlay */}
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
                                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40" />
-                                    
+
                                     <div className="relative p-6 h-full flex flex-col justify-between">
                                         <div className="flex justify-between items-start">
                                             <div className="flex items-center gap-2.5">
@@ -471,9 +471,9 @@ export default function VirtualCardActivationPage() {
 
                         {/* Selection Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                            
+
                             {/* Wallet Card */}
-                            <div 
+                            <div
                                 onClick={() => setPaymentMode('WALLET')}
                                 className={cn(
                                     "relative group cursor-pointer transition-all h-full",
@@ -482,21 +482,21 @@ export default function VirtualCardActivationPage() {
                             >
                                 {/* Badge */}
                                 <div className="absolute -top-1 -right-1 z-20 overflow-hidden rounded-bl-xl rounded-tr-xl">
-                                   <div className="bg-[#39ff14] text-black text-[7px] font-black px-4 py-1.5 uppercase rotate-45 translate-x-4 -translate-y-1">Best For You</div>
+                                    <div className="bg-[#39ff14] text-black text-[7px] font-black px-4 py-1.5 uppercase rotate-45 translate-x-4 -translate-y-1">Best For You</div>
                                 </div>
-                                
+
                                 <div className={cn(
                                     "bg-black border-2 rounded-3xl p-6 relative overflow-hidden transition-all flex flex-col h-full",
                                     paymentMode === 'WALLET' ? "border-[#39ff14] shadow-[0_0_30px_rgba(57,255,20,0.15)]" : "border-[#39ff14]/30 hover:border-[#39ff14]"
                                 )}>
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#39ff14]/5 rounded-full blur-3xl pointer-events-none" />
-                                    
+
                                     <div className="flex items-center gap-3 mb-6 text-left">
                                         <div className="p-3 bg-[#39ff14]/20 rounded-2xl border border-[#39ff14]/30">
                                             <Wallet className="w-6 h-6 text-[#39ff14]" />
                                         </div>
                                         <div>
-                                            <p className="text-[9px] text-gray-400 uppercase font-black italic">Activate via</p>
+                                            <p className="text-[9px] text-gray-400 uppercase font-black italic"></p>
                                             <p className="font-black text-[#39ff14] uppercase tracking-wider text-lg">Wallet</p>
                                         </div>
                                     </div>
@@ -505,22 +505,18 @@ export default function VirtualCardActivationPage() {
                                         <p className="text-sm text-gray-400 font-black italic uppercase">Upto <span className="text-3xl text-white font-black italic">200</span> Cashback</p>
                                         <p className="text-[9px] text-[#39ff14]/80 font-black uppercase tracking-widest mt-1">on wallet activation</p>
                                     </div>
-
                                     <div className="space-y-4 mb-8 flex-1 text-left">
                                         {[
-                                            { icon: <Award className="w-4 h-4" />, text: "Get upto 200 cashback instantly" },
-                                            { icon: <Zap className="w-4 h-4" />, text: "Instant activation with wallet" },
-                                            { icon: <ShieldCheck className="w-4 h-4" />, text: "100% secure & safe transactions" },
+                                            { icon: <Award className="w-4 h-4" />, text: "Get flat 500 cashback instantly" },
                                         ].map((item, i) => (
                                             <div key={i} className="flex items-center gap-3">
-                                                <div className="text-[#39ff14]/50 border border-[#39ff14]/20 p-1.5 rounded-full">{item.icon}</div>
+                                                <div className="text-[#00d2ff]/50 border border-[#00d2ff]/20 p-1.5 rounded-full">{item.icon}</div>
                                                 <p className="text-[10px] text-gray-400 font-black italic uppercase tracking-tight">{item.text}</p>
                                             </div>
                                         ))}
                                     </div>
-
                                     {paymentMode === 'WALLET' ? (
-                                        <button 
+                                        <button
                                             onClick={(e) => { e.stopPropagation(); handleActivate(); }}
                                             disabled={isSubmitting}
                                             className="w-full bg-[#39ff14] hover:bg-[#32e012] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(57,255,20,0.3)] transition-all transform active:scale-95"
@@ -534,7 +530,7 @@ export default function VirtualCardActivationPage() {
                             </div>
 
                             {/* UPI Card */}
-                            <div 
+                            <div
                                 onClick={() => setPaymentMode('UPI')}
                                 className={cn(
                                     "relative group cursor-pointer transition-all h-full",
@@ -543,7 +539,7 @@ export default function VirtualCardActivationPage() {
                             >
                                 {/* Badge */}
                                 <div className="absolute -top-1 -right-1 z-20 overflow-hidden rounded-bl-xl rounded-tr-xl">
-                                   <div className="bg-[#00d2ff] text-black text-[7px] font-black px-4 py-1.5 uppercase rotate-45 translate-x-4 -translate-y-1">Recommended</div>
+                                    <div className="bg-[#00d2ff] text-black text-[7px] font-black px-4 py-1.5 uppercase rotate-45 translate-x-4 -translate-y-1">Recommended</div>
                                 </div>
 
                                 <div className={cn(
@@ -551,34 +547,20 @@ export default function VirtualCardActivationPage() {
                                     paymentMode === 'UPI' ? "border-[#00d2ff] shadow-[0_0_30px_rgba(0,210,255,0.15)]" : "border-[#00d2ff]/30 hover:border-[#00d2ff]"
                                 )}>
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#00d2ff]/5 rounded-full blur-3xl pointer-events-none" />
-                                    
+
                                     <div className="flex items-center gap-3 mb-6 text-left">
                                         <div className="p-3 bg-[#00d2ff]/20 rounded-2xl border border-[#00d2ff]/30 flex items-center justify-center">
                                             <span className="font-black italic text-lg tracking-tighter text-[#00d2ff]">UPI</span>
                                         </div>
                                         <div>
-                                            <p className="text-[9px] text-gray-400 uppercase font-black italic">Activate via</p>
-                                            <p className="font-black text-[#00d2ff] uppercase tracking-wider text-lg">UPI</p>
+                                            <p className="text-[9px] text-gray-400 uppercase font-black italic">Activate &</p>
+                                            <p className="font-black text-[#00d2ff] uppercase tracking-wider text-lg">Flat 500 Cashback</p>
                                         </div>
                                     </div>
 
                                     <div className="mb-6 text-left">
                                         <p className="text-sm text-gray-400 font-black italic uppercase">Flat <span className="text-3xl text-white font-black italic">500</span> Cashback</p>
                                         <p className="text-[9px] text-[#00d2ff]/80 font-black uppercase tracking-widest mt-1">on UPI activation</p>
-                                    </div>
-
-                                    <div className="space-y-4 mb-8 flex-1 text-left">
-                                        {[
-                                            { icon: <Award className="w-4 h-4" />, text: "Get flat 500 cashback instantly" },
-                                            { icon: <Zap className="w-4 h-4" />, text: "Instant activation with UPI" },
-                                            { icon: <ShieldCheck className="w-4 h-4" />, text: "100% secure vault processing" },
-                                            { icon: <Smartphone className="w-4 h-4" />, text: "Works with all major UPI Apps" },
-                                        ].map((item, i) => (
-                                            <div key={i} className="flex items-center gap-3">
-                                                <div className="text-[#00d2ff]/50 border border-[#00d2ff]/20 p-1.5 rounded-full">{item.icon}</div>
-                                                <p className="text-[10px] text-gray-400 font-black italic uppercase tracking-tight">{item.text}</p>
-                                            </div>
-                                        ))}
                                     </div>
 
                                     {paymentMode === 'UPI' ? (
@@ -619,7 +601,7 @@ export default function VirtualCardActivationPage() {
                                                 )}
                                             </div>
 
-                                            <button 
+                                            <button
                                                 onClick={(e) => { e.stopPropagation(); handleActivate(); }}
                                                 disabled={!proofImage || isSubmitting}
                                                 className="w-full bg-[#00d2ff] hover:bg-[#00b8e6] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(0,210,255,0.3)] transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
@@ -670,7 +652,8 @@ export default function VirtualCardActivationPage() {
                         </section>
                     </main>
 
-                    <style dangerouslySetInnerHTML={{ __html: `
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
                         .perspective-1000 { perspective: 1000px; }
                         @keyframes float {
                             0%, 100% { transform: translateY(0) rotate(-12deg); }
