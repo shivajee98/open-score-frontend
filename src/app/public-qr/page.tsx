@@ -122,7 +122,7 @@ export default function PublicQrPage() {
         }
     };
 
-    const upiUrl = `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
+    const upiUrl = `upi://pay?pa=flipflops@upi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
 
     if (success && bookingId) {
         const trackingUrl = typeof window !== 'undefined' ? `${window.location.origin}/qr-update?id=${bookingId}` : '';
@@ -368,10 +368,10 @@ export default function PublicQrPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
-                                    <p className="text-lg font-mono font-black tracking-wider truncate">9161168840@uboi</p>
+                                    <p className="text-lg font-mono font-black tracking-wider truncate">flipflops@upi</p>
                                     <button 
                                         onClick={() => {
-                                            navigator.clipboard.writeText('9161168840@uboi');
+                                            navigator.clipboard.writeText('flipflops@upi');
                                             toast.info('Copied!');
                                         }}
                                         className="shrink-0 bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all"

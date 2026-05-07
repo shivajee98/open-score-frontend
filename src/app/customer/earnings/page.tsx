@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
 import { apiFetch } from '@/lib/api';
-import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode, Search, Info, CreditCard, Loader2, Landmark, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Coins, TrendingUp, History, Users, ArrowUpRight, CheckCircle, Clock, Trophy, Copy, Check, X, AlertCircle, QrCode, Search, Info, CreditCard, Loader2, Landmark, CheckCircle2, Phone } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { toast } from '@/components/ui/Toast';
 import { useStore } from '@/store/useStore';
@@ -213,8 +213,35 @@ export default function TeamEarningsPage() {
                         <ArrowLeft className="w-4 h-4" /> Back to Profile
                     </BackButton>
 
-                    <h1 className="text-2xl font-black text-white tracking-tight">My Earnings</h1>
-                    <p className="text-indigo-200 text-xs font-bold mt-1 uppercase tracking-widest">Performance Dashboard</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-black text-white tracking-tight">My Earnings</h1>
+                            <p className="text-indigo-200 text-xs font-bold mt-1 uppercase tracking-widest">Performance Dashboard</p>
+                        </div>
+
+                        <div className="flex gap-3">
+                            {(stats?.parent_support_number || user?.parent_support_number) && (
+                                <a
+                                    href={`tel:${stats?.parent_support_number || user?.parent_support_number}`}
+                                    className="w-10 h-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90 group relative"
+                                    title="Call Vendor"
+                                >
+                                    <Phone size={18} strokeWidth={2.5} />
+                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-[8px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none uppercase tracking-tighter">Call Vendor</span>
+                                </a>
+                            )}
+                            {(stats?.support_number || user?.support_number) && (
+                                <a
+                                    href={`tel:${stats?.support_number || user?.support_number}`}
+                                    className="w-10 h-10 bg-emerald-500 border border-emerald-400 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition-all active:scale-90 animate-pulse group relative"
+                                    title="Call Support"
+                                >
+                                    <Phone size={18} strokeWidth={2.5} />
+                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-emerald-600 text-[8px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none uppercase tracking-tighter">Call Support</span>
+                                </a>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -914,6 +941,7 @@ export default function TeamEarningsPage() {
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

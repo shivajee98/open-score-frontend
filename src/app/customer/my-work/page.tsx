@@ -373,7 +373,7 @@ export default function MyWorkDashboard() {
                             </div>
                         )}
 
-                        {user?.show_parent_support && user?.parent_support_number && (
+                        {(user?.support_number || (user?.show_parent_support && user?.parent_support_number)) && (
                             <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center text-center">
                                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner mb-4">
                                     <MessageSquare size={32} />
@@ -384,14 +384,14 @@ export default function MyWorkDashboard() {
                                 </p>
                                 <div className="grid grid-cols-2 gap-4 w-full mt-6">
                                     <a 
-                                        href={`tel:${user.parent_support_number}`}
+                                        href={`tel:${user.support_number || user.parent_support_number}`}
                                         className="py-3 bg-slate-900 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
                                     >
                                         <Smartphone size={14} /> 
-                                        {user.parent_support_number.slice(0,2)}xxxxxx{user.parent_support_number.slice(-2)}
+                                        {(user.support_number || user.parent_support_number).slice(0,2)}xxxxxx{(user.support_number || user.parent_support_number).slice(-2)}
                                     </a>
                                     <a 
-                                        href={`https://wa.me/91${user.parent_support_number}`}
+                                        href={`https://wa.me/91${user.support_number || user.parent_support_number}`}
                                         target="_blank"
                                         className="py-3 bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg hover:bg-emerald-700 transition-all"
                                     >
@@ -1073,6 +1073,20 @@ export default function MyWorkDashboard() {
             />
 
             <FloatingHelpButton onClick={() => setShowSupport(true)} />
+
+            {/* Direct Call Support Button (Floating) */}
+            {(user?.support_number || (user?.show_parent_support && user?.parent_support_number)) && (
+                <div className="fixed bottom-10 left-6 z-[99] animate-in slide-in-from-bottom-4 duration-500">
+                    <button 
+                        onClick={() => window.location.href = `tel:${user.support_number || user.parent_support_number}`}
+                        className="bg-white/95 backdrop-blur-xl border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-1.5 rounded-full flex items-center group hover:scale-105 active:scale-95 transition-all"
+                    >
+                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-200 group-hover:rotate-12 transition-transform">
+                            <Smartphone size={20} fill="currentColor" />
+                        </div>
+                    </button>
+                </div>
+            )}
         </div>
         </DashboardLayout>
     );

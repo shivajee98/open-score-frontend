@@ -412,38 +412,6 @@ export default function LoanStatus() {
                                     </div>
                                 )}
 
-                                {loan.reupload_fields?.length > 0 && (
-                                    <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl animate-in fade-in slide-in-from-top-2 shadow-sm">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center">
-                                                <MessageSquare size={12} className="text-amber-600" />
-                                            </div>
-                                            <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Action Required: KYC Correction</span>
-                                        </div>
-                                        <p className="text-sm text-amber-700 font-bold leading-relaxed italic pl-8">
-                                            "{loan.remarks || 'Admin has requested corrections for specific fields in your KYC application.'}"
-                                        </p>
-                                        <div className="mt-4 pl-8 space-y-3">
-                                            {loan.reupload_fields.map((field: string, i: number) => (
-                                                <div key={i} className="flex flex-col gap-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
-                                                        <span className="text-[10px] font-black text-amber-900 uppercase tracking-tight">
-                                                            {field.replace(/_/g, ' ')}
-                                                        </span>
-                                                    </div>
-                                                    {loan.reupload_remarks?.[field] && (
-                                                        <div className="bg-white/60 p-2 rounded-lg border border-amber-200/40 ml-3.5">
-                                                            <p className="text-[11px] text-amber-700 font-medium italic">
-                                                                "{loan.reupload_remarks[field]}"
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                             <h2 className="text-xl font-normal text-slate-900 tracking-tight">#{loan.display_id || loanId}</h2>
                         </div>
@@ -698,6 +666,26 @@ export default function LoanStatus() {
                                     ? 'Your loan is processed, all you need is to re-upload these fields required by admin.'
                                     : 'We need a few more details to finalize your application.'}
                             </p>
+                            
+                            {loan.reupload_fields?.length > 0 && (
+                                <div className="mt-4 text-left space-y-2 border-t border-white/10 pt-4">
+                                    {loan.reupload_fields.map((field: string, i: number) => (
+                                        <div key={i} className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 bg-white rounded-full shadow-lg shadow-white/50" />
+                                                <span className="text-[10px] font-black text-white uppercase tracking-tight">
+                                                    {field.replace(/_/g, ' ')}
+                                                </span>
+                                            </div>
+                                            {loan.reupload_remarks?.[field] && (
+                                                <p className="text-[10px] text-blue-100 font-medium italic pl-3.5 opacity-80">
+                                                    "{loan.reupload_remarks[field]}"
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         <div className="flex w-full gap-2">
                             <button
@@ -722,7 +710,7 @@ export default function LoanStatus() {
                 )}
 
                 {/* Special Action: Pay Platform Fee - ONLY if APPROVED and EMI #0 is pending */}
-                {loan.status === 'APPROVED' && repayments.some(r => Number(r.emi_number) === 0 && r.status === 'PENDING') && (
+                {loan.status === 'APPROVED' && (!loan.reupload_fields || loan.reupload_fields.length === 0) && repayments.some(r => Number(r.emi_number) === 0 && r.status === 'PENDING') && (
                     <div className="bg-slate-900 rounded-lg p-5 text-white shadow-xl shadow-slate-900/20 flex flex-col items-center text-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center border border-white/10 shadow-inner">
                             <IndianRupee className="w-6 h-6 text-emerald-400" />

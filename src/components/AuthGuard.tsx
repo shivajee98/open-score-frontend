@@ -66,9 +66,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         const isPublicRoute = path.startsWith("/public") || path.startsWith("/privacy-policy") || path.startsWith("/qr-update") || path === "/qr" || path.startsWith("/qr?");
 
 
-        if (token) {
-            // User is logged in
+        const isResettingPin = localStorage.getItem('is_resetting_pin') === 'true';
+        const tempResetToken = localStorage.getItem('temp_reset_token');
+
+        if (token || tempResetToken) {
+            // User is logged in or in-flow
             if (isAuthRoute) {
+                // If they are on pin-reset-setup, let them stay there
+                if (path === "/auth/pin-reset-setup" && (isResettingPin || tempResetToken)) {
+                    setAuthorized(true);
+                    return;
+                }
+
                 let target = user.role === 'ADMIN' ? '/customer' : '/customer';
                 if (user.is_onboarded === false || user.is_onboarded === 0 || user.is_onboarded === "0") {
                     target = user.role === 'MERCHANT' ? '/auth/merchant-onboarding' : '/auth/onboarding';
@@ -148,7 +157,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                     } else {
                         setSuspended(false);
                     }
-                } catch (e) {}
+                } catch (e) { }
             }
         };
         handleStateUpdate(); // Initial check

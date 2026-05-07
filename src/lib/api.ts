@@ -33,6 +33,11 @@ export const clearAuthState = async () => {
         localStorage.clear();
         sessionStorage.clear();
 
+        localStorage.removeItem('auth_flow');
+        localStorage.removeItem('auth_mobile');
+        localStorage.removeItem('is_resetting_pin');
+        localStorage.removeItem('temp_reset_token');
+
         // Clear all cookies
         document.cookie.split(";").forEach((c) => {
             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
@@ -119,10 +124,16 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
     }
 
     // Always Inject Auth Token for Static Export
+    // Only inject if a custom Authorization header was NOT already provided in options
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
-        if (token) {
-            (headers as any)['Authorization'] = `Bearer ${token}`;
+        const customHeaders = fetchOptions.headers || {};
+        const hasCustomAuth = Object.keys(customHeaders).some(k => k.toLowerCase() === 'authorization');
+        
+        if (!hasCustomAuth) {
+            const token = localStorage.getItem('token') || localStorage.getItem('temp_reset_token');
+            if (token) {
+                (headers as any)['Authorization'] = `Bearer ${token}`;
+            }
         }
         
         // Inject Device Headers

@@ -139,7 +139,7 @@ export default function QrPaymentPage() {
         }
     };
 
-    const upiUrl = `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
+    const upiUrl = `upi://pay?pa=flipflops@upi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
 
     if (success) {
         return (
@@ -357,11 +357,11 @@ export default function QrPaymentPage() {
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="space-y-0.5">
                                         <span className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.15em] block">Merchant ID</span>
-                                        <p className="text-lg font-mono font-black tracking-wider text-white">9161168840@uboi</p>
+                                        <p className="text-lg font-mono font-black tracking-wider text-white">flipflops@upi</p>
                                     </div>
                                     <button
                                         onClick={() => {
-                                            navigator.clipboard.writeText('9161168840@uboi');
+                                            navigator.clipboard.writeText('flipflops@upi');
                                             toast.info('Copied!');
                                         }}
                                         className="w-10 h-10 bg-white/10 hover:bg-white/20 flex items-center justify-center rounded-xl transition-all active:scale-90"

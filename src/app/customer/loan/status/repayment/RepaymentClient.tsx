@@ -208,7 +208,7 @@ export default function RepaymentDashboard() {
     const pendingEmi = repayments.find(r => r.status === 'PENDING' || r.status === 'PENDING_VERIFICATION' || r.status === 'MANUAL_VERIFICATION' || r.status === 'REASK_PROOF');
     
     // Dynamic UPI URL for QR and Button
-    const upiUrl = pendingEmi ? `upi://pay?pa=9161168840@uboi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${pendingEmi.amount}&tn=${encodeURIComponent(`EMI Payment for Loan #${loanId}`)}` : '';
+    const upiUrl = pendingEmi ? `upi://pay?pa=flipflops@upi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${pendingEmi.amount}&tn=${encodeURIComponent(`EMI Payment for Loan #${loanId}`)}` : '';
 
     const totalPaid = paidEmis.filter(r => Number(r.emi_number) > 0).reduce((sum, r) => sum + Number(r.amount), 0);
     const totalFeesPaid = paidEmis.filter(r => Number(r.emi_number) === 0).reduce((sum, r) => sum + Number(r.amount), 0);

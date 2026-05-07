@@ -80,6 +80,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const [checkingUniqueness, setCheckingUniqueness] = useState<{ aadhar?: boolean, pan?: boolean, referral?: boolean }>({});
     const [referrerName, setReferrerName] = useState<string | null>(null);
     const [eligibilityError, setEligibilityError] = useState<{ message: string, step: number } | null>(null);
+    const [aadhaarCooldown, setAadhaarCooldown] = useState(0);
+    const lastCheckedValues = useRef<{ aadhar?: string, pan?: string }>({});
 
     const activeSteps = useMemo(() => {
         const reuploadFields = (initialData as any)?.reupload_fields || [];
@@ -261,17 +263,30 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
 
 
+    useEffect(() => {
+        if (aadhaarCooldown > 0) {
+            const timer = setTimeout(() => setAadhaarCooldown(aadhaarCooldown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [aadhaarCooldown]);
+
     const referralValue = watch('referral_code');
+    const lastCheckedReferral = useRef<string | null>(null);
 
     useEffect(() => {
         if (referralValue && String(referralValue).length >= 4) {
+            const val = String(referralValue).toUpperCase();
+            if (val === lastCheckedReferral.current) return;
+
             const timer = setTimeout(() => {
-                checkReferral(String(referralValue));
+                lastCheckedReferral.current = val;
+                checkReferral(val);
             }, 600);
             return () => clearTimeout(timer);
         } else {
             setUniquenessErrors(prev => ({ ...prev, referral: undefined }));
             setReferrerName(null);
+            lastCheckedReferral.current = null;
         }
     }, [referralValue]);
 
@@ -329,12 +344,16 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
 
 
     const checkUniqueness = async (type: 'aadhar' | 'pan', value: string) => {
+        if (lastCheckedValues.current[type] === value) return; // Skip if same as last check
+        
         setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
         try {
             const res = await apiFetch('/loans/check-kyc-uniqueness', {
                 method: 'POST',
                 body: JSON.stringify({ type, value })
             });
+
+            lastCheckedValues.current[type] = value; // Store last checked value
 
             if (res.already_verified) {
                 if (type === 'aadhar') setIsAadhaarVerified(true);
@@ -614,7 +633,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     };
 
     const handleSendAadhaarOtp = async () => {
-        if (isAadhaarVerified) return;
+        if (isAadhaarVerified || aadhaarCooldown > 0) return;
         const aadhaarNumber = watch('aadhar_number');
         if (!aadhaarNumber || String(aadhaarNumber).length !== 12) {
             toast.error('कृपया पहले आधार नंबर दर्ज करें।');
@@ -632,17 +651,30 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 method: 'POST',
                 body: JSON.stringify({ aadhaar_number: aadhaarNumber }),
             });
+
+            if (res.cooldown) {
+                setAadhaarCooldown(60);
+                toast.error(res.message, { id: toastId });
+                return;
+            }
+
             // Sandbox returns reference_id inside data object
             const refId = res?.data?.reference_id ?? res?.reference_id;
             if (refId) {
                 setAadhaarReferenceId(refId);
                 setAadhaarOtpSent(true);
+                setAadhaarCooldown(60); // Start 60s cooldown
                 toast.success('OTP आपके आधार से लिंक्ड मोबाइल नंबर पर भेज दिया गया है।', { id: toastId });
             } else {
                 toast.error(res?.message || 'OTP भेजने में विफल। पुनः प्रयास करें।', { id: toastId });
             }
         } catch (err: any) {
-            toast.error(err?.message || 'OTP अनुरोध विफल।', { id: toastId });
+            if (err.status === 429) {
+                setAadhaarCooldown(60);
+                toast.error('Too many requests. Please wait 60 seconds.', { id: toastId });
+            } else {
+                toast.error(err?.message || 'OTP अनुरोध विफल।', { id: toastId });
+            }
         } finally {
             setIsAadhaarVerifying(false);
         }
@@ -902,10 +934,10 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                         <button
                                             type="button"
                                             onClick={handleSendAadhaarOtp}
-                                            disabled={isAadhaarVerifying || !watch('aadhar_number') || String(watch('aadhar_number') || '').length !== 12}
+                                            disabled={isAadhaarVerifying || aadhaarCooldown > 0 || !watch('aadhar_number') || String(watch('aadhar_number') || '').length !== 12}
                                             className="w-full py-3.5 bg-blue-600/10 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-blue-600 hover:text-white active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-blue-100"
                                         >
-                                            {isAadhaarVerifying ? 'Sending...' : 'Verify with OTP (Required)'}
+                                            {isAadhaarVerifying ? 'Sending...' : (aadhaarCooldown > 0 ? `Resend in ${aadhaarCooldown}s` : 'Verify with OTP (Required)')}
                                         </button>
                                     ) : (
                                         <div className="space-y-3 animate-in slide-in-from-bottom-2 duration-300">

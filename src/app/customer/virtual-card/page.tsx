@@ -231,17 +231,25 @@ export default function VirtualCardActivationPage() {
                                         <p className="text-[6px] font-black uppercase tracking-widest text-indigo-300">Elite</p>
                                     </div>
                                 </div>
-                                <div className="mt-4 flex justify-center">
-                                    <div className="w-8 h-6 bg-yellow-500/40 rounded-sm border border-yellow-500/10"></div>
-                                </div>
-                                <div className="mt-auto flex justify-between items-end">
-                                    <div className="max-w-[80px]">
-                                        <p className="text-[5px] text-white/30 uppercase tracking-widest mb-0.5 leading-none">Card Holder</p>
-                                        <p className="text-[9px] font-black uppercase truncate">{user?.name || 'Rahul Kumar'}</p>
+                                <div className="mt-4">
+                                    {/* Chip */}
+                                    <div className="w-8 h-6 bg-gradient-to-br from-yellow-200 to-yellow-600 rounded-md shadow-inner mb-3 flex items-center justify-center">
+                                        <div className="grid grid-cols-2 gap-px w-full h-full p-1 opacity-50">
+                                            <div className="border-r border-b border-black/20" />
+                                            <div className="border-b border-black/20" />
+                                            <div className="border-r border-black/20" />
+                                            <div />
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black tracking-widest">•••• 8840</p>
-                                        <p className="text-[6px] font-black text-slate-500 tracking-widest mt-0.5 uppercase">DEBIT</p>
+                                    <div className="flex justify-between items-end">
+                                        <div className="text-left">
+                                            <p className="text-[10px] font-mono tracking-[0.1em] text-white/90 leading-none">•••• •••• •••• 8840</p>
+                                            <div className="mt-3">
+                                                <p className="text-[5px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Card Holder</p>
+                                                <p className="text-[9px] font-black text-white uppercase italic leading-none">{user?.name || 'Rahul Kumar'}</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-[8px] font-black text-white/30 tracking-widest uppercase italic leading-none">Debit</p>
                                     </div>
                                 </div>
                             </div>
@@ -257,27 +265,50 @@ export default function VirtualCardActivationPage() {
                         </div>
 
                         {/* Benefits Grid - Compact */}
-                        <div className="space-y-4 mb-4 shrink-0">
-                            <div className="flex items-center gap-4">
-                                <div className="h-[1px] flex-1 bg-gradient-to-l from-blue-600/20 to-transparent"></div>
-                                <h4 className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em]">AMAZING BENEFITS</h4>
-                                <div className="h-[1px] flex-1 bg-gradient-to-r from-blue-600/20 to-transparent"></div>
+                        <div className="bg-[#020617]/40 border border-blue-900/30 rounded-[2rem] p-6 mb-6 shrink-0 relative overflow-hidden backdrop-blur-sm">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="h-[1px] flex-1 bg-gradient-to-l from-blue-600/30 to-transparent"></div>
+                                <h4 className="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em]">AMAZING BENEFITS</h4>
+                                <div className="h-[1px] flex-1 bg-gradient-to-r from-blue-600/30 to-transparent"></div>
                             </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                <div className="bg-[#0A0D1E] rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
-                                    <Calendar className="text-blue-500 mb-2" size={18} />
-                                    <p className="text-[8px] font-bold text-slate-500 mb-0.5">Daily</p>
-                                    <h5 className="text-[11px] font-black leading-none">100 - 200</h5>
+                            
+                            <div className="grid grid-cols-3 relative">
+                                {/* Daily Section */}
+                                <div className="flex flex-col items-center text-center px-2">
+                                    <div className="mb-3 relative">
+                                        <Calendar className="text-blue-500" size={24} />
+                                        <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full"></div>
+                                    </div>
+                                    <p className="text-[9px] font-bold text-slate-500 mb-1 leading-none">Daily</p>
+                                    <h5 className="text-[14px] font-black text-white leading-none tracking-tighter">100 - 200</h5>
+                                    <p className="text-[9px] font-bold text-slate-500 mt-1.5 leading-none">Tak Bachat</p>
                                 </div>
-                                <div className="bg-[#0A0D1E] rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
-                                    <PiggyBank className="text-purple-500 mb-2" size={18} />
-                                    <p className="text-[8px] font-bold text-slate-500 mb-0.5">Yearly Upto</p>
-                                    <h5 className="text-[11px] font-black leading-none">75,000</h5>
+
+                                {/* Divider */}
+                                <div className="absolute left-[33.33%] top-1/2 -translate-y-1/2 w-[1px] h-12 bg-blue-900/20"></div>
+
+                                {/* Yearly Section */}
+                                <div className="flex flex-col items-center text-center px-2">
+                                    <div className="mb-3 relative">
+                                        <PiggyBank className="text-blue-500" size={24} />
+                                        <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full"></div>
+                                    </div>
+                                    <p className="text-[9px] font-bold text-slate-500 mb-1 leading-none">Yearly Upto</p>
+                                    <h5 className="text-[14px] font-black text-white leading-none tracking-tighter">75,000</h5>
+                                    <p className="text-[9px] font-bold text-slate-500 mt-1.5 leading-none">Fix Bachat</p>
                                 </div>
-                                <div className="bg-[#0A0D1E] rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
-                                    <ShieldCheck className="text-blue-400 mb-2" size={18} />
-                                    <p className="text-[8px] font-bold text-slate-500 mb-0.5">Smart Card</p>
-                                    <h5 className="text-[11px] font-black leading-none italic">Smarter!</h5>
+
+                                {/* Divider */}
+                                <div className="absolute left-[66.66%] top-1/2 -translate-y-1/2 w-[1px] h-12 bg-blue-900/20"></div>
+
+                                {/* Smart Card Section */}
+                                <div className="flex flex-col items-center text-center px-2">
+                                    <div className="mb-3 relative">
+                                        <ShieldCheck className="text-blue-500" size={24} />
+                                        <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full"></div>
+                                    </div>
+                                    <p className="text-[9px] font-bold text-slate-500 mb-1 leading-none">Smart Card</p>
+                                    <h5 className="text-[14px] font-black text-white leading-none tracking-tight">Smarter You!</h5>
                                 </div>
                             </div>
                         </div>
@@ -497,15 +528,15 @@ export default function VirtualCardActivationPage() {
                                         </div>
                                         <div>
                                             <p className="text-[9px] text-gray-400 uppercase font-black italic"></p>
-                                            <p className="font-black text-[#39ff14] uppercase tracking-wider text-lg">Wallet</p>
+                                            <p className="font-black text-[#39ff14] uppercase tracking-wider text-lg">Upto <span className="text-3xl text-white font-black italic">200</span> cashback </p><p className="text-[9px] text-[#39ff14]/80 font-black uppercase tracking-widest mt-1">on wallet activation</p>
                                         </div>
                                     </div>
 
-                                    <div className="mb-6 text-left">
-                                        <p className="text-sm text-gray-400 font-black italic uppercase">Upto <span className="text-3xl text-white font-black italic">200</span> Cashback</p>
+                                    {/* <div className="mb-6 text-left">
+                                        <p className="text-sm text-gray-400 font-black italic uppercase">Upto  Cashback</p>
                                         <p className="text-[9px] text-[#39ff14]/80 font-black uppercase tracking-widest mt-1">on wallet activation</p>
-                                    </div>
-                                    <div className="space-y-4 mb-8 flex-1 text-left">
+                                    </div> */}
+                                    {/* <div className="space-y-4 mb-8 flex-1 text-left">
                                         {[
                                             { icon: <Award className="w-4 h-4" />, text: "Get flat 500 cashback instantly" },
                                         ].map((item, i) => (
@@ -514,14 +545,14 @@ export default function VirtualCardActivationPage() {
                                                 <p className="text-[10px] text-gray-400 font-black italic uppercase tracking-tight">{item.text}</p>
                                             </div>
                                         ))}
-                                    </div>
+                                    </div> */}
                                     {paymentMode === 'WALLET' ? (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleActivate(); }}
                                             disabled={isSubmitting}
                                             className="w-full bg-[#39ff14] hover:bg-[#32e012] text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(57,255,20,0.3)] transition-all transform active:scale-95"
                                         >
-                                            {isSubmitting ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : <><Award className="w-5 h-5" /> CLAIM NOW <ChevronRight className="w-4 h-4" /></>}
+                                            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> <Award className="w-5 h-5" /> CLAIM NOW <ChevronRight className="w-4 h-4" />
                                         </button>
                                     ) : (
                                         <p className="text-center mt-3 text-[9px] text-[#39ff14] font-black uppercase tracking-widest italic animate-pulse">Click to Select</p>
@@ -559,7 +590,6 @@ export default function VirtualCardActivationPage() {
                                     </div>
 
                                     <div className="mb-6 text-left">
-                                        <p className="text-sm text-gray-400 font-black italic uppercase">Flat <span className="text-3xl text-white font-black italic">500</span> Cashback</p>
                                         <p className="text-[9px] text-[#00d2ff]/80 font-black uppercase tracking-widest mt-1">on UPI activation</p>
                                     </div>
 

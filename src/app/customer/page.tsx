@@ -616,11 +616,20 @@ export default function CustomerHome() {
                                     </button>
                                 </Link>
                             )}
-                            {activeUser?.can_make_calls && (
+                            {activeUser?.parent_support_number && (
                                 <button
-                                    onClick={() => setIsCallModalOpen(true)}
+                                    onClick={() => window.location.href = `tel:${activeUser.parent_support_number}`}
+                                    className="w-6 h-6 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-slate-800 font-black"
+                                    title="Call Vendor Support"
+                                >
+                                    <Phone size={12} strokeWidth={2.5} />
+                                </button>
+                            )}
+                            {activeUser?.support_number && (
+                                <button
+                                    onClick={() => window.location.href = `tel:${activeUser.support_number}`}
                                     className="w-6 h-6 rounded-lg bg-emerald-500 border border-emerald-400 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-emerald-600 font-black animate-pulse"
-                                    title="Call Support Agent"
+                                    title="Call Admin Support"
                                 >
                                     <Phone size={12} strokeWidth={2.5} />
                                 </button>
@@ -1049,24 +1058,37 @@ export default function CustomerHome() {
                     <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 shadow-lg shadow-rose-500/5 animate-in fade-in slide-in-from-bottom-4 duration-500 border-l-4 border-l-rose-500 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-rose-200/10 rounded-full blur-2xl -mr-12 -mt-12"></div>
 
-                        <div className="flex items-center justify-between gap-4 relative z-10">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20 group-hover:scale-105 transition-transform">
-                                    <Lock size={22} strokeWidth={2.5} />
+                        <div className="flex flex-col gap-3 relative z-10">
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20 group-hover:scale-105 transition-transform">
+                                        <Lock size={22} strokeWidth={2.5} />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest leading-none mb-1">Account Restricted</p>
+                                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">KYC Action Required</h4>
+                                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter opacity-80 italic">
+                                            Payments currently locked
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="space-y-0.5">
-                                    <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest leading-none mb-1">Account Restricted</p>
-                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">KYC Action Required</h4>
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter opacity-80 italic">
-                                        Payments currently locked
-                                    </p>
-                                </div>
+                                <Link href={kycLoan ? `/customer/loan/status/view?id=${kycLoan.id}` : "/customer/loan"} className="shrink-0">
+                                    <button className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 group/btn">
+                                        FIX KYC <ArrowRight size={14} strokeWidth={3} className="group-hover/btn:translate-x-1 transition-transform" />
+                                    </button>
+                                </Link>
                             </div>
-                            <Link href="/customer/loan" className="shrink-0">
-                                <button className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 group/btn">
-                                    FIX KYC <ArrowRight size={14} strokeWidth={3} className="group-hover/btn:translate-x-1 transition-transform" />
-                                </button>
-                            </Link>
+
+                            {kycLoan?.reupload_fields?.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 pt-1 border-t border-rose-200/50 mt-1">
+                                    <p className="w-full text-[8px] font-black text-rose-500 uppercase tracking-widest mb-1">Items requiring update:</p>
+                                    {kycLoan.reupload_fields.map((field: string, idx: number) => (
+                                        <span key={idx} className="bg-rose-500 text-white text-[7px] font-black uppercase px-2 py-1 rounded-md shadow-sm">
+                                            {field.replace(/_/g, ' ')}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1216,9 +1238,9 @@ export default function CustomerHome() {
 
 
 
-            {/* KYC Alert (If any) */}
+            {/* KYC Alert (If any) - Only shown if not already blocked by re-upload at the top */}
             {
-                kycLoan && (
+                kycLoan && !activeUser?.has_pending_kyc_reupload && (
                     <div className="px-4 mb-3">
                         <Link href={`/customer/loan/status/view?id=${kycLoan.id}`} prefetch={false}>
                             <div className={cn(

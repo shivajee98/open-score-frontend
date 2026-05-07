@@ -210,8 +210,14 @@ export default function AppLockGuard({ children }: { children: React.ReactNode }
                             <div className="pt-2 text-center">
                                 <button
                                     onClick={() => {
+                                        const userStr = localStorage.getItem("user");
+                                        const mobileStr = userStr ? JSON.parse(userStr).mobile_number : null;
                                         clearAuthState();
-                                        window.location.href = "/";
+                                        if (mobileStr) {
+                                            window.location.href = `/?reset_pin=true&mobile=${encodeURIComponent(mobileStr)}`;
+                                        } else {
+                                            window.location.href = "/";
+                                        }
                                     }}
                                     className="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest"
                                 >

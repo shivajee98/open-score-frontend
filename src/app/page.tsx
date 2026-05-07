@@ -9,7 +9,7 @@ import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap, 
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 
 function HomeContent() {
-  const [mobile, setMobile] = useState('');
+  const [mobile, setMobile] = useState(typeof window !== 'undefined' ? localStorage.getItem('auth_mobile') || '' : '');
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,8 +18,10 @@ function HomeContent() {
   const [tempReferralCode, setTempReferralCode] = useState('');
 
   // flow state: 'onboarding' | 'mobile_entry' | 'otp_verify' | 'pin_login' | 'pin_reset_setup' | 'role_select' | 'processing'
-  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'pin_login' | 'pin_reset_setup' | 'role_select' | 'processing'>('onboarding');
-  const [isResettingPin, setIsResettingPin] = useState(false);
+  const [flow, setFlow] = useState<'onboarding' | 'mobile_entry' | 'otp_verify' | 'pin_login' | 'pin_reset_setup' | 'role_select' | 'processing'>(
+    typeof window !== 'undefined' ? (localStorage.getItem('auth_flow') as any) || 'onboarding' : 'onboarding'
+  );
+  const [isResettingPin, setIsResettingPin] = useState(typeof window !== 'undefined' ? localStorage.getItem('is_resetting_pin') === 'true' : false);
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
 
@@ -47,10 +49,10 @@ function HomeContent() {
     if (ref) {
       const normalizedCode = ref.trim().toUpperCase();
       if (!normalizedCode.startsWith('SU')) {
-      localStorage.setItem('referral_code', normalizedCode);
-      setReferralCode(normalizedCode);
-      // Dispatch event to sync other tabs/components
-      window.dispatchEvent(new Event('referral_code_updated'));
+        localStorage.setItem('referral_code', normalizedCode);
+        setReferralCode(normalizedCode);
+        // Dispatch event to sync other tabs/components
+        window.dispatchEvent(new Event('referral_code_updated'));
       }
     }
   }, [searchParams]);
@@ -102,6 +104,37 @@ function HomeContent() {
         redirectUser(userData);
       } catch (e) {
         clearAuthState();
+
+        const resetPin = searchParams.get('reset_pin') === 'true';
+        const mobileParam = searchParams.get('mobile');
+
+        if (resetPin && mobileParam) {
+          // Clean URL
+          window.history.replaceState({}, '', window.location.pathname);
+
+          // Set states
+          setMobile(mobileParam);
+          setIsResettingPin(true);
+          localStorage.setItem('is_resetting_pin', 'true');
+          localStorage.setItem('auth_mobile', mobileParam);
+
+          // Auto send OTP
+          apiFetch('/auth/otp', {
+            method: 'POST',
+            body: JSON.stringify({ mobile_number: mobileParam })
+          }).then(() => {
+            setFlow('otp_verify');
+            localStorage.setItem('auth_flow', 'otp_verify');
+            setResendTimer(30);
+            setCheckingSession(false);
+          }).catch((err: any) => {
+            setError(err.message);
+            setFlow('mobile_entry');
+            setCheckingSession(false);
+          });
+          return;
+        }
+
         const seen = localStorage.getItem('hasSeenOnboarding') === 'true';
         if (seen) setFlow('mobile_entry');
         setCheckingSession(false);
@@ -122,7 +155,7 @@ function HomeContent() {
           localStorage.removeItem('referral code');
           setReferralCode(null);
         } else {
-        setReferralCode(code);
+          setReferralCode(code);
         }
       }
 
@@ -132,7 +165,7 @@ function HomeContent() {
           localStorage.removeItem('temp_referral_code');
           setTempReferralCode('');
         } else {
-        setTempReferralCode(temp);
+          setTempReferralCode(temp);
         }
       }
     };
@@ -285,8 +318,10 @@ function HomeContent() {
 
     if (isReset) {
       setIsResettingPin(true);
+      localStorage.setItem('is_resetting_pin', 'true');
     } else {
       setIsResettingPin(false);
+      localStorage.removeItem('is_resetting_pin');
     }
 
     const normalizedTempCode = tempReferralCode.trim().toUpperCase();
@@ -297,9 +332,9 @@ function HomeContent() {
         setTempReferralCode('');
         setReferralCode(null);
       } else {
-      localStorage.setItem('referral_code', normalizedTempCode);
-      setReferralCode(normalizedTempCode);
-      localStorage.removeItem('temp_referral_code');
+        localStorage.setItem('referral_code', normalizedTempCode);
+        setReferralCode(normalizedTempCode);
+        localStorage.removeItem('temp_referral_code');
       }
     }
 
@@ -308,7 +343,10 @@ function HomeContent() {
         method: 'POST',
         body: JSON.stringify({ mobile_number: mobile }),
       });
+
       setFlow('otp_verify');
+      localStorage.setItem('auth_flow', 'otp_verify');
+      localStorage.setItem('auth_mobile', mobile);
       setResendTimer(30);
     } catch (err: any) {
       setError(err.message);
@@ -357,7 +395,7 @@ function HomeContent() {
         redirectUser(data.user);
       }
     } catch (err: any) {
-      if (err.message.includes('verify via OTP')) {
+      if (err.code === 'STEP_UP_REQUIRED' || err.message.includes('verify via OTP')) {
         handleSendOtp();
         return;
       }
@@ -386,6 +424,7 @@ function HomeContent() {
 
       if (isResettingPin) {
         setFlow('pin_reset_setup');
+        localStorage.setItem('auth_flow', 'pin_reset_setup');
         // keep token for later use when setting pin
         localStorage.setItem('temp_reset_token', data.access_token);
         return;
@@ -393,10 +432,17 @@ function HomeContent() {
 
       if (data.status === 'NEW_USER') {
         setFlow('role_select');
+        localStorage.setItem('auth_flow', 'role_select');
       } else {
         localStorage.setItem('user', JSON.stringify(data.user));
         if (data.access_token) localStorage.setItem('token', data.access_token);
         localStorage.setItem('hasSeenOnboarding', 'true');
+
+        // Cleanup flow persistence
+        localStorage.removeItem('auth_flow');
+        localStorage.removeItem('auth_mobile');
+        localStorage.removeItem('is_resetting_pin');
+
         if (referralCode) {
           localStorage.removeItem('referral_code');
           localStorage.removeItem('referral code');
@@ -501,6 +547,13 @@ function HomeContent() {
 
       sessionStorage.setItem("app_unlocked", "true");
       window.dispatchEvent(new Event('auth-login'));
+
+      // Clear persistence
+      localStorage.removeItem('auth_flow');
+      localStorage.removeItem('auth_mobile');
+      localStorage.removeItem('is_resetting_pin');
+      setIsResettingPin(false);
+
       registerPush();
       redirectUser(userData);
 
@@ -653,7 +706,7 @@ function HomeContent() {
                     <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
                   ) : (
                     <>
-                      { (userExists && isTrusted && hasPin) ? 'Login with PIN' : 'Get OTP' }
+                      {(userExists && isTrusted && hasPin) ? 'Login with PIN' : 'Get OTP'}
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
@@ -777,6 +830,21 @@ function HomeContent() {
               >
                 {loading ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span> : 'Set New PIN & Login'}
               </button>
+              <button
+                onClick={() => {
+                  setFlow('mobile_entry');
+                  localStorage.removeItem('auth_flow');
+                  localStorage.removeItem('auth_mobile');
+                  localStorage.removeItem('is_resetting_pin');
+                  localStorage.removeItem('temp_reset_token');
+                  setIsResettingPin(false);
+                  setPin('');
+                  setConfirmPin('');
+                }}
+                className="w-full py-4 text-xs font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors"
+              >
+                Cancel and Start Over
+              </button>
             </div>
           </div>
         )}
@@ -784,12 +852,12 @@ function HomeContent() {
         {flow === 'otp_verify' && (
           <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/5 relative overflow-hidden animate-in slide-in-from-right-8 duration-500 border border-slate-100/50">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-600 to-blue-600"></div>
-            
+
             <div className="text-center space-y-8">
               <div>
                 <h2 className="text-2xl font-black mb-2 tracking-tight text-slate-900">Verify Identity</h2>
                 <div className="p-3 bg-blue-50 text-blue-700/70 rounded-2xl text-[10px] font-black uppercase tracking-widest leading-relaxed border border-blue-100">
-                  Pick Up The call to listen to the OTP sent to 
+                  Pick Up The call to listen to the OTP sent to
                   <span className="block mt-1 text-blue-700 text-xs font-black tracking-widest">+91 {mobile}</span>
                 </div>
               </div>
@@ -820,7 +888,13 @@ function HomeContent() {
                 </button>
 
                 <div className="flex flex-col items-center gap-4 pt-4 border-t border-slate-100">
-                  <button onClick={() => setFlow('mobile_entry')} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Change Number</button>
+                  <button onClick={() => {
+                    setFlow('mobile_entry');
+                    localStorage.removeItem('auth_flow');
+                    localStorage.removeItem('auth_mobile');
+                    localStorage.removeItem('is_resetting_pin');
+                    setIsResettingPin(false);
+                  }} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Change Number / Back</button>
 
                   <div className="pt-0">
                     {resendTimer > 0 ? (
