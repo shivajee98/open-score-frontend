@@ -71,6 +71,7 @@ export default function Profile() {
     const [uploadingImages, setUploadingImages] = useState<Record<string, boolean>>({});
     const [isAppPinMissing, setIsAppPinMissing] = useState(false);
     const hasPromptedPin = useRef(false);
+    const lastCheckedValues = useRef<Record<string, string>>({});
 
     // Alternate Number Verification States
     const [alternatePhone, setAlternatePhone] = useState(user?.alternate_number?.phone || '');
@@ -139,6 +140,9 @@ export default function Profile() {
     };
 
     const checkUniqueness = async (type: 'aadhar' | 'pan' | 'account', value: string, ifsc?: string) => {
+        const cacheKey = `${type}:${value}${ifsc ? ':' + ifsc : ''}`;
+        if (lastCheckedValues.current[type] === cacheKey) return;
+
         setCheckingUniqueness(prev => ({ ...prev, [type]: true }));
         try {
             const apiType = type === 'account' ? 'account_number' : type;
@@ -146,6 +150,8 @@ export default function Profile() {
                 method: 'POST',
                 body: JSON.stringify({ type: apiType, value, ifsc_code: ifsc })
             });
+
+            lastCheckedValues.current[type] = cacheKey;
 
             if (!res.unique) {
                 setUniquenessErrors(prev => ({ ...prev, [type]: 'यह विवरण पहले से ही किसी अन्य खाते से लिंक है।' }));
@@ -493,7 +499,7 @@ export default function Profile() {
         if (isEditing && formData.account_number.length >= 9 && formData.ifsc_code.length === 11 && isNewBank) {
             const timer = setTimeout(() => {
                 checkUniqueness('account', formData.account_number, formData.ifsc_code);
-            }, 600);
+            }, 1000); // Increased debounce for bank details
             return () => clearTimeout(timer);
         } else {
             setUniquenessErrors(prev => ({ ...prev, account: undefined }));

@@ -47,6 +47,7 @@ export default function QrPaymentPage() {
         landmark: '',
         security_amount: '1000'
     });
+    const upiId = process.env.NEXT_PUBLIC_UPI_ID || 'flipflops@upi';
 
     // Verification State
     const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -139,7 +140,7 @@ export default function QrPaymentPage() {
         }
     };
 
-    const upiUrl = `upi://pay?pa=flipflops@upi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
+    const upiUrl = `upi://pay?pa=${upiId}&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
 
     if (success) {
         return (
@@ -357,11 +358,11 @@ export default function QrPaymentPage() {
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="space-y-0.5">
                                         <span className="text-[10px] font-black text-indigo-300 uppercase tracking-[0.15em] block">Merchant ID</span>
-                                        <p className="text-lg font-mono font-black tracking-wider text-white">flipflops@upi</p>
+                                        <p className="text-lg font-mono font-black tracking-wider text-white">{upiId}</p>
                                     </div>
                                     <button
                                         onClick={() => {
-                                            navigator.clipboard.writeText('flipflops@upi');
+                                            navigator.clipboard.writeText(upiId);
                                             toast.info('Copied!');
                                         }}
                                         className="w-10 h-10 bg-white/10 hover:bg-white/20 flex items-center justify-center rounded-xl transition-all active:scale-90"

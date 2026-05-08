@@ -156,7 +156,7 @@ export default function VirtualCardActivationPage() {
         );
     }
 
-    const upiId = "flipflops@upi";
+    const upiId = process.env.NEXT_PUBLIC_UPI_ID || "flipflops@upi";
     const upiUrl = `upi://pay?pa=${upiId}&pn=Flip%20Flops&am=999&tn=Vault%20Card%20Activation`;
 
     const copyToClipboard = (text: string) => {

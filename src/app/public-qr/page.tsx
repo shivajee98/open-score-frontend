@@ -45,6 +45,7 @@ export default function PublicQrPage() {
         landmark: '',
         security_amount: '1000'
     });
+    const upiId = process.env.NEXT_PUBLIC_UPI_ID || 'flipflops@upi';
 
     // Verification State
     const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -122,7 +123,7 @@ export default function PublicQrPage() {
         }
     };
 
-    const upiUrl = `upi://pay?pa=flipflops@upi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
+    const upiUrl = `upi://pay?pa=${upiId}&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${form.security_amount}`;
 
     if (success && bookingId) {
         const trackingUrl = typeof window !== 'undefined' ? `${window.location.origin}/qr-update?id=${bookingId}` : '';
@@ -368,10 +369,10 @@ export default function PublicQrPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
-                                    <p className="text-lg font-mono font-black tracking-wider truncate">flipflops@upi</p>
+                                    <p className="text-lg font-mono font-black tracking-wider truncate">{upiId}</p>
                                     <button 
                                         onClick={() => {
-                                            navigator.clipboard.writeText('flipflops@upi');
+                                            navigator.clipboard.writeText(upiId);
                                             toast.info('Copied!');
                                         }}
                                         className="shrink-0 bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all"

@@ -1578,24 +1578,28 @@ export default function CustomerHome() {
                     </div>
                 </div>
             )}
-            {/* Floating Action Buttons - Bottom Left */}
-            <div className="fixed bottom-24 left-6 flex flex-col gap-4 z-50">
-                {activeUser?.support_number && (
-                    <button
-                        onClick={() => window.location.href = `tel:${activeUser.support_number}`}
-                        className="w-14 h-14 rounded-[1.2rem] bg-emerald-500 border-2 border-emerald-400/50 flex items-center justify-center shadow-[0_12px_24px_rgba(16,185,129,0.4)] active:scale-90 transition-all cursor-pointer text-white hover:bg-emerald-600 font-black animate-bounce-subtle group"
-                        title="Global Support Call"
-                    >
-                        <Phone size={24} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
-                    </button>
-                )}
+            {/* Floating Action Buttons - Repositioned to Bottom Right for better accessibility */}
+            <div className="fixed bottom-28 left-6 flex flex-col gap-5 z-50 items-start animate-in fade-in slide-in-from-left-10 duration-700">
                 {activeUser?.meeting_link && (
                     <button
                         onClick={() => window.open(activeUser.meeting_link, '_blank')}
-                        className="w-14 h-14 rounded-[1.2rem] bg-indigo-500 border-2 border-indigo-400/50 flex items-center justify-center shadow-[0_12px_24px_rgba(79,70,229,0.4)] active:scale-90 transition-all cursor-pointer text-white hover:bg-indigo-600 font-black group"
-                        title="Meeting Link"
+                        className="w-14 h-14 rounded-2xl bg-indigo-600 border border-indigo-400/30 flex items-center justify-center shadow-[0_20px_40px_rgba(79,70,229,0.3)] active:scale-90 transition-all cursor-pointer text-white hover:bg-indigo-700 font-black group relative overflow-hidden"
+                        title="Join Meeting"
                     >
-                        <MessageSquare size={24} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/0 via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <MessageSquare size={24} strokeWidth={2.5} className="group-hover:scale-110 transition-transform relative z-10" />
+                    </button>
+                )}
+                {activeUser?.support_number && (
+                    <button
+                        onClick={() => window.location.href = `tel:${activeUser.support_number}`}
+                        className="w-16 h-16 rounded-[2rem] bg-emerald-500 border border-emerald-300/30 flex items-center justify-center shadow-[0_25px_50px_rgba(16,185,129,0.4)] active:scale-90 transition-all cursor-pointer text-white hover:bg-emerald-600 font-black animate-bounce-subtle group relative overflow-hidden"
+                        title="Call Support"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-600/0 via-white/20 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Phone size={28} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform relative z-10" />
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full animate-ping" />
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full" />
                     </button>
                 )}
             </div>

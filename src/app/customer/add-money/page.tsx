@@ -37,6 +37,7 @@ export default function AddMoneyPage() {
     const [amount, setAmount] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<'upi' | 'qr'>('upi');
     const [showQR, setShowQR] = useState(false);
+    const upiId = process.env.NEXT_PUBLIC_UPI_ID || 'flipflops@upi';
 
     // Step 2 State (Verification)
     const [transactionId, setTransactionId] = useState('');
@@ -51,7 +52,7 @@ export default function AddMoneyPage() {
 
     const getUpiUrl = () => {
         const transactionNote = paymentPurpose === 'emi_payment' ? "EMI Payment" : "Wallet Topup";
-        return `upi://pay?pa=flipflops@upi&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
+        return `upi://pay?pa=${upiId}&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${amount}&tn=${encodeURIComponent(transactionNote)}`;
     };
 
     const handleStep1Submit = () => {
@@ -478,7 +479,7 @@ export default function AddMoneyPage() {
                             <div className="space-y-6 w-full text-center">
                                 <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 relative">
                                     <p className="text-slate-400 text-[9px] font-black uppercase tracking-[0.15em] mb-1">Payee VPA</p>
-                                    <p className="text-slate-900 font-black text-base tracking-tight uppercase">flipflops@upi</p>
+                                    <p className="text-slate-900 font-black text-base tracking-tight uppercase">{upiId}</p>
                                     <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[8px] font-black p-1.5 px-3 rounded-lg uppercase tracking-tighter shadow-lg shadow-blue-500/30">Verified</div>
                                 </div>
 

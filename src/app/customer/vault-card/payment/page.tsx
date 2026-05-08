@@ -104,7 +104,7 @@ function VaultCardPaymentContent() {
         );
     }
 
-    const upiId = "flipflops@upi"; // Provided by user as existing UPI id
+    const upiId = process.env.NEXT_PUBLIC_UPI_ID || "flipflops@upi"; // Provided by user as existing UPI id
     const amount = request?.activation_charge || 0;
     const upiUrl = `upi://pay?pa=${upiId}&pn=Flip%20Flops&mc=0000&mode=02&purpose=00&am=${amount}&tn=VaultCard_${id}`;
 
