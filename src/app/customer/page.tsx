@@ -616,24 +616,6 @@ export default function CustomerHome() {
                                     </button>
                                 </Link>
                             )}
-                            {activeUser?.parent_support_number && (
-                                <button
-                                    onClick={() => window.location.href = `tel:${activeUser.parent_support_number}`}
-                                    className="w-6 h-6 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-slate-800 font-black"
-                                    title="Call Vendor Support"
-                                >
-                                    <Phone size={12} strokeWidth={2.5} />
-                                </button>
-                            )}
-                            {activeUser?.support_number && (
-                                <button
-                                    onClick={() => window.location.href = `tel:${activeUser.support_number}`}
-                                    className="w-6 h-6 rounded-lg bg-emerald-500 border border-emerald-400 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-emerald-600 font-black animate-pulse"
-                                    title="Call Admin Support"
-                                >
-                                    <Phone size={12} strokeWidth={2.5} />
-                                </button>
-                            )}
                             <Link href="/customer/support" prefetch={false}>
                                 <button
                                     className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"
@@ -1596,6 +1578,27 @@ export default function CustomerHome() {
                     </div>
                 </div>
             )}
+            {/* Floating Action Buttons - Bottom Left */}
+            <div className="fixed bottom-24 left-6 flex flex-col gap-4 z-50">
+                {activeUser?.support_number && (
+                    <button
+                        onClick={() => window.location.href = `tel:${activeUser.support_number}`}
+                        className="w-14 h-14 rounded-[1.2rem] bg-emerald-500 border-2 border-emerald-400/50 flex items-center justify-center shadow-[0_12px_24px_rgba(16,185,129,0.4)] active:scale-90 transition-all cursor-pointer text-white hover:bg-emerald-600 font-black animate-bounce-subtle group"
+                        title="Global Support Call"
+                    >
+                        <Phone size={24} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
+                    </button>
+                )}
+                {activeUser?.meeting_link && (
+                    <button
+                        onClick={() => window.open(activeUser.meeting_link, '_blank')}
+                        className="w-14 h-14 rounded-[1.2rem] bg-indigo-500 border-2 border-indigo-400/50 flex items-center justify-center shadow-[0_12px_24px_rgba(79,70,229,0.4)] active:scale-90 transition-all cursor-pointer text-white hover:bg-indigo-600 font-black group"
+                        title="Meeting Link"
+                    >
+                        <MessageSquare size={24} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
+                    </button>
+                )}
+            </div>
         </div>
     );
 }

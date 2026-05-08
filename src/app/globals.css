@@ -167,3 +167,12 @@ input, textarea, [contenteditable="true"], .select-text {
 .animate-float {
     animation: float 3s ease-in-out infinite;
 }
+
+@keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.animate-bounce-subtle {
+    animation: bounce-subtle 2s ease-in-out infinite;
+}
