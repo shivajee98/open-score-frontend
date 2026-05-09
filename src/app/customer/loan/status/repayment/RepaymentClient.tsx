@@ -133,6 +133,7 @@ export default function RepaymentDashboard() {
         const formData = new FormData();
         formData.append('proof_image', proofFile);
         formData.append('amount', pendingEmi.amount);
+        formData.append('repayment_id', pendingEmi.id);
         if (transactionId) {
             formData.append('transaction_id', transactionId);
         }
