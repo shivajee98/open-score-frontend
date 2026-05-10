@@ -15,6 +15,7 @@ import { cn } from '@/lib/loanUtils';
 import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
 import MerchantLoanMilestone from '@/components/MerchantLoanMilestone';
 import OutgoingCallModal from '@/components/OutgoingCallModal';
+import CampaignModal from '@/components/CampaignModal';
 
 export default function CustomerHome() {
     const { user: cachedUser, wallet: cachedWallet, loans: cachedLoans, setUser, setWallet, setLoans } = useStore();
@@ -27,6 +28,7 @@ export default function CustomerHome() {
     const { data: vaultSetupData } = useApi('/vault/me');
     const { data: adminMessages, mutate: mutateAdminMessages } = useApi(user ? '/admin-messages' : null);
     const { data: cardRequests } = useApi('/vault-cards/my-requests');
+    const { data: campaignStatus } = useApi('/campaign/status');
 
     // Sync SWR data to Zustand Store for persistent caching
     useEffect(() => { if (user) setUser(user); }, [user, setUser]);
@@ -242,6 +244,32 @@ export default function CustomerHome() {
 
     // New Loan Launch Banner State
     const [showLoanBanner, setShowLoanBanner] = useState(false);
+    const [showCampaignModal, setShowCampaignModal] = useState(false);
+
+    useEffect(() => {
+        if (campaignStatus?.is_active) {
+            let isTargeted = false;
+            if (campaignStatus.visibility === 'ALL') {
+                isTargeted = true;
+            } else if (campaignStatus.visibility === 'ROLES') {
+                isTargeted = campaignStatus.target_roles?.includes(activeUser?.role);
+            } else if (campaignStatus.visibility === 'USERS') {
+                isTargeted = campaignStatus.target_user_ids?.includes(activeUser?.id);
+            }
+
+            // Only show Agent poster if role is AGENT (as per user request)
+            if (isTargeted && activeUser?.role === 'AGENT') {
+                const hasSeen = sessionStorage.getItem('seen_campaign_2024');
+                if (!hasSeen) {
+                    const timer = setTimeout(() => {
+                        setShowCampaignModal(true);
+                        sessionStorage.setItem('seen_campaign_2024', 'true');
+                    }, 2000);
+                    return () => clearTimeout(timer);
+                }
+            }
+        }
+    }, [campaignStatus, activeUser]);
 
     useEffect(() => {
         const launchTime = new Date('2026-04-20T17:42:00').getTime();
@@ -406,6 +434,7 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
+            <CampaignModal isOpen={showCampaignModal} onClose={() => setShowCampaignModal(false)} role={activeUser?.role} />
             {showLoanBanner && (
                 <div className="bg-emerald-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-[100] shadow-lg animate-in slide-in-from-top duration-500">
                     <div className="flex items-center gap-2">

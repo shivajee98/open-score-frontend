@@ -14,6 +14,7 @@ import SupportTicketScreen from '@/components/support/SupportTicketScreen';
 import DirectSupportChat from '@/components/support/DirectSupportChat';
 import FloatingHelpButton from '@/components/FloatingHelpButton';
 import VirtualCardProcessModal from '@/components/VirtualCardProcessModal';
+import CampaignModal from '@/components/CampaignModal';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
 
 const navItems = [
@@ -59,6 +60,33 @@ export default function MyWorkDashboard() {
     const [qrHistory, setQrHistory] = useState<any[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [qrSearchTerm, setQrSearchTerm] = useState('');
+    const { data: campaignStatus } = useApi('/campaign/status');
+    const [showCampaignModal, setShowCampaignModal] = useState(false);
+
+    useEffect(() => {
+        if (campaignStatus?.is_active) {
+            let isTargeted = false;
+            if (campaignStatus.visibility === 'ALL') {
+                isTargeted = true;
+            } else if (campaignStatus.visibility === 'ROLES') {
+                isTargeted = campaignStatus.target_roles?.includes(user?.role);
+            } else if (campaignStatus.visibility === 'USERS') {
+                isTargeted = campaignStatus.target_user_ids?.includes(user?.id);
+            }
+
+            // Only show Agent poster if role is AGENT (as per user request)
+            if (isTargeted && user?.role === 'AGENT') {
+                const hasSeen = sessionStorage.getItem('seen_campaign_2024');
+                if (!hasSeen) {
+                    const timer = setTimeout(() => {
+                        setShowCampaignModal(true);
+                        sessionStorage.setItem('seen_campaign_2024', 'true');
+                    }, 2000);
+                    return () => clearTimeout(timer);
+                }
+            }
+        }
+    }, [campaignStatus, user]);
 
     // Earn Wallet State
     const [earnStats, setEarnStats] = useState<any>(null);
@@ -165,6 +193,7 @@ export default function MyWorkDashboard() {
 
     return (
         <DashboardLayout navItems={navItems} title="My Work Dashboard">
+            <CampaignModal isOpen={showCampaignModal} onClose={() => setShowCampaignModal(false)} role={user?.role} />
             <div className="min-h-screen bg-slate-50 pb-10">
             {/* Header */}
             <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 pt-10 pb-12 px-4 shadow-xl relative overflow-hidden">
