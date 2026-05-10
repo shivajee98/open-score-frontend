@@ -45,9 +45,15 @@ export default function CampaignBanner() {
             
             <div className="max-w-7xl mx-auto px-4 py-2 relative flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                        <Megaphone className="w-4 h-4 text-white" />
-                    </div>
+                    {campaign.image_url ? (
+                        <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-white/20 shadow-inner">
+                            <img src={campaign.image_url} alt="" className="w-full h-full object-cover" />
+                        </div>
+                    ) : (
+                        <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                            <Megaphone className="w-4 h-4 text-white" />
+                        </div>
+                    )}
                     <div className="min-w-0">
                         <p className="text-[11px] font-black text-indigo-100 uppercase tracking-widest leading-none mb-0.5">
                             Active Campaign
