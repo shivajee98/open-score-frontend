@@ -15,6 +15,7 @@ import DirectSupportChat from '@/components/support/DirectSupportChat';
 import FloatingHelpButton from '@/components/FloatingHelpButton';
 import VirtualCardProcessModal from '@/components/VirtualCardProcessModal';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
+import CampaignPopup from '@/components/CampaignPopup';
 
 const navItems = [
     { label: 'Home', href: '/customer', icon: <Home size={20} /> },
@@ -165,6 +166,7 @@ export default function MyWorkDashboard() {
 
     return (
         <DashboardLayout navItems={navItems} title="My Work Dashboard">
+            <CampaignPopup />
             <div className="min-h-screen bg-slate-50 pb-10">
             {/* Header */}
             <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 pt-10 pb-12 px-4 shadow-xl relative overflow-hidden">

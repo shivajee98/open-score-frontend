@@ -15,6 +15,7 @@ import { cn } from '@/lib/loanUtils';
 import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
 import MerchantLoanMilestone from '@/components/MerchantLoanMilestone';
 import OutgoingCallModal from '@/components/OutgoingCallModal';
+import CampaignPopup from '@/components/CampaignPopup';
 
 export default function CustomerHome() {
     const { user: cachedUser, wallet: cachedWallet, loans: cachedLoans, setUser, setWallet, setLoans } = useStore();
@@ -406,6 +407,7 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
+            <CampaignPopup />
             {showLoanBanner && (
                 <div className="bg-emerald-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-[100] shadow-lg animate-in slide-in-from-top duration-500">
                     <div className="flex items-center gap-2">
