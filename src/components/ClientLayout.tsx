@@ -12,6 +12,8 @@ import MaintenanceGuard from "@/components/MaintenanceGuard";
 import ReferralHandler from "@/components/ReferralHandler";
 import { Suspense } from "react";
 import OfflineOverlay from "@/components/OfflineOverlay";
+import CampaignBanner from "@/components/CampaignBanner";
+import CampaignPopup from "@/components/CampaignPopup";
 
 export default function ClientLayout({
     children,
@@ -65,10 +67,12 @@ export default function ClientLayout({
                 <ToastContainer />
                 <OfflineOverlay />
                 <AppLockGuard>
+                    <CampaignBanner />
                     <Suspense fallback={null}>
                         <ReferralHandler />
                     </Suspense>
                     {children}
+                    <CampaignPopup />
                 </AppLockGuard>
                 <MobileNav />
             </AuthGuard>
