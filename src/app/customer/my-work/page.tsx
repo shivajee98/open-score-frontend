@@ -27,6 +27,7 @@ const navItems = [
 export default function MyWorkDashboard() {
     const router = useRouter();
     const { data: user, isLoading, mutate } = useApi('/auth/me');
+    const { data: activeCampaign } = useApi('/campaigns/active');
 
     // UI State
     const [activeTab, setActiveTab] = useState<'profile' | 'kyc' | 'qr'>('profile');
@@ -239,6 +240,32 @@ export default function MyWorkDashboard() {
                 {/* Tab: Profile Overview */}
                 {activeTab === 'profile' && (
                     <div className="space-y-4">
+                        {/* Contest Tracker */}
+                        {activeCampaign?.data?.registration && (
+                            <div className="bg-[#041226] rounded-[2rem] p-6 relative overflow-hidden border border-[#D4AF37]/30 shadow-[0_10px_30px_rgba(212,175,55,0.15)]">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                                <div className="flex justify-between items-start mb-6 relative z-10">
+                                    <div>
+                                        <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em]">Active Contest</p>
+                                        <h3 className="text-white text-xl font-black mt-1 uppercase tracking-wider">{activeCampaign.data.title}</h3>
+                                    </div>
+                                    <div className="px-3 py-1 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-lg">
+                                        <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest">Plan {activeCampaign.data.registration.selected_plan}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-3 relative z-10">
+                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Loans Done</p>
+                                        <p className="text-white text-2xl font-black">{earnStats?.approved_loans || 0}</p>
+                                    </div>
+                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Onboarding</p>
+                                        <p className="text-white text-2xl font-black">{earnStats?.onboarded_vendors || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {/* Process Virtual Card Entry (Agent Specific) */}
                         {isKycApproved && (
                             <div 
