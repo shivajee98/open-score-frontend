@@ -16,6 +16,7 @@ import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
 import MerchantLoanMilestone from '@/components/MerchantLoanMilestone';
 import OutgoingCallModal from '@/components/OutgoingCallModal';
 import CampaignPopup from '@/components/CampaignPopup';
+import SplashScreen from './_components/SplashScreen';
 
 export default function CustomerHome() {
     const { user: cachedUser, wallet: cachedWallet, loans: cachedLoans, setUser, setWallet, setLoans } = useStore();
@@ -47,6 +48,19 @@ export default function CustomerHome() {
     const [showAdminMessage, setShowAdminMessage] = useState(false);
     const [showAdminMessageHistory, setShowAdminMessageHistory] = useState(false);
     const [currentMsgIndex, setCurrentMsgIndex] = useState(0);
+    const [showSplashScreen, setShowSplashScreen] = useState(false);
+
+    useEffect(() => {
+        const hasSeenSplash = sessionStorage.getItem('customer_splash_seen');
+        if (!hasSeenSplash) {
+            setShowSplashScreen(true);
+        }
+    }, []);
+
+    const handleCloseSplash = () => {
+        setShowSplashScreen(false);
+        sessionStorage.setItem('customer_splash_seen', 'true');
+    };
 
     const allAdminMessages = Array.isArray(adminMessages) ? adminMessages : [];
     const unreadAdminMessages = allAdminMessages.filter((m: any) => !m.is_read);
@@ -407,6 +421,7 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
+            {showSplashScreen && <SplashScreen onClose={handleCloseSplash} />}
             <CampaignPopup />
             {showLoanBanner && (
                 <div className="bg-emerald-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-[100] shadow-lg animate-in slide-in-from-top duration-500">
