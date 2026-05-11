@@ -421,8 +421,11 @@ export default function CustomerHome() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
-            {showSplashScreen && <SplashScreen onClose={handleCloseSplash} />}
-            <CampaignPopup />
+            {showSplashScreen ? (
+                <SplashScreen onClose={handleCloseSplash} />
+            ) : (
+                <CampaignPopup />
+            )}
             {showLoanBanner && (
                 <div className="bg-emerald-600 text-white px-4 py-2 flex items-center justify-between sticky top-0 z-[100] shadow-lg animate-in slide-in-from-top duration-500">
                     <div className="flex items-center gap-2">

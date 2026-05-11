@@ -102,7 +102,7 @@ export default function CampaignPopup() {
                         position: 'fixed',
                         top: '24px',
                         right: '24px',
-                        zIndex: 99999,
+                        zIndex: 999999,
                         width: '48px',
                         height: '48px',
                         borderRadius: '9999px',
@@ -124,64 +124,66 @@ export default function CampaignPopup() {
     }
 
     return (
-        <div className="fixed inset-0 z-[120] bg-[#041226] text-white flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden animate-in fade-in duration-500">
-            <button
-                onClick={() => setShowContest(true)}
-                className="relative w-full shrink-0 active:scale-[0.98] transition-transform"
-            >
-                <img
-                    src={bannerImage}
-                    alt={campaign.title}
-                    className="w-full h-auto block"
-                />
-            </button>
-            <div className="w-full relative z-10 mt-4 pb-4">
-                <div className="flex flex-col items-center px-6 text-center">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">
-                        {campaign.body ? 'Limited Time Offer' : 'Ultimate Reward'}
-                    </span>
-                    <div className="relative">
-                        <h2
-                            className="text-3xl font-black uppercase tracking-tighter"
-                            style={{
-                                background: 'linear-gradient(to bottom, #FFDF73, #D4AF37, #997A15)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                filter: 'drop-shadow(0px 4px 10px rgba(212,175,55,0.2))'
-                            }}
-                        >
-                            {campaign.title || 'WIN UP TO 20 LAKHS'}
-                        </h2>
-                        {campaign.body && (
-                            <p className="mt-2 text-xs font-bold text-slate-300 uppercase tracking-wide px-4">
-                                {campaign.body}
-                            </p>
-                        )}
-                        <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mt-1 opacity-50"></div>
+        <div className="fixed inset-0 z-[120] bg-[#041226] text-white flex flex-col h-full overflow-hidden animate-in fade-in duration-500">
+            <div className="flex-1 overflow-y-auto overscroll-contain pb-32">
+                <button
+                    onClick={() => setShowContest(true)}
+                    className="relative w-full shrink-0 active:scale-[0.98] transition-transform"
+                >
+                    <img
+                        src={bannerImage}
+                        alt={campaign.title}
+                        className="w-full h-auto block"
+                    />
+                </button>
+                <div className="w-full relative z-10 mt-4 pb-4">
+                    <div className="flex flex-col items-center px-6 text-center">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">
+                            {campaign.body ? 'Limited Time Offer' : 'Ultimate Reward'}
+                        </span>
+                        <div className="relative">
+                            <h2
+                                className="text-3xl font-black uppercase tracking-tighter"
+                                style={{
+                                    background: 'linear-gradient(to bottom, #FFDF73, #D4AF37, #997A15)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    filter: 'drop-shadow(0px 4px 10px rgba(212,175,55,0.2))'
+                                }}
+                            >
+                                {campaign.title || 'WIN UP TO 20 LAKHS'}
+                            </h2>
+                            {campaign.body && (
+                                <p className="mt-2 text-xs font-bold text-slate-300 uppercase tracking-wide px-4">
+                                    {campaign.body}
+                                </p>
+                            )}
+                            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mt-1 opacity-50"></div>
+                        </div>
                     </div>
-                </div>
 
-                <div className="w-full h-auto flex flex-col gap-4 px-6 mt-8 mb-8">
-                    <button
-                        onClick={() => setShowGuide(true)}
-                        className="w-full py-4 rounded-2xl font-black text-[#041226] text-lg uppercase tracking-widest shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all active:scale-95"
-                        style={{ background: 'linear-gradient(to right, #FAD961, #F76B1C)' }}
-                    >
-                        How to participate
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (campaign.link && campaign.link.startsWith('http')) {
-                                window.location.href = campaign.link;
-                            } else {
-                                setShowContest(true);
-                            }
-                        }}
-                        className="w-full py-4 rounded-2xl font-black text-white text-lg uppercase tracking-widest shadow-[0_10px_30px_rgba(21,67,140,0.3)] transition-all active:scale-95 border border-[#15438C]"
-                        style={{ background: 'linear-gradient(to bottom, #15438C, #0B1E3B)' }}
-                    >
-                        Join Contest & win
-                    </button>
+                    <div className="w-full h-auto flex flex-col gap-4 px-6 mt-8 mb-8">
+                        <button
+                            onClick={() => setShowGuide(true)}
+                            className="w-full py-4 rounded-2xl font-black text-[#041226] text-lg uppercase tracking-widest shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all active:scale-95"
+                            style={{ background: 'linear-gradient(to right, #FAD961, #F76B1C)' }}
+                        >
+                            How to participate
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (campaign.link && campaign.link.startsWith('http')) {
+                                    window.location.href = campaign.link;
+                                } else {
+                                    setShowContest(true);
+                                }
+                            }}
+                            className="w-full py-4 rounded-2xl font-black text-white text-lg uppercase tracking-widest shadow-[0_10px_30px_rgba(21,67,140,0.3)] transition-all active:scale-95 border border-[#15438C]"
+                            style={{ background: 'linear-gradient(to bottom, #15438C, #0B1E3B)' }}
+                        >
+                            Join Contest & win
+                        </button>
+                    </div>
                 </div>
             </div>
 

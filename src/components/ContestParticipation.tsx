@@ -41,7 +41,8 @@ export default function ContestParticipation({ campaign, onRegistered, onBack, o
     };
 
     return (
-        <div className="min-h-screen bg-[#041226] flex flex-col font-sans overflow-y-auto overflow-x-hidden text-white relative">
+        <div className="fixed inset-0 z-[120] bg-[#041226] flex flex-col h-full overflow-hidden text-white font-sans">
+            <div className="flex-1 overflow-y-auto overscroll-contain">
             <button 
                 onClick={() => {}}
                 className="relative w-full shrink-0 active:scale-[0.98] transition-transform cursor-default"
@@ -113,6 +114,7 @@ export default function ContestParticipation({ campaign, onRegistered, onBack, o
                     </div>
                 </div>
             )}
+            </div>
 
             {/* Navigation buttons with INLINE STYLES to guarantee clickability */}
             <button 
