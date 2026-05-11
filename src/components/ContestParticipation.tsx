@@ -40,19 +40,6 @@ export default function ContestParticipation({ campaign, onRegistered, onBack, o
     return (
         <div className="min-h-screen bg-[#041226] flex flex-col font-sans overflow-y-auto overflow-x-hidden text-white relative">
             <button 
-                onClick={onBack} 
-                className="absolute top-6 left-6 z-[10000] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
-            >
-                <ArrowLeft size={24} className="text-white" />
-            </button>
-            <button 
-                onClick={onClose || onBack} 
-                className="absolute top-6 right-6 z-[10000] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
-            >
-                <X size={24} className="text-white" />
-            </button>
-
-            <button 
                 onClick={() => {}}
                 className="relative w-full shrink-0 active:scale-[0.98] transition-transform cursor-default"
             >
@@ -123,6 +110,20 @@ export default function ContestParticipation({ campaign, onRegistered, onBack, o
                     </div>
                 </div>
             )}
+
+            {/* Navigation buttons LAST in DOM so they paint on top of everything */}
+            <button 
+                onClick={onBack} 
+                className="fixed top-6 left-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+            >
+                <ArrowLeft size={24} className="text-white" />
+            </button>
+            <button 
+                onClick={onClose || onBack} 
+                className="fixed top-6 right-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+            >
+                <X size={24} className="text-white" />
+            </button>
         </div>
     );
 }

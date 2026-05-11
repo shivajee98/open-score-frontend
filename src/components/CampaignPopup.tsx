@@ -65,15 +65,9 @@ export default function CampaignPopup() {
             <div className="fixed inset-0 z-[120] bg-[#041226] text-white flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden animate-in slide-in-from-right duration-500">
                 <button
                     onClick={() => setShowGuide(false)}
-                    className="absolute top-6 left-6 z-[130] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+                    className="fixed top-6 left-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
                 >
                     <ArrowLeft size={24} className="text-white" />
-                </button>
-                <button
-                    onClick={handleClose}
-                    className="absolute top-6 right-6 z-[130] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
-                >
-                    <X size={24} className="text-white" />
                 </button>
                 <button
                     onClick={() => setShowContest(true)}
@@ -98,18 +92,20 @@ export default function CampaignPopup() {
                         Join Now & Win
                     </button>
                 </div>
+
+                {/* X button LAST in DOM so it paints on top of everything */}
+                <button
+                    onClick={handleClose}
+                    className="fixed top-6 right-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+                >
+                    <X size={24} className="text-white" />
+                </button>
             </div>
         );
     }
 
     return (
         <div className="fixed inset-0 z-[120] bg-[#041226] text-white flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden animate-in fade-in duration-500">
-            <button
-                onClick={handleClose}
-                className="absolute top-6 right-6 z-[130] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
-            >
-                <X size={24} className="text-white" />
-            </button>
             <button
                 onClick={() => setShowContest(true)}
                 className="relative w-full shrink-0 active:scale-[0.98] transition-transform"
@@ -158,9 +154,6 @@ export default function CampaignPopup() {
                         onClick={() => {
                             if (campaign.link && campaign.link.startsWith('http')) {
                                 window.location.href = campaign.link;
-                            } else if (campaign.link) {
-                                // Internal navigation could be handled here if needed
-                                setShowContest(true);
                             } else {
                                 setShowContest(true);
                             }
@@ -172,6 +165,14 @@ export default function CampaignPopup() {
                     </button>
                 </div>
             </div>
+
+            {/* X button LAST in DOM so it paints on top of everything */}
+            <button
+                onClick={handleClose}
+                className="fixed top-6 right-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+            >
+                <X size={24} className="text-white" />
+            </button>
         </div>
     );
 }
