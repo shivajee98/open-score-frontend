@@ -31,7 +31,7 @@ export default function CampaignPopup() {
 
     useEffect(() => {
         fetchActiveCampaign();
-        
+
         // Polling every 30 seconds to ensure immediate UI sync if campaign is deleted
         const interval = setInterval(fetchActiveCampaign, 30000);
         return () => clearInterval(interval);
@@ -44,13 +44,17 @@ export default function CampaignPopup() {
 
     if (!isOpen || !campaign) return null;
 
+    const bannerImage = campaign.image_url || '/vendor/11.webp';
+    const guideImage = '/vendor/22.webp'; // Keep guide as fallback or use another field
+
     if (showContest) {
         return (
             <div className="fixed inset-0 z-[120] overflow-hidden bg-[#041226] animate-in fade-in duration-500">
-                <ContestParticipation 
-                    campaign={campaign} 
-                    onRegistered={(reg) => setCampaign({ ...campaign, registration: reg })} 
-                    onBack={() => setShowContest(false)} 
+                <ContestParticipation
+                    campaign={campaign}
+                    onRegistered={(reg) => setCampaign({ ...campaign, registration: reg })}
+                    onBack={() => setShowContest(false)}
+                    onClose={handleClose}
                 />
             </div>
         );
@@ -71,19 +75,19 @@ export default function CampaignPopup() {
                 >
                     <X size={24} className="text-white" />
                 </button>
-                <button 
+                <button
                     onClick={() => setShowContest(true)}
                     className="relative w-full shrink-0 active:scale-[0.98] transition-transform"
                 >
                     <img
-                        src="/vendor/22.webp"
+                        src={guideImage}
                         alt="Guide"
                         className="w-full h-auto block"
                     />
                 </button>
 
                 <div className="w-full px-6 py-10 pb-20">
-                     <button
+                    <button
                         onClick={() => {
                             setShowGuide(false);
                             setShowContest(true);
@@ -106,20 +110,20 @@ export default function CampaignPopup() {
             >
                 <X size={24} className="text-white" />
             </button>
-            <button 
+            <button
                 onClick={() => setShowContest(true)}
                 className="relative w-full shrink-0 active:scale-[0.98] transition-transform"
             >
                 <img
-                    src="/vendor/11.webp"
-                    alt="Splash"
+                    src={bannerImage}
+                    alt={campaign.title}
                     className="w-full h-auto block"
                 />
             </button>
             <div className="w-full relative z-10 mt-4 pb-4">
                 <div className="flex flex-col items-center px-6 text-center">
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">
-                        Ultimate Reward
+                        {campaign.body ? 'Limited Time Offer' : 'Ultimate Reward'}
                     </span>
                     <div className="relative">
                         <h2
@@ -131,8 +135,13 @@ export default function CampaignPopup() {
                                 filter: 'drop-shadow(0px 4px 10px rgba(212,175,55,0.2))'
                             }}
                         >
-                            WIN UP TO 20 LAKHS
+                            {campaign.title || 'WIN UP TO 20 LAKHS'}
                         </h2>
+                        {campaign.body && (
+                            <p className="mt-2 text-xs font-bold text-slate-300 uppercase tracking-wide px-4">
+                                {campaign.body}
+                            </p>
+                        )}
                         <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mt-1 opacity-50"></div>
                     </div>
                 </div>
@@ -146,7 +155,16 @@ export default function CampaignPopup() {
                         How to participate
                     </button>
                     <button
-                        onClick={() => setShowContest(true)}
+                        onClick={() => {
+                            if (campaign.link && campaign.link.startsWith('http')) {
+                                window.location.href = campaign.link;
+                            } else if (campaign.link) {
+                                // Internal navigation could be handled here if needed
+                                setShowContest(true);
+                            } else {
+                                setShowContest(true);
+                            }
+                        }}
                         className="w-full py-4 rounded-2xl font-black text-white text-lg uppercase tracking-widest shadow-[0_10px_30px_rgba(21,67,140,0.3)] transition-all active:scale-95 border border-[#15438C]"
                         style={{ background: 'linear-gradient(to bottom, #15438C, #0B1E3B)' }}
                     >

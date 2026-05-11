@@ -15,7 +15,7 @@ const AGENT_PLANS = [
     { id: 'F', image: '/contest/f-plan.webp' },
 ];
 
-export default function ContestParticipation({ campaign, onRegistered, onBack }: { campaign: any, onRegistered: (reg: any) => void, onBack?: () => void }) {
+export default function ContestParticipation({ campaign, onRegistered, onBack, onClose }: { campaign: any, onRegistered: (reg: any) => void, onBack?: () => void, onClose?: () => void }) {
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(campaign.registration?.selected_plan || null);
     const [loading, setLoading] = useState(false);
 
@@ -46,7 +46,7 @@ export default function ContestParticipation({ campaign, onRegistered, onBack }:
                 <ArrowLeft size={24} className="text-white" />
             </button>
             <button 
-                onClick={onBack} 
+                onClick={onClose || onBack} 
                 className="absolute top-6 right-6 z-[10000] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
             >
                 <X size={24} className="text-white" />
