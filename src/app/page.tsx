@@ -309,7 +309,10 @@ function HomeContent() {
     }
 
     if (user.role === 'ADMIN') window.location.href = '/admin';
-    else window.location.href = '/customer';
+    else {
+      sessionStorage.removeItem('customer_splash_seen');
+      window.location.href = '/customer';
+    }
   };
 
   const handleSendOtp = async (isReset = false) => {
