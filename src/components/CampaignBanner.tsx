@@ -17,7 +17,11 @@ export default function CampaignBanner() {
                 const res = await apiFetch('/campaigns/active');
                 console.log('[CampaignBanner] API Response:', res.data ? `ID: ${res.data.id}` : 'NULL');
                 if (res.data) {
-                    setCampaign(res.data);
+                    if (res.data.registration) {
+                        setCampaign(null);
+                    } else {
+                        setCampaign(res.data);
+                    }
                 } else {
                     setCampaign(null);
                 }

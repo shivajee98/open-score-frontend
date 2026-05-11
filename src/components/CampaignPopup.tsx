@@ -17,9 +17,12 @@ export default function CampaignPopup() {
             console.log('[CampaignPopup] API Response:', res.data ? `ID: ${res.data.id}` : 'NULL');
             if (res.data) {
                 setCampaign(res.data);
-                const seen = sessionStorage.getItem(`campaign_${res.data.id}`);
-                if (!seen && !isOpen) {
-                    console.log('[CampaignPopup] Showing popup for campaign:', res.data.id);
+                // Don't show popup if already registered
+                if (res.data.registration) {
+                    console.log('[CampaignPopup] User already registered, hiding popup');
+                    setIsOpen(false);
+                } else if (!isOpen) {
+                    console.log('[CampaignPopup] Showing popup for active campaign:', res.data.id);
                     setIsOpen(true);
                 }
             } else {
@@ -44,7 +47,7 @@ export default function CampaignPopup() {
 
     const handleClose = () => {
         setIsOpen(false);
-        if (campaign) sessionStorage.setItem(`campaign_${campaign.id}`, 'true');
+        // Note: sessionStorage restriction removed per user request to show "each time"
     };
 
     if (!isOpen || !campaign) return null;
