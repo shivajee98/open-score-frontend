@@ -23,14 +23,17 @@ export default function ContestParticipation({ campaign, onRegistered, onBack, o
         if (!selectedPlanId || campaign.registration) return;
 
         setLoading(true);
+        console.log('[ContestParticipation] Registering for campaign:', campaign.id, 'with plan:', selectedPlanId);
         try {
             const res = await apiFetch(`/campaigns/${campaign.id}/register`, {
                 method: 'POST',
                 body: JSON.stringify({ selected_plan: selectedPlanId })
             });
+            console.log('[ContestParticipation] Registration success:', res.data);
             onRegistered(res.data);
             toast.success('Successfully entered the contest!');
         } catch (e: any) {
+            console.error('[ContestParticipation] Registration error:', e);
             toast.error(e.message || 'Participation failed');
         } finally {
             setLoading(false);
@@ -136,27 +139,33 @@ export default function ContestParticipation({ campaign, onRegistered, onBack, o
                 <ArrowLeft size={24} className="text-white" />
             </button>
             <button 
-                onClick={onClose || onBack} 
+                onClick={(e) => {
+                    console.log('[ContestParticipation] Close button clicked');
+                    e.stopPropagation();
+                    if (onClose) onClose();
+                    else if (onBack) onBack();
+                }} 
                 style={{
                     position: 'fixed',
                     top: '24px',
                     right: '24px',
-                    zIndex: 99999,
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '9999px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                    backdropFilter: 'blur(12px)',
+                    zIndex: 999999,
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '28px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backdropFilter: 'blur(20px)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
                     cursor: 'pointer',
-                    WebkitBackdropFilter: 'blur(12px)',
+                    pointerEvents: 'auto',
+                    WebkitBackdropFilter: 'blur(20px)',
                 }}
-                className="hover:bg-black/80 transition-all active:scale-90"
+                className="hover:bg-black transition-all active:scale-90"
             >
-                <X size={24} className="text-white" />
+                <X size={28} className="text-white" />
             </button>
         </div>
     );
