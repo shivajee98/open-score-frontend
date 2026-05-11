@@ -147,7 +147,7 @@ export default function Profile() {
   const [capturedImages, setCapturedImages] = useState<Record<string, string>>(
     {},
   );
-  const [showSplashScreen, setShowSplashScreen] = useState(true);
+  const [showSplashScreen, setShowSplashScreen] = useState(false);
 
   const DOCUMENT_CATEGORIES = [
     {
@@ -1322,11 +1322,14 @@ export default function Profile() {
       <div className="w-full max-w-lg bg-slate-50 relative pb-24 font-sans selection:bg-blue-100 selection:text-blue-900 shadow-2xl">
       <SplashScreen
         isVisible={showSplashScreen}
-        onClose={() => setShowSplashScreen(false)}
+        onClose={() => {
+          setShowSplashScreen(false);
+          setIsPortalOpen(true);
+        }}
       />
       {/* Themed Header */}
       <div
-        className={`bg-gradient-to-br ${isMerchant ? "from-emerald-950 via-green-900 to-teal-950" : "from-slate-900 via-indigo-950 to-violet-950"} pt-12 pb-24 px-4 relative overflow-hidden shadow-2xl`}
+        className={`bg-linear-to-br ${isMerchant ? "from-emerald-950 via-green-900 to-teal-950" : "from-slate-900 via-indigo-950 to-violet-950"} pt-12 pb-24 px-4 relative overflow-hidden shadow-2xl`}
       >
         <div
           className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? "bg-emerald-600/20" : "bg-blue-600/20"} rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse`}
@@ -1394,7 +1397,7 @@ export default function Profile() {
               htmlFor="profile-photo-upload"
               className="cursor-pointer block"
             >
-              <div className="w-32 h-32 mx-auto bg-slate-900 border-4 border-white text-white rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-2xl mb-6 overflow-hidden relative group">
+              <div className="w-32 h-32 mx-auto bg-slate-900 border-4 border-white text-white rounded-4xl flex items-center justify-center text-4xl font-black shadow-2xl mb-6 overflow-hidden relative group">
                 {uploadingImages.profile_image && (
                   <div className="absolute inset-0 z-10 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center">
                     <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
@@ -2458,7 +2461,7 @@ export default function Profile() {
 
                     {/* PAN Card */}
                     <div className="col-span-2">
-                      <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden group">
+                      <div className="bg-white rounded-4xl p-6 border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden group">
                         {uploadingImages.pan_image && (
                           <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
                             <div
@@ -2779,7 +2782,7 @@ export default function Profile() {
                           placeholder="e.g. HDFC Bank"
                         />
                         {showBankSuggestions && bankSuggestions.length > 0 && (
-                          <div className="absolute z-[60] left-0 right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl max-h-[160px] overflow-y-auto">
+                          <div className="absolute z-60 left-0 right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl max-h-[160px] overflow-y-auto">
                             {bankSuggestions.map((name: string, idx) => (
                               <div
                                 key={idx}
@@ -2868,7 +2871,7 @@ export default function Profile() {
                           placeholder="HDFC0001234"
                         />
                         {showIfscSuggestions && ifscSuggestions.length > 0 && (
-                          <div className="absolute z-[60] left-0 right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl max-h-[160px] overflow-y-auto">
+                          <div className="absolute z-60 left-0 right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl max-h-[160px] overflow-y-auto">
                             {ifscSuggestions.map((item: any, idx) => (
                               <div
                                 key={idx}
@@ -3082,7 +3085,7 @@ export default function Profile() {
                 {/* Switch to Partner Panel */}
                 {user?.is_vendor && (
                   <div
-                    onClick={() => setIsPortalOpen(true)}
+                    onClick={() => setShowSplashScreen(true)}
                     className="col-span-2 bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200 flex items-center gap-3 cursor-pointer hover:bg-indigo-700 transition-all border border-indigo-400/20 group mt-2"
                   >
                     <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
@@ -3135,7 +3138,7 @@ export default function Profile() {
                   <button
                     onClick={handleUpdateProfile}
                     disabled={isSaving}
-                    className={`flex-1 bg-gradient-to-r from-${themeColor}-600 to-${themeColor}-500 text-white py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:shadow-lg transition-all flex items-center justify-center gap-1.5 shadow-xl shadow-${themeColor}-500/20 text-[11px] uppercase tracking-wider`}
+                    className={`flex-1 bg-linear-to-r from-${themeColor}-600 to-${themeColor}-500 text-white py-3 px-2 rounded-xl font-bold whitespace-nowrap hover:shadow-lg transition-all flex items-center justify-center gap-1.5 shadow-xl shadow-${themeColor}-500/20 text-[11px] uppercase tracking-wider`}
                   >
                     {isSaving ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -3197,12 +3200,12 @@ export default function Profile() {
 
       {/* Name Mismatch Modal */}
       {showNameMismatch && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             onClick={() => setShowNameMismatch(false)}
           ></div>
-          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full relative z-10 shadow-2xl border-2 border-rose-500 animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-4xl p-8 max-w-sm w-full relative z-10 shadow-2xl border-2 border-rose-500 animate-in zoom-in-95 duration-200">
             <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-600">
               <AlertTriangle size={32} />
             </div>
@@ -3240,10 +3243,10 @@ export default function Profile() {
       )}
 
       {isPortalOpen && (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed inset-0 z-100 bg-white flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="bg-[#0a0f1d] text-white p-4 flex items-center justify-between shadow-md border-b border-white/5">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg border border-white/10">
+              <div className="w-8 h-8 bg-linear-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg border border-white/10">
                 <Briefcase className="w-4 h-4" />
               </div>
               <span className="font-bold text-sm tracking-tight">
@@ -3314,14 +3317,14 @@ export default function Profile() {
 
       {/* OCR Loading Overlay */}
       {isOcrLoading && (
-        <div className="fixed inset-0 z-[3000] bg-slate-900/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-3000 bg-slate-900/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
           <div className="relative w-56 h-56 mb-10 flex items-center justify-center">
             <div className="absolute inset-0 bg-blue-500/5 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]" />
             <div className="absolute inset-10 bg-blue-500/10 rounded-full animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]" />
             <div className="absolute inset-20 bg-blue-500/15 rounded-full animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
 
             <div className="relative w-28 h-36 bg-slate-800 rounded-2xl border-[3px] border-slate-700 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-              <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900" />
+              <div className="absolute inset-0 bg-linear-to-tr from-slate-900 via-slate-800 to-slate-900" />
               <div className="p-5 space-y-4 pt-10 relative z-10">
                 <div className="h-1.5 bg-white/5 rounded-full w-full" />
                 <div className="h-1.5 bg-white/5 rounded-full w-5/6" />
@@ -3329,8 +3332,8 @@ export default function Profile() {
                 <div className="h-1.5 bg-white/5 rounded-full w-full" />
                 <div className="h-1.5 bg-white/5 rounded-full w-3/4" />
               </div>
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-400 shadow-[0_0_15px_2px_rgba(59,130,246,0.8)] z-20 animate-[scanVertical_2.5s_ease-in-out_infinite]" />
-              <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-blue-500/20 to-transparent z-10 opacity-0 animate-[scanVerticalPulse_2.5s_ease-in-out_infinite]" />
+              <div className="absolute top-0 left-0 right-0 h-px bg-blue-400 shadow-[0_0_15px_2px_rgba(59,130,246,0.8)] z-20 animate-[scanVertical_2.5s_ease-in-out_infinite]" />
+              <div className="absolute top-0 left-0 right-0 h-20 bg-linear-to-b from-blue-500/20 to-transparent z-10 opacity-0 animate-[scanVerticalPulse_2.5s_ease-in-out_infinite]" />
             </div>
 
             <div className="absolute -bottom-2 -right-2 w-14 h-14 bg-blue-600 rounded-2xl border-4 border-slate-900 flex items-center justify-center shadow-2xl animate-[bounce_2s_infinite]">
