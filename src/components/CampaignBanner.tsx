@@ -15,11 +15,15 @@ export default function CampaignBanner() {
         const fetchCampaign = async () => {
             try {
                 const res = await apiFetch('/campaigns/active');
+                console.log('[CampaignBanner] API Response:', res.data ? `ID: ${res.data.id}` : 'NULL');
                 if (res.data) {
                     setCampaign(res.data);
+                } else {
+                    setCampaign(null);
                 }
             } catch (e) {
-                console.error('Failed to fetch campaign banner:', e);
+                console.error('[CampaignBanner] Fetch failed:', e);
+                setCampaign(null);
             }
         };
 

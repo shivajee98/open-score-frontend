@@ -14,18 +14,23 @@ export default function CampaignPopup() {
     const fetchActiveCampaign = async () => {
         try {
             const res = await apiFetch('/campaigns/active');
+            console.log('[CampaignPopup] API Response:', res.data ? `ID: ${res.data.id}` : 'NULL');
             if (res.data) {
                 setCampaign(res.data);
                 const seen = sessionStorage.getItem(`campaign_${res.data.id}`);
                 if (!seen && !isOpen) {
+                    console.log('[CampaignPopup] Showing popup for campaign:', res.data.id);
                     setIsOpen(true);
                 }
             } else {
+                if (isOpen) console.log('[CampaignPopup] Closing popup - no active targeted campaign');
                 setCampaign(null);
                 setIsOpen(false);
             }
         } catch (e) {
-            console.error('Failed to fetch campaign', e);
+            console.error('[CampaignPopup] Fetch failed:', e);
+            // Close popup on error to be safe (e.g. 401 Unauthorized)
+            setIsOpen(false);
         }
     };
 
@@ -63,40 +68,51 @@ export default function CampaignPopup() {
     if (showGuide) {
         return (
             <div className="fixed inset-0 z-[120] bg-[#041226] text-white flex flex-col items-center justify-start overflow-y-auto overflow-x-hidden animate-in slide-in-from-right duration-500">
+                {/* Navigation buttons with INLINE STYLES to guarantee clickability */}
                 <button
                     onClick={() => setShowGuide(false)}
-                    className="fixed top-6 left-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+                    style={{
+                        position: 'fixed',
+                        top: '24px',
+                        left: '24px',
+                        zIndex: 99999,
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '9999px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        backdropFilter: 'blur(12px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        cursor: 'pointer',
+                        WebkitBackdropFilter: 'blur(12px)',
+                    }}
+                    className="hover:bg-black/80 transition-all active:scale-90"
                 >
                     <ArrowLeft size={24} className="text-white" />
                 </button>
-                <button
-                    onClick={() => setShowContest(true)}
-                    className="relative w-full shrink-0 active:scale-[0.98] transition-transform"
-                >
-                    <img
-                        src={guideImage}
-                        alt="Guide"
-                        className="w-full h-auto block"
-                    />
-                </button>
 
-                <div className="w-full px-6 py-10 pb-20">
-                    <button
-                        onClick={() => {
-                            setShowGuide(false);
-                            setShowContest(true);
-                        }}
-                        className="w-full py-4 rounded-2xl font-black text-[#041226] text-lg uppercase tracking-widest shadow-[0_10px_30px_rgba(212,175,55,0.3)] transition-all active:scale-95"
-                        style={{ background: 'linear-gradient(to right, #FAD961, #F76B1C)' }}
-                    >
-                        Join Now & Win
-                    </button>
-                </div>
-
-                {/* X button LAST in DOM so it paints on top of everything */}
                 <button
                     onClick={handleClose}
-                    className="fixed top-6 right-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+                    style={{
+                        position: 'fixed',
+                        top: '24px',
+                        right: '24px',
+                        zIndex: 99999,
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '9999px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        backdropFilter: 'blur(12px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        cursor: 'pointer',
+                        WebkitBackdropFilter: 'blur(12px)',
+                    }}
+                    className="hover:bg-black/80 transition-all active:scale-90"
                 >
                     <X size={24} className="text-white" />
                 </button>
@@ -166,10 +182,27 @@ export default function CampaignPopup() {
                 </div>
             </div>
 
-            {/* X button LAST in DOM so it paints on top of everything */}
+            {/* X button with INLINE STYLES to guarantee z-index and clickability */}
             <button
                 onClick={handleClose}
-                className="fixed top-6 right-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+                style={{
+                    position: 'fixed',
+                    top: '24px',
+                    right: '24px',
+                    zIndex: 99999,
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '9999px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(12px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    cursor: 'pointer',
+                    WebkitBackdropFilter: 'blur(12px)',
+                }}
+                className="hover:bg-black/80 transition-all active:scale-90"
             >
                 <X size={24} className="text-white" />
             </button>

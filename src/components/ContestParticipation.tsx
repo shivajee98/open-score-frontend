@@ -111,16 +111,50 @@ export default function ContestParticipation({ campaign, onRegistered, onBack, o
                 </div>
             )}
 
-            {/* Navigation buttons LAST in DOM so they paint on top of everything */}
+            {/* Navigation buttons with INLINE STYLES to guarantee clickability */}
             <button 
                 onClick={onBack} 
-                className="fixed top-6 left-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+                style={{
+                    position: 'fixed',
+                    top: '24px',
+                    left: '24px',
+                    zIndex: 99999,
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '9999px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(12px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    cursor: 'pointer',
+                    WebkitBackdropFilter: 'blur(12px)',
+                }}
+                className="hover:bg-black/80 transition-all active:scale-90"
             >
                 <ArrowLeft size={24} className="text-white" />
             </button>
             <button 
                 onClick={onClose || onBack} 
-                className="fixed top-6 right-6 z-[9999] w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 transition-all active:scale-90"
+                style={{
+                    position: 'fixed',
+                    top: '24px',
+                    right: '24px',
+                    zIndex: 99999,
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '9999px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(12px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    cursor: 'pointer',
+                    WebkitBackdropFilter: 'blur(12px)',
+                }}
+                className="hover:bg-black/80 transition-all active:scale-90"
             >
                 <X size={24} className="text-white" />
             </button>
