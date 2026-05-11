@@ -72,10 +72,9 @@ export default function CampaignBanner() {
                         View Details
                         <ArrowRight size={12} />
                     </button>
-                    {/* Optional: Close button if user wants to hide the banner for the session */}
-                    {/* <button onClick={() => setIsVisible(false)} className="p-1 text-white/50 hover:text-white">
+                    <button onClick={() => setIsVisible(false)} className="p-1 text-white/50 hover:text-white transition-colors">
                         <X size={14} />
-                    </button> */}
+                    </button>
                 </div>
             </div>
         </div>

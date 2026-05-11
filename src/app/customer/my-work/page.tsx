@@ -240,6 +240,33 @@ export default function MyWorkDashboard() {
                 {/* Tab: Profile Overview */}
                 {activeTab === 'profile' && (
                     <div className="space-y-4">
+                        {/* Campaign Spotlight - Shown if not enrolled */}
+                        {activeCampaign?.data && !activeCampaign.data.registration && (
+                            <div 
+                                onClick={() => {
+                                    sessionStorage.removeItem(`campaign_${activeCampaign.data.id}`);
+                                    window.location.reload();
+                                }}
+                                className="relative w-full rounded-[2.5rem] overflow-hidden cursor-pointer group shadow-2xl shadow-indigo-500/20 active:scale-[0.98] transition-all duration-500 mb-6"
+                            >
+                                <img 
+                                    src="/vendor/11.webp" 
+                                    alt="Campaign" 
+                                    className="w-full h-auto block group-hover:scale-105 transition-transform duration-1000"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#041226] via-transparent to-transparent opacity-60" />
+                                <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+                                    <div className="text-white">
+                                        <p className="text-[#D4AF37] text-[9px] font-black uppercase tracking-[0.3em] mb-1">Exclusive Reward</p>
+                                        <h3 className="text-xl font-black uppercase tracking-tight leading-none">JOIN {activeCampaign.data.title}</h3>
+                                    </div>
+                                    <div className="px-6 py-2 bg-gradient-to-r from-[#FAD961] to-[#F76B1C] rounded-xl text-[#041226] font-black text-xs uppercase tracking-widest shadow-xl">
+                                        JOIN NOW
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Contest Tracker */}
                         {activeCampaign?.data?.registration && (
                             <div className="bg-[#041226] rounded-[2rem] p-6 relative overflow-hidden border border-[#D4AF37]/30 shadow-[0_10px_30px_rgba(212,175,55,0.15)]">
@@ -250,20 +277,61 @@ export default function MyWorkDashboard() {
                                         <h3 className="text-white text-xl font-black mt-1 uppercase tracking-wider">{activeCampaign.data.title}</h3>
                                     </div>
                                     <div className="px-3 py-1 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-lg">
-                                        <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest">Plan {activeCampaign.data.registration.selected_plan}</p>
+                                        <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest">Plan {activeCampaign?.data?.registration?.selected_plan}</p>
                                     </div>
                                 </div>
                                 
-                                <div className="grid grid-cols-2 gap-3 relative z-10">
-                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-                                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Loans Done</p>
-                                        <p className="text-white text-2xl font-black">{earnStats?.approved_loans || 0}</p>
-                                    </div>
-                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-                                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Onboarding</p>
-                                        <p className="text-white text-2xl font-black">{earnStats?.onboarded_vendors || 0}</p>
-                                    </div>
-                                </div>
+                                {(() => {
+                                    const planGoals: any = {
+                                        'A': { loans: 2100, onboarding: 1000 },
+                                        'B': { loans: 510, onboarding: 250 },
+                                        'C': { loans: 210, onboarding: 100 },
+                                        'D': { loans: 60, onboarding: 30 },
+                                        'E': { loans: 30, onboarding: 15 },
+                                    };
+                                    const selectedPlan = activeCampaign?.data?.registration?.selected_plan;
+                                    const goals = (selectedPlan ? planGoals[selectedPlan] : null) || { loans: 1, onboarding: 1 };
+                                    const loanCount = ((user as any)?.campaign_loan_count ?? (earnStats as any)?.approved_loans) || 0;
+                                    const onboardCount = ((user as any)?.campaign_qr_count ?? (earnStats as any)?.onboarded_vendors) || 0;
+                                    const loanPerc = Math.min(100, (loanCount / goals.loans) * 100);
+                                    const onboardPerc = Math.min(100, (onboardCount / goals.onboarding) * 100);
+
+                                    return (
+                                        <div className="space-y-6 relative z-10">
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-end">
+                                                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Loans Achieved</p>
+                                                    <p className="text-white text-sm font-black">{loanCount} <span className="text-slate-500 text-[10px]">/ {goals.loans}</span></p>
+                                                </div>
+                                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full bg-gradient-to-r from-[#D4AF37] to-[#FACC15] transition-all duration-1000" 
+                                                        style={{ width: `${loanPerc}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-end">
+                                                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Onboarding Progress</p>
+                                                    <p className="text-white text-sm font-black">{onboardCount} <span className="text-slate-500 text-[10px]">/ {goals.onboarding}</span></p>
+                                                </div>
+                                                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 transition-all duration-1000" 
+                                                        style={{ width: `${onboardPerc}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-2 flex items-center gap-2">
+                                                <div className="flex-1 h-px bg-white/10"></div>
+                                                <p className="text-[9px] font-black text-[#D4AF37] uppercase tracking-[0.2em]">Overall Progress: {Math.round((loanPerc + onboardPerc) / 2)}%</p>
+                                                <div className="flex-1 h-px bg-white/10"></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         )}
                         {/* Process Virtual Card Entry (Agent Specific) */}
