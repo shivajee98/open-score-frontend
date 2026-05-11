@@ -164,7 +164,7 @@ export default function ContestParticipation({ campaign, onRegistered, onBack }:
                             >
                               WIN UP TO 15 LAKHS
                             </h2>
-                            <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mt-1 opacity-50"></div>
+                            <div className="h-0.5 w-12 bg-linear-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mt-1 opacity-50"></div>
                         </div>
                     </div>
                 </div>
