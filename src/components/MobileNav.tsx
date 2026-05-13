@@ -11,7 +11,11 @@ export default function MobileNav() {
     const rawPathname = usePathname();
     // Fix: Strip trailing slash so exact comparisons work with trailingSlash: true
     const pathname = rawPathname.endsWith('/') && rawPathname !== '/' ? rawPathname.slice(0, -1) : rawPathname;
-    const { data: user, mutate: mutateUser } = useApi('/auth/me');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const isAppPath = ['admin', 'merchant', 'customer'].includes(pathname.split('/')[1]);
+    
+    const { data: user, mutate: mutateUser } = useApi(token && isAppPath ? '/auth/me' : null);
+
     const [activeLoanId, setActiveLoanId] = useState<string | null>(null);
     const [hasActiveLoan, setHasActiveLoan] = useState(false);
 

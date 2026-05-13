@@ -20,13 +20,23 @@ export default function SplashScreen({ onClose }: SplashScreenProps) {
     const fetchCampaign = async () => {
       try {
         const res = await apiFetch('/campaigns/active');
-        if (res.data) setCampaign(res.data);
+        if (res.data && res.data.id) {
+          setCampaign(res.data);
+        } else {
+          // No active campaign, close splash immediately
+          onClose();
+        }
       } catch (e) {
         console.error("Failed to fetch campaign", e);
+        onClose();
       }
     };
     fetchCampaign();
-  }, []);
+  }, [onClose]);
+
+  // Don't render anything if campaign is still loading or doesn't exist
+  if (!campaign) return null;
+
 
   const handleSelect = async (planId: string) => {
     if (!campaign) {

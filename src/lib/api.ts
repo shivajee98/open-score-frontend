@@ -25,23 +25,14 @@ import { getDeviceHeaders } from './device';
 // Loop Prevention
 let isRedirecting = false;
 let authFailureCount = 0;
-const MAX_AUTH_FAILURES = 3;
+const MAX_AUTH_FAILURES = 5; // Increased to be less trigger-happy
 
 export const clearAuthState = async () => {
     if (typeof window !== 'undefined') {
+        console.warn('[Auth] Clearing all authentication state');
         // Clear all storage
         localStorage.clear();
         sessionStorage.clear();
-
-        localStorage.removeItem('auth_flow');
-        localStorage.removeItem('auth_mobile');
-        localStorage.removeItem('is_resetting_pin');
-        localStorage.removeItem('temp_reset_token');
-
-        // Clear all cookies
-        document.cookie.split(";").forEach((c) => {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
 
         // Reset failure count
         authFailureCount = 0;
@@ -61,6 +52,15 @@ export const clearAuthState = async () => {
 
 export const handleUnauthorized = () => {
     if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token') || localStorage.getItem('temp_reset_token');
+        
+        // If there's no token to begin with, a 401 is just a "not logged in" signal, 
+        // not an "auth failure" that requires clearing state or redirecting.
+        if (!token) {
+            console.log('[Auth] 401 received but no token found - ignoring');
+            return;
+        }
+
         const isHomePage = window.location.pathname === '/' ||
             window.location.pathname.startsWith('/auth') ||
             window.location.pathname.startsWith('/privacy-policy');
@@ -89,6 +89,7 @@ export const handleUnauthorized = () => {
         }
     }
 };
+
 
 interface ApiOptions extends RequestInit {
     skipAuthCheck?: boolean;

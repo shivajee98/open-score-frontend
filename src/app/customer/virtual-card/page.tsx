@@ -48,7 +48,8 @@ export default function VirtualCardActivationPage() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const activeRequest = requests?.[0];
+    const hasActivated = requests?.some((r: any) => r.status === 'ACTIVATED');
+    const activeRequest = hasActivated ? null : requests?.[0];
 
     useEffect(() => {
         if (requests && requests.length === 0) {
@@ -59,6 +60,9 @@ export default function VirtualCardActivationPage() {
         if (activeRequest) {
             if (activeRequest.status === 'PENDING_APPROVAL') {
                 setStep(4);
+                setPaymentMode('UPI');
+            } else if (activeRequest.status === 'REJECTED') {
+                setStep(3);
                 setPaymentMode('UPI');
             }
         }
@@ -101,7 +105,7 @@ export default function VirtualCardActivationPage() {
     };
 
     const history = requests || [];
-    const hasActiveRequest = activeRequest && ['INITIATED', 'PENDING_CHARGE', 'PENDING_PAYMENT', 'PENDING_APPROVAL'].includes(activeRequest.status);
+    const hasActiveRequest = activeRequest && ['INITIATED', 'PENDING_CHARGE', 'PENDING_PAYMENT', 'PENDING_APPROVAL', 'REJECTED'].includes(activeRequest.status);
 
     if (history.length === 0) {
         return (
@@ -400,6 +404,19 @@ export default function VirtualCardActivationPage() {
                     </header>
 
                     <main className="max-w-xl mx-auto px-6 flex-1">
+                        {activeRequest?.status === 'REJECTED' && (
+                            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl animate-in slide-in-from-top duration-500">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-500">
+                                        <X size={16} />
+                                    </div>
+                                    <p className="text-sm font-black text-rose-500 uppercase tracking-tight italic">Payment Declined</p>
+                                </div>
+                                <p className="text-[11px] font-bold text-slate-400 italic ml-11">
+                                    {activeRequest.rejection_reason || 'Your payment proof was not accepted. Please check the screenshot and try again.'}
+                                </p>
+                            </div>
+                        )}
 
                         {/* Hero Section */}
                         <section className="text-center mt-4 relative mb-12">

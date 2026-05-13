@@ -2538,8 +2538,157 @@ export default function Profile() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                  {(!user.aadhar_image || !user.pan_image) && (
+                  {isMerchant && (
+                    <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+                      {/* Electricity Bill */}
+                      <div>
+                        <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">
+                          Electricity Bill <span className="text-rose-500 font-black ml-1 text-[8px]">*REQUIRED FOR KYC</span>
+                        </p>
+                        <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
+                          {uploadingImages.electricity_bill && (
+                            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                              <div
+                                className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
+                              ></div>
+                              <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
+                                Uploading...
+                              </p>
+                            </div>
+                          )}
+                          {user.electricity_bill ? (
+                            <>
+                              <img
+                                src={getStorageUrl(user.electricity_bill)}
+                                alt="Electricity Bill"
+                                className={`w-full h-full object-cover ${uploadingImages.electricity_bill ? "blur-[2px]" : ""}`}
+                              />
+                              {isEditing && (
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                    Change
+                                    <input
+                                      type="file"
+                                      className="hidden"
+                                      accept="image/*"
+                                      onChange={(e) =>
+                                        handleFileChangeAutoSave(
+                                          e,
+                                          "electricity_bill",
+                                        )
+                                      }
+                                    />
+                                  </label>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                              <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
+                                Missing
+                                <br />
+                                Bill
+                              </p>
+                              {isEditing && (
+                                <label
+                                  className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
+                                >
+                                  Upload
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={(e) =>
+                                      handleFileChangeAutoSave(
+                                        e,
+                                        "electricity_bill",
+                                      )
+                                    }
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Shop Rent Document */}
+                      <div>
+                        <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">
+                          Shop Rent Doc <span className="text-rose-500 font-black ml-1 text-[8px]">*REQUIRED FOR KYC</span>
+                        </p>
+                        <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
+                          {uploadingImages.shop_rent_doc && (
+                            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                              <div
+                                className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
+                              ></div>
+                              <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
+                                Uploading...
+                              </p>
+                            </div>
+                          )}
+                          {user.shop_rent_doc ? (
+                            <>
+                              <img
+                                src={getStorageUrl(user.shop_rent_doc)}
+                                alt="Shop Rent Doc"
+                                className={`w-full h-full object-cover ${uploadingImages.shop_rent_doc ? "blur-[2px]" : ""}`}
+                              />
+                              {isEditing && (
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                    Change
+                                    <input
+                                      type="file"
+                                      className="hidden"
+                                      accept="image/*"
+                                      onChange={(e) =>
+                                        handleFileChangeAutoSave(
+                                          e,
+                                          "shop_rent_doc",
+                                        )
+                                      }
+                                    />
+                                  </label>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                              <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
+                                Missing
+                                <br />
+                                Agreement
+                              </p>
+                              {isEditing && (
+                                <label
+                                  className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
+                                >
+                                  Upload
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={(e) =>
+                                      handleFileChangeAutoSave(
+                                        e,
+                                        "shop_rent_doc",
+                                      )
+                                    }
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(!user.aadhar_image || !user.pan_image || (isMerchant && (!user.electricity_bill || !user.shop_rent_doc))) && (
                     <p className="mt-3 text-[10px] font-bold text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100 flex gap-2 items-start">
                       <Info size={12} className="shrink-0 mt-0.5" />
                       Please edit your profile and upload the pending KYC

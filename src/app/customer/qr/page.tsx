@@ -33,8 +33,9 @@ export default function CustomerQR() {
     // KYC Check for Merchants
     useEffect(() => {
         if (user && user.role === 'MERCHANT') {
-            const complete = !!(user.aadhar_number && user.pan_number && user.aadhar_image && user.pan_image);
-            setIsKycComplete(complete);
+            const docsUploaded = !!(user.aadhar_number && user.pan_number && user.aadhar_image && user.pan_image && user.electricity_bill && user.shop_rent_doc);
+            const isNotRejected = user.kyc_status !== 'REJECTED';
+            setIsKycComplete(docsUploaded && isNotRejected);
         }
     }, [user]);
 
@@ -269,14 +270,14 @@ export default function CustomerQR() {
                         </div>
                         
                         <p className="text-xs font-bold leading-relaxed mb-6">
-                            Your QR code is hidden. Please upload <span className="underline decoration-2">Aadhaar & PAN</span> images/details in your profile to activate your merchant account.
+                            Your QR code is hidden. Please upload <span className="underline decoration-2">Aadhaar, PAN, Electricity Bill & Rent Doc</span> images/details in your profile to activate your merchant account.
                         </p>
 
                         <button 
                             onClick={() => router.push('/customer/profile')}
                             className="w-full py-4 bg-amber-950 text-amber-400 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
-                            Complete Profile
+                            Complete Profile (4 docs)
                         </button>
                     </div>
                 ) : (
@@ -433,7 +434,7 @@ export default function CustomerQR() {
                         <button
                             onClick={() => {
                                 if (!isKycComplete) {
-                                    toast.error("Mandatory: Upload Aadhaar/PAN images and details in Profile first.", {
+                                    toast.error("Mandatory: Upload Aadhaar, PAN, Electricity Bill and Shop Rent Doc in Profile first.", {
                                         icon: '🔒',
                                         duration: 4000
                                     });

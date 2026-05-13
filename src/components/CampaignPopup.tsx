@@ -1,49 +1,39 @@
 'use client';
 
 import { apiFetch } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 import { useEffect, useState } from 'react';
 import { X, ArrowLeft } from 'lucide-react';
 import ContestParticipation from './ContestParticipation';
 
 export default function CampaignPopup() {
-    const [campaign, setCampaign] = useState<any>(null);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const { data: res, mutate } = useApi(token ? '/campaigns/active' : null, {
+        refreshInterval: 60000 // Poll every 60s if active
+    });
+    const campaign = res?.data;
+
     const [isOpen, setIsOpen] = useState(false);
     const [showContest, setShowContest] = useState(false);
     const [showGuide, setShowGuide] = useState(false);
 
-    const fetchActiveCampaign = async () => {
-        try {
-            const res = await apiFetch('/campaigns/active');
-            console.log('[CampaignPopup] API Response:', res.data ? `ID: ${res.data.id}` : 'NULL');
-            if (res.data) {
-                setCampaign(res.data);
-                // Don't show popup if already registered
-                if (res.data.registration) {
-                    console.log('[CampaignPopup] User already registered, hiding popup');
-                    setIsOpen(false);
-                } else if (!isOpen) {
-                    console.log('[CampaignPopup] Showing popup for active campaign:', res.data.id);
-                    setIsOpen(true);
-                }
-            } else {
-                if (isOpen) console.log('[CampaignPopup] Closing popup - no active targeted campaign');
-                setCampaign(null);
+    useEffect(() => {
+        if (campaign && campaign.id) {
+            // Don't show popup if already registered
+            if (campaign.registration) {
+                console.log('[CampaignPopup] User already registered, hiding popup');
                 setIsOpen(false);
+            } else if (!isOpen) {
+                console.log('[CampaignPopup] Showing popup for active campaign:', campaign.id);
+                setIsOpen(true);
             }
-        } catch (e) {
-            console.error('[CampaignPopup] Fetch failed:', e);
-            // Close popup on error to be safe (e.g. 401 Unauthorized)
+        } else {
+            if (isOpen) console.log('[CampaignPopup] Closing popup - no active campaign with ID');
             setIsOpen(false);
         }
-    };
+    }, [campaign, isOpen]);
 
-    useEffect(() => {
-        fetchActiveCampaign();
 
-        // Polling every 30 seconds to ensure immediate UI sync if campaign is deleted
-        const interval = setInterval(fetchActiveCampaign, 30000);
-        return () => clearInterval(interval);
-    }, []);
 
     const handleClose = () => {
         setIsOpen(false);
@@ -60,7 +50,7 @@ export default function CampaignPopup() {
             <div className="fixed inset-0 z-[120] overflow-hidden bg-[#041226] animate-in fade-in duration-500">
                 <ContestParticipation
                     campaign={campaign}
-                    onRegistered={(reg) => setCampaign({ ...campaign, registration: reg })}
+                    onRegistered={(reg) => mutate({ ...res, data: { ...campaign, registration: reg } }, false)}
                     onBack={() => setShowContest(false)}
                     onClose={handleClose}
                 />

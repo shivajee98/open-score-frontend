@@ -203,7 +203,8 @@ export default function CustomerHome() {
     const hasActiveLoan = !!activeLoan;
     const loading = !activeUser && (userLoading || walletLoading);
 
-    const activeVaultRequest = cardRequests?.find((r: any) => !['ACTIVATED', 'REJECTED'].includes(r.status));
+    const isVaultEnabledByAdmin = !!vaultSetupData?.vault;
+    const activeVaultRequest = isVaultEnabledByAdmin ? null : cardRequests?.find((r: any) => !['ACTIVATED'].includes(r.status));
 
 
     // Fetch Cashback Settings
@@ -330,7 +331,6 @@ export default function CustomerHome() {
     const isVaultPromptDismissedPersisted = typeof window !== 'undefined' && vaultPromptDismissKey
         ? localStorage.getItem(vaultPromptDismissKey) === 'true'
         : false;
-    const isVaultEnabledByAdmin = !!vaultSetupData?.vault;
     const hasVaultUsage = Number(vaultSetupData?.vault?.balance || 0) > 0 || (vaultSetupData?.deposits?.length || 0) > 0;
     const showVaultSetupPopup = !!activeUser?.id
         && isVaultEnabledByAdmin
@@ -1111,7 +1111,7 @@ export default function CustomerHome() {
                             <div className="flex items-center gap-2 mb-1">
                                 <Zap size={12} className="text-[#FFD600] fill-[#FFD600]" />
                                 <span className="italic font-bold text-[10px] tracking-[0.1em] text-[#A855F7] uppercase">
-                                    {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Verifying' : 'Limited Offer'}
+                                    {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Verifying' : (activeVaultRequest.status === 'REJECTED' ? 'Declined' : 'Limited Offer')}
                                 </span>
                             </div>
 
@@ -1119,6 +1119,8 @@ export default function CustomerHome() {
                             <h2 className="italic font-black text-[22px] sm:text-[28px] leading-tight tracking-wide text-white mb-1 whitespace-nowrap">
                                 {activeVaultRequest.status === 'PENDING_APPROVAL' ? (
                                     <>Proof <span className="text-[#FFD600]">Verifying</span></>
+                                ) : activeVaultRequest.status === 'REJECTED' ? (
+                                    <>Payment <span className="text-rose-500">Declined</span></>
                                 ) : (
                                     <>Get <span className="text-[#FFD600]">500</span> Instantly</>
                                 )}
@@ -1126,14 +1128,14 @@ export default function CustomerHome() {
 
                             {/* Sub Headline - Minimal */}
                             <p className="italic text-[#9ca3af] text-[12px] font-semibold tracking-wide mb-3">
-                                {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Securing Reward...' : 'On Your Titanium Card'}
+                                {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Securing Reward...' : (activeVaultRequest.status === 'REJECTED' ? 'Please re-upload proof' : 'On Your Titanium Card')}
                             </p>
 
                             {/* Info Tag - Ultra Compact */}
                             <div className="flex items-center gap-2">
                                 <Gift size={12} className="text-[#FFD600]/60" />
                                 <span className="text-[#9ca3af] text-[9px] font-medium tracking-widest uppercase opacity-60">
-                                    {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Security Check' : 'Rewards Ready'}
+                                    {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Security Check' : (activeVaultRequest.status === 'REJECTED' ? 'Try Again' : 'Rewards Ready')}
                                 </span>
                             </div>
                         </div>
@@ -1174,7 +1176,7 @@ export default function CustomerHome() {
                                 <button className="relative z-30 w-full h-[38px] rounded-[10px] bg-gradient-to-r from-[#8B5CF6] to-[#3B82F6] flex items-center justify-center gap-2 text-white font-bold text-[12px] tracking-wider shadow-lg active:scale-95 transition-all">
                                     <ArrowRight size={12} strokeWidth={4} />
                                     <span className="uppercase">
-                                        {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Status' : 'Claim'}
+                                        {activeVaultRequest.status === 'PENDING_APPROVAL' ? 'Status' : (activeVaultRequest.status === 'REJECTED' ? 'Retry' : 'Claim')}
                                     </span>
                                 </button>
                             </Link>

@@ -2,39 +2,31 @@
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 import { Megaphone, ArrowRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 export default function CampaignBanner() {
-    const [campaign, setCampaign] = useState<any>(null);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const { data: res, error } = useApi(token ? '/campaigns/active' : null);
+    const campaign = res?.data;
+    
     const [isVisible, setIsVisible] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
-        const fetchCampaign = async () => {
-            try {
-                const res = await apiFetch('/campaigns/active');
-                console.log('[CampaignBanner] API Response:', res.data ? `ID: ${res.data.id}` : 'NULL');
-                if (res.data) {
-                    if (res.data.registration) {
-                        setCampaign(null);
-                    } else {
-                        setCampaign(res.data);
-                    }
-                } else {
-                    setCampaign(null);
-                }
-            } catch (e) {
-                console.error('[CampaignBanner] Fetch failed:', e);
-                setCampaign(null);
-            }
-        };
+        if (campaign && campaign.id) {
+            console.log('[CampaignBanner] Active campaign detected:', campaign.id);
+        }
+    }, [campaign]);
 
-        fetchCampaign();
-    }, []);
+    if (!token || !campaign || !campaign.id || !isVisible) return null;
 
-    if (!campaign || !isVisible) return null;
+    // Filter out registration-only campaigns if already registered
+    if (campaign.registration) return null;
+
+
 
     const handleAction = () => {
         if (campaign.link) {
