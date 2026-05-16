@@ -1486,10 +1486,12 @@ export default function Profile() {
             </div>
 
             {/* Missing KYC Documents Alert */}
-            {user.role === "MERCHANT" &&
+            {isMerchant &&
               (!user.aadhar_image ||
                 !user.aadhar_back_image ||
-                !user.pan_image) && (
+                !user.pan_image ||
+                !user.electricity_bill ||
+                !user.shop_rent_doc) && (
                 <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 animate-in slide-in-from-top duration-500">
                   <div className="flex gap-3 items-start">
                     <div className="p-2 bg-amber-100 rounded-xl text-amber-600">
@@ -1497,14 +1499,11 @@ export default function Profile() {
                     </div>
                     <div className="flex-1">
                       <p className="text-xs font-black text-amber-900 uppercase tracking-tight mb-1">
-                        Missing Documents
+                        Missing KYC Documents
                       </p>
                       <p className="text-[10px] font-medium text-amber-700 leading-relaxed">
-                        Your KYC is incomplete. Please click{" "}
-                        <span className="font-bold underline">
-                          Edit Profile
-                        </span>{" "}
-                        below to upload your Aadhaar and PAN card images.
+                        Your merchant KYC is incomplete. Please upload the required
+                        images below to verify your identity and enable full features.
                       </p>
                       <div className="flex flex-wrap gap-2 mt-3">
                         {!user.aadhar_image && (
@@ -1520,6 +1519,16 @@ export default function Profile() {
                         {!user.pan_image && (
                           <span className="text-[8px] font-black bg-white/50 px-2 py-0.5 rounded text-amber-800 border border-amber-200">
                             PAN CARD
+                          </span>
+                        )}
+                        {isMerchant && !user.electricity_bill && (
+                          <span className="text-[8px] font-black bg-white/50 px-2 py-0.5 rounded text-amber-800 border border-amber-200">
+                            ELECTRICITY BILL
+                          </span>
+                        )}
+                        {isMerchant && !user.shop_rent_doc && (
+                          <span className="text-[8px] font-black bg-white/50 px-2 py-0.5 rounded text-amber-800 border border-amber-200">
+                            SHOP RENT DOC
                           </span>
                         )}
                       </div>
@@ -2313,72 +2322,61 @@ export default function Profile() {
                       <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">
                         Aadhar Front
                       </p>
-                      <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
-                        {uploadingImages.aadhar_image && (
-                          <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
-                            <div
-                              className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
-                            ></div>
-                            <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
-                              Uploading...
-                            </p>
-                          </div>
-                        )}
-                        {newAadharImage || user.aadhar_image ? (
-                          <>
-                            <img
-                              src={
-                                newAadharImage
-                                  ? URL.createObjectURL(newAadharImage)
-                                  : getStorageUrl(user.aadhar_image)
-                              }
-                              alt="Aadhar Front"
-                              className={`w-full h-full object-cover ${uploadingImages.aadhar_image ? "blur-[2px]" : ""}`}
-                            />
-                            {isEditing && (
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
-                                  Change
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) =>
-                                      handleFileChangeAutoSave(
-                                        e,
-                                        "aadhar_image",
-                                      )
-                                    }
-                                  />
-                                </label>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
-                            <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
-                              Missing
-                              <br />
-                              Front
-                            </p>
-                            {isEditing && (
-                              <label
-                                className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
+                      <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group">
+                        <label className="w-full h-full flex items-center justify-center cursor-pointer">
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) =>
+                              handleFileChangeAutoSave(e, "aadhar_image")
+                            }
+                          />
+                          {uploadingImages.aadhar_image && (
+                            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                              <div
+                                className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
+                              ></div>
+                              <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
+                                Uploading...
+                              </p>
+                            </div>
+                          )}
+                          {newAadharImage || user.aadhar_image ? (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={
+                                  newAadharImage
+                                    ? URL.createObjectURL(newAadharImage)
+                                    : getStorageUrl(user.aadhar_image)
+                                }
+                                alt="Aadhar Front"
+                                className={`w-full h-full object-cover ${uploadingImages.aadhar_image ? "blur-[2px]" : ""}`}
+                              />
+                              {isEditing && (
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <span className="bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                    Change
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                              <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
+                                Missing
+                                <br />
+                                Front
+                              </p>
+                              <div
+                                className={`mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
                               >
                                 Upload
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  accept="image/*"
-                                  onChange={(e) =>
-                                    handleFileChangeAutoSave(e, "aadhar_image")
-                                  }
-                                />
-                              </label>
-                            )}
-                          </div>
-                        )}
+                              </div>
+                            </div>
+                          )}
+                        </label>
                       </div>
                     </div>
 
@@ -2387,75 +2385,61 @@ export default function Profile() {
                       <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">
                         Aadhar Back
                       </p>
-                      <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
-                        {uploadingImages.aadhar_back_image && (
-                          <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
-                            <div
-                              className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
-                            ></div>
-                            <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
-                              Uploading...
-                            </p>
-                          </div>
-                        )}
-                        {newAadharBackImage || user.aadhar_back_image ? (
-                          <>
-                            <img
-                              src={
-                                newAadharBackImage
-                                  ? URL.createObjectURL(newAadharBackImage)
-                                  : getStorageUrl(user.aadhar_back_image)
-                              }
-                              alt="Aadhar Back"
-                              className={`w-full h-full object-cover ${uploadingImages.aadhar_back_image ? "blur-[2px]" : ""}`}
-                            />
-                            {isEditing && (
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
-                                  Change
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) =>
-                                      handleFileChangeAutoSave(
-                                        e,
-                                        "aadhar_back_image",
-                                      )
-                                    }
-                                  />
-                                </label>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
-                            <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
-                              Missing
-                              <br />
-                              Back
-                            </p>
-                            {isEditing && (
-                              <label
-                                className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
+                      <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group">
+                        <label className="w-full h-full flex items-center justify-center cursor-pointer">
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={(e) =>
+                              handleFileChangeAutoSave(e, "aadhar_back_image")
+                            }
+                          />
+                          {uploadingImages.aadhar_back_image && (
+                            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                              <div
+                                className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
+                              ></div>
+                              <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
+                                Uploading...
+                              </p>
+                            </div>
+                          )}
+                          {newAadharBackImage || user.aadhar_back_image ? (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={
+                                  newAadharBackImage
+                                    ? URL.createObjectURL(newAadharBackImage)
+                                    : getStorageUrl(user.aadhar_back_image)
+                                }
+                                alt="Aadhar Back"
+                                className={`w-full h-full object-cover ${uploadingImages.aadhar_back_image ? "blur-[2px]" : ""}`}
+                              />
+                              {isEditing && (
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <span className="bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                    Change
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                              <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
+                                Missing
+                                <br />
+                                Back
+                              </p>
+                              <div
+                                className={`mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
                               >
                                 Upload
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  accept="image/*"
-                                  onChange={(e) =>
-                                    handleFileChangeAutoSave(
-                                      e,
-                                      "aadhar_back_image",
-                                    )
-                                  }
-                                />
-                              </label>
-                            )}
-                          </div>
-                        )}
+                              </div>
+                            </div>
+                          )}
+                        </label>
                       </div>
                     </div>
 
@@ -2484,57 +2468,59 @@ export default function Profile() {
                           Permanent Account Number
                         </p>
 
-                        <div className="aspect-video rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 overflow-hidden relative group/img flex items-center justify-center">
-                          {newPanImage || user.pan_image ? (
-                            <>
-                              <img
-                                src={
-                                  newPanImage
-                                    ? URL.createObjectURL(newPanImage)
-                                    : getStorageUrl(user.pan_image)
-                                }
-                                alt="PAN Card"
-                                className={`w-full h-full object-cover ${uploadingImages.pan_image ? "blur-sm" : ""}`}
-                              />
-                              {isEditing && (
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                                  <label className="cursor-pointer bg-white text-slate-900 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl">
-                                    Change Image
-                                    <input
-                                      type="file"
-                                      className="hidden"
-                                      accept="image/*"
-                                      onChange={(e) =>
-                                        handleFileChangeAutoSave(e, "pan_image")
-                                      }
-                                    />
-                                  </label>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="text-center p-6">
-                              <AlertTriangle className="mx-auto h-8 w-8 text-amber-500 mb-2" />
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
-                                Image Missing
-                              </p>
-                              {isEditing && (
-                                <label
-                                  className={`cursor-pointer mt-3 text-[10px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-4 py-2 rounded-xl inline-block border border-${themeColor}-100`}
+                        <div className="aspect-video rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 overflow-hidden relative group">
+                          <label className="w-full h-full flex items-center justify-center cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) =>
+                                handleFileChangeAutoSave(e, "pan_image")
+                              }
+                            />
+                            {uploadingImages.pan_image && (
+                              <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                                <div
+                                  className={`w-8 h-8 border-4 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-2`}
+                                ></div>
+                                <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                                  Uploading...
+                                </p>
+                              </div>
+                            )}
+                            {newPanImage || user.pan_image ? (
+                              <div className="relative w-full h-full">
+                                <img
+                                  src={
+                                    newPanImage
+                                      ? URL.createObjectURL(newPanImage)
+                                      : getStorageUrl(user.pan_image)
+                                  }
+                                  alt="PAN Card"
+                                  className={`w-full h-full object-cover ${uploadingImages.pan_image ? "blur-sm" : ""}`}
+                                />
+                                {isEditing && (
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span className="bg-white text-slate-900 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl">
+                                      Change Image
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-center p-6">
+                                <AlertTriangle className="mx-auto h-8 w-8 text-amber-500 mb-2" />
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
+                                  Image Missing
+                                </p>
+                                <div
+                                  className={`mt-3 text-[10px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-4 py-2 rounded-xl inline-block border border-${themeColor}-100`}
                                 >
                                   Upload Now
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) =>
-                                      handleFileChangeAutoSave(e, "pan_image")
-                                    }
-                                  />
-                                </label>
-                              )}
-                            </div>
-                          )}
+                                </div>
+                              </div>
+                            )}
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -2545,71 +2531,57 @@ export default function Profile() {
                         <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">
                           Electricity Bill <span className="text-rose-500 font-black ml-1 text-[8px]">*REQUIRED FOR KYC</span>
                         </p>
-                        <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
-                          {uploadingImages.electricity_bill && (
-                            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
-                              <div
-                                className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
-                              ></div>
-                              <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
-                                Uploading...
-                              </p>
-                            </div>
-                          )}
-                          {user.electricity_bill ? (
-                            <>
-                              <img
-                                src={getStorageUrl(user.electricity_bill)}
-                                alt="Electricity Bill"
-                                className={`w-full h-full object-cover ${uploadingImages.electricity_bill ? "blur-[2px]" : ""}`}
-                              />
-                              {isEditing && (
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
-                                    Change
-                                    <input
-                                      type="file"
-                                      className="hidden"
-                                      accept="image/*"
-                                      onChange={(e) =>
-                                        handleFileChangeAutoSave(
-                                          e,
-                                          "electricity_bill",
-                                        )
-                                      }
-                                    />
-                                  </label>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
-                              <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
-                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
-                                Missing
-                                <br />
-                                Bill
-                              </p>
-                              {isEditing && (
-                                <label
-                                  className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
+                        <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group">
+                          <label className="w-full h-full flex items-center justify-center cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) =>
+                                handleFileChangeAutoSave(e, "electricity_bill")
+                              }
+                            />
+                            {uploadingImages.electricity_bill && (
+                              <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                                <div
+                                  className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
+                                ></div>
+                                <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
+                                  Uploading...
+                                </p>
+                              </div>
+                            )}
+                            {user.electricity_bill ? (
+                              <div className="relative w-full h-full">
+                                <img
+                                  src={getStorageUrl(user.electricity_bill)}
+                                  alt="Electricity Bill"
+                                  className={`w-full h-full object-cover ${uploadingImages.electricity_bill ? "blur-[2px]" : ""}`}
+                                />
+                                {isEditing && (
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span className="bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                      Change
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                                <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
+                                  Missing
+                                  <br />
+                                  Bill
+                                </p>
+                                <div
+                                  className={`mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
                                 >
                                   Upload
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) =>
-                                      handleFileChangeAutoSave(
-                                        e,
-                                        "electricity_bill",
-                                      )
-                                    }
-                                  />
-                                </label>
-                              )}
-                            </div>
-                          )}
+                                </div>
+                              </div>
+                            )}
+                          </label>
                         </div>
                       </div>
 
@@ -2618,71 +2590,57 @@ export default function Profile() {
                         <p className="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-2">
                           Shop Rent Doc <span className="text-rose-500 font-black ml-1 text-[8px]">*REQUIRED FOR KYC</span>
                         </p>
-                        <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group flex items-center justify-center">
-                          {uploadingImages.shop_rent_doc && (
-                            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
-                              <div
-                                className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
-                              ></div>
-                              <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
-                                Uploading...
-                              </p>
-                            </div>
-                          )}
-                          {user.shop_rent_doc ? (
-                            <>
-                              <img
-                                src={getStorageUrl(user.shop_rent_doc)}
-                                alt="Shop Rent Doc"
-                                className={`w-full h-full object-cover ${uploadingImages.shop_rent_doc ? "blur-[2px]" : ""}`}
-                              />
-                              {isEditing && (
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <label className="cursor-pointer bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
-                                    Change
-                                    <input
-                                      type="file"
-                                      className="hidden"
-                                      accept="image/*"
-                                      onChange={(e) =>
-                                        handleFileChangeAutoSave(
-                                          e,
-                                          "shop_rent_doc",
-                                        )
-                                      }
-                                    />
-                                  </label>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
-                              <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
-                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
-                                Missing
-                                <br />
-                                Agreement
-                              </p>
-                              {isEditing && (
-                                <label
-                                  className={`cursor-pointer mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
+                        <div className="relative aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-white overflow-hidden group">
+                          <label className="w-full h-full flex items-center justify-center cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) =>
+                                handleFileChangeAutoSave(e, "shop_rent_doc")
+                              }
+                            />
+                            {uploadingImages.shop_rent_doc && (
+                              <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                                <div
+                                  className={`w-6 h-6 border-2 border-${themeColor}-600 border-t-transparent rounded-full animate-spin mb-1`}
+                                ></div>
+                                <p className="text-[7px] font-black uppercase text-slate-500 tracking-tighter">
+                                  Uploading...
+                                </p>
+                              </div>
+                            )}
+                            {user.shop_rent_doc ? (
+                              <div className="relative w-full h-full">
+                                <img
+                                  src={getStorageUrl(user.shop_rent_doc)}
+                                  alt="Shop Rent Doc"
+                                  className={`w-full h-full object-cover ${uploadingImages.shop_rent_doc ? "blur-[2px]" : ""}`}
+                                />
+                                {isEditing && (
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span className="bg-white text-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase shadow-lg">
+                                      Change
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="text-center p-3 w-full h-full flex flex-col items-center justify-center">
+                                <AlertTriangle className="mx-auto h-5 w-5 text-amber-500 mb-1" />
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">
+                                  Missing
+                                  <br />
+                                  Agreement
+                                </p>
+                                <div
+                                  className={`mt-2 text-[9px] font-black uppercase text-${themeColor}-600 bg-${themeColor}-50 px-2 py-1 rounded inline-block`}
                                 >
                                   Upload
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) =>
-                                      handleFileChangeAutoSave(
-                                        e,
-                                        "shop_rent_doc",
-                                      )
-                                    }
-                                  />
-                                </label>
-                              )}
-                            </div>
-                          )}
+                                </div>
+                              </div>
+                            )}
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -2696,8 +2654,9 @@ export default function Profile() {
                     </p>
                   )}
                 </div>
-              </>
-            )}
+              </div>
+            </>
+          )}
 
             <div
               id="address-section"

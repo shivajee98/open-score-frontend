@@ -350,7 +350,8 @@ function HomeContent() {
       setFlow('otp_verify');
       localStorage.setItem('auth_flow', 'otp_verify');
       localStorage.setItem('auth_mobile', mobile);
-      setResendTimer(30);
+      // Task: Increase valid OTP timer to 10 mins (600s) for new users, 30s for existing
+      setResendTimer(userExists === false ? 600 : 30);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -901,8 +902,11 @@ function HomeContent() {
 
                   <div className="pt-0">
                     {resendTimer > 0 ? (
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 py-2 bg-slate-50 rounded-full border border-slate-100">
-                        Resend OTP in <span className="text-slate-900 text-xs font-black ml-1">{resendTimer}s</span>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 py-2 bg-slate-50 rounded-full border border-slate-100 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+                        Resend OTP in <span className="text-slate-900 text-xs font-black ml-1">
+                          {Math.floor(resendTimer / 60)}:{String(resendTimer % 60).padStart(2, '0')}
+                        </span>
                       </p>
                     ) : (
                       <button
