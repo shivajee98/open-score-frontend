@@ -499,7 +499,7 @@ export default function MyWorkDashboard() {
                         )}
 
                         {/* Area Analytics Entry */}
-                        {/* <div 
+                        <div 
                             onClick={() => router.push('/customer/my-work/pincodes')}
                             className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center justify-between group cursor-pointer hover:border-indigo-200 transition-all"
                         >
@@ -515,7 +515,7 @@ export default function MyWorkDashboard() {
                             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
                                 <ArrowRight size={20} />
                             </div>
-                        </div> */}
+                        </div>
 
                     </div>
                 )}

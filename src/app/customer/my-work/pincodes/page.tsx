@@ -12,7 +12,15 @@ export default function AreaAnalyticsPage() {
     const [stats, setStats] = useState<{ active: any[], upcoming: any[] } | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'active' | 'upcoming'>('active');
+    const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'global'>('active');
+
+    // Global Pincodes state
+    const [globalPincodes, setGlobalPincodes] = useState<any[]>([]);
+    const [globalPage, setGlobalPage] = useState(1);
+    const [globalSearch, setGlobalSearch] = useState('');
+    const [hasMoreGlobal, setHasMoreGlobal] = useState(false);
+    const [loadingGlobal, setLoadingGlobal] = useState(false);
+    const [totalGlobal, setTotalGlobal] = useState<number>(0);
 
     // Modal state for merchant list
     const [selectedPincode, setSelectedPincode] = useState<string | null>(null);
@@ -45,13 +53,44 @@ export default function AreaAnalyticsPage() {
         }
     };
 
+    const fetchGlobalPincodes = async (page: number = 1, search: string = '') => {
+        setLoadingGlobal(true);
+        try {
+            const res = await apiFetch(`/analytics/global-pincodes?page=${page}&search=${search}`);
+            if (page === 1) {
+                setGlobalPincodes(res.pincodes || []);
+            } else {
+                setGlobalPincodes(prev => [...prev, ...(res.pincodes || [])]);
+            }
+            setGlobalPage(res.current_page);
+            setHasMoreGlobal(res.has_more);
+            setTotalGlobal(res.total || 0);
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to fetch global pincodes');
+        } finally {
+            setLoadingGlobal(false);
+        }
+    };
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (activeTab === 'global') {
+                fetchGlobalPincodes(1, globalSearch);
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [globalSearch, activeTab]);
+
     useEffect(() => {
         fetchStats();
     }, []);
 
-    const filteredAreas = (stats?.[activeTab] || []).filter(area =>
-        area.pincode.toString().includes(searchTerm)
-    );
+    const filteredAreas = activeTab === 'global' 
+        ? globalPincodes 
+        : (stats?.[activeTab as 'active' | 'upcoming'] || []).filter(area => 
+            area.pincode.toString().includes(searchTerm)
+        );
 
     const filteredMerchants = merchants.filter(m =>
         m.name?.toLowerCase().includes(merchantSearch.toLowerCase()) ||
@@ -85,26 +124,28 @@ export default function AreaAnalyticsPage() {
             <div className="max-w-2xl mx-auto px-4 mt-6 space-y-4">
 
                 {/* Compact Metrics Row */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
-                        <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                            <Zap size={16} className="fill-current" />
+                {activeTab !== 'global' && (
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                            <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                                <Zap size={16} className="fill-current" />
+                            </div>
+                            <div>
+                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Active</p>
+                                <h3 className="text-sm font-black text-slate-900 leading-none">{stats?.active.length || 0}</h3>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Active</p>
-                            <h3 className="text-sm font-black text-slate-900 leading-none">{stats?.active.length || 0}</h3>
+                        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                            <div className="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
+                                <Activity size={16} />
+                            </div>
+                            <div>
+                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Upcoming</p>
+                                <h3 className="text-sm font-black text-slate-900 leading-none">{stats?.upcoming.length || 0}</h3>
+                            </div>
                         </div>
                     </div>
-                    <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
-                        <div className="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
-                            <Activity size={16} />
-                        </div>
-                        <div>
-                            <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Upcoming</p>
-                            <h3 className="text-sm font-black text-slate-900 leading-none">{stats?.upcoming.length || 0}</h3>
-                        </div>
-                    </div>
-                </div>
+                )}
 
                 {/* Compact Search & Tabs */}
                 <div className="space-y-3">
@@ -114,10 +155,22 @@ export default function AreaAnalyticsPage() {
                             type="text"
                             inputMode="numeric"
                             placeholder="Filter by pincode..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value.replace(/[^0-9]/g, ''))}
+                            value={activeTab === 'global' ? globalSearch : searchTerm}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                if (activeTab === 'global') {
+                                    setGlobalSearch(val);
+                                } else {
+                                    setSearchTerm(val);
+                                }
+                            }}
                             className="w-full pl-10 pr-4 py-3 bg-white border border-slate-50 rounded-xl text-[10px] font-bold outline-none shadow-sm focus:ring-4 focus:ring-indigo-50/50"
                         />
+                        {activeTab === 'global' && totalGlobal > 0 && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 rounded-lg border border-indigo-100">
+                                <span className="text-[7px] font-black text-indigo-600 uppercase tracking-tighter">{totalGlobal} Zones</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-slate-200/50 p-1 rounded-xl flex">
@@ -133,34 +186,61 @@ export default function AreaAnalyticsPage() {
                         >
                             Upcoming
                         </button>
+                        <button
+                            onClick={() => setActiveTab('global')}
+                            className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${activeTab === 'global' ? "bg-white text-indigo-700 shadow-sm" : "text-slate-400"}`}
+                        >
+                            Global
+                        </button>
                     </div>
                 </div>
 
                 {/* Compact List */}
                 <div className="grid grid-cols-1 gap-3 pb-20">
-                    {filteredAreas.length === 0 ? (
+                    {loadingGlobal && activeTab === 'global' && globalPincodes.length === 0 ? (
+                        <div className="py-12 flex flex-col items-center justify-center gap-2">
+                             <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Searching Map...</p>
+                        </div>
+                    ) : filteredAreas.length === 0 ? (
                         <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-slate-100">
                             <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">No matching areas</p>
                         </div>
                     ) : (
-                        filteredAreas.map((area) => (
-                            <div
-                                key={area.pincode}
-                                onClick={() => fetchMerchants(area.pincode)}
-                                className="bg-white p-3 rounded-2xl border border-slate-50 flex items-center justify-between shadow-sm active:scale-95 transition-all"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-slate-50 text-slate-300 rounded-lg flex items-center justify-center">
-                                        <MapPin size={18} />
+                        <>
+                            {filteredAreas.map((area) => (
+                                <div
+                                    key={area.pincode}
+                                    onClick={() => activeTab !== 'global' && fetchMerchants(area.pincode)}
+                                    className={`bg-white p-3 rounded-2xl border border-slate-50 flex items-center justify-between shadow-sm transition-all ${activeTab !== 'global' ? 'active:scale-95 cursor-pointer' : 'cursor-default opacity-80'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-slate-50 text-slate-300 rounded-lg flex items-center justify-center">
+                                            <MapPin size={18} />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-black text-slate-900 tracking-tight leading-none">{area.pincode}</h4>
+                                            {activeTab !== 'global' && (
+                                                <p className="text-[8px] font-black text-indigo-500 uppercase mt-1 leading-none">
+                                                    {area.mapped_count || area.merchant_count || 0} Merchants
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="text-sm font-black text-slate-900 tracking-tight leading-none">{area.pincode}</h4>
-                                        <p className="text-[8px] font-black text-indigo-500 uppercase mt-1 leading-none">{area.mapped_count} Merchants</p>
-                                    </div>
+                                    {activeTab !== 'global' && <ChevronRight size={14} className="text-slate-200" />}
                                 </div>
-                                <ChevronRight size={14} className="text-slate-200" />
-                            </div>
-                        ))
+                            ))}
+
+                            {activeTab === 'global' && hasMoreGlobal && (
+                                <button
+                                    onClick={() => fetchGlobalPincodes(globalPage + 1, globalSearch)}
+                                    disabled={loadingGlobal}
+                                    className="w-full py-4 bg-white border border-slate-100 rounded-2xl text-[9px] font-black text-indigo-600 uppercase tracking-widest hover:bg-indigo-50 transition-all disabled:opacity-50 mt-2 shadow-sm"
+                                >
+                                    {loadingGlobal ? 'Searching Map...' : 'Load Next 50 Zones'}
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
