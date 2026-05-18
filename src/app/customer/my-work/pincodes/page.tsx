@@ -12,7 +12,7 @@ export default function AreaAnalyticsPage() {
     const [stats, setStats] = useState<{ active: any[], upcoming: any[] } | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'global'>('active');
+    const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'global' | 'active_loans'>('active');
 
     // Global Pincodes state
     const [globalPincodes, setGlobalPincodes] = useState<any[]>([]);
@@ -21,6 +21,14 @@ export default function AreaAnalyticsPage() {
     const [hasMoreGlobal, setHasMoreGlobal] = useState(false);
     const [loadingGlobal, setLoadingGlobal] = useState(false);
     const [totalGlobal, setTotalGlobal] = useState<number>(0);
+
+    // Active Loans state
+    const [activeLoansPincodes, setActiveLoansPincodes] = useState<any[]>([]);
+    const [activeLoansPage, setActiveLoansPage] = useState(1);
+    const [activeLoansSearch, setActiveLoansSearch] = useState('');
+    const [hasMoreActiveLoans, setHasMoreActiveLoans] = useState(false);
+    const [loadingActiveLoans, setLoadingActiveLoans] = useState(false);
+    const [totalActiveLoans, setTotalActiveLoans] = useState<number>(0);
 
     // Modal state for merchant list
     const [selectedPincode, setSelectedPincode] = useState<string | null>(null);
@@ -72,15 +80,42 @@ export default function AreaAnalyticsPage() {
         }
     };
 
+    const fetchActiveLoansPincodes = async (page: number = 1, search: string = '') => {
+        setLoadingActiveLoans(true);
+        try {
+            const res = await apiFetch(`/analytics/active-loans?page=${page}&search=${search}`);
+            if (page === 1) {
+                setActiveLoansPincodes(res.pincodes || []);
+            } else {
+                setActiveLoansPincodes(prev => [...prev, ...(res.pincodes || [])]);
+            }
+            setActiveLoansPage(res.current_page);
+            setHasMoreActiveLoans(res.has_more);
+            setTotalActiveLoans(res.total || 0);
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to fetch active loans pincodes');
+        } finally {
+            setLoadingActiveLoans(false);
+        }
+    };
+
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             if (activeTab === 'global') {
                 fetchGlobalPincodes(1, globalSearch);
+            } else if (activeTab === 'active_loans') {
+                fetchActiveLoansPincodes(1, activeLoansSearch);
             }
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [globalSearch, activeTab]);
+    }, [globalSearch, activeLoansSearch, activeTab]);
+
+    useEffect(() => {
+        if (activeTab === 'active_loans' && activeLoansPincodes.length === 0) {
+            fetchActiveLoansPincodes(1, activeLoansSearch);
+        }
+    }, [activeTab]);
 
     useEffect(() => {
         fetchStats();
@@ -88,8 +123,11 @@ export default function AreaAnalyticsPage() {
 
     const filteredAreas = activeTab === 'global' 
         ? globalPincodes 
-        : (stats?.[activeTab as 'active' | 'upcoming'] || []).filter(area => 
-            area.pincode.toString().includes(searchTerm)
+        : (activeTab === 'active_loans'
+            ? activeLoansPincodes
+            : (stats?.[activeTab as 'active' | 'upcoming'] || []).filter(area => 
+                area.pincode.toString().includes(searchTerm)
+            )
         );
 
     const filteredMerchants = merchants.filter(m =>
@@ -155,11 +193,13 @@ export default function AreaAnalyticsPage() {
                             type="text"
                             inputMode="numeric"
                             placeholder="Filter by pincode..."
-                            value={activeTab === 'global' ? globalSearch : searchTerm}
+                            value={activeTab === 'global' ? globalSearch : (activeTab === 'active_loans' ? activeLoansSearch : searchTerm)}
                             onChange={(e) => {
                                 const val = e.target.value.replace(/[^0-9]/g, '');
                                 if (activeTab === 'global') {
                                     setGlobalSearch(val);
+                                } else if (activeTab === 'active_loans') {
+                                    setActiveLoansSearch(val);
                                 } else {
                                     setSearchTerm(val);
                                 }
@@ -171,9 +211,14 @@ export default function AreaAnalyticsPage() {
                                 <span className="text-[7px] font-black text-indigo-600 uppercase tracking-tighter">{totalGlobal} Zones</span>
                             </div>
                         )}
+                        {activeTab === 'active_loans' && totalActiveLoans > 0 && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 rounded-lg border border-indigo-100">
+                                <span className="text-[7px] font-black text-indigo-600 uppercase tracking-tighter">{totalActiveLoans} Zones</span>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="bg-slate-200/50 p-1 rounded-xl flex">
+                    <div className="bg-slate-200/50 p-1 rounded-xl flex gap-1">
                         <button
                             onClick={() => setActiveTab('active')}
                             className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${activeTab === 'active' ? "bg-white text-indigo-700 shadow-sm" : "text-slate-400"}`}
@@ -192,12 +237,23 @@ export default function AreaAnalyticsPage() {
                         >
                             Global
                         </button>
+                        <button
+                            onClick={() => {
+                                setActiveTab('active_loans');
+                                if (activeLoansPincodes.length === 0) {
+                                    fetchActiveLoansPincodes(1, activeLoansSearch);
+                                }
+                            }}
+                            className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all ${activeTab === 'active_loans' ? "bg-white text-indigo-700 shadow-sm" : "text-slate-400"}`}
+                        >
+                            Active Loans
+                        </button>
                     </div>
                 </div>
 
                 {/* Compact List */}
                 <div className="grid grid-cols-1 gap-3 pb-20">
-                    {loadingGlobal && activeTab === 'global' && globalPincodes.length === 0 ? (
+                    {((loadingGlobal && activeTab === 'global' && globalPincodes.length === 0) || (loadingActiveLoans && activeTab === 'active_loans' && activeLoansPincodes.length === 0)) ? (
                         <div className="py-12 flex flex-col items-center justify-center gap-2">
                              <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Searching Map...</p>
@@ -211,23 +267,36 @@ export default function AreaAnalyticsPage() {
                             {filteredAreas.map((area) => (
                                 <div
                                     key={area.pincode}
-                                    onClick={() => activeTab !== 'global' && fetchMerchants(area.pincode)}
-                                    className={`bg-white p-3 rounded-2xl border border-slate-50 flex items-center justify-between shadow-sm transition-all ${activeTab !== 'global' ? 'active:scale-95 cursor-pointer' : 'cursor-default opacity-80'}`}
+                                    onClick={() => (activeTab !== 'global' && activeTab !== 'active_loans') && fetchMerchants(area.pincode)}
+                                    className={`bg-white p-3 rounded-2xl border border-slate-50 flex items-center justify-between shadow-sm transition-all ${(activeTab !== 'global' && activeTab !== 'active_loans') ? 'active:scale-95 cursor-pointer' : 'cursor-default opacity-95'}`}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-slate-50 text-slate-300 rounded-lg flex items-center justify-center">
+                                    <div className="flex items-center gap-3 w-full">
+                                        <div className="w-10 h-10 bg-slate-50 text-slate-300 rounded-lg flex items-center justify-center shrink-0">
                                             <MapPin size={18} />
                                         </div>
-                                        <div>
+                                        <div className="flex-1 min-w-0">
                                             <h4 className="text-sm font-black text-slate-900 tracking-tight leading-none">{area.pincode}</h4>
-                                            {activeTab !== 'global' && (
+                                            {activeTab === 'active_loans' ? (
+                                                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                                    {area.merchant_count !== undefined && (
+                                                        <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded leading-none ${area.merchant_count >= 50 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-500'}`}>
+                                                            {area.merchant_count} Merchants
+                                                        </span>
+                                                    )}
+                                                    {area.loan_count !== undefined && area.loan_count > 0 && (
+                                                        <span className="text-[7px] font-black uppercase px-1.5 py-0.5 rounded leading-none bg-blue-50 text-blue-600 border border-blue-100">
+                                                            Processed Loan
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ) : activeTab !== 'global' ? (
                                                 <p className="text-[8px] font-black text-indigo-500 uppercase mt-1 leading-none">
                                                     {area.mapped_count || area.merchant_count || 0} Merchants
                                                 </p>
-                                            )}
+                                            ) : null}
                                         </div>
                                     </div>
-                                    {activeTab !== 'global' && <ChevronRight size={14} className="text-slate-200" />}
+                                    {(activeTab !== 'global' && activeTab !== 'active_loans') && <ChevronRight size={14} className="text-slate-200" />}
                                 </div>
                             ))}
 
@@ -238,6 +307,16 @@ export default function AreaAnalyticsPage() {
                                     className="w-full py-4 bg-white border border-slate-100 rounded-2xl text-[9px] font-black text-indigo-600 uppercase tracking-widest hover:bg-indigo-50 transition-all disabled:opacity-50 mt-2 shadow-sm"
                                 >
                                     {loadingGlobal ? 'Searching Map...' : 'Load Next 50 Zones'}
+                                </button>
+                            )}
+
+                            {activeTab === 'active_loans' && hasMoreActiveLoans && (
+                                <button
+                                    onClick={() => fetchActiveLoansPincodes(activeLoansPage + 1, activeLoansSearch)}
+                                    disabled={loadingActiveLoans}
+                                    className="w-full py-4 bg-white border border-slate-100 rounded-2xl text-[9px] font-black text-indigo-600 uppercase tracking-widest hover:bg-indigo-50 transition-all disabled:opacity-50 mt-2 shadow-sm"
+                                >
+                                    {loadingActiveLoans ? 'Searching Map...' : 'Load Next 50 Zones'}
                                 </button>
                             )}
                         </>
