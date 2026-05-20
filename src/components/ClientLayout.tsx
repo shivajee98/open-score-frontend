@@ -6,6 +6,7 @@ import MobileNav from "@/components/MobileNav";
 import AuthGuard from "@/components/AuthGuard";
 import MobileNavigationHandler from "@/components/MobileNavigationHandler";
 import NotificationHandler from "@/components/NotificationHandler";
+import InAppNotificationAlert from "@/components/InAppNotificationAlert";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import AppLockGuard from "@/components/AppLockGuard";
 import MaintenanceGuard from "@/components/MaintenanceGuard";
@@ -62,6 +63,7 @@ export default function ClientLayout({
         <MaintenanceGuard>
             <AuthGuard>
                 <NotificationHandler />
+                <InAppNotificationAlert />
                 <IncomingCallModal />
                 <MobileNavigationHandler />
                 <ToastContainer />

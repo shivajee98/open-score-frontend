@@ -64,6 +64,9 @@ export default function VirtualCardActivationPage() {
             } else if (activeRequest.status === 'REJECTED') {
                 setStep(3);
                 setPaymentMode('UPI');
+            } else if (activeRequest.status === 'ON_HOLD') {
+                setStep(5); // Re-upload proof flow
+                setPaymentMode('UPI');
             }
         }
     }, [requests, activeRequest, router]);
@@ -94,7 +97,7 @@ export default function VirtualCardActivationPage() {
                 body: fd
             });
 
-            toast.success(paymentMode === 'WALLET' ? 'Card activated! Your exclusive asset is ready.' : 'Payment proof submitted! Awaiting verification.');
+            toast.success('Card activated! Your exclusive asset is ready.');
             mutate();
             setStep(4);
         } catch (err: any) {
@@ -104,8 +107,32 @@ export default function VirtualCardActivationPage() {
         }
     };
 
+
+    const handleReUploadProof = async () => {
+        if (!proofImage) {
+            toast.error('Please upload a payment screenshot');
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            const fd = new FormData();
+            fd.append('proof_image', proofImage);
+            await apiFetch(`/vault-cards/${activeRequest.id}/reupload-proof`, {
+                method: 'POST',
+                body: fd
+            });
+            toast.success('Proof re-uploaded! Your card is active again.');
+            mutate();
+            setStep(4);
+        } catch (err: any) {
+            toast.error(err.message || 'Re-upload failed');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const history = requests || [];
-    const hasActiveRequest = activeRequest && ['INITIATED', 'PENDING_CHARGE', 'PENDING_PAYMENT', 'PENDING_APPROVAL', 'REJECTED'].includes(activeRequest.status);
+    const hasActiveRequest = activeRequest && ['INITIATED', 'PENDING_CHARGE', 'PENDING_PAYMENT', 'PENDING_APPROVAL', 'REJECTED', 'ON_HOLD'].includes(activeRequest.status);
 
     if (history.length === 0) {
         return (
@@ -616,6 +643,15 @@ export default function VirtualCardActivationPage() {
                                                 <div className="p-4 bg-white rounded-3xl shadow-2xl mb-4">
                                                     <QRCodeSVG value={upiUrl} size={150} level="M" />
                                                 </div>
+
+                                                {/* Open UPI App Button */}
+                                                <a
+                                                    href={upiUrl}
+                                                    className="w-full max-w-[200px] py-3 px-4 bg-gradient-to-r from-[#00d2ff] to-[#0066ff] hover:from-[#00b0e0] hover:to-[#0055ee] rounded-2xl flex items-center justify-center gap-2 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 transition-all duration-300 mb-6 text-center border border-white/10"
+                                                >
+                                                    <Smartphone size={14} className="animate-bounce" />
+                                                    Open UPI App (₹999)
+                                                </a>
                                                 <div className="w-full p-4 bg-white/5 rounded-2xl flex items-center justify-between border border-white/10">
                                                     <div className="flex flex-col text-left">
                                                         <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Merchant UPI ID</p>
@@ -719,14 +755,115 @@ export default function VirtualCardActivationPage() {
                         <CheckCircle2 size={40} />
                     </div>
                     <h2 className="text-2xl font-black text-white tracking-tight uppercase italic mb-4 leading-none">
-                        {paymentMode === 'WALLET' ? 'Card Activated!' : 'Received!'}
+                        {paymentMode === 'WALLET' ? 'Card Activated!' : 'Card Activated!'}
                     </h2>
                     <p className="text-xs font-bold text-slate-400 max-w-[240px] mx-auto leading-relaxed mb-12 italic">
-                        {paymentMode === 'WALLET' ? 'Your Titanium card is now live. Enjoy.' : 'Payment is being verified. Your card will be active in 24h.'}
+                        {paymentMode === 'WALLET' ? 'Your Titanium card is now live. Enjoy.' : 'Your Titanium card is now live! Enjoy your rewards.'}
                     </p>
                     <button onClick={() => router.push('/customer')} className="w-full h-14 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all italic">Back to Home</button>
                 </div>
             )}
+
+            {step === 5 && (
+                <div className="flex-1 flex flex-col animate-in slide-in-from-right duration-500 relative overflow-y-auto pb-20 scrollbar-hide">
+                    {/* Background Glows */}
+                    <div className="fixed top-[-10%] right-[-10%] w-[500px] h-[500px] bg-rose-900/10 rounded-full blur-[120px] pointer-events-none" />
+                    <div className="fixed bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-amber-900/5 rounded-full blur-[100px] pointer-events-none" />
+
+                    {/* Header */}
+                    <header className="px-6 pt-10 pb-6 flex items-center justify-between sticky top-0 z-50 bg-[#020617]/80 backdrop-blur-md shrink-0">
+                        <button onClick={() => router.push('/customer')} className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <h1 className="text-[10px] font-black tracking-[0.2em] uppercase text-slate-400 italic">Card On Hold</h1>
+                        <div className="w-10" />
+                    </header>
+
+                    <main className="max-w-xl mx-auto px-6 flex-1">
+                        {/* Hold Banner */}
+                        <div className="mb-8 p-5 bg-amber-500/10 border border-amber-500/20 rounded-2xl animate-in slide-in-from-top duration-500">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500">
+                                    <Shield size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-amber-500 uppercase tracking-tight italic">Card On Hold</p>
+                                    <p className="text-[10px] font-bold text-slate-400 italic">Your payment proof needs attention</p>
+                                </div>
+                            </div>
+                            <p className="text-[11px] font-bold text-slate-400 italic ml-[52px]">
+                                {activeRequest?.rejection_reason || 'Your payment proof could not be verified. Please re-upload a clear screenshot.'}
+                            </p>
+                        </div>
+
+                        {/* Re-upload Section */}
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-300 whitespace-nowrap italic">Re-upload Payment Proof</h3>
+                                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+                            </div>
+
+                            <div className="space-y-3 text-left">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Payment Screenshot</label>
+                                {previewUrl ? (
+                                    <div className="relative rounded-2xl overflow-hidden border-2 border-amber-500 aspect-video group">
+                                        <img src={previewUrl} className="w-full h-full object-cover" />
+                                        <button onClick={() => { setProofImage(null); setPreviewUrl(null); }} className="absolute top-3 right-3 bg-rose-500 text-white p-2 rounded-xl shadow-lg"><X size={16} /></button>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/5 rounded-2xl hover:border-amber-500 hover:bg-amber-500/5 transition-all cursor-pointer group">
+                                            <Camera className="text-slate-600 group-hover:text-amber-500 mb-2" size={24} />
+                                            <span className="text-[10px] font-black text-slate-500 group-hover:text-slate-300 uppercase tracking-widest italic">Camera</span>
+                                            <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
+                                        </label>
+                                        <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/5 rounded-2xl hover:border-amber-500 hover:bg-amber-500/5 transition-all cursor-pointer group">
+                                            <UploadCloud className="text-slate-600 group-hover:text-amber-500 mb-2" size={24} />
+                                            <span className="text-[10px] font-black text-slate-500 group-hover:text-slate-300 uppercase tracking-widest italic">Gallery</span>
+                                            <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={handleReUploadProof}
+                                disabled={!proofImage || isSubmitting}
+                                className="w-full bg-amber-500 hover:bg-amber-600 text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(245,158,11,0.3)] transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+                            >
+                                {isSubmitting ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : <><UploadCloud className="w-5 h-5" /> RE-UPLOAD PROOF <ChevronRight className="w-4 h-4" /></>}
+                            </button>
+
+                            <p className="text-center text-[9px] text-slate-500 font-bold italic uppercase tracking-widest">
+                                Or complete a fresh payment below
+                            </p>
+
+                            <a
+                                href={upiUrl}
+                                className="w-full py-3 px-4 bg-gradient-to-r from-[#00d2ff] to-[#0066ff] hover:from-[#00b0e0] hover:to-[#0055ee] rounded-2xl flex items-center justify-center gap-2 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 transition-all duration-300 mb-2 text-center border border-white/10"
+                            >
+                                <Smartphone size={14} className="animate-bounce" />
+                                Open UPI App (₹999)
+                            </a>
+
+                            <div className="flex flex-col items-center mt-6">
+                                <div className="p-4 bg-white rounded-3xl shadow-2xl mb-4">
+                                    <QRCodeSVG value={upiUrl} size={150} level="M" />
+                                </div>
+                                <div className="w-full p-4 bg-white/5 rounded-2xl flex items-center justify-between border border-white/10">
+                                    <div className="flex flex-col text-left">
+                                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Merchant UPI ID</p>
+                                        <p className="text-[11px] font-black text-white italic">{upiId}</p>
+                                    </div>
+                                    <button onClick={(e) => { e.stopPropagation(); copyToClipboard(upiId); }} className="p-3 bg-amber-500 text-white rounded-xl shadow-lg active:scale-90 transition-all"><Copy size={16} /></button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            )}
+
         </div>
     );
 }
