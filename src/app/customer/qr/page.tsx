@@ -29,13 +29,17 @@ export default function CustomerQR() {
     const [scanning, setScanning] = useState(false);
     const scannerRef = useRef<any>(null);
     const [isKycComplete, setIsKycComplete] = useState(true);
+    const [isAddressProofMissing, setIsAddressProofMissing] = useState(false);
 
-    // KYC Check for Merchants
+    // KYC Check for Merchants (Adopting Delayed Docs Upload: Electricity Bill and Shop Rent Doc are optional for QR mapping)
     useEffect(() => {
         if (user && user.role === 'MERCHANT') {
-            const docsUploaded = !!(user.aadhar_number && user.pan_number && user.aadhar_image && user.pan_image && user.electricity_bill && user.shop_rent_doc);
+            const basicDocsUploaded = !!(user.aadhar_number && user.pan_number && user.aadhar_image && user.pan_image);
+            const addressProofUploaded = !!(user.electricity_bill && user.shop_rent_doc);
             const isNotRejected = user.kyc_status !== 'REJECTED';
-            setIsKycComplete(docsUploaded && isNotRejected);
+            
+            setIsKycComplete(basicDocsUploaded && isNotRejected);
+            setIsAddressProofMissing(!addressProofUploaded);
         }
     }, [user]);
 
@@ -257,6 +261,30 @@ export default function CustomerQR() {
     return (
         <DashboardLayout title="Receive Money" navItems={navItems}>
             <div className="max-w-md mx-auto space-y-6 relative pb-20">
+                {isMerchant && isKycComplete && isAddressProofMissing && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 animate-in slide-in-from-top duration-500 shadow-sm m-1">
+                        <div className="flex gap-3 items-start">
+                            <div className="p-2 bg-amber-100 rounded-xl text-amber-600">
+                                <AlertCircle size={20} />
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-xs font-black text-amber-900 uppercase tracking-tight mb-1">
+                                    Pending Address Verification
+                                </p>
+                                <p className="text-[10px] font-medium text-amber-700 leading-relaxed">
+                                    Your QR is active! Please upload your <span className="font-bold">Electricity Bill</span> and <span className="font-bold">Shop Rent Paper</span> in your Profile page to enable field KYC verification in the future.
+                                </p>
+                                <button
+                                    onClick={() => router.push('/customer/profile')}
+                                    className="mt-3 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-[9px] font-black uppercase tracking-wider rounded-lg transition-all"
+                                >
+                                    Upload Address Proofs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {isMerchant && !isKycComplete ? (
                     <div className="bg-amber-400 rounded-2xl p-6 text-amber-950 shadow-xl border-b-4 border-amber-500/50 m-1">
                         <div className="flex items-center gap-3 mb-4">
@@ -270,14 +298,14 @@ export default function CustomerQR() {
                         </div>
                         
                         <p className="text-xs font-bold leading-relaxed mb-6">
-                            Your QR code is hidden. Please upload <span className="underline decoration-2">Aadhaar, PAN, Electricity Bill & Rent Doc</span> images/details in your profile to activate your merchant account.
+                            Your QR code is hidden. Please upload <span className="underline decoration-2">Aadhaar & PAN</span> details/images in your profile to activate your merchant account and map physical QR codes.
                         </p>
 
                         <button 
                             onClick={() => router.push('/customer/profile')}
                             className="w-full py-4 bg-amber-950 text-amber-400 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
-                            Complete Profile (4 docs)
+                            Upload Aadhaar & PAN
                         </button>
                     </div>
                 ) : (
@@ -434,7 +462,7 @@ export default function CustomerQR() {
                         <button
                             onClick={() => {
                                 if (!isKycComplete) {
-                                    toast.error("Mandatory: Upload Aadhaar, PAN, Electricity Bill and Shop Rent Doc in Profile first.", {
+                                    toast.error("Mandatory: Upload Aadhaar & PAN in Profile first.", {
                                         icon: '🔒',
                                         duration: 4000
                                     });

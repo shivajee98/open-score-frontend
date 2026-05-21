@@ -135,11 +135,6 @@ export default function Profile() {
     !!user?.aadhar_number,
   );
   const [isPanVerified, setIsPanVerified] = useState(!!user?.pan_number);
-  const [aadhaarReferenceId, setAadhaarReferenceId] = useState("");
-  const [aadhaarOtpSent, setAadhaarOtpSent] = useState(false);
-  const [aadhaarOtpInput, setAadhaarOtpInput] = useState("");
-  const [isAadhaarVerifying, setIsAadhaarVerifying] = useState(false);
-  const [isPanVerifying, setIsPanVerifying] = useState(false);
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [activeCameraCategory, setActiveCameraCategory] = useState<
     string | null
@@ -239,154 +234,7 @@ export default function Profile() {
     }
   };
 
-  const handleSendAadhaarOtp = async () => {
-    const aadhaarNumber = formData.aadhar_number;
-    if (!aadhaarNumber || aadhaarNumber.length !== 12) {
-      toast.error("कृपया पहले आधार नंबर दर्ज करें।");
-      return;
-    }
 
-    if (uniquenessErrors.aadhar) {
-      toast.error("यह आधार पहले से ही किसी अन्य खाते से लिंक है।");
-      return;
-    }
-    setIsAadhaarVerifying(true);
-    const toastId = toast.loading("OTP भेजा जा रहा है...");
-    try {
-      const res = await apiFetch("/loans/sandbox/aadhaar-otp", {
-        method: "POST",
-        body: JSON.stringify({ aadhaar_number: aadhaarNumber }),
-      });
-      const refId = res?.data?.reference_id ?? res?.reference_id;
-      if (refId) {
-        setAadhaarReferenceId(refId);
-        setAadhaarOtpSent(true);
-        toast.success(
-          "OTP आपके आधार से लिंक्ड मोबाइल नंबर पर भेज दिया गया है।",
-          { id: toastId },
-        );
-      } else {
-        toast.error(res?.message || "OTP भेजने में विफल। पुनः प्रयास करें।", {
-          id: toastId,
-        });
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "OTP अनुरोध विफल।", { id: toastId });
-    } finally {
-      setIsAadhaarVerifying(false);
-    }
-  };
-
-  const handleVerifyAadhaarOtp = async () => {
-    if (
-      !aadhaarOtpInput ||
-      aadhaarOtpInput.length !== 6 ||
-      !aadhaarReferenceId
-    ) {
-      toast.error("कृपया 6 अंकों का OTP दर्ज करें।");
-      return;
-    }
-    setIsAadhaarVerifying(true);
-    const toastId = toast.loading("OTP सत्यापित किया जा रहा है...");
-    try {
-      const res = await apiFetch("/loans/sandbox/aadhaar-verify", {
-        method: "POST",
-        body: JSON.stringify({
-          otp: aadhaarOtpInput,
-          reference_id: String(aadhaarReferenceId),
-        }),
-      });
-      const kyc = res?.data?.kyc_result ?? res?.data ?? {};
-
-      if (res?.code === 200 || res?.status === 200 || kyc?.name) {
-        setIsAadhaarVerified(true);
-        toast.success("आधार सत्यापन सफल!", { id: toastId });
-
-        // Auto-fill
-        const update: any = {};
-        if (kyc.name) update.name = kyc.name;
-        if (kyc.dob) {
-          const parts = kyc.dob.split(/[-/]/);
-          update.date_of_birth =
-            parts.length === 3
-              ? parts[2].length === 4
-                ? `${parts[2]}-${parts[1]}-${parts[0]}`
-                : kyc.dob
-              : kyc.dob;
-        }
-        if (kyc.care_of)
-          update.father_name = kyc.care_of
-            .replace(/^(S\/O|D\/O|W\/O)\s*/i, "")
-            .trim();
-
-        const addr = kyc.address ?? {};
-        const street = [
-          addr.house,
-          addr.street,
-          addr.landmark,
-          addr.loc,
-          addr.vtc,
-        ]
-          .filter(Boolean)
-          .join(", ");
-        if (street) update.street_address = street;
-        if (addr.city || addr.dist) update.city = addr.city || addr.dist;
-        if (addr.state) update.state = addr.state;
-        if (addr.zip) update.postal_code = addr.zip;
-
-        setFormData((prev) => ({ ...prev, ...update }));
-      } else {
-        toast.error(res?.message || "OTP सत्यापन विफल। पुनः प्रयास करें।", {
-          id: toastId,
-        });
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "OTP सत्यापन विफल।", { id: toastId });
-    } finally {
-      setIsAadhaarVerifying(false);
-    }
-  };
-
-  const handleVerifyPan = async () => {
-    const pan = formData.pan_number;
-    const name = formData.name;
-    const dob = formData.date_of_birth;
-
-    if (!pan || pan.length !== 10) {
-      toast.error("कृपया पहले पैन नंबर दर्ज करें।");
-      return;
-    }
-    if (!name || !dob) {
-      toast.error("पैन सत्यापन के लिए नाम और जन्म तिथि आवश्यक है।");
-      return;
-    }
-
-    setIsPanVerifying(true);
-    const toastId = toast.loading("पैन सत्यापित किया जा रहा है...");
-    try {
-      const res = await apiFetch("/loans/sandbox/pan-verify", {
-        method: "POST",
-        body: JSON.stringify({ pan, name, dob }),
-      });
-
-      if (
-        res?.data?.status === "VALID" ||
-        res?.status === "VALID" ||
-        res?.data?.name_match === true
-      ) {
-        setIsPanVerified(true);
-        toast.success("पैन सत्यापन सफल!", { id: toastId });
-      } else {
-        toast.error(res?.message || "पैन सत्यापन विफल। विवरण जांचें।", {
-          id: toastId,
-        });
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "पैन सत्यापन विफल।", { id: toastId });
-    } finally {
-      setIsPanVerifying(false);
-    }
-  };
 
   const handleCapture = async (blob: Blob, corners?: string) => {
     if (corners === "CLOSE") {
@@ -2099,23 +1947,6 @@ export default function Profile() {
                               className={`flex-1 text-sm font-black text-slate-900 bg-white border-2 rounded-xl px-4 py-2.5 transition-all focus:outline-none ${uniquenessErrors.aadhar ? "border-rose-200 bg-rose-50" : isAadhaarVerified ? "border-emerald-100 bg-emerald-50/30" : "border-slate-100 focus:border-blue-500"}`}
                               placeholder="0000 0000 0000"
                             />
-                            {!isAadhaarVerified && (
-                              <button
-                                onClick={handleSendAadhaarOtp}
-                                disabled={
-                                  isAadhaarVerifying ||
-                                  formData.aadhar_number?.length !== 12 ||
-                                  !!uniquenessErrors.aadhar
-                                }
-                                className="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-600/20"
-                              >
-                                {isAadhaarVerifying
-                                  ? "Sending..."
-                                  : aadhaarOtpSent
-                                    ? "Resend"
-                                    : "Send OTP"}
-                              </button>
-                            )}
                             <button
                               onClick={() =>
                                 setActiveCameraCategory("aadhar_front")
@@ -2135,38 +1966,6 @@ export default function Profile() {
                             <p className="text-[9px] text-blue-500 font-bold animate-pulse uppercase tracking-widest ml-1">
                               Verifying Uniqueness...
                             </p>
-                          )}
-
-                          {aadhaarOtpSent && !isAadhaarVerified && (
-                            <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl space-y-3 animate-in slide-in-from-top-2 duration-300">
-                              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
-                                Enter 6-Digit Aadhaar OTP
-                              </p>
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  maxLength={6}
-                                  value={aadhaarOtpInput}
-                                  onChange={(e) =>
-                                    setAadhaarOtpInput(
-                                      e.target.value.replace(/\D/g, ""),
-                                    )
-                                  }
-                                  placeholder="000000"
-                                  className="flex-1 bg-white border-2 border-blue-100 rounded-xl px-4 py-2 text-center text-lg font-black tracking-[0.5em] focus:border-blue-500 focus:outline-none"
-                                />
-                                <button
-                                  onClick={handleVerifyAadhaarOtp}
-                                  disabled={
-                                    isAadhaarVerifying ||
-                                    aadhaarOtpInput.length !== 6
-                                  }
-                                  className="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-6 rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50"
-                                >
-                                  {isAadhaarVerifying ? "Wait..." : "Verify"}
-                                </button>
-                              </div>
-                            </div>
                           )}
                         </div>
                       ) : (
@@ -2217,19 +2016,6 @@ export default function Profile() {
                               className={`flex-1 text-sm font-black text-slate-900 bg-white border-2 rounded-xl px-4 py-2.5 transition-all focus:outline-none ${uniquenessErrors.pan ? "border-rose-200 bg-rose-50" : isPanVerified ? "border-emerald-100 bg-emerald-50/30" : "border-slate-100 focus:border-blue-500"}`}
                               placeholder="ABCDE1234F"
                             />
-                            {!isPanVerified && (
-                              <button
-                                onClick={handleVerifyPan}
-                                disabled={
-                                  isPanVerifying ||
-                                  formData.pan_number?.length !== 10 ||
-                                  !!uniquenessErrors.pan
-                                }
-                                className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-all disabled:opacity-50"
-                              >
-                                {isPanVerifying ? "Wait..." : "Verify"}
-                              </button>
-                            )}
                             <button
                               onClick={() =>
                                 setActiveCameraCategory("pan_card")
