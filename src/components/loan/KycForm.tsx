@@ -694,7 +694,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             });
             const kyc = res?.data?.kyc_result ?? res?.data ?? {};
 
-            if (res?.code === 200 || res?.status === 200 || kyc?.name) {
+            if ((res?.code === 200 || res?.status === 200) && kyc?.aadhaar_number) {
                 setIsAadhaarVerified(true);
                 toast.success('आधार सत्यापन सफल!', { id: toastId });
 
@@ -757,7 +757,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                 // Save draft AFTER all setValues to ensure backend gets the latest data
                 saveDraft(getValues()); 
             } else {
-                toast.error(res?.message || 'OTP सत्यापन विफल। पुनः प्रयास करें।', { id: toastId });
+                toast.error(res?.message || 'Aadhaar details are incorrect or invalid. Please check and try again.', { id: toastId });
             }
         } catch (err: any) {
             toast.error(err?.message || 'OTP सत्यापन विफल।', { id: toastId });
@@ -798,12 +798,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             });
 
             const data = res?.data ?? res;
-            if (res?.code === 200 || res?.status === 200 || data?.status === 'VALID' || data?.full_name) {
+            if ((res?.code === 200 || res?.status === 200) && (data?.status === 'VALID' || data?.data?.status === 'VALID')) {
                 setIsPanVerified(true);
                 saveDraft(getValues()); // Save immediately on verification success
                 toast.success('पैन सत्यापन सफल!', { id: toastId });
             } else {
-                toast.error(res?.message || 'PAN number is incorrect or invalid.', { id: toastId });
+                toast.error(res?.message || 'PAN details are incorrect or invalid. Please check and try again.', { id: toastId });
             }
         } catch (err: any) {
             toast.error(err?.message || 'पैन सत्यापन विफल।', { id: toastId });

@@ -8,9 +8,12 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap, Lock, ShieldCheck } from 'lucide-react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 
+import { toast } from '@/components/ui/Toast';
+
 function HomeContent() {
   const [mobile, setMobile] = useState(typeof window !== 'undefined' ? localStorage.getItem('auth_mobile') || '' : '');
   const [otp, setOtp] = useState('');
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'CUSTOMER' | 'MERCHANT' | 'STUDENT' | null>(null);
@@ -33,6 +36,14 @@ function HomeContent() {
   // Account Check States
   const [userExists, setUserExists] = useState<boolean | null>(null);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
+
+  // Auto-fill OTP and toast notification for test/magic numbers
+  useEffect(() => {
+    if (flow === 'otp_verify' && mobile.startsWith('99999') && otp !== '123456') {
+      setOtp('123456');
+      toast.success("Magic number detected! Bypassing OTP with '123456'");
+    }
+  }, [flow, mobile]);
   const [hasPin, setHasPin] = useState<boolean | null>(null);
   const [isTrusted, setIsTrusted] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
@@ -622,7 +633,17 @@ function HomeContent() {
         {flow === 'mobile_entry' && (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-black mb-2">Welcome Back</h2>
+              <h2 
+                className="text-2xl font-black mb-2 cursor-pointer select-none hover:text-blue-600 transition-colors"
+                onClick={() => {
+                  const randomTestNumber = '999' + Math.floor(1000000 + Math.random() * 9000000);
+                  setMobile(randomTestNumber);
+                  toast.success("Generated test number: " + randomTestNumber);
+                }}
+                title="Click to generate a test bypass number"
+              >
+                Welcome Back
+              </h2>
               <p className="text-slate-500 text-sm">Enter your mobile number to continue</p>
             </div>
 

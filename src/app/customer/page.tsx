@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare, ArrowDownToLine, ArrowUpFromLine, X, Clock, Upload, Phone } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare, ArrowDownToLine, ArrowUpFromLine, X, Clock, Upload, Phone, Mail, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
@@ -43,6 +43,78 @@ export default function CustomerHome() {
     const activeLoans = (loans ? (Array.isArray(loans) ? loans : (loans.data || [])) : cachedLoans) || [];
 
     const isRefreshing = userValidating || walletValidating || loansValidating;
+
+    // Email Verification States
+    const [email, setEmail] = useState('');
+    const [otp, setOtp] = useState('');
+    const [isOtpSent, setIsOtpSent] = useState(false);
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
+    const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+    const [resendCountdown, setResendCountdown] = useState(0);
+
+    // Sync email from user profile
+    useEffect(() => {
+        if (activeUser?.email && !email) {
+            setEmail(activeUser.email);
+        }
+    }, [activeUser?.email]);
+
+    // Resend countdown timer
+    useEffect(() => {
+        if (resendCountdown > 0) {
+            const timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [resendCountdown]);
+
+    const handleSendOtp = async () => {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            toast.error('Please enter a valid email address.');
+            return;
+        }
+        setIsSendingOtp(true);
+        try {
+            const response = await apiFetch('/auth/email/send-otp', {
+                method: 'POST',
+                body: JSON.stringify({ email }),
+            });
+            if (response.error) {
+                toast.error(response.error);
+            } else {
+                toast.success('OTP sent successfully to your email.');
+                setIsOtpSent(true);
+                setResendCountdown(60);
+            }
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to send OTP. Please try again.');
+        } finally {
+            setIsSendingOtp(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otp || otp.length !== 6) {
+            toast.error('Please enter a valid 6-digit OTP.');
+            return;
+        }
+        setIsVerifyingOtp(true);
+        try {
+            const response = await apiFetch('/auth/email/verify-otp', {
+                method: 'POST',
+                body: JSON.stringify({ email, otp }),
+            });
+            if (response.error) {
+                toast.error(response.error);
+            } else {
+                toast.success('Email verified successfully!');
+                await mutateUser();
+            }
+        } catch (e: any) {
+            toast.error(e.message || 'Invalid OTP. Please try again.');
+        } finally {
+            setIsVerifyingOtp(false);
+        }
+    };
 
     const [showBalance, setShowBalance] = useState(true);
     const [showAdminMessage, setShowAdminMessage] = useState(false);
@@ -419,6 +491,177 @@ export default function CustomerHome() {
     );
 
 
+
+    if (activeUser && !activeUser.email_verified_at) {
+        return (
+            <div className={`min-h-screen ${isMerchant ? 'bg-slate-950' : 'bg-slate-900'} flex flex-col justify-between relative overflow-hidden p-6`}>
+                {/* Circuit board overlay pattern */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
+                    <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <pattern id="lock-circuit" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                            <path d="M0 40 h 80 M40 0 v 80" fill="none" stroke="white" strokeWidth="1" />
+                            <circle cx="40" cy="40" r="3" fill="white" />
+                        </pattern>
+                        <rect width="100%" height="100%" fill="url(#lock-circuit)" />
+                    </svg>
+                </div>
+
+                {/* Top Bar */}
+                <div className="flex justify-between items-center z-10">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-xl ${isMerchant ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'} flex items-center justify-center border border-white/5`}>
+                            <ShieldCheck className="w-4 h-4" />
+                        </div>
+                        <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">OpenScore Secure</span>
+                    </div>
+                    <button 
+                        onClick={async () => {
+                            await clearAuthState();
+                            window.location.replace('/');
+                        }}
+                        className="text-[9px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/20 hover:bg-rose-500/20 active:scale-95 transition-all"
+                    >
+                        Logout
+                    </button>
+                </div>
+
+                {/* Main Content Card */}
+                <div className="my-auto z-10 w-full max-w-md mx-auto">
+                    <div className="text-center mb-8">
+                        <div className="inline-flex w-16 h-16 rounded-[1.8rem] bg-gradient-to-tr from-amber-500 to-orange-600 items-center justify-center text-white mb-4 shadow-xl shadow-orange-500/20 animate-pulse">
+                            <Mail size={28} strokeWidth={1.5} />
+                        </div>
+                        <h2 className="text-2xl font-black text-white tracking-tight uppercase">Verify Your Email</h2>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1.5">
+                            Required to activate your account benefits
+                        </p>
+                    </div>
+
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 shadow-2xl">
+                        {/* Email Field Group */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] block mb-1.5 pl-1">
+                                    Email Address
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => {
+                                            if (!isOtpSent) setEmail(e.target.value);
+                                        }}
+                                        disabled={isOtpSent || isSendingOtp}
+                                        placeholder="Enter your email address"
+                                        className={`w-full bg-slate-950/40 border ${isOtpSent ? 'border-white/5 text-slate-500' : 'border-white/10 text-white focus:border-indigo-500'} rounded-xl py-3.5 px-4 text-sm font-semibold focus:outline-none transition-all disabled:opacity-60`}
+                                    />
+                                    {isOtpSent && (
+                                        <button
+                                            onClick={() => {
+                                                setIsOtpSent(false);
+                                                setOtp('');
+                                            }}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-indigo-400 uppercase hover:underline"
+                                        >
+                                            Change
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* OTP Field Group (Shown only when OTP is sent) */}
+                            {isOtpSent && (
+                                <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] block mb-1.5 pl-1">
+                                        Verification OTP
+                                    </label>
+                                    <input
+                                        type="text"
+                                        maxLength={6}
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                        placeholder="Enter 6-digit OTP"
+                                        className="w-full bg-slate-950/40 border border-white/10 rounded-xl py-3.5 px-4 text-center text-lg font-black tracking-[0.3em] text-white focus:border-emerald-500 focus:outline-none transition-all"
+                                    />
+                                    <div className="flex justify-between items-center mt-2.5 px-1">
+                                        <span className="text-[9px] font-bold text-slate-500 uppercase">
+                                            Sent to {email}
+                                        </span>
+                                        {resendCountdown > 0 ? (
+                                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                                                Resend in {resendCountdown}s
+                                            </span>
+                                        ) : (
+                                            <button
+                                                onClick={handleSendOtp}
+                                                disabled={isSendingOtp}
+                                                className="text-[9px] font-black text-emerald-400 hover:text-emerald-300 uppercase tracking-wider transition-colors disabled:opacity-50"
+                                            >
+                                                Resend OTP
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="pt-2">
+                                {!isOtpSent ? (
+                                    <button
+                                        onClick={handleSendOtp}
+                                        disabled={isSendingOtp || !email}
+                                        className={`w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all shadow-xl ${
+                                            isMerchant
+                                                ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-950/30'
+                                                : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-950/30'
+                                        } disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] flex items-center justify-center gap-2`}
+                                    >
+                                        {isSendingOtp ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Sending OTP...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Send Verification OTP
+                                                <ArrowRight size={14} />
+                                            </>
+                                        )}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleVerifyOtp}
+                                        disabled={isVerifyingOtp || otp.length !== 6}
+                                        className="w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-xl shadow-emerald-950/30 disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] flex items-center justify-center gap-2"
+                                    >
+                                        {isVerifyingOtp ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Verifying OTP...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Verify & Activate Account
+                                                <Check size={14} strokeWidth={3} />
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer Info */}
+                <div className="text-center z-10">
+                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                        By continuing, you verify this email is owned and managed by you.<br />
+                        Security audits are active. IP: logged.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">

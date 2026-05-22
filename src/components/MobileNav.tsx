@@ -79,6 +79,9 @@ export default function MobileNav() {
     const isMerchant = user?.role === 'MERCHANT';
     const isRestricted = !!(user?.has_pending_kyc_reupload || user?.has_pending_reupload);
 
+    // Hide bottom nav if email is unverified
+    if (user && !user.email_verified_at) return null;
+
     // Helper: active class
     const activeClass = isMerchant ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50';
 
