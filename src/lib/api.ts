@@ -29,9 +29,20 @@ const MAX_AUTH_FAILURES = 5; // Increased to be less trigger-happy
 
 export const clearAuthState = async () => {
     if (typeof window !== 'undefined') {
-        console.warn('[Auth] Clearing all authentication state');
-        // Clear all storage
-        localStorage.clear();
+        console.warn('[Auth] Clearing authentication state (preserving device identity)');
+
+        // Keys that must survive logout — device identity & push tokens
+        const PRESERVE_PREFIXES = ['os_device_id', '_cap_', 'CapacitorStorage.', 'fcm_token_', 'hasSeenOnboarding'];
+
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && !PRESERVE_PREFIXES.some(prefix => key.startsWith(prefix))) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
         sessionStorage.clear();
 
         // Reset failure count

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap, Lock, ShieldCheck } from 'lucide-react';
+import { Smartphone, LogIn, ArrowRight, User as UserIcon, Store, GraduationCap, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
 import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
 
 import { toast } from '@/components/ui/Toast';
@@ -30,6 +30,8 @@ function HomeContent() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isConflict, setIsConflict] = useState(false);
+  const [conflictMessage, setConflictMessage] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
   const [showLogoutHint, setShowLogoutHint] = useState(false);
 
@@ -253,6 +255,11 @@ function HomeContent() {
 
   // Debounced User Existence Check
   useEffect(() => {
+    // Reset states on mobile number change
+    setIsConflict(false);
+    setConflictMessage('');
+    setError('');
+
     if (mobile.length === 10) {
       setIsCheckingUser(true);
       const handler = setTimeout(async () => {
@@ -268,9 +275,15 @@ function HomeContent() {
             setReferralError(null);
             setReferralName(null);
           }
-        } catch (e) {
+        } catch (e: any) {
           setUserExists(null);
           setHasPin(null);
+          if (e.code === 'DEVICE_BINDING_CONFLICT' || e.status === 403) {
+            setIsConflict(true);
+            setConflictMessage(e.message);
+          } else {
+            setError(e.message || 'Failed to check account status');
+          }
         } finally {
           setIsCheckingUser(false);
         }
@@ -624,11 +637,46 @@ function HomeContent() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-white p-6 text-primary overflow-hidden">
       <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-10 duration-700">
 
-        {error && (
+        {isConflict ? (
+          <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-3xl mb-6 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0 mt-0.5">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-3 text-left w-full">
+                <div>
+                  <h3 className="text-[11px] font-black tracking-wider text-amber-900 uppercase">Device Bound to Another Account</h3>
+                  <p className="text-[11px] text-amber-800 leading-normal font-bold mt-0.5">
+                    This mobile is registered with this number. You can't register a new account on this mobile.
+                  </p>
+                </div>
+                
+                <div className="border-t border-amber-200/50 pt-2.5">
+                  <h3 className="text-[11px] font-black tracking-wider text-amber-900 uppercase">डिवाइस दूसरे नंबर से लिंक है</h3>
+                  <p className="text-[11px] text-amber-800 leading-normal font-bold mt-0.5">
+                    यह मोबाइल इसके साथ पंजीकृत है। आप इस मोबाइल पर नया खाता पंजीकृत नहीं कर सकते हैं।
+                  </p>
+                </div>
+
+                {(() => {
+                  const match = conflictMessage.match(/\(([^)]+)\)/);
+                  const maskedNum = match ? match[1] : '';
+                  if (!maskedNum) return null;
+                  return (
+                    <div className="bg-amber-100/60 rounded-xl py-2 px-3 text-[11px] font-black text-amber-900 border border-amber-200/60 flex items-center justify-between mt-2">
+                      <span className="uppercase tracking-wider text-[9px] text-amber-800/80">Registered Number / पहला नंबर:</span>
+                      <span className="font-mono text-xs select-all bg-white px-2 py-0.5 rounded-md shadow-sm border border-amber-200/20 tracking-widest">+91 {maskedNum}</span>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        ) : error ? (
           <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold text-center border border-red-100 mb-6">
             {error}
           </div>
-        )}
+        ) : null}
 
         {flow === 'mobile_entry' && (
           <div className="space-y-6">
