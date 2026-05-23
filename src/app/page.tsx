@@ -34,6 +34,7 @@ function HomeContent() {
   const [conflictMessage, setConflictMessage] = useState('');
   const [checkingSession, setCheckingSession] = useState(true);
   const [showLogoutHint, setShowLogoutHint] = useState(false);
+  const [maskedEmail, setMaskedEmail] = useState('');
 
   // Account Check States
   const [userExists, setUserExists] = useState<boolean | null>(null);
@@ -134,11 +135,14 @@ function HomeContent() {
           // Auto send OTP
           apiFetch('/auth/otp', {
             method: 'POST',
-            body: JSON.stringify({ mobile_number: mobileParam })
-          }).then(() => {
+            body: JSON.stringify({ mobile_number: mobileParam, reset_pin: true })
+          }).then((res: any) => {
+            if (res && res.masked_email) {
+              setMaskedEmail(res.masked_email);
+            }
             setFlow('otp_verify');
             localStorage.setItem('auth_flow', 'otp_verify');
-            setResendTimer(30);
+            setResendTimer(60);
             setCheckingSession(false);
           }).catch((err: any) => {
             setError(err.message);
@@ -366,16 +370,20 @@ function HomeContent() {
     }
 
     try {
-      await apiFetch('/auth/otp', {
+      const res = await apiFetch('/auth/otp', {
         method: 'POST',
-        body: JSON.stringify({ mobile_number: mobile }),
+        body: JSON.stringify({ mobile_number: mobile, reset_pin: isReset }),
       });
+
+      if (res && res.masked_email) {
+        setMaskedEmail(res.masked_email);
+      }
 
       setFlow('otp_verify');
       localStorage.setItem('auth_flow', 'otp_verify');
       localStorage.setItem('auth_mobile', mobile);
-      // Task: Increase valid OTP timer to 10 mins (600s) for new users, 30s for existing
-      setResendTimer(userExists === false ? 600 : 30);
+      // Task: Increase valid OTP timer to 10 mins (600s) for new users, 60s for existing
+      setResendTimer(userExists === false ? 600 : 60);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -929,10 +937,17 @@ function HomeContent() {
             <div className="text-center space-y-8">
               <div>
                 <h2 className="text-2xl font-black mb-2 tracking-tight text-slate-900">Verify Identity</h2>
-                <div className="p-3 bg-blue-50 text-blue-700/70 rounded-2xl text-[10px] font-black uppercase tracking-widest leading-relaxed border border-blue-100">
-                  Pick Up The call to listen to the OTP sent to
-                  <span className="block mt-1 text-blue-700 text-xs font-black tracking-widest">+91 {mobile}</span>
-                </div>
+                {isResettingPin ? (
+                  <div className="p-3 bg-blue-50 text-blue-700/70 rounded-2xl text-[10px] font-black uppercase tracking-widest leading-relaxed border border-blue-100">
+                    Enter the OTP sent to your registered email
+                    <span className="block mt-1 text-blue-700 text-xs font-black tracking-normal lowercase">{maskedEmail || 'address'}</span>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-blue-50 text-blue-700/70 rounded-2xl text-[10px] font-black uppercase tracking-widest leading-relaxed border border-blue-100">
+                    Pick Up The call to listen to the OTP sent to
+                    <span className="block mt-1 text-blue-700 text-xs font-black tracking-widest">+91 {mobile}</span>
+                  </div>
+                )}
               </div>
 
               <input
