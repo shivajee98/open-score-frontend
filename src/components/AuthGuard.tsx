@@ -165,6 +165,25 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         return () => window.removeEventListener('userStateUpdate', handleStateUpdate);
     }, []);
 
+    // Real-time Live Heartbeat Ping
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const sendHeartbeat = async () => {
+            try {
+                await apiFetch("/user/heartbeat", { method: "POST" });
+            } catch (e) {
+                // Fail silently to avoid cluttering logs
+            }
+        };
+
+        sendHeartbeat();
+        const interval = setInterval(sendHeartbeat, 10000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     if (suspended) {
         return <SuspendedScreen />;
     }
