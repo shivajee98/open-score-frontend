@@ -263,6 +263,7 @@ function HomeContent() {
     setIsConflict(false);
     setConflictMessage('');
     setError('');
+    setMaskedEmail('');
 
     if (mobile.length === 10) {
       setIsCheckingUser(true);
@@ -937,10 +938,10 @@ function HomeContent() {
             <div className="text-center space-y-8">
               <div>
                 <h2 className="text-2xl font-black mb-2 tracking-tight text-slate-900">Verify Identity</h2>
-                {isResettingPin ? (
+                {maskedEmail ? (
                   <div className="p-3 bg-blue-50 text-blue-700/70 rounded-2xl text-[10px] font-black uppercase tracking-widest leading-relaxed border border-blue-100">
                     Enter the OTP sent to your registered email
-                    <span className="block mt-1 text-blue-700 text-xs font-black tracking-normal lowercase">{maskedEmail || 'address'}</span>
+                    <span className="block mt-1 text-blue-700 text-xs font-black tracking-normal lowercase">{maskedEmail}</span>
                   </div>
                 ) : (
                   <div className="p-3 bg-blue-50 text-blue-700/70 rounded-2xl text-[10px] font-black uppercase tracking-widest leading-relaxed border border-blue-100">
@@ -982,6 +983,7 @@ function HomeContent() {
                     localStorage.removeItem('auth_mobile');
                     localStorage.removeItem('is_resetting_pin');
                     setIsResettingPin(false);
+                    setMaskedEmail('');
                   }} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Change Number / Back</button>
 
                   <div className="pt-0">
