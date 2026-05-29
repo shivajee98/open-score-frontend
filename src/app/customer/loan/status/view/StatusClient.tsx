@@ -143,7 +143,17 @@ export default function LoanStatus() {
         fetchLoan();
         fetchUserData();
         fetchTickets();
-    }, [loanId]);
+
+        const interval = setInterval(() => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible' && !showKycForm && !showVerificationLoading && !submitting) {
+                fetchLoan();
+                fetchUserData();
+                fetchTickets();
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [loanId, showKycForm, showVerificationLoading, submitting]);
 
     useEffect(() => {
         const handleLoanUpdate = (e: any) => {
@@ -513,37 +523,48 @@ export default function LoanStatus() {
 
                 {/* Timeline Stepper */}
                 <div className="bg-white rounded-lg p-4 py-6 shadow-xl shadow-blue-900/5">
-                    {loan?.auto_pilot_enabled && timerInfo && timerInfo.remaining > 0 && (
+                    {loan?.auto_pilot_enabled && loan?.auto_pilot_next_step_at && (
                         <div className="mb-8 flex flex-col items-center justify-center p-6 bg-slate-50/50 border border-slate-100 rounded-[2rem] animate-in fade-in zoom-in duration-500 relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 to-transparent pointer-events-none" />
 
                             <div className="relative z-10 flex flex-col items-center gap-4">
-                                <CountdownCircleTimer
-                                    key={`${loan.status}-${loan.auto_pilot_next_step_at}`}
-                                    isPlaying
-                                    duration={timerInfo.total}
-                                    initialRemainingTime={timerInfo.remaining}
-                                    colors={['#3b82f6', '#2563eb', '#1d4ed8', '#1e3a8a']}
-                                    colorsTime={[timerInfo.total, timerInfo.total * 0.6, timerInfo.total * 0.3, 0]}
-                                    size={120}
-                                    strokeWidth={6}
-                                    trailColor="#f1f5f9"
-                                    onComplete={() => {
-                                        fetchLoan();
-                                        fetchUserData();
-                                        window.location.reload();
-                                    }}
-                                >
-                                    {({ remainingTime }) => (
-                                        <div className="flex flex-col items-center justify-center text-center">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Remaining</span>
-                                            <span className="text-xl font-black text-slate-900 tabular-nums tracking-tighter leading-none">
-                                                {formatTimerLabel(remainingTime)}
-                                            </span>
-                                            <span className="text-[9px] font-bold text-blue-500 mt-1 uppercase tracking-widest animate-pulse">Syncing</span>
-                                        </div>
-                                    )}
-                                </CountdownCircleTimer>
+                                {timerInfo && timerInfo.remaining > 0 ? (
+                                    <CountdownCircleTimer
+                                        key={`${loan.status}-${loan.auto_pilot_next_step_at}`}
+                                        isPlaying
+                                        duration={timerInfo.total}
+                                        initialRemainingTime={timerInfo.remaining}
+                                        colors={['#3b82f6', '#2563eb', '#1d4ed8', '#1e3a8a']}
+                                        colorsTime={[timerInfo.total, timerInfo.total * 0.6, timerInfo.total * 0.3, 0]}
+                                        size={120}
+                                        strokeWidth={6}
+                                        trailColor="#f1f5f9"
+                                        onComplete={() => {
+                                            fetchLoan();
+                                            fetchUserData();
+                                            window.location.reload();
+                                        }}
+                                    >
+                                        {({ remainingTime }) => (
+                                            <div className="flex flex-col items-center justify-center text-center">
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Remaining</span>
+                                                <span className="text-xl font-black text-slate-900 tabular-nums tracking-tighter leading-none">
+                                                    {formatTimerLabel(remainingTime)}
+                                                </span>
+                                                <span className="text-[9px] font-bold text-blue-500 mt-1 uppercase tracking-widest animate-pulse">Syncing</span>
+                                            </div>
+                                        )}
+                                    </CountdownCircleTimer>
+                                ) : (
+                                    <div className="w-[120px] h-[120px] rounded-full border-6 border-slate-100 flex flex-col items-center justify-center text-center bg-white shadow-sm relative">
+                                        <div className="absolute inset-0 rounded-full border-6 border-t-amber-500 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Status</span>
+                                        <span className="text-xs font-black text-amber-500 uppercase tracking-widest animate-pulse leading-none">
+                                            PROCESSING
+                                        </span>
+                                        <span className="text-[9px] font-bold text-emerald-500 mt-1 uppercase tracking-widest animate-pulse">Syncing</span>
+                                    </div>
+                                )}
 
                                 <div className="text-center">
                                     <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-1">
@@ -666,7 +687,7 @@ export default function LoanStatus() {
                                     ? 'Your loan is processed, all you need is to re-upload these fields required by admin.'
                                     : 'We need a few more details to finalize your application.'}
                             </p>
-                            
+
                             {loan.reupload_fields?.length > 0 && (
                                 <div className="mt-4 text-left space-y-2 border-t border-white/10 pt-4">
                                     {loan.reupload_fields.map((field: string, i: number) => (

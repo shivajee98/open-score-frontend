@@ -83,13 +83,17 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     const [aadhaarCooldown, setAadhaarCooldown] = useState(0);
     const lastCheckedValues = useRef<{ aadhar?: string, pan?: string }>({});
 
-    const activeSteps = useMemo(() => {
-        const reuploadFields = (initialData as any)?.reupload_fields || [];
+    const reuploadFields = useMemo(() => (initialData as any)?.reupload_fields || [], [initialData]);
 
+    const isVerificationRequired = useMemo(() => {
+        return reuploadFields.includes('aadhar_number') || reuploadFields.includes('pan_number');
+    }, [reuploadFields]);
+
+    const activeSteps = useMemo(() => {
         // If it's a reupload request, only show relevant steps
         if (reuploadFields.length > 0) {
             return STEPS.filter(step => {
-                if (step.id === 'aadhaar') return reuploadFields.includes('aadhar_front') || reuploadFields.includes('aadhar_back') || reuploadFields.includes('aadhaar_number');
+                if (step.id === 'aadhaar') return reuploadFields.includes('aadhar_front') || reuploadFields.includes('aadhar_back') || reuploadFields.includes('aadhar_number');
                 if (step.id === 'pan') return reuploadFields.includes('pan_card') || reuploadFields.includes('pan_number');
                 if (step.id === 'personal') return reuploadFields.includes('full_name') || reuploadFields.includes('date_of_birth') || reuploadFields.includes('address_details') || reuploadFields.includes('personal_details');
                 if (step.id === 'employment') return reuploadFields.includes('employment_details') || reuploadFields.includes('bank_details');
@@ -105,7 +109,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             if (step.id === 'pan' && isPanVerified && capturedImages['pan_card']) return false;
             return true;
         });
-    }, [isAadhaarVerified, isPanVerified, capturedImages, initialData]);
+    }, [isAadhaarVerified, isPanVerified, capturedImages, reuploadFields]);
 
     const saveDraft = async (data: any, imageOverride?: any) => {
         if (!loanId) return;
@@ -379,11 +383,12 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             return !!watch('referral_code') && !!referrerName;
         }
         if (step.id === 'aadhaar') { // Aadhaar
-            // Skip if verified OR if images are already present in initialData/capturedImages
+            if (isVerificationRequired && !isAadhaarVerified) return false;
             const hasAadharImages = capturedImages['aadhar_front'] && capturedImages['aadhar_back'];
             return isAadhaarVerified || (hasAadharImages && !!watch('aadhar_number'));
         }
         if (step.id === 'pan') { // PAN
+            if (isVerificationRequired && !isPanVerified) return false;
             const hasPanImage = capturedImages['pan_card'];
             return isPanVerified || (hasPanImage && !!watch('pan_number'));
         }
@@ -405,48 +410,46 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
     }, [user, initialData, currentStep, activeSteps.length]);
 
     const nextStep = async () => {
-        // Enforce document uploads - Only if not already verified
+        const currentStepId = activeSteps[currentStep]?.id;
         const aadharVal = watch('aadhar_number');
         const panVal = watch('pan_number');
 
-        if (currentStep === 1) { // Aadhaar step
+        if (currentStepId === 'aadhaar') { // Aadhaar step
             if (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back']) {
                 setErrorPopup("कृपया आधार कार्ड के दोनों हिस्से अपलोड करें।");
                 return;
             }
         }
-        if (currentStep === 2) { // PAN step
+        if (currentStepId === 'pan') { // PAN step
             if (!capturedImages['pan_card']) {
                 setErrorPopup("कृपया अपना पैन कार्ड अपलोड करें।");
                 return;
             }
         }
 
-
-
-        const fieldsToValidate = getFieldsForStep(currentStep);
+        const fieldsToValidate = getFieldsForStepId(currentStepId);
         if (fieldsToValidate.length > 0) {
             const isStepValid = await trigger(fieldsToValidate as any);
             if (!isStepValid) {
-                console.error(`Step ${currentStep} Validation Failed:`, errors);
+                console.error(`Step ${currentStep} (${currentStepId}) Validation Failed:`, errors);
                 const firstErr = Object.values(errors)[0];
                 if (firstErr) toast.error(String(firstErr.message));
                 return;
             }
         }
 
-        if (currentStep === 1 && checkingUniqueness.aadhar) {
+        if (currentStepId === 'aadhaar' && checkingUniqueness.aadhar) {
             toast.loading("Fetching Aadhaar data... please wait", { id: 'api-loading' });
             return;
         }
 
-        if (currentStep === 1 && uniquenessErrors.aadhar) {
+        if (currentStepId === 'aadhaar' && uniquenessErrors.aadhar) {
             toast.error("यह आधार कार्ड पहले से ही उपयोग किया जा चुका है।", { id: 'api-error' });
             return;
         }
 
         // Enforce Aadhaar OKYC OTP verification
-        if (currentStep === 1 && !isAadhaarVerified) {
+        if (currentStepId === 'aadhaar' && isVerificationRequired && !isAadhaarVerified) {
             if (!aadhaarOtpSent) {
                 toast.error("कृपया आधार OTP सत्यापन पूरा करें।");
             } else {
@@ -455,18 +458,18 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
             return;
         }
 
-        if (currentStep === 2 && checkingUniqueness.pan) {
+        if (currentStepId === 'pan' && checkingUniqueness.pan) {
             toast.loading("Fetching PAN data... please wait", { id: 'api-loading' });
             return;
         }
 
-        if (currentStep === 2 && uniquenessErrors.pan) {
+        if (currentStepId === 'pan' && uniquenessErrors.pan) {
             toast.error("यह पैन कार्ड पहले से ही उपयोग किया जा चुका है।", { id: 'api-error' });
             return;
         }
 
         // Enforce PAN verification
-        if (currentStep === 2 && !isPanVerified) {
+        if (currentStepId === 'pan' && isVerificationRequired && !isPanVerified) {
             toast.error("कृपया पैन कार्ड विवरण सत्यापित करें।");
             return;
         }
@@ -620,14 +623,14 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
         }
     };
 
-    const getFieldsForStep = (step: number) => {
-        switch (step) {
-            case 0: return ['annual_income', 'loan_usage', 'referral_code'];
-            case 1: return ['aadhar_number'];
-            case 2: return ['pan_number', 'date_of_birth'];
-            case 3: return ['first_name', 'email', 'phone', 'father_name', 'mother_name', 'marital_status', 'street_address', 'city', 'state', 'postal_code'];
-            case 4: return ['employer', 'occupation'];
-            case 5: return ['consent'];
+    const getFieldsForStepId = (stepId: string) => {
+        switch (stepId) {
+            case 'purpose': return ['annual_income', 'loan_usage', 'referral_code'];
+            case 'aadhaar': return ['aadhar_number'];
+            case 'pan': return ['pan_number', 'date_of_birth'];
+            case 'personal': return ['first_name', 'email', 'phone', 'father_name', 'mother_name', 'marital_status', 'street_address', 'city', 'state', 'postal_code'];
+            case 'employment': return ['employer', 'occupation'];
+            case 'consent': return ['consent'];
             default: return [];
         }
     };
@@ -928,7 +931,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                 {uniquenessErrors.aadhar && <p className={errorClasses}>{uniquenessErrors.aadhar}</p>}
                             </div>
 
-                            {!isAadhaarVerified && (
+                            {isVerificationRequired && !isAadhaarVerified && (
                                 <div className="pt-2">
                                     {!aadhaarOtpSent ? (
                                         <button
@@ -1085,7 +1088,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                                     {errors.date_of_birth && <p className={errorClasses}>{errors.date_of_birth.message as string}</p>}
                                 </div>
 
-                                {!isPanVerified && (
+                                {isVerificationRequired && !isPanVerified && (
                                     <div className="pt-2">
                                         <button
                                             type="button"
@@ -1489,8 +1492,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             type="button"
                             onClick={nextStep}
                             disabled={
-                                (activeSteps[currentStep].id === 'aadhaar' && (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'] || !isAadhaarVerified)) ||
-                                (activeSteps[currentStep].id === 'pan' && (!capturedImages['pan_card'] || !isPanVerified))
+                                (activeSteps[currentStep].id === 'aadhaar' && (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'] || (reuploadFields.includes('aadhar_number') && !isAadhaarVerified))) ||
+                                (activeSteps[currentStep].id === 'pan' && (!capturedImages['pan_card'] || (reuploadFields.includes('pan_number') && !isPanVerified)))
                             }
                             className="flex-[2] py-4 bg-slate-900 text-white rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
@@ -1514,6 +1517,8 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             }}
                             disabled={
                                 !isValid || 
+                                (reuploadFields.includes('aadhar_number') && !isAadhaarVerified) ||
+                                (reuploadFields.includes('pan_number') && !isPanVerified) ||
                                 (!isAadhaarVerified && (!capturedImages['aadhar_front'] || !capturedImages['aadhar_back'])) ||
                                 (!isPanVerified && !capturedImages['pan_card']) ||
                                 !capturedImages['applicant_selfie'] || 

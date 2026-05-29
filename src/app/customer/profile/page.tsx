@@ -1173,13 +1173,6 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center">
       <div className="w-full max-w-lg bg-slate-50 relative pb-24 font-sans selection:bg-blue-100 selection:text-blue-900 shadow-2xl">
-      <SplashScreen
-        isVisible={showSplashScreen}
-        onClose={() => {
-          setShowSplashScreen(false);
-          setIsPortalOpen(true);
-        }}
-      />
       {/* Themed Header */}
       <div
         className={`bg-linear-to-br ${isMerchant ? "from-emerald-950 via-green-900 to-teal-950" : "from-slate-900 via-indigo-950 to-violet-950"} pt-12 pb-24 px-4 relative overflow-hidden shadow-2xl`}
