@@ -15,6 +15,7 @@ import { Suspense } from "react";
 import OfflineOverlay from "@/components/OfflineOverlay";
 import CampaignBanner from "@/components/CampaignBanner";
 import CampaignPopup from "@/components/CampaignPopup";
+import NativeAppGuard from "@/components/NativeAppGuard";
 
 export default function ClientLayout({
     children,
@@ -60,24 +61,26 @@ export default function ClientLayout({
     }, []);
 
     return (
-        <MaintenanceGuard>
-            <AuthGuard>
-                <NotificationHandler />
-                <InAppNotificationAlert />
-                <IncomingCallModal />
-                <MobileNavigationHandler />
-                <ToastContainer />
-                <OfflineOverlay />
-                <AppLockGuard>
-                    <CampaignBanner />
-                    <Suspense fallback={null}>
-                        <ReferralHandler />
-                    </Suspense>
-                    {children}
-                    <CampaignPopup />
-                </AppLockGuard>
-                <MobileNav />
-            </AuthGuard>
-        </MaintenanceGuard>
+        <NativeAppGuard>
+            <MaintenanceGuard>
+                <AuthGuard>
+                    <NotificationHandler />
+                    <InAppNotificationAlert />
+                    <IncomingCallModal />
+                    <MobileNavigationHandler />
+                    <ToastContainer />
+                    <OfflineOverlay />
+                    <AppLockGuard>
+                        <CampaignBanner />
+                        <Suspense fallback={null}>
+                            <ReferralHandler />
+                        </Suspense>
+                        {children}
+                        <CampaignPopup />
+                    </AppLockGuard>
+                    <MobileNav />
+                </AuthGuard>
+            </MaintenanceGuard>
+        </NativeAppGuard>
     );
 }

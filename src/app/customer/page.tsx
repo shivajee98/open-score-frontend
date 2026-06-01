@@ -846,47 +846,48 @@ export default function CustomerHome() {
 
                 <div className="flex justify-between items-start text-white mb-6 relative z-10">
                     <div>
-                        <div className="flex items-center gap-3">
-                            <div>
-                                <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'}/90 text-[7px] font-black uppercase tracking-[0.2em] mb-1 opacity-80`}>Welcome Back</p>
-                                <h1 className="text-lg font-black tracking-tighter drop-shadow-sm uppercase">
-                                    {isMerchant ? (activeUser?.business_name || 'MY STORE') : (activeUser?.name || 'CUSTOMER')}
-                                </h1>
+                        <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center gap-2">
+                                <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'}/90 text-[7px] font-black uppercase tracking-[0.2em] opacity-80`}>Welcome Back</p>
+                                
+                                {/* Live Users Pill with Lightning flash effect */}
+                                <div className="flex items-center gap-1 bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full text-[7.5px] font-extrabold uppercase tracking-widest shrink-0 shadow-[0_0_15px_rgba(52,211,153,0.3)] lightning-animate relative overflow-hidden">
+                                    <span className="relative flex h-1 w-1">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-1 w-1 bg-emerald-500"></span>
+                                    </span>
+                                    <Zap size={8} className="text-emerald-400 fill-emerald-400 animate-pulse" />
+                                    <span>{liveActiveCount} LIVE</span>
+                                    <style>{`
+                                        @keyframes lightning-flash {
+                                            0%, 90%, 94%, 98%, 100% {
+                                                box-shadow: 0 0 8px rgba(52, 211, 153, 0.25), inset 0 0 4px rgba(52, 211, 153, 0.1);
+                                                border-color: rgba(52, 211, 153, 0.4);
+                                                background-color: rgba(16, 185, 129, 0.15);
+                                            }
+                                            92% {
+                                                box-shadow: 0 0 25px rgba(52, 211, 153, 0.9), 0 0 50px rgba(52, 211, 153, 0.6);
+                                                border-color: rgba(52, 211, 153, 1);
+                                                background-color: rgba(52, 211, 153, 0.4);
+                                                filter: brightness(1.5);
+                                            }
+                                            96% {
+                                                box-shadow: 0 0 30px rgba(52, 211, 153, 1), 0 0 60px rgba(52, 211, 153, 0.7);
+                                                border-color: rgba(255, 255, 255, 1);
+                                                background-color: rgba(52, 211, 153, 0.5);
+                                                filter: brightness(1.8);
+                                            }
+                                        }
+                                        .lightning-animate {
+                                            animation: lightning-flash 5s infinite;
+                                        }
+                                    `}</style>
+                                </div>
                             </div>
                             
-                            {/* Live Users Pill with Lightning flash effect */}
-                            <div className="flex items-center gap-1 bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-[8.5px] font-extrabold uppercase tracking-widest shrink-0 mt-2 shadow-[0_0_15px_rgba(52,211,153,0.3)] lightning-animate relative overflow-hidden">
-                                <span className="relative flex h-1.5 w-1.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                                </span>
-                                <Zap size={9} className="text-emerald-400 fill-emerald-400 animate-pulse" />
-                                <span>{liveActiveCount} LIVE Users</span>
-                                <style>{`
-                                    @keyframes lightning-flash {
-                                        0%, 90%, 94%, 98%, 100% {
-                                            box-shadow: 0 0 8px rgba(52, 211, 153, 0.25), inset 0 0 4px rgba(52, 211, 153, 0.1);
-                                            border-color: rgba(52, 211, 153, 0.4);
-                                            background-color: rgba(16, 185, 129, 0.15);
-                                        }
-                                        92% {
-                                            box-shadow: 0 0 25px rgba(52, 211, 153, 0.9), 0 0 50px rgba(52, 211, 153, 0.6);
-                                            border-color: rgba(52, 211, 153, 1);
-                                            background-color: rgba(52, 211, 153, 0.4);
-                                            filter: brightness(1.5);
-                                        }
-                                        96% {
-                                            box-shadow: 0 0 30px rgba(52, 211, 153, 1), 0 0 60px rgba(52, 211, 153, 0.7);
-                                            border-color: rgba(255, 255, 255, 1);
-                                            background-color: rgba(52, 211, 153, 0.5);
-                                            filter: brightness(1.8);
-                                        }
-                                    }
-                                    .lightning-animate {
-                                        animation: lightning-flash 5s infinite;
-                                    }
-                                `}</style>
-                            </div>
+                            <h1 className="text-base xs:text-lg font-black tracking-tighter drop-shadow-sm uppercase line-clamp-2 leading-tight max-w-[190px] xs:max-w-[230px] break-words">
+                                {isMerchant ? (activeUser?.business_name || 'MY STORE') : (activeUser?.name || 'CUSTOMER')}
+                            </h1>
                         </div>
                         {isMerchant && (
                             <div className="flex items-center gap-2 mt-1">
@@ -1070,7 +1071,7 @@ export default function CustomerHome() {
                     >
                         <div className={`absolute inset-0 bg-slate-950/90 backdrop-blur-md transition-opacity duration-700 ${isBigVaultOpen ? 'opacity-100' : 'opacity-0'}`} />
 
-                        <div className="relative w-full max-w-[340px] px-4 perspective-[2000px] h-[175px]">
+                        <div className="relative w-full max-w-[340px] px-4 perspective-[2000px] h-[195px]">
                             <div
                                 className={`w-full h-full transition-all duration-[1000ms] ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer
                                   ${isBigVaultOpen
@@ -1321,7 +1322,7 @@ export default function CustomerHome() {
                             { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-amber-200', show: true },
                             { label: 'Repay', icon: <CreditCard size={20} strokeWidth={2.5} />, href: `/customer/loan/status/repayment?id=${activeLoan?.id}`, color: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-200', show: hasActiveLoan },
                         ].filter(item => item.show).map((item, i) => {
-                            const isDisabled = (activeUser?.has_pending_reupload || activeUser?.has_pending_kyc_reupload) && (item.label === 'Scan QR' || item.label === 'Pay ID' || item.label === 'Show QR');
+                            const isDisabled = false;
 
                             return (
                                 <div
@@ -1409,7 +1410,7 @@ export default function CustomerHome() {
                         <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-blue-600/5 rounded-full blur-[60px] pointer-events-none z-0"></div>
 
                         {/* Left Content Section - 65% width */}
-                        <div className="flex-[1.8] flex flex-col justify-center relative z-10 py-1">
+                        <div className="flex-[1.5] xs:flex-[1.6] sm:flex-[1.8] flex flex-col justify-center relative z-10 py-1">
                             
                             {/* Top Tag - Very Small */}
                             <div className="flex items-center gap-2 mb-1">
@@ -1452,17 +1453,17 @@ export default function CustomerHome() {
                             {/* 3D Graphics - Scaled for 16:9 thinness */}
                             <div className="relative w-full h-[90px] flex justify-center items-center transform -translate-y-1">
                                 {/* Ring & Plate */}
-                                <div className="absolute w-[140px] h-[40px] bottom-[5px]">
+                                <div className="absolute w-[110px] sm:w-[140px] h-[36px] sm:h-[40px] bottom-[5px]">
                                     <div className="absolute inset-0 bg-gradient-to-b from-[#181E3D] to-[#0B0D1E] rounded-lg border-t-[1px] border-[#4b6bfb]/20 shadow-lg z-10 overflow-hidden">
                                         <div className="absolute top-0 left-0 w-full h-[0.5px] bg-blue-400/20"></div>
-                                        <span className="absolute bottom-1 right-2 text-[#8892b0] text-[8px] font-bold tracking-[0.1em] opacity-40">CASHBACK</span>
+                                        <span className="absolute bottom-1 right-2 text-[#8892b0] text-[7px] sm:text-[8px] font-bold tracking-[0.1em] opacity-40">CASHBACK</span>
                                     </div>
                                     <div className="absolute inset-[-6px] border-[1.5px] border-[#3B82F6] rounded-[100%] shadow-[0_0_10px_#3B82F6] transform -rotate-[8deg] z-0 opacity-40"></div>
                                 </div>
 
                                 {/* 3D "500" - Small */}
                                 <div 
-                                    className="italic font-black text-[#FFD600] text-[54px] sm:text-[64px] leading-none tracking-tighter relative z-30 transform translate-x-2 -translate-y-1 animate-float"
+                                    className="italic font-black text-[#FFD600] text-[42px] sm:text-[64px] leading-none tracking-tighter relative z-30 transform translate-x-1 sm:translate-x-2 -translate-y-1 animate-float"
                                     style={{
                                         textShadow: `
                                             -1px 1px 0px #cc9900,
@@ -1502,7 +1503,7 @@ export default function CustomerHome() {
             )}
 
             {/* Marketing Banner - Get Needs Done */}
-            <div className={`px-1 mb-1 ${activeUser?.has_pending_reupload || activeUser?.has_pending_kyc_reupload ? 'opacity-30 grayscale cursor-not-allowed pointer-events-none' : ''}`}>
+            <div className="px-1 mb-1">
                 <div onClick={() => router.push('/customer/pay?scan=true')} className="cursor-pointer group">
                     <div className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 p-0.5 rounded-2xl shadow-xl shadow-amber-500/20 active:scale-[0.98] transition-transform">
                         <div className="bg-slate-900 rounded-[0.9rem] px-4 py-1 relative overflow-hidden">

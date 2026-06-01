@@ -4,10 +4,79 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee, MessageSquare, Eye, ChevronDown, Info, CreditCard, TrendingUp, ArrowDownToLine, ArrowUpFromLine, Plus, X, Upload } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee, MessageSquare, Eye, ChevronDown, Info, CreditCard, TrendingUp, ArrowDownToLine, ArrowUpFromLine, Plus, X, Upload, Copy, Award, ChevronRight, ShieldCheck } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 import PinModal from '@/components/PinModal';
+import { QRCodeSVG } from 'qrcode.react';
+
+const DEFAULT_PLANS = [
+    {
+        id: 'starter',
+        title: 'Starter Plan',
+        min_amount: 2000,
+        max_amount: 4000,
+        tenure_days: 30,
+        rate_percent: 1.0,
+        rate_frequency: 'DAILY',
+        penalty_daily_charge: 20,
+        penalty_cancellation_fee: 300,
+        collapse_increment_on_penalty: true,
+        sort_order: 1
+    },
+    {
+        id: 'growth',
+        title: 'Growth Plan',
+        min_amount: 5000,
+        max_amount: 10000,
+        tenure_days: 90,
+        rate_percent: 1.5,
+        rate_frequency: 'DAILY',
+        penalty_daily_charge: 20,
+        penalty_cancellation_fee: 600,
+        collapse_increment_on_penalty: true,
+        sort_order: 2
+    },
+    {
+        id: 'premium',
+        title: 'Premium Plan',
+        min_amount: 20000,
+        max_amount: 40000,
+        tenure_days: 180,
+        rate_percent: 3.0,
+        rate_frequency: 'DAILY',
+        penalty_daily_charge: 20,
+        penalty_cancellation_fee: 900,
+        collapse_increment_on_penalty: true,
+        sort_order: 3
+    },
+    {
+        id: 'gold',
+        title: 'Gold Plan',
+        min_amount: 20000,
+        max_amount: 50000,
+        tenure_days: 365,
+        rate_percent: 5.0,
+        rate_frequency: 'DAILY',
+        penalty_daily_charge: 20,
+        penalty_cancellation_fee: 1500,
+        collapse_increment_on_penalty: true,
+        sort_order: 4
+    },
+    {
+        id: 'elite',
+        title: 'Elite Plan',
+        min_amount: 20000,
+        max_amount: 100000,
+        tenure_days: 730,
+        rate_percent: 1.4,
+        rate_frequency: 'DAILY',
+        penalty_daily_charge: 500,
+        penalty_cancellation_fee: 3000,
+        collapse_increment_on_penalty: true,
+        sort_order: 5
+    }
+];
 
 export default function PayoutPage() {
     // Data Fetching
@@ -134,7 +203,8 @@ export default function PayoutPage() {
     const [addMoneySource, setAddMoneySource] = useState<'WALLET' | 'UPI' | null>(null);
     const [addMoneyProof, setAddMoneyProof] = useState<File | null>(null);
     const [isAddingMoney, setIsAddingMoney] = useState(false);
-    
+    const upiId = process.env.NEXT_PUBLIC_UPI_ID || "flipflops@upi";
+
     const handleAddMoney = async () => {
         if (!addMoneyAmount || isNaN(Number(addMoneyAmount)) || Number(addMoneyAmount) <= 0) {
             toast.error('Enter a valid amount');
@@ -148,7 +218,7 @@ export default function PayoutPage() {
             toast.error('Please upload payment screenshot');
             return;
         }
-        
+
         setIsAddingMoney(true);
         try {
             const formData = new FormData();
@@ -157,7 +227,7 @@ export default function PayoutPage() {
             if (addMoneySource === 'UPI' && addMoneyProof) {
                 formData.append('proof_image', addMoneyProof);
             }
-            
+
             const res = await apiFetch('/vault/add-money', {
                 method: 'POST',
                 body: formData
@@ -181,6 +251,28 @@ export default function PayoutPage() {
     const [showVaultExpiry, setShowVaultExpiry] = useState(false);
     const [showVaultCvc, setShowVaultCvc] = useState(false);
     const [isVaultSubmitting, setIsVaultSubmitting] = useState(false);
+
+    // Custom Multi-step Growth Plan Modal States
+    const [growthPlanStep, setGrowthPlanStep] = useState(1);
+    const [selectedPlanId, setSelectedPlanId] = useState<any>('starter');
+    const [growthPlanAmount, setGrowthPlanAmount] = useState<number>(2000);
+    const [growthPaymentMethod, setGrowthPaymentMethod] = useState<'WALLET' | 'UPI'>('WALLET');
+    const [growthProofScreenshot, setGrowthProofScreenshot] = useState<File | null>(null);
+    const [growthProofPreview, setGrowthProofPreview] = useState<string | null>(null);
+
+    const activePlans = vaultData?.growth_plans && vaultData.growth_plans.length > 0
+        ? vaultData.growth_plans
+        : DEFAULT_PLANS;
+
+    const currentPlan = activePlans.find((p: any) => p.id === selectedPlanId) || activePlans[0];
+
+    useEffect(() => {
+        if (vaultData?.growth_plans && vaultData.growth_plans.length > 0) {
+            const firstPlan = vaultData.growth_plans[0];
+            setSelectedPlanId(firstPlan.id);
+            setGrowthPlanAmount(Math.round(parseFloat(firstPlan.min_amount)));
+        }
+    }, [vaultData]);
 
     // Bank Details State
     const [bankName, setBankName] = useState('');
@@ -300,6 +392,57 @@ export default function PayoutPage() {
             fetchVaultLogs();
         } catch (e: any) { toast.error(e.message || 'Failed to set tenure'); }
         finally { setIsVaultSubmitting(false); }
+    };
+
+    const handleGrowthPlanSubmit = async () => {
+        setIsVaultSubmitting(true);
+        try {
+            const planDetails = currentPlan;
+            if (growthPaymentMethod === 'WALLET') {
+                await apiFetch('/vault/deposit', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        tenure_days: planDetails.tenure_days,
+                        amount: growthPlanAmount,
+                        pay_from_wallet: true,
+                        growth_plan_id: planDetails.id
+                    }),
+                });
+                toast.success(`Success! ${planDetails.title} activated with ₹${growthPlanAmount.toLocaleString('en-IN')}`);
+                setIsSettlementTenureOpen(false);
+                setGrowthPlanStep(1);
+                mutateWallet();
+                fetchVault();
+                fetchVaultLogs();
+            } else {
+                if (!growthProofScreenshot) {
+                    toast.error('Please upload your payment screenshot proof.');
+                    setIsVaultSubmitting(false);
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('amount', growthPlanAmount.toString());
+                formData.append('payment_mode', 'UPI');
+                formData.append('proof_image', growthProofScreenshot);
+                formData.append('growth_plan_id', planDetails.id.toString());
+
+                await apiFetch('/vault/add-money', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                toast.success('Payment proof submitted successfully! Verification usually takes less than 30 mins.');
+                setIsSettlementTenureOpen(false);
+                setGrowthPlanStep(1);
+                setGrowthProofScreenshot(null);
+                setGrowthProofPreview(null);
+            }
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to submit plan');
+        } finally {
+            setIsVaultSubmitting(false);
+        }
     };
 
     const handleVaultWithdraw = async () => {
@@ -698,7 +841,7 @@ export default function PayoutPage() {
                                 {vaultData?.vault && (
                                     <>
                                         {/* Card Layout Container with Placeholder */}
-                                        <div className="w-full max-w-[320px] mx-auto h-[175px] mb-6 relative">
+                                        <div className="w-full max-w-[320px] mx-auto h-[195px] mb-6 relative">
                                             {/* Placeholder to prevent layout shift */}
                                             {isVaultMaximized && (
                                                 <div className="w-full h-full bg-slate-500/[0.03] rounded-xl border border-slate-500/10 border-dashed animate-pulse flex items-center justify-center">
@@ -733,22 +876,22 @@ export default function PayoutPage() {
                                                     </button>
                                                 )}
 
-                                            {isVaultMaximized && (
-                                                <div className="absolute -bottom-16 left-0 right-0 flex justify-center opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setIsAddMoneyModalOpen(true);
-                                                        }}
-                                                        className="px-6 py-3 bg-[#c5a059] hover:bg-[#d6b571] text-[#0f1113] rounded-full font-black text-sm uppercase tracking-widest shadow-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-                                                    >
-                                                        <Plus size={16} /> Add Money
-                                                    </button>
-                                                </div>
-                                            )}
+                                                {isVaultMaximized && (
+                                                    <div className="absolute -bottom-16 left-0 right-0 flex justify-center opacity-0 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setIsAddMoneyModalOpen(true);
+                                                            }}
+                                                            className="px-6 py-3 bg-[#c5a059] hover:bg-[#d6b571] text-[#0f1113] rounded-full font-black text-sm uppercase tracking-widest shadow-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                                                        >
+                                                            <Plus size={16} /> Add Money
+                                                        </button>
+                                                    </div>
+                                                )}
 
                                                 <div
-                                                    className={`relative w-full max-w-[320px] h-[175px] perspective-1000 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isVaultMaximized ? 'scale-[1.2] md:scale-[1.35] shadow-2xl' : ''
+                                                    className={`relative w-full max-w-[320px] h-[195px] perspective-1000 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isVaultMaximized ? 'scale-[1.2] md:scale-[1.35] shadow-2xl' : ''
                                                         }`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -763,7 +906,7 @@ export default function PayoutPage() {
 
                                                         {/* FRONT SIDE */}
                                                         <div className="absolute inset-0 backface-hidden">
-                                                            <div className="bg-[#0f1113] rounded-xl px-5 py-4 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col justify-between group">
+                                                            <div className="bg-[#0f1113] rounded-xl px-5 py-3 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col justify-between group">
                                                                 {/* Brushed Metal Texture Effect */}
                                                                 <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
                                                                     <div className="absolute inset-0 bg-gradient-to-tr from-black via-[#1a1d21] to-[#2a2d33]" />
@@ -783,14 +926,9 @@ export default function PayoutPage() {
                                                                     <div className="flex items-start justify-between">
                                                                         <div className="flex flex-col gap-0">
                                                                             <div className="flex items-center gap-2">
-                                                                                <div className="w-5 h-5 rounded-full border-2 border-[#c5a059] flex items-center justify-center p-0.5">
-                                                                                    <div className="w-full h-full bg-[#c5a059] rounded-full flex items-center justify-center">
-                                                                                        <CheckCircle2 size={10} className="text-[#0f1113]" strokeWidth={4} />
-                                                                                    </div>
-                                                                                </div>
                                                                                 <div className="flex flex-col">
                                                                                     <span className="text-[11px] font-black tracking-[0.1em] text-[#c5a059] uppercase leading-none">Open Score</span>
-                                                                                    <span className="text-[5px] font-bold text-[#c5a059]/60 uppercase tracking-widest mt-0.5">Smart Credit For Daily Needs</span>
+                                                                                    <span className="text-[5px] font-bold text-[#c5a059]/60 uppercase tracking-widest mt-0.5">Smart Value</span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -800,7 +938,7 @@ export default function PayoutPage() {
                                                                         </div>
                                                                     </div>
 
-                                                                    <div className="flex items-center justify-between mt-1">
+                                                                    <div className="flex items-center justify-between mt-0.5">
                                                                         {/* Gold Chip */}
                                                                         <div className="flex items-center gap-3">
                                                                             <div className="w-10 h-7 bg-gradient-to-br from-[#e6c07b] via-[#c5a059] to-[#8e6e36] rounded-md shadow-inner relative overflow-hidden border border-[#8e6e36]/30">
@@ -817,23 +955,33 @@ export default function PayoutPage() {
                                                                     </div>
 
 
-                                                                    <div className="mt-2 mb-2 flex items-end justify-between">
+                                                                    <div className="my-1 flex items-end justify-between">
                                                                         <div className="flex flex-col">
-                                                                            <span className="text-[7px] font-black uppercase tracking-widest text-[#c5a059]/80 mb-0.5">Vault Balance</span>
+                                                                            <span className="text-[7px] font-black uppercase tracking-widest text-[#c5a059]/80 mb-0.5">Available Value</span>
                                                                             <span className="text-xl font-black tracking-tighter text-[#fef9f3] leading-none">
                                                                                 {vaultData.vault.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                                                             </span>
                                                                         </div>
-                                                                        <div className="flex flex-col text-right">
-                                                                            <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400/80 mb-0.5">Increment</span>
-                                                                            <span className="text-lg font-black tracking-tighter text-emerald-400 leading-none">
-                                                                                +{activeDeposit ? ((activeDeposit.amount * activeDeposit.interest_rate * activeDeposit.tenure_days) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '0.00'}
-                                                                            </span>
+                                                                        <div className="flex flex-col text-right gap-1">
+                                                                            {activeDeposit && (
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="text-[7px] font-black uppercase tracking-widest text-purple-400 mb-0.5">Locked In</span>
+                                                                                    <span className="text-[11px] font-black tracking-tighter text-purple-300 leading-none">
+                                                                                        {activeDeposit.amount.toLocaleString('en-IN')}
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
+                                                                            <div className="flex flex-col">
+                                                                                <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400/80 mb-0.5">Increment</span>
+                                                                                <span className="text-sm font-black tracking-tighter text-emerald-400 leading-none">
+                                                                                    +{activeDeposit ? ((activeDeposit.amount * activeDeposit.interest_rate * activeDeposit.tenure_days) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '0.00'}
+                                                                                </span>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
 
                                                                     {/* Card Number */}
-                                                                    <div className="py-1 flex items-center justify-start gap-4 group/number" onClick={(e) => e.stopPropagation()}>
+                                                                    <div className="py-0.5 flex items-center justify-start gap-4 group/number" onClick={(e) => e.stopPropagation()}>
 
                                                                         <p className={`font-mono text-base tracking-[0.15em] drop-shadow-sm font-medium ${vaultData.vault.payment_verified === false ? 'text-[#fef9f3]/40' : 'text-[#fef9f3]'}`}>
                                                                             {vaultData.vault.payment_verified === false
@@ -850,32 +998,35 @@ export default function PayoutPage() {
                                                                         ) : (
                                                                             <button
                                                                                 onClick={() => setShowVaultCardNumber(!showVaultCardNumber)}
-                                                                                className="p-1 hover:bg-white/10 rounded-md transition-all opacity-0 group-hover/number:opacity-100"
+                                                                                className="p-1 hover:bg-white/10 rounded-md transition-all text-[#c5a059]/70 hover:text-white"
                                                                             >
-                                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/50'} />
+                                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/60'} />
                                                                             </button>
                                                                         )}
                                                                     </div>
 
-                                                                    <div className="flex items-end justify-between pt-1">
-                                                                        <div className="space-y-1">
-                                                                            <div className="flex flex-col">
-                                                                                <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60">Valid Thru</span>
-                                                                                <span className="text-[10px] font-mono text-[#fef9f3] mt-0.5">
-                                                                                    {vaultData.vault.payment_verified === false ? '••/••' : (showVaultExpiry ? (vaultData.vault.expiry_date || '12/29') : '••/••')}
-                                                                                </span>
+                                                                    <div className="flex items-end justify-between pt-0.5">
+                                                                        <div className="flex flex-col gap-1 w-full">
+                                                                            <div className="flex items-center gap-6">
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 leading-none">Valid Thru</span>
+                                                                                    <span className="text-[9px] font-mono text-[#fef9f3] mt-0.5 leading-none">
+                                                                                        {vaultData.vault.payment_verified === false ? '••/••' : (showVaultExpiry ? (vaultData.vault.expiry_date || '12/29') : '••/••')}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 leading-none">Card Holder</span>
+                                                                                    <span className="text-[9px] font-black uppercase tracking-[0.05em] text-[#fef9f3]/90 mt-0.5 leading-none truncate max-w-[120px]">
+                                                                                        {userData?.name || 'Rahul Kumar'}
+                                                                                    </span>
+                                                                                </div>
                                                                             </div>
-                                                                            <div className="flex flex-col">
-                                                                                <span className="text-[10px] font-black uppercase tracking-[0.05em] text-[#fef9f3]/90">
-                                                                                    {userData?.name || 'Rahul Kumar'}
-                                                                                </span>
-                                                                                <span className="text-[6px] font-black text-[#c5a059] uppercase tracking-[0.1em] mt-0.5">0% Interest Credit</span>
-                                                                            </div>
+                                                                            <span className="text-[5px] font-black text-[#c5a059] uppercase tracking-[0.1em] leading-none">0% Interest Credit</span>
                                                                         </div>
 
-                                                                        <div className="text-right">
-                                                                            <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block mb-0.5">Powered By</span>
-                                                                            <span className="text-[8px] font-black tracking-[0.1em] text-[#fef9f3] uppercase">Open Score</span>
+                                                                        <div className="text-right flex flex-col items-end shrink-0">
+                                                                            <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block mb-0.5 leading-none">Powered By</span>
+                                                                            <span className="text-[8px] font-black tracking-[0.1em] text-[#fef9f3] uppercase leading-none">Open Score</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1070,13 +1221,15 @@ export default function PayoutPage() {
                                                     </button>
                                                 ))}
                                             </div>
-                                            <button
-        onClick={() => setIsSettlementWalletOpen(true)}
-        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 shadow-inner"
-    >
-        <ArrowRightLeft size={10} strokeWidth={3} />
-        Settlement
-    </button>
+                                            {isMerchant && (
+                                                <button
+                                                    onClick={() => setIsSettlementWalletOpen(true)}
+                                                    className="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 shadow-inner"
+                                                >
+                                                    <ArrowRightLeft size={10} strokeWidth={3} />
+                                                    Settlement
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 
@@ -1870,7 +2023,7 @@ export default function PayoutPage() {
                     </div>
                 )}
 
-                
+
                 {/* Settlement Wallet Modal — Hardcoded Tiers */}
                 {isSettlementWalletOpen && (
                     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
@@ -1920,82 +2073,390 @@ export default function PayoutPage() {
                     </div>
                 )}
 
-                {/* Settlement Tenure Modal — Dynamic Admin Rates */}
+                {/* Custom Multi-step Growth Plan Modal */}
                 {isSettlementTenureOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-[300px] rounded-[1.5rem] p-5 shadow-2xl relative">
-                            <div className="flex justify-between items-center mb-3">
-                                <h3 className="text-sm font-black text-slate-900 tracking-tight">Vault Growth Plan</h3>
-                                <button onClick={() => setIsSettlementTenureOpen(false)} className="p-1 hover:bg-slate-50 rounded-full"><XCircle className="w-4 h-4 text-slate-300" /></button>
-                            </div>
+                    <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-300">
+                        <div className="bg-[#0b0f19] border border-white/10 w-full max-w-lg rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative my-4 md:my-8 text-white">
 
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-3">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Choose Your Plan</p>
-                                <p className="text-[9px] font-bold text-slate-500 leading-tight">
-                                    Select a growth plan to lock your vault funds and earn daily returns.
-                                </p>
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Select Plan</label>
-                                <div className="grid grid-cols-1 gap-1.5">
-                                    {(vaultData?.rates && vaultData.rates.length > 0 ? vaultData.rates : []).map((r: any) => {
-                                        const dailyEarnPer1000 = (1000 * r.interest_rate) / 100;
-                                        const totalEarnPer1000 = dailyEarnPer1000 * r.tenure_days;
-                                        const rangeLabel = `${Math.floor(dailyEarnPer1000 * r.tenure_days * 0.5)} - ${Math.ceil(totalEarnPer1000)}`;
-                                        return (
-                                            <button
-                                                key={r.id || r.tenure_days}
-                                                onClick={() => setSettlementTenureDays(r.tenure_days)}
-                                                className={`px-3 py-2 rounded-xl border flex items-center justify-between transition-all ${settlementTenureDays === r.tenure_days
-                                                    ? 'border-slate-900 bg-slate-50'
-                                                    : 'border-slate-100 hover:border-slate-200 bg-white'
-                                                    }`}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-black ${settlementTenureDays === r.tenure_days ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'
-                                                        }`}>
-                                                        T{r.tenure_days}
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[11px] font-black text-slate-900">{r.tenure_days} Days</span>
-                                                        <span className="text-[8px] font-bold text-slate-400">+{r.interest_rate}% per day</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-col items-end justify-center">
-                                                    <span className="text-[10px] font-black text-emerald-600 leading-none">{rangeLabel}</span>
-                                                    <span className="text-[7px] font-bold text-slate-300 uppercase tracking-tighter">per 1000</span>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                                {(!vaultData?.rates || vaultData.rates.length === 0) && (
-                                    <p className="text-[10px] font-bold text-slate-400 text-center py-4">No plans available. Contact admin to configure rates.</p>
-                                )}
-                            </div>
-
-                            {settlementTenureDays && (() => {
-                                const selectedRate = vaultData?.rates?.find((r: any) => r.tenure_days === settlementTenureDays);
-                                if (!selectedRate) return null;
-                                const dailyEarn = (balance * selectedRate.interest_rate) / 100;
-                                const totalEarn = dailyEarn * selectedRate.tenure_days;
-                                return (
-                                    <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100 mb-4">
-                                        <p className="text-[8px] font-black text-emerald-700 uppercase tracking-widest mb-1">Estimated Earnings</p>
-                                        <p className="text-lg font-black text-emerald-800">{Math.floor(totalEarn).toLocaleString('en-IN')} <span className="text-[10px] font-bold text-emerald-600">after {selectedRate.tenure_days} days</span></p>
-                                        <p className="text-[9px] font-bold text-emerald-600 mt-0.5">≈ {dailyEarn.toFixed(2)} / day on {balance.toLocaleString('en-IN')} balance</p>
-                                    </div>
-                                );
-                            })()}
-
+                            {/* Close Button */}
                             <button
-                                onClick={handleSettlementTenure}
-                                disabled={isVaultSubmitting || !settlementTenureDays || settlementTenureDays < 1}
-                                className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 disabled:bg-slate-100 disabled:text-slate-300"
+                                onClick={() => {
+                                    setIsSettlementTenureOpen(false);
+                                    setGrowthPlanStep(1);
+                                    setGrowthProofScreenshot(null);
+                                    setGrowthProofPreview(null);
+                                }}
+                                className="absolute top-6 right-6 p-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 transition-colors"
                             >
-                                {isVaultSubmitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Continue'}
+                                <X className="w-5 h-5 text-slate-300" />
                             </button>
+
+                            {growthPlanStep === 1 ? (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="text-center pt-2">
+                                        <div className="inline-flex p-3 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-purple-400 mb-3 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+                                            <TrendingUp className="w-6 h-6 animate-pulse" />
+                                        </div>
+                                        <h3 className="text-xl font-black tracking-tight uppercase italic text-white">Select Growth Plan</h3>
+                                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">Accelerate Your Wealth JIT</p>
+                                    </div>
+
+                                    {/* Horizontal Plan Selector Cards */}
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {activePlans.map((plan: any) => {
+                                            const isSelected = selectedPlanId === plan.id;
+                                            const lockLabel = `${plan.tenure_days} Days`;
+                                            const rateLabel = `+${parseFloat(parseFloat(plan.rate_percent).toFixed(1))}% ${plan.rate_frequency === 'DAILY' ? 'Daily' : 'Monthly'}`;
+                                            return (
+                                                <button
+                                                    key={plan.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedPlanId(plan.id);
+                                                        setGrowthPlanAmount(Math.round(parseFloat(plan.min_amount)));
+                                                    }}
+                                                    className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between h-[104px] transition-all duration-300 relative overflow-hidden ${isSelected
+                                                            ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                            : 'border-white/5 hover:border-white/15 bg-white/5'
+                                                        }`}
+                                                >
+                                                    <div className="flex justify-between items-start w-full">
+                                                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md ${isSelected ? 'bg-purple-500 text-white' : 'bg-white/10 text-slate-400'
+                                                            }`}>
+                                                            {lockLabel}
+                                                        </span>
+                                                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-[11px] font-black uppercase text-white truncate">{plan.title}</h4>
+                                                        <p className="text-[9px] font-black text-purple-400 italic mt-0.5">{rateLabel}</p>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Amount Increments Selector Bar */}
+                                    <div className="bg-white/5 border border-white/5 p-4 rounded-[2rem] space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select Plan Amount</span>
+                                            <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest">
+                                                {Math.round(parseFloat(currentPlan.min_amount)).toLocaleString('en-IN')} - {Math.round(parseFloat(currentPlan.max_amount)).toLocaleString('en-IN')}
+                                            </span>
+                                        </div>
+
+                                        {/* Suggestions chips */}
+                                        <div className="flex flex-wrap gap-2 justify-center">
+                                            {(() => {
+                                                const min = Math.round(parseFloat(currentPlan.min_amount)) || 0;
+                                                const max = Math.round(parseFloat(currentPlan.max_amount)) || 0;
+                                                if (min === max) return [min];
+                                                const step = (max - min) / 3;
+                                                const chips = [
+                                                    min,
+                                                    min + Math.round(step * 1 / 100) * 100,
+                                                    min + Math.round(step * 2 / 100) * 100,
+                                                    max
+                                                ];
+                                                return chips.map((amt) => {
+                                                    const isAmtSelected = Math.round(parseFloat(growthPlanAmount as any) || 0) === amt;
+                                                    return (
+                                                        <button
+                                                            key={amt}
+                                                            type="button"
+                                                            onClick={() => setGrowthPlanAmount(amt)}
+                                                            className={`px-4 py-2.5 rounded-xl text-[11px] font-black transition-all active:scale-95 duration-200 ${isAmtSelected
+                                                                    ? 'bg-purple-500 text-white shadow-[0_4px_12px_rgba(168,85,247,0.25)]'
+                                                                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5'
+                                                                }`}
+                                                        >
+                                                            {amt.toLocaleString('en-IN')}
+                                                        </button>
+                                                    );
+                                                });
+                                            })()}
+                                        </div>
+
+                                        {/* Custom Manual Input */}
+                                        <div className="pt-3 border-t border-white/5 flex gap-3 items-center">
+                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest shrink-0">Custom Amount:</span>
+                                            <input
+                                                type="number"
+                                                min={Math.round(parseFloat(currentPlan.min_amount))}
+                                                max={Math.round(parseFloat(currentPlan.max_amount))}
+                                                value={growthPlanAmount || ''}
+                                                onChange={(e) => {
+                                                    const val = parseFloat(e.target.value) || 0;
+                                                    setGrowthPlanAmount(val);
+                                                }}
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs font-black text-white outline-none focus:border-purple-500 transition-all"
+                                                placeholder="Enter custom amount..."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Live Returns Calculation Cards */}
+                                    {(() => {
+                                        const parsedAmount = parseFloat(growthPlanAmount as any) || 0;
+                                        const dailyGrowth = currentPlan.rate_frequency === 'MONTHLY'
+                                            ? (parsedAmount * (parseFloat(currentPlan.rate_percent) / 30)) / 100
+                                            : (parsedAmount * parseFloat(currentPlan.rate_percent)) / 100;
+                                        const totalYield = dailyGrowth * currentPlan.tenure_days;
+                                        const maturityTotal = parsedAmount + totalYield;
+
+                                        return (
+                                            <div className="bg-gradient-to-br from-purple-950/20 via-slate-900/30 to-purple-950/20 border border-purple-500/10 p-5 rounded-[2.2rem] space-y-4">
+                                                <p className="text-[9px] font-black text-purple-400 uppercase tracking-widest text-center border-b border-white/5 pb-2">Incremental Growth Calculation</p>
+
+                                                <div className="grid grid-cols-3 gap-2 text-center">
+                                                    <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+                                                        <p className="text-[7px] text-slate-500 uppercase font-black tracking-widest">Daily cashback</p>
+                                                        <p className="text-[13px] font-black text-purple-400 mt-1">+{dailyGrowth.toFixed(1).replace(/\.0$/, '')}</p>
+                                                    </div>
+                                                    <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+                                                        <p className="text-[7px] text-slate-500 uppercase font-black tracking-widest">Growth Period</p>
+                                                        <p className="text-[13px] font-black text-slate-300 mt-1">{currentPlan.tenure_days} Days</p>
+                                                    </div>
+                                                    <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+                                                        <p className="text-[7px] text-slate-500 uppercase font-black tracking-widest">Total Cashback</p>
+                                                        <p className="text-[13px] font-black text-emerald-400 mt-1">+{totalYield.toFixed(0)}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                                                    <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Maturity Payback</span>
+                                                    <span className="text-xl font-black text-white italic">{Math.round(maturityTotal).toLocaleString('en-IN')}</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Early Withdrawal Rule Disclosure Box */}
+                                    <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl flex gap-3 text-left">
+                                        <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest mb-1">Early Withdrawal Penalty Notice</p>
+                                            <p className="text-[9px] text-slate-400 leading-relaxed font-semibold">
+                                                If you request your money back before maturity, a penalty of{' '}
+                                                <span className="text-amber-300 font-bold">
+                                                    {Math.round(parseFloat(currentPlan.penalty_daily_charge))} daily charge
+                                                </span>{' '}
+                                                for each remaining day applies, plus a{' '}
+                                                <span className="text-amber-300 font-bold">
+                                                    {Math.round(parseFloat(currentPlan.penalty_cancellation_fee))} cancellation fee
+                                                </span>
+                                                . {currentPlan.collapse_increment_on_penalty ? 'Any daily cashback already earned during this period will be clawed back.' : 'Accrued daily yields will be preserved.'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (growthPlanAmount < parseFloat(currentPlan.min_amount) || growthPlanAmount > parseFloat(currentPlan.max_amount)) {
+                                                toast.error(`Please enter an amount between ${Math.round(parseFloat(currentPlan.min_amount)).toLocaleString('en-IN')} and ${Math.round(parseFloat(currentPlan.max_amount)).toLocaleString('en-IN')}`);
+                                                return;
+                                            }
+                                            setGrowthPlanStep(2);
+                                        }}
+                                        className="w-full py-4 bg-purple-500 hover:bg-purple-600 active:scale-95 text-black font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-[0_8px_24px_rgba(168,85,247,0.25)] transition-all flex items-center justify-center gap-2"
+                                    >
+                                        PROCEED TO PAYMENT <ArrowRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <button
+                                            onClick={() => setGrowthPlanStep(1)}
+                                            className="p-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/5"
+                                        >
+                                            <ArrowLeft className="w-4 h-4 text-slate-300" />
+                                        </button>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Back to plan selection</span>
+                                    </div>
+
+                                    <div className="text-center pt-2">
+                                        <h3 className="text-xl font-black tracking-tight uppercase italic text-white">Complete Deposit</h3>
+                                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">Select Payment Method</p>
+                                    </div>
+
+                                    <div className="bg-white/5 p-4 rounded-[2rem] border border-white/5 space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Selected Plan</span>
+                                            <span className="text-[11px] font-black text-purple-400 uppercase">{currentPlan.title}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center border-t border-white/5 pt-2">
+                                            <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Tenure Lock</span>
+                                            <span className="text-[11px] font-black text-slate-300 uppercase">{currentPlan.tenure_days} Days</span>
+                                        </div>
+                                        <div className="flex justify-between items-center border-t border-white/5 pt-2">
+                                            <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Total Amount</span>
+                                            <span className="text-[13px] font-black text-white italic">{Math.round(parseFloat(growthPlanAmount as any) || 0).toLocaleString('en-IN')}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Payment Source Selection */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setGrowthPaymentMethod('WALLET')}
+                                            className={`p-4 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${growthPaymentMethod === 'WALLET'
+                                                    ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                    : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                }`}
+                                        >
+                                            <div className="p-1.5 bg-white/5 border border-white/10 rounded-lg w-fit text-slate-300">
+                                                <Wallet className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Pay from Wallet</p>
+                                                <p className="text-[11px] font-black text-white mt-0.5">{(walletData?.wallet?.balance || 0).toLocaleString('en-IN')}</p>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setGrowthPaymentMethod('UPI')}
+                                            className={`p-4 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${growthPaymentMethod === 'UPI'
+                                                    ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                    : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                }`}
+                                        >
+                                            <div className="p-1.5 bg-white/5 border border-white/10 rounded-lg w-fit text-slate-300">
+                                                <CreditCard className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Add Money / UPI</p>
+                                                <p className="text-[11px] font-black text-purple-400 mt-0.5 italic">Instant Transfer</p>
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    {/* Conditional Payment UI */}
+                                    {growthPaymentMethod === 'WALLET' ? (
+                                        <div className="space-y-4">
+                                            {parseFloat(walletData?.wallet?.balance || 0) < growthPlanAmount ? (
+                                                <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl flex gap-3 text-left">
+                                                    <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Insufficient Wallet Balance</p>
+                                                        <p className="text-[9px] text-slate-400 leading-normal font-semibold">
+                                                            You need{' '}
+                                                            <span className="text-white font-bold">
+                                                                {(growthPlanAmount - parseFloat(walletData?.wallet?.balance || 0)).toLocaleString('en-IN')}
+                                                            </span>{' '}
+                                                            more to activate this plan directly from your wallet balance. Please select UPI to pay.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-2xl flex gap-3 text-left">
+                                                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">Available in Wallet</p>
+                                                        <p className="text-[9px] text-slate-400 leading-normal font-semibold">
+                                                            You have sufficient funds to activate this plan instantly. Clicking the button below will deduct the amount and start the tenure immediately.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                onClick={handleGrowthPlanSubmit}
+                                                disabled={isVaultSubmitting || parseFloat(walletData?.wallet?.balance || 0) < growthPlanAmount}
+                                                className="w-full py-4 bg-purple-500 hover:bg-purple-600 active:scale-95 disabled:bg-white/5 disabled:text-slate-500 disabled:border disabled:border-white/5 text-black font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-[0_8px_24px_rgba(168,85,247,0.25)] transition-all flex items-center justify-center gap-2"
+                                            >
+                                                {isVaultSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-black" /> : 'Confirm & Activate Plan'}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-6 pt-4 border-t border-white/5 animate-in fade-in duration-500">
+                                            <div className="flex flex-col items-center">
+                                                <div className="p-4 bg-white rounded-3xl shadow-2xl mb-4">
+                                                    <QRCodeSVG
+                                                        value={`upi://pay?pa=${upiId}&pn=Flip%20Flops&am=${growthPlanAmount}&tn=Vault%20Growth%20Plan%20Deposit`}
+                                                        size={150}
+                                                        level="M"
+                                                    />
+                                                </div>
+
+                                                <div className="bg-white/5 border border-white/5 rounded-2xl py-3 px-4 flex items-center justify-between gap-4 w-full max-w-[280px] mb-4">
+                                                    <div className="text-left">
+                                                        <p className="text-[8px] text-slate-500 uppercase font-black tracking-widest leading-none">UPI Address</p>
+                                                        <p className="text-[11px] font-black text-slate-300 italic mt-1">{upiId}</p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(upiId);
+                                                            toast.success('UPI ID copied to clipboard!');
+                                                        }}
+                                                        className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-purple-400 active:scale-90 transition-all border border-white/5"
+                                                    >
+                                                        <Copy className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* File Upload screenshot proof */}
+                                            <div className="space-y-2">
+                                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest text-left">Upload Payment Screenshot</label>
+                                                <div className="relative border-2 border-dashed border-white/10 hover:border-purple-500/50 rounded-2xl p-6 transition-all bg-white/[0.02]">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                setGrowthProofScreenshot(file);
+                                                                setGrowthProofPreview(URL.createObjectURL(file));
+                                                            }
+                                                        }}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                    />
+                                                    {growthProofPreview ? (
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <img
+                                                                src={growthProofPreview}
+                                                                alt="Screenshot proof preview"
+                                                                className="h-28 object-contain rounded-lg border border-white/10"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setGrowthProofScreenshot(null);
+                                                                    setGrowthProofPreview(null);
+                                                                }}
+                                                                className="text-[9px] font-black text-red-400 uppercase tracking-widest hover:text-red-300 mt-1"
+                                                            >
+                                                                Remove File
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center justify-center gap-2 text-center">
+                                                            <Upload className="w-8 h-8 text-purple-400/60" />
+                                                            <p className="text-[10px] font-black text-slate-300 uppercase">Click or Drag to Upload Screenshot</p>
+                                                            <p className="text-[8px] text-slate-500 font-bold">JPEG, PNG, or WebP up to 5MB</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleGrowthPlanSubmit}
+                                                disabled={isVaultSubmitting || !growthProofScreenshot}
+                                                className="w-full py-4 bg-purple-500 hover:bg-purple-600 active:scale-95 disabled:bg-white/5 disabled:text-slate-500 disabled:border disabled:border-white/5 text-black font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-[0_8px_24px_rgba(168,85,247,0.25)] transition-all flex items-center justify-center gap-2"
+                                            >
+                                                {isVaultSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-black" /> : 'Confirm & Start Growing'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

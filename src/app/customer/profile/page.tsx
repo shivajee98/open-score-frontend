@@ -870,6 +870,33 @@ export default function Profile() {
       return;
     }
 
+    // Validate Aadhaar number
+    const hasAadharImage = !!user?.aadhar_image || !!user?.aadhar_back_image || !!newAadharImage || !!newAadharBackImage;
+    const aadharVal = (formData.aadhar_number || "").trim();
+    if (hasAadharImage && !aadharVal) {
+      toast.error("Aadhaar number is required since Aadhaar images are uploaded.");
+      return;
+    }
+    if (aadharVal && (aadharVal.length !== 12 || !/^\d{12}$/.test(aadharVal))) {
+      toast.error("Please enter a valid 12-digit Aadhaar number.");
+      return;
+    }
+
+    // Validate PAN number
+    const hasPanImage = !!user?.pan_image || !!newPanImage;
+    const panVal = (formData.pan_number || "").trim();
+    if (hasPanImage && !panVal) {
+      toast.error("PAN number is required since the PAN image is uploaded.");
+      return;
+    }
+    if (panVal) {
+      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i;
+      if (!panRegex.test(panVal)) {
+        toast.error("Please enter a valid 10-character PAN number.");
+        return;
+      }
+    }
+
     if (!formData.postal_code || formData.postal_code.length !== 6) {
       toast.error("Valid 6-digit PIN Code is required.");
       const element = document.getElementById("address-section");

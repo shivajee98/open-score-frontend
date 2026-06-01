@@ -557,6 +557,20 @@ export default function LoanList() {
                             <span className="text-[10px] font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Apply</span>
                         </div>
 
+                        <div
+                            onClick={() => router.push('/customer/loan/construction')}
+                            className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all active:scale-[0.98]"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="text-2xl">🏗️</div>
+                                <div>
+                                    <h4 className="font-black text-slate-900 text-sm">Construction Loan</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Build, add floors or renovate</p>
+                                </div>
+                            </div>
+                            <span className="text-[10px] font-bold text-white bg-slate-900 px-3 py-1 rounded-full uppercase tracking-widest shrink-0">Apply</span>
+                        </div>
+
                         <div className="bg-white rounded-2xl p-4 border border-slate-100 opacity-60 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="text-2xl grayscale">🏠</div>

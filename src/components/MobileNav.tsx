@@ -105,18 +105,12 @@ export default function MobileNav() {
                 <span className="text-[8px] font-black uppercase tracking-widest">Loans</span>
             </Link>
 
-            <Link href={isRestricted ? '#' : "/customer/qr"} prefetch={false} 
-                className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isRestricted ? 'opacity-30 grayscale cursor-not-allowed' : (isQR ? activeClass : 'text-slate-400')}`}
-                onClick={(e) => { if (isRestricted) { e.preventDefault(); } }}
-            >
+            <Link href="/customer/qr" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isQR ? activeClass : 'text-slate-400'}`}>
                 <QrCode size={20} className={isQR ? 'scale-110' : ''} strokeWidth={2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">My QR</span>
             </Link>
 
-            <Link href={isRestricted ? '#' : "/customer/payout"} prefetch={false} 
-                className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isRestricted ? 'opacity-30 grayscale cursor-not-allowed' : (isCredOut ? activeClass : 'text-slate-400')}`}
-                onClick={(e) => { if (isRestricted) { e.preventDefault(); } }}
-            >
+            <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isCredOut ? activeClass : 'text-slate-400'}`}>
                 <Landmark size={20} className={isCredOut ? 'scale-110' : ''} strokeWidth={2} />
                 <span className="text-[8px] font-black uppercase tracking-widest">Cred-Out</span>
             </Link>
