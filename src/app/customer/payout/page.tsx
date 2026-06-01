@@ -967,40 +967,48 @@ export default function PayoutPage() {
                                                                                 <div className="flex flex-col">
                                                                                     <span className="text-[7px] font-black uppercase tracking-widest text-purple-400 mb-0.5">Locked In</span>
                                                                                     <span className="text-[11px] font-black tracking-tighter text-purple-300 leading-none">
-                                                                                        {activeDeposit.amount.toLocaleString('en-IN')}
+                                                                                        {Number(activeDeposit.amount).toLocaleString('en-IN', { maximumFractionDigits: 1 })}
                                                                                     </span>
                                                                                 </div>
                                                                             )}
-                                                                            <div className="flex flex-col">
-                                                                                <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400/80 mb-0.5">Increment</span>
-                                                                                <span className="text-sm font-black tracking-tighter text-emerald-400 leading-none">
-                                                                                    +{activeDeposit ? ((activeDeposit.amount * activeDeposit.interest_rate * activeDeposit.tenure_days) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '0.00'}
-                                                                                </span>
-                                                                            </div>
+                                                                            {activeDeposit && (
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400/80 mb-0.5">Daily +</span>
+                                                                                    <span className="text-sm font-black tracking-tighter text-emerald-400 leading-none">
+                                                                                        +{(() => {
+                                                                                            const rate = Number(activeDeposit.interest_rate);
+                                                                                            const amt = Number(activeDeposit.amount);
+                                                                                            const daily = activeDeposit.rate_frequency === 'PER_MONTH'
+                                                                                                ? (amt * rate) / 100 / 30
+                                                                                                : (amt * rate) / 100;
+                                                                                            return daily.toLocaleString('en-IN', { maximumFractionDigits: 1 });
+                                                                                        })()}
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                     </div>
 
                                                                     {/* Card Number */}
-                                                                    <div className="py-0.5 flex items-center justify-start gap-4 group/number" onClick={(e) => e.stopPropagation()}>
-
-                                                                        <p className={`font-mono text-base tracking-[0.15em] drop-shadow-sm font-medium ${vaultData.vault.payment_verified === false ? 'text-[#fef9f3]/40' : 'text-[#fef9f3]'}`}>
+                                                                    <div className="py-0.5 flex items-center justify-start gap-2" onClick={(e) => e.stopPropagation()}>
+                                                                        <p className={`font-mono text-base tracking-[0.15em] drop-shadow-sm font-medium leading-none ${vaultData.vault.payment_verified === false ? 'text-[#fef9f3]/40' : 'text-[#fef9f3]'}`}>
                                                                             {vaultData.vault.payment_verified === false
-                                                                                ? '••••  ••••  ••••  ' + vaultData.vault.card_number?.slice(-4)
+                                                                                ? <>••••&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;{vaultData.vault.card_number?.slice(-4)}</>
                                                                                 : (showVaultCardNumber
                                                                                     ? vaultData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()
-                                                                                    : '••••  ••••  ••••  ' + vaultData.vault.card_number?.slice(-4))}
+                                                                                    : <>••••&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;{vaultData.vault.card_number?.slice(-4)}</>)}
                                                                         </p>
                                                                         {vaultData.vault.payment_verified === false ? (
-                                                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                                                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md shrink-0">
                                                                                 <Lock size={8} className="text-amber-500" />
                                                                                 <span className="text-[6px] font-black text-amber-500 uppercase tracking-widest">Verifying</span>
                                                                             </div>
                                                                         ) : (
                                                                             <button
-                                                                                onClick={() => setShowVaultCardNumber(!showVaultCardNumber)}
-                                                                                className="p-1 hover:bg-white/10 rounded-md transition-all text-[#c5a059]/70 hover:text-white"
+                                                                                onClick={(e) => { e.stopPropagation(); setShowVaultCardNumber(!showVaultCardNumber); }}
+                                                                                className="p-1 hover:bg-white/10 rounded-md transition-all shrink-0"
                                                                             >
-                                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/60'} />
+                                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/80'} />
                                                                             </button>
                                                                         )}
                                                                     </div>
@@ -1093,9 +1101,17 @@ export default function PayoutPage() {
                                                                                     <span className="text-[10px] font-black text-emerald-400 mt-0.5">+{activeDeposit.interest_rate}%</span>
                                                                                 </div>
                                                                                 <div className="flex flex-col text-right">
-                                                                                    <span className="text-[5px] font-black text-[#c5a059]/80 uppercase tracking-widest">Estimated Return</span>
+                                                                                    <span className="text-[5px] font-black text-[#c5a059]/80 uppercase tracking-widest">Total Return</span>
                                                                                     <span className="text-[10px] font-black text-[#c5a059] mt-0.5">
-                                                                                        +{((activeDeposit.amount * activeDeposit.interest_rate * activeDeposit.tenure_days) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                                                                        +{(() => {
+                                                                                            const rate = Number(activeDeposit.interest_rate);
+                                                                                            const amt = Number(activeDeposit.amount);
+                                                                                            const days = Number(activeDeposit.tenure_days);
+                                                                                            const total = activeDeposit.rate_frequency === 'PER_MONTH'
+                                                                                                ? (amt * rate / 100 / 30) * days
+                                                                                                : (amt * rate / 100) * days;
+                                                                                            return total.toLocaleString('en-IN', { maximumFractionDigits: 1 });
+                                                                                        })()}
                                                                                     </span>
                                                                                 </div>
                                                                             </div>
@@ -1164,10 +1180,19 @@ export default function PayoutPage() {
                                                                     <p className="text-[8px] font-bold text-slate-500 mt-0.5">T{activeDeposit.tenure_days} Plan Active</p>
                                                                 </div>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <p className="text-xs font-black text-emerald-600 leading-none">+{activeDeposit.interest_rate}%</p>
-                                                                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daily Reward</p>
-                                                            </div>
+                                                                 <div className="text-right">
+                                                                    <p className="text-xs font-black text-emerald-600 leading-none">
+                                                                        +{(() => {
+                                                                            const rate = Number(activeDeposit.interest_rate);
+                                                                            const amt = Number(activeDeposit.amount);
+                                                                            const daily = activeDeposit.rate_frequency === 'PER_MONTH'
+                                                                                ? (amt * rate) / 100 / 30
+                                                                                : (amt * rate) / 100;
+                                                                            return daily.toLocaleString('en-IN', { maximumFractionDigits: 1 });
+                                                                        })()}
+                                                                    </p>
+                                                                    <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daily Reward</p>
+                                                                </div>
                                                         </div>
                                                     );
                                                 }
