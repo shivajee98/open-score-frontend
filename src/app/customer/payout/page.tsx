@@ -952,10 +952,19 @@ export default function PayoutPage() {
                                                                                 <div className="w-[1px] h-3 bg-[#c5a059]/20" />
                                                                             </div>
                                                                         </div>
+                                                                        {/* Locked In Amount */}
+                                                                        {activeDeposit && (
+                                                                            <div className="flex items-center gap-1.5 bg-[#c5a059]/10 border border-[#c5a059]/20 px-2 py-1 rounded-md shadow-sm shrink-0">
+                                                                                <Lock size={9} className="text-[#c5a059]" />
+                                                                                <span className="text-[10px] font-black tracking-tighter text-[#fef9f3] leading-none">
+                                                                                    {Number(activeDeposit.amount).toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
 
 
-                                                                    <div className="my-1 flex items-end justify-between">
+                                                                    <div className="mt-0.5 mb-1 flex items-end justify-between">
                                                                         <div className="flex flex-col">
                                                                             <span className="text-[7px] font-black uppercase tracking-widest text-[#c5a059]/80 mb-0.5">Available Value</span>
                                                                             <span className="text-xl font-black tracking-tighter text-[#fef9f3] leading-none">
@@ -965,23 +974,15 @@ export default function PayoutPage() {
                                                                         <div className="flex flex-col text-right gap-1">
                                                                             {activeDeposit && (
                                                                                 <div className="flex flex-col">
-                                                                                    <span className="text-[7px] font-black uppercase tracking-widest text-purple-400 mb-0.5">Locked In</span>
-                                                                                    <span className="text-[11px] font-black tracking-tighter text-purple-300 leading-none">
-                                                                                        {Number(activeDeposit.amount).toLocaleString('en-IN', { maximumFractionDigits: 1 })}
-                                                                                    </span>
-                                                                                </div>
-                                                                            )}
-                                                                            {activeDeposit && (
-                                                                                <div className="flex flex-col">
-                                                                                    <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400/80 mb-0.5">Daily +</span>
+                                                                                    <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400/80 mb-0.5">Daily</span>
                                                                                     <span className="text-sm font-black tracking-tighter text-emerald-400 leading-none">
                                                                                         +{(() => {
                                                                                             const rate = Number(activeDeposit.interest_rate);
                                                                                             const amt = Number(activeDeposit.amount);
-                                                                                            const daily = activeDeposit.rate_frequency === 'PER_MONTH'
+                                                                                            const daily = activeDeposit.rate_frequency === 'MONTHLY'
                                                                                                 ? (amt * rate) / 100 / 30
                                                                                                 : (amt * rate) / 100;
-                                                                                            return daily.toLocaleString('en-IN', { maximumFractionDigits: 1 });
+                                                                                            return daily.toLocaleString('en-IN', { maximumFractionDigits: 2 });
                                                                                         })()}
                                                                                     </span>
                                                                                 </div>
@@ -990,26 +991,38 @@ export default function PayoutPage() {
                                                                     </div>
 
                                                                     {/* Card Number */}
-                                                                    <div className="py-0.5 flex items-center justify-start gap-2" onClick={(e) => e.stopPropagation()}>
-                                                                        <p className={`font-mono text-base tracking-[0.15em] drop-shadow-sm font-medium leading-none ${vaultData.vault.payment_verified === false ? 'text-[#fef9f3]/40' : 'text-[#fef9f3]'}`}>
-                                                                            {vaultData.vault.payment_verified === false
-                                                                                ? <>••••&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;{vaultData.vault.card_number?.slice(-4)}</>
-                                                                                : (showVaultCardNumber
-                                                                                    ? vaultData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()
-                                                                                    : <>••••&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;{vaultData.vault.card_number?.slice(-4)}</>)}
+                                                                    <div className="py-0.5 flex items-center justify-between w-full gap-2" onClick={(e) => e.stopPropagation()}>
+                                                                        <p className={`font-mono text-sm sm:text-base tracking-[0.06em] sm:tracking-[0.1em] drop-shadow-sm font-medium leading-none ${vaultData.vault.payment_verified === false ? 'text-[#fef9f3]/40' : 'text-[#fef9f3]'}`}>
+                                                                            {showVaultCardNumber
+                                                                                ? vaultData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()
+                                                                                : <>•••• •••• •••• {vaultData.vault.card_number?.slice(-4)}</>}
                                                                         </p>
                                                                         {vaultData.vault.payment_verified === false ? (
-                                                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md shrink-0">
-                                                                                <Lock size={8} className="text-amber-500" />
-                                                                                <span className="text-[6px] font-black text-amber-500 uppercase tracking-widest">Verifying</span>
+                                                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                                                                                    <Lock size={8} className="text-amber-500" />
+                                                                                    <span className="text-[6px] font-black text-amber-500 uppercase tracking-widest">Verifying</span>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={(e) => { e.stopPropagation(); setShowVaultCardNumber(!showVaultCardNumber); }}
+                                                                                    className="p-1 hover:bg-white/10 rounded-md transition-all"
+                                                                                >
+                                                                                    <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/80'} />
+                                                                                </button>
                                                                             </div>
                                                                         ) : (
-                                                                            <button
-                                                                                onClick={(e) => { e.stopPropagation(); setShowVaultCardNumber(!showVaultCardNumber); }}
-                                                                                className="p-1 hover:bg-white/10 rounded-md transition-all shrink-0"
-                                                                            >
-                                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/80'} />
-                                                                            </button>
+                                                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                                                                                    <CheckCircle2 size={8} className="text-emerald-400" />
+                                                                                    <span className="text-[6px] font-black text-emerald-400 uppercase tracking-widest">Verified</span>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={(e) => { e.stopPropagation(); setShowVaultCardNumber(!showVaultCardNumber); }}
+                                                                                    className="p-1 hover:bg-white/10 rounded-md transition-all"
+                                                                                >
+                                                                                    <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/80'} />
+                                                                                </button>
+                                                                            </div>
                                                                         )}
                                                                     </div>
 
@@ -1019,7 +1032,7 @@ export default function PayoutPage() {
                                                                                 <div className="flex flex-col">
                                                                                     <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 leading-none">Valid Thru</span>
                                                                                     <span className="text-[9px] font-mono text-[#fef9f3] mt-0.5 leading-none">
-                                                                                        {vaultData.vault.payment_verified === false ? '••/••' : (showVaultExpiry ? (vaultData.vault.expiry_date || '12/29') : '••/••')}
+                                                                                        {showVaultCardNumber ? (vaultData.vault.expiry_date || '12/29') : '••/••'}
                                                                                     </span>
                                                                                 </div>
                                                                                 <div className="flex flex-col">
@@ -1053,20 +1066,21 @@ export default function PayoutPage() {
                                                                             <div className="w-16 h-4 bg-white/5 rounded-sm border border-white/5 flex items-center justify-center">
                                                                                 <span className="text-[5px] font-black text-white/30 uppercase tracking-widest italic">Authorized Signature</span>
                                                                             </div>
-                                                                            <div className="w-24 h-6 bg-white/10 rounded flex items-center justify-end px-2 border border-white/10">
-                                                                                <div className="flex flex-col items-end">
+                                                                            <div className="w-28 h-7 bg-white/5 rounded flex items-center justify-between px-2 border border-white/10">
+                                                                                <div className="flex flex-col items-start">
                                                                                     <span className="text-[4px] font-bold text-[#c5a059] uppercase leading-none mb-0.5">CVV / Secure</span>
-                                                                                    <span className="text-[10px] font-mono text-[#f9e37a] tracking-widest">
-                                                                                        {vaultData.vault.payment_verified === false ? '•••' : (showVaultCvc ? (vaultData.vault.cvc || '•••') : '•••')}
+                                                                                    <span className="text-[10px] font-mono text-[#f9e37a] tracking-widest leading-none mt-0.5">
+                                                                                        {showVaultCvc ? (vaultData.vault.cvc || '•••') : '•••'}
                                                                                     </span>
                                                                                 </div>
-                                                                                {vaultData.vault.payment_verified === false ? (
-                                                                                    <div className="ml-2 p-1"><Lock size={8} className="text-amber-500/60" /></div>
-                                                                                ) : (
-                                                                                    <button onClick={(e) => { e.stopPropagation(); setShowVaultCvc(!showVaultCvc); }} className="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
-                                                                                        <Eye size={8} className={showVaultCvc ? 'text-amber-400' : 'text-white/30'} />
+                                                                                <div className="flex items-center gap-1">
+                                                                                    {vaultData.vault.payment_verified === false && (
+                                                                                        <Lock size={8} className="text-amber-500/50 shrink-0" />
+                                                                                    )}
+                                                                                    <button onClick={(e) => { e.stopPropagation(); setShowVaultCvc(!showVaultCvc); }} className="p-1 hover:bg-white/10 rounded-md transition-colors shrink-0">
+                                                                                        <Eye size={12} className={showVaultCvc ? 'text-amber-400' : 'text-white/30'} />
                                                                                     </button>
-                                                                                )}
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                         <div className="text-right">
@@ -1098,7 +1112,7 @@ export default function PayoutPage() {
                                                                                 </div>
                                                                                 <div className="flex flex-col">
                                                                                     <span className="text-[5px] font-black text-white/40 uppercase tracking-widest">Earning Rate</span>
-                                                                                    <span className="text-[10px] font-black text-emerald-400 mt-0.5">+{activeDeposit.interest_rate}%</span>
+                                                                                    <span className="text-[10px] font-black text-emerald-400 mt-0.5">+{parseFloat(parseFloat(activeDeposit.interest_rate).toFixed(1))}%</span>
                                                                                 </div>
                                                                                 <div className="flex flex-col text-right">
                                                                                     <span className="text-[5px] font-black text-[#c5a059]/80 uppercase tracking-widest">Total Return</span>
@@ -1107,7 +1121,7 @@ export default function PayoutPage() {
                                                                                             const rate = Number(activeDeposit.interest_rate);
                                                                                             const amt = Number(activeDeposit.amount);
                                                                                             const days = Number(activeDeposit.tenure_days);
-                                                                                            const total = activeDeposit.rate_frequency === 'PER_MONTH'
+                                                                                            const total = activeDeposit.rate_frequency === 'MONTHLY'
                                                                                                 ? (amt * rate / 100 / 30) * days
                                                                                                 : (amt * rate / 100) * days;
                                                                                             return total.toLocaleString('en-IN', { maximumFractionDigits: 1 });
@@ -1121,7 +1135,7 @@ export default function PayoutPage() {
                                                                             {vaultData.rates?.slice(0, 4).map((r: any) => (
                                                                                 <div key={r.id} className="bg-white/[0.03] border border-white/[0.04] px-2 py-1.5 rounded-md flex flex-col hover:bg-white/[0.07] transition-all min-w-[60px]">
                                                                                     <span className="text-[5px] font-black text-white/40 uppercase tracking-widest">{r.tenure_days} Days</span>
-                                                                                    <span className="text-[10px] font-black text-[#c5a059] leading-none">{r.interest_rate}%</span>
+                                                                                    <span className="text-[10px] font-black text-[#c5a059] leading-none">{parseFloat(parseFloat(r.interest_rate).toFixed(1))}%</span>
                                                                                 </div>
                                                                             ))}
                                                                         </div>
@@ -1185,10 +1199,10 @@ export default function PayoutPage() {
                                                                         +{(() => {
                                                                             const rate = Number(activeDeposit.interest_rate);
                                                                             const amt = Number(activeDeposit.amount);
-                                                                            const daily = activeDeposit.rate_frequency === 'PER_MONTH'
+                                                                            const daily = activeDeposit.rate_frequency === 'MONTHLY'
                                                                                 ? (amt * rate) / 100 / 30
                                                                                 : (amt * rate) / 100;
-                                                                            return daily.toLocaleString('en-IN', { maximumFractionDigits: 1 });
+                                                                            return daily.toLocaleString('en-IN', { maximumFractionDigits: 2 });
                                                                         })()}
                                                                     </p>
                                                                     <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daily Reward</p>

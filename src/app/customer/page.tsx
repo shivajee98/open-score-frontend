@@ -300,6 +300,7 @@ export default function CustomerHome() {
     const isVaultEnabledByAdmin = !!vaultSetupData?.vault;
     const activeVaultRequest = cardRequests?.find((r: any) => ['ON_HOLD', 'PENDING_APPROVAL', 'REJECTED'].includes(r.status))
         || (!isVaultEnabledByAdmin ? cardRequests?.find((r: any) => !['ACTIVATED'].includes(r.status)) : null);
+    const activeDeposit = vaultSetupData?.deposits?.find((d: any) => d.status === 'ACTIVE');
 
 
     // Fetch Cashback Settings
@@ -1045,8 +1046,7 @@ export default function CustomerHome() {
                                         <div>
                                             <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block opacity-60">Asset Value</span>
                                             <div className="flex items-baseline gap-0.5">
-                                                <span className="text-[8px] font-black text-[#c5a059]">₹</span>
-                                                <span className="text-[14px] font-black tracking-tighter text-[#fef9f3] truncate max-w-[60px]">
+                                                <span className="text-[14px] font-black tracking-tighter text-[#fef9f3] truncate max-w-[80px]">
                                                     {parseFloat(vaultSetupData?.vault?.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
@@ -1109,14 +1109,9 @@ export default function CustomerHome() {
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex flex-col gap-0">
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-5 h-5 rounded-full border-2 border-[#c5a059] flex items-center justify-center p-0.5">
-                                                                <div className="w-full h-full bg-[#c5a059] rounded-full flex items-center justify-center">
-                                                                    <CheckCircle2 size={10} className="text-[#0f1113]" strokeWidth={4} />
-                                                                </div>
-                                                            </div>
                                                             <div className="flex flex-col">
                                                                 <span className="text-[11px] font-black tracking-[0.1em] text-[#c5a059] uppercase leading-none">Open Score</span>
-                                                                <span className="text-[5px] font-bold text-[#c5a059]/60 uppercase tracking-widest mt-0.5">Smart Credit For Daily Needs</span>
+                                                                <span className="text-[5px] font-bold text-[#c5a059]/60 uppercase tracking-widest mt-0.5">Smart Value</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1136,7 +1131,8 @@ export default function CustomerHome() {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center justify-between mt-1">
+                                                <div className="flex items-center justify-between mt-0.5">
+                                                    {/* Gold Chip */}
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-7 bg-gradient-to-br from-[#e6c07b] via-[#c5a059] to-[#8e6e36] rounded-md shadow-inner relative overflow-hidden border border-[#8e6e36]/30">
                                                             <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30">
@@ -1149,44 +1145,101 @@ export default function CustomerHome() {
                                                             <div className="w-[1px] h-3 bg-[#c5a059]/20" />
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <span className="text-[6px] font-black text-[#c5a059]/80 uppercase tracking-[0.2em]">Premium Metal Card</span>
+                                                    {/* Locked In Amount */}
+                                                    {activeDeposit && (
+                                                        <div className="flex items-center gap-1.5 bg-[#c5a059]/10 border border-[#c5a059]/20 px-2 py-1 rounded-md shadow-sm shrink-0">
+                                                            <Lock size={9} className="text-[#c5a059]" />
+                                                            <span className="text-[10px] font-black tracking-tighter text-[#fef9f3] leading-none">
+                                                                {Number(activeDeposit.amount).toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="mt-0.5 mb-1 flex items-end justify-between">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[7px] font-black uppercase tracking-widest text-[#c5a059]/80 mb-0.5">Available Value</span>
+                                                        <span className="text-xl font-black tracking-tighter text-[#fef9f3] leading-none">
+                                                            {parseFloat(vaultSetupData.vault.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col text-right gap-1">
+                                                        {activeDeposit && (
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400/80 mb-0.5">Daily</span>
+                                                                <span className="text-sm font-black tracking-tighter text-emerald-400 leading-none">
+                                                                    +{(() => {
+                                                                        const rate = Number(activeDeposit.interest_rate);
+                                                                        const amt = Number(activeDeposit.amount);
+                                                                        const daily = activeDeposit.rate_frequency === 'MONTHLY'
+                                                                            ? (amt * rate) / 100 / 30
+                                                                            : (amt * rate) / 100;
+                                                                        return daily.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                                                                    })()}
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
-                                                <div className="py-1 flex items-center justify-start gap-4 group/number" onClick={(e) => e.stopPropagation()}>
-                                                    <p className="font-mono text-base tracking-[0.15em] text-[#fef9f3] drop-shadow-sm font-medium">
+                                                {/* Card Number */}
+                                                <div className="py-0.5 flex items-center justify-between w-full gap-2" onClick={(e) => e.stopPropagation()}>
+                                                    <p className={`font-mono text-sm sm:text-base tracking-[0.06em] sm:tracking-[0.1em] drop-shadow-sm font-medium leading-none ${vaultSetupData.vault.payment_verified === false ? 'text-[#fef9f3]/40' : 'text-[#fef9f3]'}`}>
                                                         {showVaultCardNumber
                                                             ? vaultSetupData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()
-                                                            : '••••  ••••  ••••  ' + vaultSetupData.vault.card_number?.slice(-4)}
+                                                            : <>•••• •••• •••• {vaultSetupData.vault.card_number?.slice(-4)}</>}
                                                     </p>
-                                                    <button
-                                                        onClick={() => setShowVaultCardNumber(!showVaultCardNumber)}
-                                                        className="p-1 hover:bg-white/10 rounded-md transition-all opacity-0 group-hover/number:opacity-100"
-                                                    >
-                                                        <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/50'} />
-                                                    </button>
+                                                    {vaultSetupData.vault.payment_verified === false ? (
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                                                                <Lock size={8} className="text-amber-500" />
+                                                                <span className="text-[6px] font-black text-amber-500 uppercase tracking-widest">Verifying</span>
+                                                            </div>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setShowVaultCardNumber(!showVaultCardNumber); }}
+                                                                className="p-1 hover:bg-white/10 rounded-md transition-all"
+                                                            >
+                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/80'} />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                                                                <CheckCircle2 size={8} className="text-emerald-400" />
+                                                                <span className="text-[6px] font-black text-emerald-400 uppercase tracking-widest">Verified</span>
+                                                            </div>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setShowVaultCardNumber(!showVaultCardNumber); }}
+                                                                className="p-1 hover:bg-white/10 rounded-md transition-all"
+                                                            >
+                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/80'} />
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
 
-                                                <div className="flex items-end justify-between pt-1">
-                                                    <div className="space-y-1">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60">Valid Thru</span>
-                                                            <span className="text-[10px] font-mono text-[#fef9f3] mt-0.5">
-                                                                {showVaultExpiry ? (vaultSetupData.vault.expiry_date || '12/29') : '••/••'}
-                                                            </span>
+                                                <div className="flex items-end justify-between pt-0.5">
+                                                    <div className="flex flex-col gap-1 w-full">
+                                                        <div className="flex items-center gap-6">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 leading-none">Valid Thru</span>
+                                                                <span className="text-[9px] font-mono text-[#fef9f3] mt-0.5 leading-none">
+                                                                    {showVaultCardNumber ? (vaultSetupData.vault.expiry_date || '12/29') : '••/••'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 leading-none">Card Holder</span>
+                                                                <span className="text-[9px] font-black uppercase tracking-[0.05em] text-[#fef9f3]/90 mt-0.5 leading-none truncate max-w-[120px]">
+                                                                    {activeUser?.name || 'Rahul Kumar'}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[10px] font-black uppercase tracking-[0.05em] text-[#fef9f3]/90">
-                                                                {activeUser?.name || 'Rahul Kumar'}
-                                                            </span>
-                                                            <span className="text-[6px] font-black text-[#c5a059] uppercase tracking-[0.1em] mt-0.5">0% Interest Credit</span>
-                                                        </div>
+                                                        <span className="text-[5px] font-black text-[#c5a059] uppercase tracking-[0.1em] leading-none">0% Interest Credit</span>
                                                     </div>
 
-                                                    <div className="text-right">
-                                                        <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block mb-0.5">Powered By</span>
-                                                        <span className="text-[8px] font-black tracking-[0.1em] text-[#fef9f3] uppercase">Open Score</span>
+                                                    <div className="text-right flex flex-col items-end shrink-0">
+                                                        <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block mb-0.5 leading-none">Powered By</span>
+                                                        <span className="text-[8px] font-black tracking-[0.1em] text-[#fef9f3] uppercase leading-none">Open Score</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1204,16 +1257,21 @@ export default function CustomerHome() {
                                                         <div className="w-16 h-4 bg-white/5 rounded-sm border border-white/5 flex items-center justify-center">
                                                             <span className="text-[5px] font-black text-white/30 uppercase tracking-widest italic">Authorized Signature</span>
                                                         </div>
-                                                        <div className="w-24 h-6 bg-white/10 rounded flex items-center justify-end px-2 border border-white/10">
-                                                            <div className="flex flex-col items-end">
+                                                        <div className="w-28 h-7 bg-white/5 rounded flex items-center justify-between px-2 border border-white/10">
+                                                            <div className="flex flex-col items-start">
                                                                 <span className="text-[4px] font-bold text-[#c5a059] uppercase leading-none mb-0.5">CVV / Secure</span>
-                                                                <span className="text-[10px] font-mono text-[#f9e37a] tracking-widest">
+                                                                <span className="text-[10px] font-mono text-[#f9e37a] tracking-widest leading-none mt-0.5">
                                                                     {showVaultCvc ? (vaultSetupData.vault.cvc || '•••') : '•••'}
                                                                 </span>
                                                             </div>
-                                                            <button onClick={(e) => { e.stopPropagation(); setShowVaultCvc(!showVaultCvc); }} className="ml-2 p-1 hover:bg-white/10 rounded transition-colors">
-                                                                <Eye size={8} className={showVaultCvc ? 'text-amber-400' : 'text-white/30'} />
-                                                            </button>
+                                                            <div className="flex items-center gap-1">
+                                                                {vaultSetupData.vault.payment_verified === false && (
+                                                                    <Lock size={8} className="text-amber-500/50 shrink-0" />
+                                                                )}
+                                                                <button onClick={(e) => { e.stopPropagation(); setShowVaultCvc(!showVaultCvc); }} className="p-1 hover:bg-white/10 rounded-md transition-colors shrink-0">
+                                                                    <Eye size={12} className={showVaultCvc ? 'text-amber-400' : 'text-white/30'} />
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
