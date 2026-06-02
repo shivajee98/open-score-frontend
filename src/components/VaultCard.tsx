@@ -71,16 +71,28 @@ export default function VaultCard({
 
     // Resolve controlled vs uncontrolled
     const isFlipped = controlledFlipped !== undefined ? controlledFlipped : internalFlipped;
-    const setIsFlipped = controlledSetFlipped || setInternalFlipped;
+    const setIsFlipped = (val: boolean) => {
+        if (controlledSetFlipped) controlledSetFlipped(val);
+        setInternalFlipped(val);
+    };
 
     const isMaximized = controlledMaximized !== undefined ? controlledMaximized : internalMaximized;
-    const setIsMaximized = controlledSetMaximized || setInternalMaximized;
+    const setIsMaximized = (val: boolean) => {
+        if (controlledSetMaximized) controlledSetMaximized(val);
+        setInternalMaximized(val);
+    };
 
     const showCardNumber = controlledShowCardNumber !== undefined ? controlledShowCardNumber : internalShowCardNumber;
-    const setShowCardNumber = controlledSetShowCardNumber || setInternalShowCardNumber;
+    const setShowCardNumber = (val: boolean) => {
+        if (controlledSetShowCardNumber) controlledSetShowCardNumber(val);
+        setInternalShowCardNumber(val);
+    };
 
     const showCvc = controlledShowCvc !== undefined ? controlledShowCvc : internalShowCvc;
-    const setShowCvc = controlledSetShowCvc || setInternalShowCvc;
+    const setShowCvc = (val: boolean) => {
+        if (controlledSetShowCvc) controlledSetShowCvc(val);
+        setInternalShowCvc(val);
+    };
 
     const handleCardClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -101,7 +113,7 @@ export default function VaultCard({
             <div className={`relative w-full h-full transition-all duration-700 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
                 
                 {/* FRONT SIDE */}
-                <div className="absolute inset-0 backface-hidden">
+                <div className={`absolute inset-0 backface-hidden ${isFlipped ? 'pointer-events-none' : ''}`}>
                     <div className="bg-[#0f1113] rounded-xl px-5 py-3 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col justify-between group">
                         {/* Brushed Metal Texture Effect */}
                         <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
@@ -182,28 +194,28 @@ export default function VaultCard({
                                             <div className="w-[1px] h-3 bg-[#c5a059]/20" />
                                         </div>
                                     </div>
-
-                                    {/* Active Deposit Badges */}
-                                    {activeDeposit && (
-                                        <div className="flex items-center gap-1.5">
-                                            {/* Locked In Amount */}
-                                            <div className="flex items-center gap-1 bg-[#c5a059]/10 border border-[#c5a059]/20 px-2 py-1 rounded-md shadow-sm shrink-0">
-                                                <Lock size={8} className="text-[#c5a059]" />
-                                                <span className="text-[9px] font-black tracking-tighter text-[#fef9f3] leading-none">
-                                                    {Number(activeDeposit.amount).toLocaleString('en-IN', { maximumFractionDigits: 1 })}
-                                                </span>
-                                            </div>
-
-                                            {/* Total Earned Value */}
-                                            <div className="flex items-center gap-1 bg-[#c5a059]/10 border border-[#c5a059]/20 px-2 py-1 rounded-md shadow-sm shrink-0">
-                                                <span className="text-[8px] font-black tracking-tighter text-[#c5a059] leading-none">+</span>
-                                                <span className="text-[9px] font-black tracking-tighter text-[#fef9f3] leading-none">
-                                                    {Number(activeDeposit.total_earned_interest || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
+
+                                {/* Active Deposit Badges */}
+                                {activeDeposit && (
+                                    <div className="flex items-center gap-1.5">
+                                        {/* Locked In Amount */}
+                                        <div className="flex items-center gap-1 bg-[#c5a059]/10 border border-[#c5a059]/20 px-2 py-1 rounded-md shadow-sm shrink-0">
+                                            <Lock size={8} className="text-[#c5a059]" />
+                                            <span className="text-[9px] font-black tracking-tighter text-[#fef9f3] leading-none">
+                                                {Number(activeDeposit.amount).toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+                                            </span>
+                                        </div>
+
+                                        {/* Total Earned Value */}
+                                        <div className="flex items-center gap-1 bg-[#c5a059]/10 border border-[#c5a059]/20 px-2 py-1 rounded-md shadow-sm shrink-0">
+                                            <span className="text-[8px] font-black tracking-tighter text-[#c5a059] leading-none">+</span>
+                                            <span className="text-[9px] font-black tracking-tighter text-[#fef9f3] leading-none">
+                                                {Number(activeDeposit.total_earned_interest || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Available Balance & Daily Yield Row */}
@@ -211,7 +223,7 @@ export default function VaultCard({
                                 <div className="flex flex-col">
                                     <span className="text-[7px] font-black uppercase tracking-widest text-[#c5a059]/80 mb-0.5">Available Value</span>
                                     <span className="text-xl font-black tracking-tighter text-[#fef9f3] leading-none">
-                                        {Number(vault.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                        {Number(Math.max(0, (vault.balance || 0) - (activeDeposit ? Number(activeDeposit.amount) : 0))).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                     </span>
                                 </div>
                                 <div className="flex flex-col text-right gap-1">
@@ -249,7 +261,6 @@ export default function VaultCard({
                                     ) : (
                                         <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
                                             <CheckCircle2 size={8} className="text-emerald-400" />
-                                            <span className="text-[6px] font-black text-emerald-400 uppercase tracking-widest">Verified</span>
                                         </div>
                                     )}
                                     <button
@@ -281,12 +292,10 @@ export default function VaultCard({
                                             </span>
                                         </div>
                                     </div>
-                                    <span className="text-[5px] font-black text-[#c5a059] uppercase tracking-[0.1em] leading-none">0% Interest Credit</span>
                                 </div>
 
                                 <div className="text-right flex flex-col items-end shrink-0">
-                                    <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block mb-0.5 leading-none">Powered By</span>
-                                    <span className="text-[8px] font-black tracking-[0.1em] text-[#fef9f3] uppercase leading-none">Open Score</span>
+                                    <CheckCircle2 size={12} className="text-emerald-400 mt-0.5" />
                                 </div>
                             </div>
                         </div>
@@ -294,7 +303,7 @@ export default function VaultCard({
                 </div>
 
                 {/* BACK SIDE — Security & Info */}
-                <div className="absolute inset-0 backface-hidden rotate-y-180">
+                <div className={`absolute inset-0 backface-hidden rotate-y-180 ${!isFlipped ? 'pointer-events-none' : ''}`}>
                     <div className="bg-[#0f1113] rounded-xl text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col group">
                         {/* Black Magnetic Strip */}
                         <div className="w-full h-8 bg-[#000] mt-4 shadow-inner" />
@@ -358,13 +367,13 @@ export default function VaultCard({
                                             <span className="text-[10px] font-black text-white mt-0.5">{activeDeposit.tenure_days} Days</span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[5px] font-black text-white/40 uppercase tracking-widest">Earning Rate</span>
+                                            <span className="text-[5px] font-black text-white/40 uppercase tracking-widest">Increment</span>
                                             <span className="text-[10px] font-black text-emerald-400 mt-0.5">
                                                 +{parseFloat(parseFloat(String(activeDeposit.interest_rate)).toFixed(1))}%
                                             </span>
                                         </div>
                                         <div className="flex flex-col text-right">
-                                            <span className="text-[5px] font-black text-[#c5a059]/80 uppercase tracking-widest">Total Return</span>
+                                            <span className="text-[5px] font-black text-[#c5a059]/80 uppercase tracking-widest">Total Increment</span>
                                             <span className="text-[10px] font-black text-[#c5a059] mt-0.5">
                                                 +{(() => {
                                                     const rate = Number(activeDeposit.interest_rate);

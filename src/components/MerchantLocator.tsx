@@ -26,6 +26,7 @@ interface Merchant {
     show_phone?: boolean;
     show_timing?: boolean;
     kyc_status?: 'PENDING' | 'FIELD_VERIFIED' | 'FULL_VERIFIED';
+    qr_codes_count?: number;
 }
 
 // Simple debounce hook
@@ -199,102 +200,172 @@ export default function MerchantLocator() {
                             <p className="mt-4 text-slate-400 font-bold text-xs uppercase tracking-widest animate-pulse">Scanning nearby stores...</p>
                         </div>
                     ) : merchants.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-3 pb-8">
-                            {merchants.map((merchant) => (
-                                <div
-                                    key={merchant.id}
-                                    onClick={() => handleMerchantClick(merchant)}
-                                    className="p-3 border border-slate-100 rounded-2xl bg-white hover:border-blue-100 hover:shadow-xl hover:shadow-blue-900/5 transition-all cursor-pointer flex items-center justify-between gap-4 relative shadow-sm group active:scale-[0.99]"
-                                >
-                                    <div className="flex items-center gap-4 overflow-hidden">
-                                        <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 overflow-hidden shadow-inner group-hover:scale-110 transition-transform duration-500">
-                                            {(() => {
-                                                let imgs: string[] = [];
-                                                try {
-                                                    if (Array.isArray(merchant.shop_images)) {
-                                                        imgs = merchant.shop_images;
-                                                    } else {
-                                                        imgs = merchant.shop_images ? JSON.parse(merchant.shop_images) : [];
-                                                    }
-                                                    // Filter out any stale blob URLs
-                                                    imgs = imgs.filter(img => img && !img.includes('blob:'));
-                                                } catch (e) { }
-                                                if (imgs && imgs.length > 0 && typeof imgs[0] === 'string') return <img src={imgs[0]} className="w-full h-full object-cover" alt="Shop" />;
-                                                return <Store size={24} className="text-slate-300 group-hover:text-blue-500 transition-colors" />;
-                                            })()}
-                                        </div>
-                                        <div className="flex-1 min-w-0 pr-1 flex flex-col justify-center">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h3 className="font-black text-slate-900 text-sm leading-tight group-hover:text-blue-600 transition-colors truncate">
-                                                    {merchant.business_name || merchant.name}
-                                                </h3>
-                                                {(merchant.kyc_status === 'FULL_VERIFIED' || merchant.kyc_status === 'FIELD_VERIFIED') && (
-                                                    <span className="shrink-0 text-emerald-500 bg-emerald-50 p-0.5 rounded-full" title="Verified Merchant">
-                                                        <ShieldCheck size={12} strokeWidth={3} />
-                                                    </span>
-                                                )}
-                                                {merchant.business_segment && (
-                                                    <span className="shrink-0 bg-blue-600 text-white text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg shadow-blue-600/20">
-                                                        {merchant.business_segment}
-                                                    </span>
-                                                )}
-                                                {merchant.business_nature && (
-                                                    <span className="shrink-0 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm">
-                                                        {merchant.business_nature}
-                                                    </span>
-                                                )}
-                                                {merchant.average_rating !== undefined && (
-                                                    <div className="flex items-center gap-1 bg-amber-50 text-amber-600 border border-amber-200 text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                                                        <span>{Number(merchant.average_rating).toFixed(1)}</span>
-                                                        <span className="text-[10px] pb-0.5">★</span>
-                                                        {merchant.rating_count !== undefined && (
-                                                            <span className="opacity-40 font-bold ml-0.5">({merchant.rating_count})</span>
+                        <div className="space-y-4 pb-8 animate-in fade-in duration-300">
+                            {/* Merchant Count Section */}
+                            <div className="flex justify-between items-center px-1">
+                                <span className="text-xs font-semibold text-slate-500">
+                                    Discovered <span className="font-extrabold text-slate-800">{merchants.length}</span> {merchants.length === 1 ? 'merchant' : 'merchants'} in this area
+                                </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 gap-3">
+                                {merchants.map((merchant) => {
+                                    const hasMappedQr = merchant.qr_codes_count !== undefined && merchant.qr_codes_count > 0;
+                                    
+                                    // Custom colors for light navy blue (has QR) vs light yellow (no QR)
+                                    // Navy blue theme
+                                    const navyBg = 'oklch(0.96 0.015 240)';
+                                    const navyBorder = 'oklch(0.91 0.025 240)';
+                                    const navyText = 'oklch(0.20 0.05 240)';
+                                    const navyMutedText = 'oklch(0.40 0.04 240)';
+                                    const navyHoverBorder = 'oklch(0.80 0.05 240)';
+                                    const navyIconBg = 'oklch(0.92 0.025 240)';
+                                    
+                                    // Yellow theme
+                                    const yellowBg = 'oklch(0.985 0.015 85)';
+                                    const yellowBorder = 'oklch(0.93 0.02 85)';
+                                    const yellowText = 'oklch(0.25 0.035 75)';
+                                    const yellowMutedText = 'oklch(0.45 0.03 75)';
+                                    const yellowHoverBorder = 'oklch(0.82 0.04 85)';
+                                    const yellowIconBg = 'oklch(0.95 0.02 85)';
+
+                                    const theme = {
+                                        bg: hasMappedQr ? navyBg : yellowBg,
+                                        border: hasMappedQr ? navyBorder : yellowBorder,
+                                        text: hasMappedQr ? navyText : yellowText,
+                                        mutedText: hasMappedQr ? navyMutedText : yellowMutedText,
+                                        hoverBorder: hasMappedQr ? navyHoverBorder : yellowHoverBorder,
+                                        iconBg: hasMappedQr ? navyIconBg : yellowIconBg,
+                                        buttonPhoneClass: hasMappedQr 
+                                            ? "bg-slate-900/5 text-slate-800 border-transparent hover:text-blue-600 hover:bg-blue-50"
+                                            : "bg-amber-900/5 text-amber-800 border-transparent hover:bg-amber-900/10 hover:text-amber-900",
+                                        buttonNavClass: hasMappedQr
+                                            ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
+                                            : "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/20",
+                                    };
+
+                                    return (
+                                        <div
+                                            key={merchant.id}
+                                            onClick={() => handleMerchantClick(merchant)}
+                                            style={{
+                                                backgroundColor: theme.bg,
+                                                borderColor: theme.border,
+                                            }}
+                                            className="py-2 px-3 border rounded-xl transition-all cursor-pointer flex items-center justify-between gap-3 relative shadow-sm group active:scale-[0.99]"
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.borderColor = theme.hoverBorder;
+                                                e.currentTarget.style.boxShadow = hasMappedQr 
+                                                    ? '0 6px 15px -3px rgba(59, 130, 246, 0.06)' 
+                                                    : '0 6px 15px -3px rgba(217, 119, 6, 0.06)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.borderColor = theme.border;
+                                                e.currentTarget.style.boxShadow = 'none';
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-3 overflow-hidden flex-1">
+                                                <div 
+                                                    style={{ backgroundColor: theme.iconBg }}
+                                                    className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-transparent overflow-hidden shadow-inner group-hover:scale-105 transition-transform duration-500"
+                                                >
+                                                    {(() => {
+                                                        let imgs: string[] = [];
+                                                        try {
+                                                            if (Array.isArray(merchant.shop_images)) {
+                                                                imgs = merchant.shop_images;
+                                                            } else {
+                                                                imgs = merchant.shop_images ? JSON.parse(merchant.shop_images) : [];
+                                                            }
+                                                            imgs = imgs.filter(img => img && !img.includes('blob:'));
+                                                        } catch (e) { }
+                                                        if (imgs && imgs.length > 0 && typeof imgs[0] === 'string') {
+                                                            return <img src={imgs[0]} className="w-full h-full object-cover" alt="Shop" />;
+                                                        }
+                                                        return <Store size={18} style={{ color: theme.mutedText }} className="transition-colors" />;
+                                                    })()}
+                                                </div>
+                                                
+                                                <div className="flex-1 min-w-0 pr-1 flex flex-col justify-center">
+                                                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                                                        <h3 
+                                                            style={{ color: theme.text }}
+                                                            className="font-extrabold text-[13px] leading-tight transition-colors truncate"
+                                                        >
+                                                            {merchant.business_name || merchant.name}
+                                                        </h3>
+                                                        {(merchant.kyc_status === 'FULL_VERIFIED' || merchant.kyc_status === 'FIELD_VERIFIED') && (
+                                                            <span className="shrink-0 text-emerald-500 bg-emerald-50 p-0.5 rounded-full" title="Verified Merchant">
+                                                                <ShieldCheck size={10} strokeWidth={3} />
+                                                            </span>
+                                                        )}
+                                                        {merchant.business_segment && (
+                                                            <span className="shrink-0 bg-blue-600 text-white text-[6.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shadow-md shadow-blue-600/10">
+                                                                {merchant.business_segment}
+                                                            </span>
+                                                        )}
+                                                        {merchant.business_nature && (
+                                                            <span className="shrink-0 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[6.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shadow-sm">
+                                                                {merchant.business_nature}
+                                                            </span>
+                                                        )}
+                                                        {merchant.average_rating !== undefined && (
+                                                            <div className="flex items-center gap-0.5 bg-amber-50 text-amber-600 border border-amber-200 text-[8.5px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
+                                                                <span>{Number(merchant.average_rating).toFixed(1)}</span>
+                                                                <span className="text-[9px] pb-0.5">★</span>
+                                                                {merchant.rating_count !== undefined && (
+                                                                    <span className="opacity-40 font-bold ml-0.5">({merchant.rating_count})</span>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                )}
+                                                    
+                                                    <div className="flex items-start gap-1 text-[9px] font-bold leading-tight">
+                                                        <MapPin size={10} style={{ color: theme.mutedText }} className="shrink-0 mt-0.5" />
+                                                        <p style={{ color: theme.mutedText }} className="line-clamp-1 uppercase">
+                                                            {(merchant.business_address && merchant.business_address !== 'null') ? merchant.business_address + ', ' : ''}{merchant.city || ''} {merchant.pincode}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="flex items-start gap-1.5 text-slate-400 text-[10px] font-bold leading-tight">
-                                                <MapPin size={12} className="shrink-0 text-slate-300" />
-                                                <p className="line-clamp-2 uppercase">{(merchant.business_address && merchant.business_address !== 'null') ? merchant.business_address + ', ' : ''}{merchant.city || ''} {merchant.pincode}</p>
+
+                                            <div className="flex items-center gap-1.5 shrink-0 pl-1.5 border-l border-slate-100/60">
+                                                {(merchant.mobile_number && (merchant.show_phone ?? true)) && (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                window.location.href = `tel:+91${merchant.mobile_number}`;
+                                                            }}
+                                                            className={`w-[30px] h-[30px] rounded-lg border border-transparent flex items-center justify-center transition-all active:scale-90 ${theme.buttonPhoneClass}`}
+                                                        >
+                                                            <Phone size={12} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                window.open(`https://wa.me/91${merchant.mobile_number}`, '_blank');
+                                                            }}
+                                                            className="w-[30px] h-[30px] rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-500 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-100 flex items-center justify-center transition-all active:scale-90"
+                                                        >
+                                                            <MessageCircle size={12} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleMerchantClick(merchant);
+                                                    }}
+                                                    className={`w-[30px] h-[30px] rounded-lg flex items-center justify-center transition-all shadow-md active:scale-90 ${theme.buttonNavClass}`}
+                                                >
+                                                    <Navigation size={12} className="rotate-90 ml-[-1px] mt-[1px]" />
+                                                </button>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 shrink-0 pl-2 border-l border-slate-50">
-                                        {(merchant.mobile_number && (merchant.show_phone ?? true)) && (
-                                            <>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        window.location.href = `tel:+91${merchant.mobile_number}`;
-                                                    }}
-                                                    className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 flex items-center justify-center transition-all active:scale-90"
-                                                >
-                                                    <Phone size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        window.open(`https://wa.me/91${merchant.mobile_number}`, '_blank');
-                                                    }}
-                                                    className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-500 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-100 flex items-center justify-center transition-all active:scale-90"
-                                                >
-                                                    <MessageCircle size={14} />
-                                                </button>
-                                            </>
-                                        )}
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleMerchantClick(merchant);
-                                            }}
-                                            className="w-9 h-9 rounded-xl bg-blue-600 text-white hover:bg-slate-900 flex items-center justify-center transition-all shadow-lg shadow-blue-600/20 active:scale-90"
-                                        >
-                                            <Navigation size={14} className="rotate-90 ml-[-1px] mt-[1px]" />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                    );
+                                })}
+                            </div>
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center h-80 text-center px-10">

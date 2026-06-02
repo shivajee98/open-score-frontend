@@ -9,11 +9,11 @@ if (typeof window !== 'undefined') {
 export const createEcho = (token?: string) => {
     const options: any = {
         broadcaster: 'reverb',
-        key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || 'openscore_app_key',
-        wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || 'api.msmeloan.sbs',
-        wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT || 443),
-        wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT || 443),
-        forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME || 'https') === 'https',
+        key: process.env.NEXT_PUBLIC_REVERB_APP_KEY,
+        wsHost: process.env.NEXT_PUBLIC_REVERB_HOST,
+        wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT ?? 80),
+        wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT ?? 443),
+        forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME ?? 'https') === 'https',
         enabledTransports: ['ws', 'wss'],
     };
 
