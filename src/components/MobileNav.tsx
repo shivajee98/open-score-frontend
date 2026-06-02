@@ -94,37 +94,38 @@ export default function MobileNav() {
     const isProfile = pathname === '/customer/profile';
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-200 p-1.5 md:hidden z-50 flex justify-around items-center pb-safe ring-1 ring-slate-900/5 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-            <Link href="/customer" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${isHome ? activeClass : 'text-slate-400 hover:text-slate-600'}`}>
-                <LayoutDashboard size={20} className={isHome ? 'scale-110' : ''} strokeWidth={isHome ? 3 : 2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
+        <div className="fixed bottom-0 left-0 right-0 bg-[#0f1113] border-t border-white/10 md:hidden z-50 flex justify-around items-center pb-safe ring-1 ring-black/5 shadow-[0_-8px_30px_rgba(0,0,0,0.5)] h-[70px] px-2 rounded-t-3xl">
+            <Link href="/customer" prefetch={false} className={`flex flex-col items-center gap-1 p-1 min-w-[48px] rounded-xl transition-all duration-300 ${isHome ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
+                <LayoutDashboard size={20} className={isHome ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} strokeWidth={isHome ? 2.5 : 2} />
+                <span className="text-[9px] font-medium tracking-wide">Home</span>
             </Link>
 
-            <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isLoans ? activeClass : 'text-slate-400'}`}>
-                <Zap size={20} className={isLoans ? 'scale-110' : ''} strokeWidth={3} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Loans</span>
+            <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 p-1 min-w-[48px] rounded-xl transition-all duration-300 ${isLoans ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
+                <Zap size={20} className={isLoans ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} strokeWidth={isLoans ? 2.5 : 2} />
+                <span className="text-[9px] font-medium tracking-wide">Loans</span>
             </Link>
 
-            <Link href="/customer/qr" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isQR ? activeClass : 'text-slate-400'}`}>
-                <QrCode size={20} className={isQR ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">My QR</span>
+            <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 p-1 min-w-[48px] rounded-xl transition-all duration-300 ${isHistory ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
+                <History size={20} className={isHistory ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} strokeWidth={isHistory ? 2.5 : 2} />
+                <span className="text-[9px] font-medium tracking-wide">History</span>
             </Link>
 
-            <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isCredOut ? activeClass : 'text-slate-400'}`}>
-                <Landmark size={20} className={isCredOut ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Cred-Out</span>
+            {/* Center Floating Button */}
+            <div className="relative -top-6 flex flex-col items-center">
+                <Link href="/customer/qr" prefetch={false} className="bg-indigo-600 rounded-full w-14 h-14 flex items-center justify-center shadow-[0_8px_20px_rgba(79,70,229,0.4)] border-[3px] border-[#0f1113] transform hover:scale-105 active:scale-95 transition-all text-white">
+                    <QrCode size={24} strokeWidth={2.5} />
+                </Link>
+                <span className="text-[9px] font-medium tracking-wide text-slate-400 mt-1">My QR</span>
+            </div>
+
+            <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 p-1 min-w-[48px] rounded-xl transition-all duration-300 ${isCredOut ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
+                <Landmark size={20} className={isCredOut ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} strokeWidth={isCredOut ? 2.5 : 2} />
+                <span className="text-[9px] font-medium tracking-wide">Cred-Out</span>
             </Link>
 
-
-
-            <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isProfile ? activeClass : 'text-slate-400'}`}>
-                <User size={20} className={isProfile ? 'scale-110' : ''} strokeWidth={isProfile ? 3 : 2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Profile</span>
-            </Link>
-
-            <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isHistory ? activeClass : 'text-slate-400'}`}>
-                <History size={20} className={isHistory ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">{isMerchant ? 'History' : 'History'}</span>
+            <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1 min-w-[48px] rounded-xl transition-all duration-300 ${isProfile ? 'text-indigo-400' : 'text-slate-500 hover:text-slate-300'}`}>
+                <User size={20} className={isProfile ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} strokeWidth={isProfile ? 2.5 : 2} />
+                <span className="text-[9px] font-medium tracking-wide">Profile</span>
             </Link>
         </div>
     );

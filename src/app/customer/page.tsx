@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import { apiFetch, clearAuthState } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 import { useStore } from '@/store/useStore';
-import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare, ArrowDownToLine, ArrowUpFromLine, X, Clock, Upload, Phone, Mail, AlertTriangle } from 'lucide-react';
+import { Wallet, Smartphone, Landmark, ScanBarcode, Send, History, Zap, CreditCard, ShieldCheck, QrCode, Flame, Droplets, Wifi, LayoutGrid, Tv, TrendingUp, Lock, Check, CheckCircle2, ArrowRight, ChevronLeft, ChevronRight, Bell, Headphones, Eye, EyeOff, RefreshCw, Gift, MapPin, Activity, User, Users, ReceiptIndianRupee, MessageSquare, ArrowDownToLine, ArrowUpFromLine, X, Clock, Upload, Phone, Mail, AlertTriangle, Search, Sun, Moon, BadgeCheck } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/components/ui/Toast';
 import { useRouter } from 'next/navigation';
 import MerchantClaimModal from '@/components/MerchantClaimModal';
 import SupportModal from '@/components/SupportModal';
+import VaultCard from '@/components/VaultCard';
 import HomeBannerCarousel from '@/components/HomeBannerCarousel';
 import { cn } from '@/lib/loanUtils';
 import WelcomeBonusPopup from '@/components/WelcomeBonusPopup';
@@ -123,6 +124,32 @@ export default function CustomerHome() {
     const [showSplashScreen, setShowSplashScreen] = useState(false);
     const [liveActiveCount, setLiveActiveCount] = useState<number>(145);
 
+    const [isDarkMode, setIsDarkMode] = useState(true);
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            setIsDarkMode(false);
+            document.documentElement.classList.remove('dark');
+        } else {
+            setIsDarkMode(true);
+            document.documentElement.classList.add('dark');
+        }
+    }, []);
+
+    const toggleTheme = () => {
+        setIsDarkMode(prev => {
+            const next = !prev;
+            if (next) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+            return next;
+        });
+    };
+
     useEffect(() => {
         const fetchLiveUsers = async () => {
             try {
@@ -194,28 +221,28 @@ export default function CustomerHome() {
 
     const baseBanners = [
         {
-            title: dynamicText,
-            sub: "First Users Only!",
-            color: "bg-gradient-to-br from-slate-900 to-blue-900",
-            accent: "bg-blue-600",
-            amount: "5,00,000",
-            label: "Limit Up to"
+            title: "Transfer & Get Daily Cashback",
+            sub: "Scan QR & Get Flat Upto ₹100",
+            color: "bg-gradient-to-br from-amber-400 to-amber-600",
+            accent: "bg-yellow-400",
+            amount: "GET NOW",
+            label: "Offer"
         },
         {
-            title: "Experience Premium",
-            sub: "Upgrade your Status",
-            color: "bg-gradient-to-br from-blue-950 to-indigo-950",
-            accent: "bg-purple-600",
-            amount: "Exclusive",
-            label: "Benefits"
+            title: "SET UP BANK ACCOUNT",
+            sub: "Start getting money transferred",
+            color: "bg-gradient-to-br from-indigo-500 to-indigo-700",
+            accent: "bg-indigo-400",
+            amount: "SET UP",
+            label: "Action"
         },
         {
-            title: "Secure Transactions",
-            sub: "Bank-Grade Security",
-            color: "bg-gradient-to-br from-slate-900 to-slate-950",
-            accent: "bg-emerald-600",
-            amount: "100% Safe",
-            label: "Safety"
+            title: "First User Advantage",
+            sub: "Enjoy 5L limit instantly",
+            color: "bg-gradient-to-br from-rose-500 to-rose-700",
+            accent: "bg-rose-400",
+            amount: "CLAIM",
+            label: "Offer"
         }
     ];
 
@@ -687,7 +714,7 @@ export default function CustomerHome() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-32">
+        <div className="min-h-screen bg-slate-50 dark:bg-[#000000] pb-32 transition-colors duration-300">
             {showSplashScreen ? (
                 <SplashScreen onClose={handleCloseSplash} />
             ) : (
@@ -845,112 +872,56 @@ export default function CustomerHome() {
                     <div className="absolute bottom-[20%] right-[10%] w-[1px] h-32 bg-gradient-to-b from-transparent via-cyan-400 to-transparent transform -rotate-12 animate-[pulse_4s_infinite]"></div>
                 </div>
 
-                <div className="flex justify-between items-start text-white mb-6 relative z-10">
-                    <div>
-                        <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-2">
-                                <p className={`${isMerchant ? 'text-emerald-50' : 'text-indigo-100'}/90 text-[7px] font-black uppercase tracking-[0.2em] opacity-80`}>Welcome Back</p>
-                                
-                                {/* Live Users Pill with Lightning flash effect */}
-                                <div className="flex items-center gap-1 bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full text-[7.5px] font-extrabold uppercase tracking-widest shrink-0 shadow-[0_0_15px_rgba(52,211,153,0.3)] lightning-animate relative overflow-hidden">
-                                    <span className="relative flex h-1 w-1">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-1 w-1 bg-emerald-500"></span>
-                                    </span>
-                                    <Zap size={8} className="text-emerald-400 fill-emerald-400 animate-pulse" />
-                                    <span>{liveActiveCount} LIVE</span>
-                                    <style>{`
-                                        @keyframes lightning-flash {
-                                            0%, 90%, 94%, 98%, 100% {
-                                                box-shadow: 0 0 8px rgba(52, 211, 153, 0.25), inset 0 0 4px rgba(52, 211, 153, 0.1);
-                                                border-color: rgba(52, 211, 153, 0.4);
-                                                background-color: rgba(16, 185, 129, 0.15);
-                                            }
-                                            92% {
-                                                box-shadow: 0 0 25px rgba(52, 211, 153, 0.9), 0 0 50px rgba(52, 211, 153, 0.6);
-                                                border-color: rgba(52, 211, 153, 1);
-                                                background-color: rgba(52, 211, 153, 0.4);
-                                                filter: brightness(1.5);
-                                            }
-                                            96% {
-                                                box-shadow: 0 0 30px rgba(52, 211, 153, 1), 0 0 60px rgba(52, 211, 153, 0.7);
-                                                border-color: rgba(255, 255, 255, 1);
-                                                background-color: rgba(52, 211, 153, 0.5);
-                                                filter: brightness(1.8);
-                                            }
-                                        }
-                                        .lightning-animate {
-                                            animation: lightning-flash 5s infinite;
-                                        }
-                                    `}</style>
-                                </div>
+                <div className="flex justify-between items-center text-white mb-6 relative z-10 w-full">
+                    {/* Left Section - Avatar, Name & Live Count */}
+                    <div className="flex items-center gap-3">
+                        <Link href="/customer/profile" prefetch={false} className="shrink-0">
+                            <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-[22px] shadow-[0_0_15px_rgba(79,70,229,0.4)] active:scale-90 transition-transform cursor-pointer text-white overflow-hidden relative border border-indigo-400/20">
+                                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-indigo-400 opacity-50"></div>
+                                <span className="relative z-10">{activeUser?.name?.[0] || 'U'}</span>
                             </div>
-                            
-                            <h1 className="text-base xs:text-lg font-black tracking-tighter drop-shadow-sm uppercase line-clamp-2 leading-tight max-w-[190px] xs:max-w-[230px] break-words">
-                                {isMerchant ? (activeUser?.business_name || 'MY STORE') : (activeUser?.name || 'CUSTOMER')}
-                            </h1>
+                        </Link>
+                        <div className="flex flex-col">
+                            <span className="text-white/90 text-[11px] font-medium tracking-wide">Welcome back,</span>
+                            <div className="flex items-center gap-1.5 -mt-0.5">
+                                <h1 className="text-white text-base font-bold uppercase tracking-wide leading-tight max-w-[120px] truncate">
+                                    {isMerchant ? (activeUser?.business_name || 'MY STORE') : (activeUser?.name || 'CUSTOMER')}
+                                </h1>
+                                <BadgeCheck size={16} className="text-blue-500 fill-white" />
+                            </div>
                         </div>
-                        {isMerchant && (
-                            <div className="flex items-center gap-2 mt-1">
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)] animate-pulse">
-                                    <Gift size={10} strokeWidth={3} />
-                                    <span className="text-[9px] font-black uppercase tracking-wider">Incremental Value</span>
-                                </div>
-                                <span className="text-sm font-black text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
-                                    {showBalance ? Number(activeWallet?.cashback_balance || 0).toLocaleString() : '••••••'}
-                                </span>
-                            </div>
-                        )}
+                        
+                        {/* Live Users Pill */}
+                        <div className="ml-1 flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-500/30 px-2 py-1 rounded-md shadow-[0_0_10px_rgba(52,211,153,0.15)] relative overflow-hidden shrink-0">
+                            <TrendingUp size={12} className="text-emerald-400" />
+                            <span className="text-emerald-400 text-[10px] font-bold tracking-wider">{liveActiveCount} LIVE</span>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-1.5">
-                            <Link href="/customer/notifications" prefetch={false}>
-                                <button className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 relative">
-                                    <Bell size={12} strokeWidth={2.5} />
-                                    <span className="absolute top-1.5 right-1.5 w-1 h-1 bg-rose-500 rounded-full border border-slate-900 animate-pulse"></span>
-                                </button>
-                            </Link>
-                            <Link href="/customer/profile" prefetch={false}>
-                                <div className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center font-black text-[10px] shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20 overflow-hidden">
-                                    {activeUser?.name?.[0] || 'U'}
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            {/* Add Money Button */}
-                            <Link href="/customer/add-money" prefetch={false}>
-                                <button
-                                    className="w-7 h-7 rounded-lg bg-emerald-500 border border-emerald-400 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-emerald-600 font-black"
-                                    title="Add Money"
-                                >
-                                    <div className="relative">
-                                        <Wallet size={12} strokeWidth={2.5} />
-                                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full w-3 h-3 flex items-center justify-center border border-emerald-500">
-                                            <span className="text-emerald-500 text-[8px] font-black leading-none">+</span>
-                                        </div>
-                                    </div>
-                                </button>
-                            </Link>
-                            {!activeUser?.sub_user_id && (
-                                <Link href="/customer/referral" prefetch={false}>
-                                    <button
-                                        className="w-6 h-6 rounded-lg bg-amber-400 border border-amber-300 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-slate-900 hover:bg-amber-500"
-                                        title="Refer & Earn"
-                                    >
-                                        <Gift size={12} strokeWidth={2.5} />
-                                    </button>
-                                </Link>
-                            )}
-                            <Link href="/customer/support" prefetch={false}>
-                                <button
-                                    className="w-6 h-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer text-white hover:bg-white/20"
-                                    title="Help & Support"
-                                >
-                                    <Headphones size={12} strokeWidth={2.5} />
-                                </button>
-                            </Link>
-                        </div>
+                    {/* Right Section - Action Buttons */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        <button onClick={toggleTheme} className="w-9 h-9 rounded-[14px] bg-slate-800/80 backdrop-blur-md border border-white/5 flex items-center justify-center shadow-lg active:scale-90 transition-transform cursor-pointer text-white/90 hover:bg-slate-700 hover:text-white" title="Toggle Theme">
+                            {isDarkMode ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
+                        </button>
+                        <button className="w-9 h-9 rounded-[14px] bg-slate-800/80 backdrop-blur-md border border-white/5 flex items-center justify-center shadow-lg active:scale-90 transition-transform cursor-pointer text-white/90 hover:bg-slate-700 hover:text-white hidden xs:flex">
+                            <Search size={16} strokeWidth={2} />
+                        </button>
+                        <Link href="/customer/notifications" prefetch={false}>
+                            <button className="w-9 h-9 rounded-[14px] bg-slate-800/80 backdrop-blur-md border border-white/5 flex items-center justify-center shadow-lg active:scale-90 transition-transform cursor-pointer text-white/90 hover:bg-slate-700 hover:text-white relative">
+                                <Bell size={16} strokeWidth={2} />
+                                <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border-[1.5px] border-slate-900"></span>
+                            </button>
+                        </Link>
+                        <Link href="/customer/pay?scan=true" prefetch={false}>
+                            <button className="w-9 h-9 rounded-[14px] bg-slate-800/80 backdrop-blur-md border border-white/5 flex items-center justify-center shadow-lg active:scale-90 transition-transform cursor-pointer text-white/90 hover:bg-slate-700 hover:text-white">
+                                <ScanBarcode size={16} strokeWidth={2} />
+                            </button>
+                        </Link>
+                        <Link href="/customer/support" prefetch={false}>
+                            <button className="w-9 h-9 rounded-[14px] bg-slate-800/80 backdrop-blur-md border border-white/5 flex items-center justify-center shadow-lg active:scale-90 transition-transform cursor-pointer text-white/90 hover:bg-slate-700 hover:text-white">
+                                <Headphones size={16} strokeWidth={2} />
+                            </button>
+                        </Link>
                     </div>
                 </div>
 
@@ -1087,223 +1058,19 @@ export default function CustomerHome() {
                                     <X size={16} />
                                 </button>
 
-                                <div className={`relative w-full h-full transition-transform duration-[800ms] preserve-3d ease-[cubic-bezier(0.23,1,0.32,1)] ${isVaultFlipped ? 'rotate-y-180' : ''}`}>
-
-                                    {/* FRONT SIDE - Premium Metal */}
-                                    <div className="absolute inset-0 backface-hidden">
-                                        <div className="bg-[#0f1113] rounded-xl px-5 py-4 text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col justify-between group">
-                                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-                                                <div className="absolute inset-0 bg-gradient-to-tr from-black via-[#1a1d21] to-[#2a2d33]" />
-                                                <div className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
-                                                    style={{ backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.1) 1px, rgba(255,255,255,0.1) 2px)` }}>
-                                                </div>
-                                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                                                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }}>
-                                                </div>
-                                                <div className="absolute -right-16 -bottom-16 w-48 h-48 rounded-full border-[12px] border-[#c5a059]/10 flex items-center justify-center">
-                                                    <div className="w-32 h-32 rounded-full border-[1px] border-[#c5a059]/5" />
-                                                </div>
-                                            </div>
-
-                                            <div className="relative z-10 flex flex-col h-full justify-between">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex flex-col gap-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[11px] font-black tracking-[0.1em] text-[#c5a059] uppercase leading-none">Open Score</span>
-                                                                <span className="text-[5px] font-bold text-[#c5a059]/60 uppercase tracking-widest mt-0.5">Smart Value</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                                        <button
-                                                            onClick={() => router.push('/customer/payout?deposit=true')}
-                                                            className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
-                                                        >
-                                                            <ArrowDownToLine size={10} className="text-[#c5a059]" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => router.push('/customer/payout?withdraw=true')}
-                                                            className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 transition-colors shadow-inner"
-                                                        >
-                                                            <ArrowUpFromLine size={10} className="text-[#c5a059]" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center justify-between mt-0.5">
-                                                    {/* Gold Chip */}
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-7 bg-gradient-to-br from-[#e6c07b] via-[#c5a059] to-[#8e6e36] rounded-md shadow-inner relative overflow-hidden border border-[#8e6e36]/30">
-                                                            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 opacity-30">
-                                                                {[...Array(9)].map((_, i) => <div key={i} className="border-[0.5px] border-black/20" />)}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex gap-[2px]">
-                                                            <div className="w-[1px] h-3 bg-[#c5a059]/40" />
-                                                            <div className="w-[1px] h-3 bg-[#c5a059]/30" />
-                                                            <div className="w-[1px] h-3 bg-[#c5a059]/20" />
-                                                        </div>
-                                                    </div>
-                                                    {/* Locked In Amount */}
-                                                    {activeDeposit && (
-                                                        <div className="flex items-center gap-1.5 bg-[#c5a059]/10 border border-[#c5a059]/20 px-2 py-1 rounded-md shadow-sm shrink-0">
-                                                            <Lock size={9} className="text-[#c5a059]" />
-                                                            <span className="text-[10px] font-black tracking-tighter text-[#fef9f3] leading-none">
-                                                                {Number(activeDeposit.amount).toLocaleString('en-IN', { maximumFractionDigits: 1 })}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="mt-0.5 mb-1 flex items-end justify-between">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[7px] font-black uppercase tracking-widest text-[#c5a059]/80 mb-0.5">Available Value</span>
-                                                        <span className="text-xl font-black tracking-tighter text-[#fef9f3] leading-none">
-                                                            {parseFloat(vaultSetupData.vault.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-col text-right gap-1">
-                                                        {activeDeposit && (
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[7px] font-black uppercase tracking-widest text-emerald-400/80 mb-0.5">Daily</span>
-                                                                <span className="text-sm font-black tracking-tighter text-emerald-400 leading-none">
-                                                                    +{(() => {
-                                                                        const rate = Number(activeDeposit.interest_rate);
-                                                                        const amt = Number(activeDeposit.amount);
-                                                                        const daily = activeDeposit.rate_frequency === 'MONTHLY'
-                                                                            ? (amt * rate) / 100 / 30
-                                                                            : (amt * rate) / 100;
-                                                                        return daily.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-                                                                    })()}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Card Number */}
-                                                <div className="py-0.5 flex items-center justify-between w-full gap-2" onClick={(e) => e.stopPropagation()}>
-                                                    <p className={`font-mono text-sm sm:text-base tracking-[0.06em] sm:tracking-[0.1em] drop-shadow-sm font-medium leading-none ${vaultSetupData.vault.payment_verified === false ? 'text-[#fef9f3]/40' : 'text-[#fef9f3]'}`}>
-                                                        {showVaultCardNumber
-                                                            ? vaultSetupData.vault.card_number?.replace(/(.{4})/g, '$1 ').trim()
-                                                            : <>•••• •••• •••• {vaultSetupData.vault.card_number?.slice(-4)}</>}
-                                                    </p>
-                                                    {vaultSetupData.vault.payment_verified === false ? (
-                                                        <div className="flex items-center gap-1.5 shrink-0">
-                                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-md">
-                                                                <Lock size={8} className="text-amber-500" />
-                                                                <span className="text-[6px] font-black text-amber-500 uppercase tracking-widest">Verifying</span>
-                                                            </div>
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); setShowVaultCardNumber(!showVaultCardNumber); }}
-                                                                className="p-1 hover:bg-white/10 rounded-md transition-all"
-                                                            >
-                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/80'} />
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1.5 shrink-0">
-                                                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
-                                                                <CheckCircle2 size={8} className="text-emerald-400" />
-                                                                <span className="text-[6px] font-black text-emerald-400 uppercase tracking-widest">Verified</span>
-                                                            </div>
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); setShowVaultCardNumber(!showVaultCardNumber); }}
-                                                                className="p-1 hover:bg-white/10 rounded-md transition-all"
-                                                            >
-                                                                <Eye size={12} className={showVaultCardNumber ? 'text-amber-400' : 'text-[#c5a059]/80'} />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex items-end justify-between pt-0.5">
-                                                    <div className="flex flex-col gap-1 w-full">
-                                                        <div className="flex items-center gap-6">
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 leading-none">Valid Thru</span>
-                                                                <span className="text-[9px] font-mono text-[#fef9f3] mt-0.5 leading-none">
-                                                                    {showVaultCardNumber ? (vaultSetupData.vault.expiry_date || '12/29') : '••/••'}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 leading-none">Card Holder</span>
-                                                                <span className="text-[9px] font-black uppercase tracking-[0.05em] text-[#fef9f3]/90 mt-0.5 leading-none truncate max-w-[120px]">
-                                                                    {activeUser?.name || 'Rahul Kumar'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-[5px] font-black text-[#c5a059] uppercase tracking-[0.1em] leading-none">0% Interest Credit</span>
-                                                    </div>
-
-                                                    <div className="text-right flex flex-col items-end shrink-0">
-                                                        <span className="text-[5px] font-bold uppercase tracking-widest text-[#c5a059]/60 block mb-0.5 leading-none">Powered By</span>
-                                                        <span className="text-[8px] font-black tracking-[0.1em] text-[#fef9f3] uppercase leading-none">Open Score</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* BACK SIDE - Yield Matrix */}
-                                    <div className="absolute inset-0 backface-hidden rotate-y-180">
-                                        <div className="bg-[#0f1113] rounded-xl text-white h-full relative overflow-hidden border-[#2a2d33] border-[0.5px] shadow-2xl flex flex-col group">
-                                            <div className="w-full h-8 bg-[#000] mt-4 shadow-inner" />
-
-                                            <div className="px-5 py-4 flex-1 flex flex-col">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div className="space-y-1">
-                                                        <div className="w-16 h-4 bg-white/5 rounded-sm border border-white/5 flex items-center justify-center">
-                                                            <span className="text-[5px] font-black text-white/30 uppercase tracking-widest italic">Authorized Signature</span>
-                                                        </div>
-                                                        <div className="w-28 h-7 bg-white/5 rounded flex items-center justify-between px-2 border border-white/10">
-                                                            <div className="flex flex-col items-start">
-                                                                <span className="text-[4px] font-bold text-[#c5a059] uppercase leading-none mb-0.5">CVV / Secure</span>
-                                                                <span className="text-[10px] font-mono text-[#f9e37a] tracking-widest leading-none mt-0.5">
-                                                                    {showVaultCvc ? (vaultSetupData.vault.cvc || '•••') : '•••'}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1">
-                                                                {vaultSetupData.vault.payment_verified === false && (
-                                                                    <Lock size={8} className="text-amber-500/50 shrink-0" />
-                                                                )}
-                                                                <button onClick={(e) => { e.stopPropagation(); setShowVaultCvc(!showVaultCvc); }} className="p-1 hover:bg-white/10 rounded-md transition-colors shrink-0">
-                                                                    <Eye size={12} className={showVaultCvc ? 'text-amber-400' : 'text-white/30'} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className="text-[7px] font-black tracking-[0.2em] text-[#c5a059] uppercase leading-none">Vault Matrix</span>
-                                                        <div className="flex items-center gap-1 opacity-20 justify-end mt-1">
-                                                            <Lock size={8} />
-                                                            <span className="text-[5px] font-black uppercase tracking-widest">Encrypted</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-1.5 flex-1 overflow-y-auto scrollbar-hide py-1" onClick={(e) => e.stopPropagation()}>
-                                                    {vaultSetupData.rates?.slice(0, 4).map((r: any) => (
-                                                        <div key={r.id} className="bg-white/[0.03] border border-white/[0.04] px-2 py-1.5 rounded-md flex flex-col hover:bg-white/[0.07] transition-all">
-                                                            <span className="text-[5px] font-black text-white/40 uppercase tracking-widest">{r.tenure_days} Days</span>
-                                                            <span className="text-[10px] font-black text-[#c5a059] leading-none">{r.interest_rate}%</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-                                                <div className="mt-1 flex items-center justify-between border-t border-white/[0.03] pt-2">
-                                                    <div className="flex gap-[1px] h-2 items-end opacity-10">
-                                                        {[1, 3, 1, 5, 2, 4, 1, 6, 2].map((w, i) => (
-                                                            <div key={i} className="bg-white" style={{ width: `${w}px`, height: '100%' }} />
-                                                        ))}
-                                                    </div>
-                                                    <span className="text-[6px] font-serif italic text-white/10 uppercase tracking-widest">Secured by Open Score</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <VaultCard
+                                    vault={vaultSetupData.vault}
+                                    rates={vaultSetupData.rates}
+                                    activeDeposit={activeDeposit}
+                                    userName={activeUser?.name}
+                                    isFlipped={isVaultFlipped}
+                                    setIsFlipped={setIsVaultFlipped}
+                                    isMaximized={false}
+                                    showCardNumber={showVaultCardNumber}
+                                    setShowCardNumber={setShowVaultCardNumber}
+                                    showCvc={showVaultCvc}
+                                    setShowCvc={setShowVaultCvc}
+                                />
                             </div>
                         </div>
                     </div>
@@ -1356,38 +1123,24 @@ export default function CustomerHome() {
             )}
 
             {/* Quick Actions - Floating Card */}
-            <div className="px-6 -mt-8 relative z-20 mb-3">
-                <div className="bg-white py-1 px-1 rounded-xl shadow-xl shadow-slate-200/50 border border-slate-50">
-                    <div className={`grid ${hasActiveLoan ? 'grid-cols-4' : 'grid-cols-3'} gap-1`}>
+            <div className="px-4 -mt-8 relative z-20 mb-3">
+                <div className="bg-[#0f1113] py-4 px-2 rounded-[2rem] shadow-2xl border border-white/5">
+                    <div className="flex justify-between items-center px-1">
                         {[
-                            { label: 'Scan QR', icon: <ScanBarcode size={20} strokeWidth={2.5} />, href: '/customer/pay?scan=true', color: 'bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-rose-200', show: true },
-                            { label: 'Pay ID', icon: <Send size={20} strokeWidth={2.5} />, href: '/customer/pay', color: 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-indigo-200', show: true },
-                            {
-                                label: 'Inbox',
-                                icon: (
-                                    <div className="relative">
-                                        <MessageSquare size={20} strokeWidth={2.5} />
-                                        {unreadAdminMessages.length > 0 && (
-                                            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full animate-bounce" />
-                                        )}
-                                    </div>
-                                ),
-                                href: '#',
-                                color: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-purple-200',
-                                show: allAdminMessages.length > 0,
-                                onClick: () => setShowAdminMessageHistory(true)
-                            },
-                            { label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, href: '/customer/qr', color: 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-amber-200', show: true },
-                            { label: 'Repay', icon: <CreditCard size={20} strokeWidth={2.5} />, href: `/customer/loan/status/repayment?id=${activeLoan?.id}`, color: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-200', show: hasActiveLoan },
-                        ].filter(item => item.show).map((item, i) => {
+                            { label: 'Scan QR', icon: <ScanBarcode size={24} strokeWidth={2} />, href: '/customer/pay?scan=true', color: 'text-indigo-400 bg-indigo-500/10' },
+                            { label: 'Pay ID', icon: <Send size={24} strokeWidth={2} />, href: '/customer/pay', color: 'text-blue-400 bg-blue-500/10' },
+                            { label: 'Send Money', icon: <RefreshCw size={24} strokeWidth={2} />, href: '/customer/pay', color: 'text-emerald-400 bg-emerald-500/10' },
+                            { label: 'Show QR', icon: <QrCode size={24} strokeWidth={2} />, href: '/customer/qr', color: 'text-amber-400 bg-amber-500/10' },
+                            { label: 'Rewards', icon: <Gift size={24} strokeWidth={2} />, href: '/customer/rewards', color: 'text-rose-400 bg-rose-500/10' },
+                        ].map((item, i) => {
                             const isDisabled = false;
 
                             return (
                                 <div
                                     key={i}
                                     className={cn(
-                                        "flex flex-col items-center gap-1 transition-all active:scale-95",
-                                        isDisabled ? "opacity-50 grayscale cursor-not-allowed" : "cursor-pointer"
+                                        "flex flex-col items-center gap-2 transition-all active:scale-95 w-[20%]",
+                                        isDisabled ? "opacity-50 grayscale cursor-not-allowed" : "cursor-pointer group"
                                     )}
                                     onClick={() => {
                                         if (isDisabled) {
@@ -1400,15 +1153,15 @@ export default function CustomerHome() {
                                     <Link
                                         href={isDisabled ? '#' : item.href}
                                         prefetch={false}
-                                        className={cn("contents", isDisabled && "pointer-events-none")}
+                                        className={cn("flex flex-col items-center gap-2", isDisabled && "pointer-events-none")}
                                     >
                                         <div className={cn(
-                                            `w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-sm border border-white/20 mb-1`,
-                                            isDisabled && "bg-slate-400 text-slate-100 shadow-none border-none"
+                                            `w-14 h-14 rounded-2xl ${item.color} flex items-center justify-center shadow-inner group-hover:bg-white/10 transition-colors`,
+                                            isDisabled && "bg-slate-800 text-slate-500"
                                         )}>
                                             {item.icon}
                                         </div>
-                                        <span className="text-[8px] font-black text-slate-700 uppercase tracking-[0.1em] text-center">{item.label}</span>
+                                        <span className="text-[10px] font-medium text-slate-300 text-center leading-tight whitespace-nowrap">{item.label}</span>
                                     </Link>
                                 </div>
                             );
@@ -1560,26 +1313,7 @@ export default function CustomerHome() {
                 />
             )}
 
-            {/* Marketing Banner - Get Needs Done */}
-            <div className="px-1 mb-1">
-                <div onClick={() => router.push('/customer/pay?scan=true')} className="cursor-pointer group">
-                    <div className="bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 p-0.5 rounded-2xl shadow-xl shadow-amber-500/20 active:scale-[0.98] transition-transform">
-                        <div className="bg-slate-900 rounded-[0.9rem] px-4 py-1 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-2xl -mr-16 -mt-16 animate-pulse"></div>
-                            <div className="flex items-center justify-between relative z-10">
-                                <div className="flex-1">
-                                    <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-100 font-black text-sm leading-tight tracking-tight mb-1">
-                                        Transfer and Get Daily Essential
-                                    </h3>
-                                </div>
-                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-300 to-yellow-600 flex items-center justify-center text-slate-900 shadow-lg group-hover:scale-110 transition-transform">
-                                    <ScanBarcode size={16} strokeWidth={2.5} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {/* Marketing Banner Removed - Now in Carousel */}
 
             {/* Tie User OTP Alert */}
             {
@@ -1779,64 +1513,78 @@ export default function CustomerHome() {
 
 
 
-            {/* Recharge & Bills Section */}
-            <div className="px-4 mb-24">
-                <div className="flex justify-between items-center mb-6 px-2">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center">
-                        Recharge & Bills
-                        <span className="ml-3 text-[7px] font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md animate-pulse border border-rose-100 shadow-sm tracking-widest">Coming Soon</span>
-                    </h3>
-                    <div className="w-8 h-1 bg-slate-100 rounded-full"></div>
+            {/* Marketplace Section */}
+            <div className="px-4 mb-6">
+                <div className="flex justify-between items-center mb-4 px-1">
+                    <h3 className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight">Marketplace</h3>
+                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 cursor-pointer">
+                        View All <ChevronRight size={12} />
+                    </span>
                 </div>
-                <div className="grid grid-cols-4 gap-y-6 gap-x-4">
+                <div className="bg-gradient-to-br from-slate-100 to-slate-50 dark:from-[#0f1113] dark:to-[#16181d] rounded-2xl p-8 border border-slate-200 dark:border-white/5 flex flex-col items-center justify-center min-h-[140px] shadow-sm">
+                    <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-500/10 rounded-full flex items-center justify-center mb-3 shadow-inner">
+                        <Zap className="text-indigo-600 dark:text-indigo-400" size={24} />
+                    </div>
+                    <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Coming Soon</h4>
+                    <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1 text-center">Exclusive shopping deals unlocking shortly</p>
+                </div>
+            </div>
+
+            {/* More Ways to Earn Section */}
+            <div className="px-4 mb-6">
+                <div className="flex justify-between items-center mb-4 px-1">
+                    <h3 className="text-[13px] font-black text-slate-900 dark:text-white tracking-tight">More Ways to Earn</h3>
+                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 cursor-pointer">
+                        View All <ChevronRight size={12} />
+                    </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                        { label: 'Electricity', icon: <Zap size={18} className="text-amber-500 fill-amber-500 animate-pulse" /> },
-                        { label: 'Mobile', icon: <Smartphone size={18} className="text-blue-500 animate-[bounce_2s_infinite]" /> },
-                        { label: 'DTH', icon: <Tv size={18} className="text-slate-900" /> },
-                        { label: 'Water', icon: <Droplets size={18} className="text-blue-500 animate-bounce delay-100" /> },
-                        { label: 'Gas', icon: <Flame size={18} className="text-orange-500 fill-orange-500 animate-pulse" /> },
-                        { label: 'Broadband', icon: <Wifi size={18} className="text-purple-500 animate-pulse" /> },
-                        { label: 'Insurance', icon: <ShieldCheck size={18} className="text-emerald-500" /> },
-                        { label: 'More', icon: <LayoutGrid size={18} className="text-slate-500" /> },
+                        { title: 'Refer & Earn', sub: 'Earn upto', amount: '₹500', icon: <Gift size={22} className="text-indigo-500" />, bg: 'bg-indigo-50 dark:bg-indigo-500/5', border: 'border-indigo-100 dark:border-indigo-500/10' },
+                        { title: 'Pay Bills', sub: 'Get upto', amount: '₹50', icon: <ReceiptIndianRupee size={22} className="text-blue-500" />, bg: 'bg-blue-50 dark:bg-blue-500/5', border: 'border-blue-100 dark:border-blue-500/10' },
+                        { title: 'Recharge', sub: 'Get upto', amount: '₹30', icon: <Zap size={22} className="text-amber-500" />, bg: 'bg-amber-50 dark:bg-amber-500/5', border: 'border-amber-100 dark:border-amber-500/10' },
+                        { title: 'Scan & Pay', sub: 'Get upto', amount: '₹20', icon: <QrCode size={22} className="text-emerald-500" />, bg: 'bg-emerald-50 dark:bg-emerald-500/5', border: 'border-emerald-100 dark:border-emerald-500/10' },
                     ].map((item, i) => (
-                        <div key={i} className="flex flex-col items-center gap-1.5 group cursor-pointer active:scale-95 transition-all">
-                            <div className="w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm relative overflow-hidden transition-all group-hover:shadow-md group-hover:-translate-y-1">
-                                {item.icon}
-                                <div className="absolute inset-0 bg-slate-50/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div key={i} className={`rounded-[1.2rem] p-3 border ${item.border} ${item.bg} flex flex-col justify-between relative overflow-hidden group cursor-pointer shadow-sm active:scale-95 transition-transform h-[85px]`}>
+                            <div className="flex justify-between items-start z-10 w-full">
+                                <div>
+                                    <h4 className="text-[10px] font-black text-slate-900 dark:text-white tracking-tight">{item.title}</h4>
+                                    <p className="text-[8px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">{item.sub}</p>
+                                </div>
+                                <div className="group-hover:scale-110 transition-transform">
+                                    {item.icon}
+                                </div>
                             </div>
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center leading-tight">{item.label}</span>
+                            <div className="relative z-10 mt-auto">
+                                <p className="text-[13px] font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">{item.amount}</p>
+                            </div>
+                            {/* Decorative background circle */}
+                            <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-white dark:bg-white/5 rounded-full blur-xl opacity-80 pointer-events-none"></div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Financial Services Section */}
+            {/* Super Saver Zone Section */}
             <div className="px-4 mb-24">
-                <div className="flex justify-between items-center mb-6 px-2">
-                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Financial Services</h3>
-                    <div className="w-8 h-1 bg-slate-100 rounded-full"></div>
-                </div>
-                <div className="grid grid-cols-1 gap-3">
-                    {[
-                        { title: 'Digital Gold', sub: 'Secure & Instant Savings', icon: <Landmark size={24} className="text-amber-500" /> },
-                        { title: 'Mutual Funds', sub: 'Wealth Management', icon: <TrendingUp size={24} className="text-emerald-500" /> },
-                        { title: 'Shakti Credit Card', sub: 'Powering Your Purchases', icon: <CreditCard size={24} className="text-blue-500" /> },
-                        { title: 'EMI Card', sub: 'Easy Installments', icon: <CreditCard size={24} className="text-indigo-500" /> },
-                        { title: 'Medical Card', sub: 'Healthcare Support', icon: <Activity size={24} className="text-rose-500" /> },
-                    ].map((item, i) => (
-                        <div key={i} className="bg-white rounded-2xl p-4 border border-slate-50 shadow-xl shadow-slate-900/5 flex items-center justify-between group cursor-pointer active:scale-[0.99] transition-all">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                    {item.icon}
-                                </div>
-                                <div>
-                                    <h4 className="font-black text-slate-900 text-sm tracking-tight">{item.title}</h4>
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{item.sub}</p>
-                                </div>
-                            </div>
-                            <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">Coming Soon</span>
+                <div className="bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-[#2e1065]/40 dark:to-[#312e81]/40 rounded-2xl p-5 border border-purple-200 dark:border-purple-500/20 flex items-center justify-between relative overflow-hidden shadow-sm">
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-1/2 w-24 h-24 bg-indigo-400/20 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div className="relative z-10 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-[14px] font-black text-slate-900 dark:text-white tracking-tight">Super Saver Zone</h3>
+                            <span className="bg-rose-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest animate-pulse shadow-sm">HOT</span>
                         </div>
-                    ))}
+                        <p className="text-[10px] font-bold text-purple-700 dark:text-purple-300 tracking-tight">Exclusive Offers & Extra Cashback</p>
+                    </div>
+
+                    <div className="relative z-10">
+                        <button className="bg-white/80 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 backdrop-blur-md px-4 py-2.5 rounded-xl text-[10px] font-black text-purple-700 dark:text-purple-300 uppercase tracking-widest border border-purple-200 dark:border-white/10 transition-colors flex items-center gap-1.5 shadow-sm active:scale-95">
+                            Coming Soon
+                        </button>
+                    </div>
                 </div>
             </div>
 

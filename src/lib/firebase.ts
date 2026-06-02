@@ -8,7 +8,7 @@ const firebaseConfig = {
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'open-score-3f0da',
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'open-score-3f0da.firebasestorage.app',
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '190101745853',
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:190101745853:web:dummy1234567890',
 };
 
 // Initialize Firebase (singleton)
