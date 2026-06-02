@@ -98,7 +98,7 @@ export default function InAppNotificationAlert() {
 
                     {/* Message Body */}
                     <div className="w-full max-h-48 overflow-y-auto px-1 py-1.5 scrollbar-thin text-slate-600 text-sm leading-relaxed mb-6 font-medium">
-                        {currentNotification.message}
+                        {currentNotification.body}
                     </div>
 
                     {/* Footer Actions */}
