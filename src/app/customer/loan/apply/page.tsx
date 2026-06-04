@@ -623,7 +623,7 @@ export default function LoanApplication() {
                                         );
                                     })()}
                                     <div className="flex justify-between text-xs pt-1 border-t border-dashed border-slate-100">
-                                        <span className="text-slate-500 font-medium">Interest</span>
+                                        <span className="text-slate-500 font-medium">Service Charge</span>
                                         <span className="text-slate-800 font-bold">
                                             {selectedFrequency && selectedTenureConfig.interest_rates?.[selectedFrequency]
                                                 ? selectedTenureConfig.interest_rates[selectedFrequency]

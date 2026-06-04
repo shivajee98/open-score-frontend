@@ -207,10 +207,18 @@ export default function PayoutPage() {
     const upiId = process.env.NEXT_PUBLIC_UPI_ID || "flipflops@upi";
 
     const handleAddMoney = async () => {
-        if (!addMoneyAmount || isNaN(Number(addMoneyAmount)) || Number(addMoneyAmount) <= 0) {
+        const amt = Number(addMoneyAmount);
+        if (!addMoneyAmount || isNaN(amt) || amt <= 0) {
             toast.error('Enter a valid amount');
             return;
         }
+
+        // Enforce predefined constraint or custom >= 5000
+        if (amt < 5000 && ![1000, 2000, 3000, 4000].includes(amt)) {
+            toast.error('Custom amounts must be ₹5,000 or above.');
+            return;
+        }
+
         if (!addMoneySource) {
             toast.error('Select payment source');
             return;
@@ -409,7 +417,7 @@ export default function PayoutPage() {
                         growth_plan_id: planDetails.id
                     }),
                 });
-                toast.success(`Success! ${planDetails.title} activated with ₹${growthPlanAmount.toLocaleString('en-IN')}`);
+                toast.success(`Success! ${planDetails.title} activated with ${growthPlanAmount.toLocaleString('en-IN')}`);
                 setIsSettlementTenureOpen(false);
                 setGrowthPlanStep(1);
                 mutateWallet();
@@ -533,10 +541,7 @@ export default function PayoutPage() {
             return;
         }
 
-        if (vaultData?.vault) {
-            setIsSourceSelectionModalOpen(true);
-            return;
-        }
+        // Vault withdrawal is now handled directly via the Vault Card component.
 
         proceedWithWalletPayout();
     };
@@ -575,6 +580,38 @@ export default function PayoutPage() {
 
         // If no confirmation needed, proceed
         executeWithdrawal();
+    };
+
+    const handleVaultWithdrawToWallet = async () => {
+        const amtStr = window.prompt(`Enter amount to withdraw from Vault to Wallet (Max: ${vaultData?.vault?.balance || 0}):`);
+        if (!amtStr) return;
+        
+        const amt = parseFloat(amtStr);
+        if (isNaN(amt) || amt <= 0) {
+            toast.error("Invalid amount");
+            return;
+        }
+
+        if (amt > (vaultData?.vault?.balance || 0)) {
+            toast.error("Insufficient vault balance");
+            return;
+        }
+
+        setIsProcessing(true);
+        try {
+            await apiFetch('/vault/withdraw-to-wallet', {
+                method: 'POST',
+                body: JSON.stringify({ amount: amt }),
+            });
+            toast.success(`Successfully withdrawn ${amt} to Wallet`);
+            mutateWallet();
+            fetchVault();
+            fetchVaultLogs();
+        } catch (e: any) {
+            toast.error(e.message || 'Vault withdrawal failed');
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const executeVaultWithdrawal = async () => {
@@ -904,6 +941,8 @@ export default function PayoutPage() {
                                                     setShowCardNumber={setShowVaultCardNumber}
                                                     showCvc={showVaultCvc}
                                                     setShowCvc={setShowVaultCvc}
+                                                    onAddMoneyClick={() => setIsAddMoneyModalOpen(true)}
+                                                    onWithdrawClick={handleVaultWithdrawToWallet}
                                                 />
 
                                                 {/* Hint Overlay / Close action when maximized */}
@@ -934,11 +973,11 @@ export default function PayoutPage() {
                                                     return (
                                                         <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-9 h-9 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600">
+                                                                <div className="w-7 h-7 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600">
                                                                     <Lock size={16} strokeWidth={2.5} className="animate-pulse" />
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Settlement Locked</p>
+                                                                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Incremental Value</p>
                                                                     <p className="text-[8px] font-bold text-slate-500 mt-0.5">T{activeDeposit.tenure_days} Plan Active</p>
                                                                 </div>
                                                             </div>
@@ -951,7 +990,7 @@ export default function PayoutPage() {
                                                                             return daily.toLocaleString('en-IN', { maximumFractionDigits: 2 });
                                                                         })()}
                                                                     </p>
-                                                                    <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daily Reward</p>
+                                                                    <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daily Increment Flat</p>
                                                                 </div>
                                                         </div>
                                                     );
@@ -980,7 +1019,7 @@ export default function PayoutPage() {
                                     </>
                                 )}
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                     {/* Main Balance Card */}
                                     <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-900 via-teal-950 to-emerald-900' : 'from-slate-900 via-indigo-950 to-indigo-900'} rounded-2xl p-4 text-white shadow-lg shadow-slate-900/10 relative overflow-hidden group h-32 flex flex-col justify-between`}>
                                         <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
@@ -1026,7 +1065,6 @@ export default function PayoutPage() {
                                             <span className="text-[8px] font-black uppercase tracking-[0.2em]">Incremental</span>
                                         </div>
                                         <div className="mb-1">
-                                            <span className="text-sm opacity-40 font-black mr-1"></span>
                                             <span className="text-2xl font-black tracking-tighter drop-shadow-md">
                                                 {cashbackBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                             </span>
@@ -1044,6 +1082,28 @@ export default function PayoutPage() {
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* Locked Vault Balance Card */}
+                                    {vaultData?.vault && (
+                                        <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-2xl p-4 text-white shadow-lg shadow-slate-900/20 relative overflow-hidden group h-32 flex flex-col justify-between col-span-2 lg:col-span-1 border border-slate-700/50">
+                                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
+                                            <div className="flex items-center gap-2 mb-1 opacity-60">
+                                                <Lock size={12} strokeWidth={3} />
+                                                <span className="text-[8px] font-black uppercase tracking-[0.2em]">Locked Growth</span>
+                                            </div>
+                                            <div className="mb-1">
+                                                <span className="text-sm opacity-40 font-black mr-1">₹</span>
+                                                <span className="text-2xl font-black tracking-tighter drop-shadow-md">
+                                                    {(vaultData?.vault?.locked_balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="bg-white/10 backdrop-blur-md rounded-lg py-1 px-2 border border-white/10 w-fit">
+                                                    <p className="text-[7px] font-black uppercase tracking-widest text-white/80 leading-tight">Vault Commitments</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
 
@@ -2239,6 +2299,210 @@ export default function PayoutPage() {
                                             </button>
                                         </div>
                                     )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Add Money Modal */}
+                {isAddMoneyModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                        <div className="bg-[#0b0f19] border border-white/10 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative text-white max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center mb-5">
+                                <div>
+                                    <h3 className="text-lg font-black tracking-tight uppercase italic">Top Up Vault</h3>
+                                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">Add funds to your reserve</p>
+                                </div>
+                                <button onClick={() => {
+                                    setIsAddMoneyModalOpen(false);
+                                    setAddMoneyAmount('');
+                                    setAddMoneySource(null);
+                                    setAddMoneyProof(null);
+                                }} className="p-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 transition-colors">
+                                    <X className="w-4 h-4 text-slate-300" />
+                                </button>
+                            </div>
+
+                            <div className="mb-6 space-y-3">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Amount to Add</label>
+                                
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[1000, 2000, 3000, 4000, 5000].map(val => (
+                                        <button
+                                            key={val}
+                                            onClick={() => setAddMoneyAmount(val.toString())}
+                                            className={`py-2 px-3 rounded-xl border text-[12px] font-black tracking-widest transition-all ${
+                                                addMoneyAmount === val.toString() 
+                                                ? 'border-purple-500 bg-purple-500/20 text-white' 
+                                                : 'border-white/10 hover:border-white/20 bg-white/5 text-slate-300'
+                                            }`}
+                                        >
+                                            ₹{val.toLocaleString('en-IN')}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="relative mt-2">
+                                    <input 
+                                        type="number" 
+                                        value={addMoneyAmount} 
+                                        onChange={(e) => {
+                                            setAddMoneyAmount(e.target.value);
+                                        }} 
+                                        placeholder="Enter custom amount (Min ₹5,000)"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-4 text-xl font-black text-white focus:border-purple-500 outline-none transition-all placeholder:text-white/20 placeholder:text-sm" 
+                                    />
+                                    {Number(addMoneyAmount) > 0 && Number(addMoneyAmount) < 5000 && ![1000, 2000, 3000, 4000].includes(Number(addMoneyAmount)) && (
+                                        <p className="text-red-400 text-[10px] font-bold mt-1 absolute -bottom-5">Custom amounts must be ₹5,000 or above.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {Number(addMoneyAmount) > 0 && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Select Payment Source</label>
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setAddMoneySource('WALLET')}
+                                            className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${addMoneySource === 'WALLET'
+                                                    ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                    : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                }`}
+                                        >
+                                            <div className="p-1.5 bg-white/5 border border-white/10 rounded-lg w-fit text-slate-300">
+                                                <Wallet className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">From Wallet</p>
+                                                <p className="text-[11px] font-black text-white mt-0.5">{balance.toLocaleString('en-IN')}</p>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setAddMoneySource('UPI')}
+                                            className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${addMoneySource === 'UPI'
+                                                    ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                    : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                }`}
+                                        >
+                                            <div className="p-1.5 bg-white/5 border border-white/10 rounded-lg w-fit text-slate-300">
+                                                <CreditCard className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">UPI Top Up</p>
+                                                <p className="text-[11px] font-black text-purple-400 mt-0.5 italic">Instant Transfer</p>
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    {addMoneySource === 'WALLET' && (
+                                        <div className="mt-4 animate-in fade-in duration-300">
+                                            {parseFloat(walletData?.wallet?.balance || 0) < Number(addMoneyAmount) ? (
+                                                <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl flex gap-3 text-left">
+                                                    <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Insufficient Balance</p>
+                                                        <p className="text-[9px] text-slate-400 font-semibold">
+                                                            You need <span className="text-white font-bold">{(Number(addMoneyAmount) - parseFloat(walletData?.wallet?.balance || 0)).toLocaleString('en-IN')}</span> more to add directly from your wallet. Please use UPI.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-2xl flex gap-3 text-left">
+                                                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">Available in Wallet</p>
+                                                        <p className="text-[9px] text-slate-400 font-semibold">
+                                                            Funds will be instantly transferred from your main wallet to your Vault Card.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {addMoneySource === 'UPI' && (
+                                        <div className="space-y-4 pt-4 border-t border-white/5 animate-in fade-in duration-300">
+                                            <div className="flex flex-col items-center">
+                                                <div className="p-3 bg-white rounded-2xl shadow-xl mb-3">
+                                                    <QRCodeSVG
+                                                        value={`upi://pay?pa=${upiId}&pn=Flip%20Flops&am=${addMoneyAmount}&tn=Vault%20Card%20TopUp`}
+                                                        size={120}
+                                                        level="M"
+                                                    />
+                                                </div>
+                                                <div className="bg-white/5 border border-white/5 rounded-xl py-2 px-3 flex items-center justify-between gap-3 w-full max-w-[240px]">
+                                                    <div className="text-left">
+                                                        <p className="text-[7px] text-slate-500 uppercase font-black tracking-widest leading-none">UPI Address</p>
+                                                        <p className="text-[10px] font-black text-slate-300 italic mt-0.5">{upiId}</p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(upiId);
+                                                            toast.success('UPI ID copied to clipboard!');
+                                                        }}
+                                                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-purple-400 active:scale-90 transition-all border border-white/5"
+                                                    >
+                                                        <Copy className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Upload Payment Screenshot</label>
+                                                <div className="relative border-2 border-dashed border-white/10 hover:border-purple-500/50 rounded-2xl p-5 transition-all bg-white/[0.02]">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                setAddMoneyProof(file);
+                                                            }
+                                                        }}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                    />
+                                                    {addMoneyProof ? (
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <div className="flex items-center gap-2 bg-purple-500/10 px-3 py-2 rounded-lg border border-purple-500/20">
+                                                                <CheckCircle2 className="w-4 h-4 text-purple-400" />
+                                                                <span className="text-[10px] font-bold text-purple-300 truncate max-w-[150px]">{addMoneyProof.name}</span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setAddMoneyProof(null);
+                                                                }}
+                                                                className="text-[9px] font-black text-red-400 uppercase tracking-widest hover:text-red-300 mt-1"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center justify-center gap-2 text-center">
+                                                            <Upload className="w-6 h-6 text-purple-400/60" />
+                                                            <p className="text-[9px] font-black text-slate-300 uppercase">Upload Screenshot</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="button"
+                                        onClick={handleAddMoney}
+                                        disabled={isAddingMoney || !addMoneySource || (addMoneySource === 'WALLET' && parseFloat(walletData?.wallet?.balance || 0) < Number(addMoneyAmount)) || (addMoneySource === 'UPI' && !addMoneyProof)}
+                                        className="w-full py-4 mt-2 bg-purple-500 hover:bg-purple-600 active:scale-95 disabled:bg-white/5 disabled:text-slate-500 disabled:border disabled:border-white/5 text-black font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-[0_8px_24px_rgba(168,85,247,0.25)] transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {isAddingMoney ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-black" /> : 'Confirm & Add Money'}
+                                    </button>
                                 </div>
                             )}
                         </div>

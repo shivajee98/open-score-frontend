@@ -163,7 +163,7 @@ export default function LoanList() {
                         amount: parseFloat(p.amount),
                         title: p.tag_text || 'Standard Loan',
                         description: firstConfig
-                            ? `${firstConfig.tenure_days} Days • ${firstConfig.interest_rate}% Interest`
+                            ? `${firstConfig.tenure_days} Days • ${firstConfig.interest_rate}% Service Charge`
                             : 'Details Pending',
                         color: p.plan_color ? p.plan_color.replace('bg-', 'from-').replace('500', '400') + ' to-' + p.plan_color.replace('bg-', '').replace('500', '600') : 'from-blue-400 to-blue-600',
                         rawColor: p.plan_color,

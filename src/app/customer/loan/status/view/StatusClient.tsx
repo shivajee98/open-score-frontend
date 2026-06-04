@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, MessageSquare, Copy, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Check, Lightbulb, Ban, IndianRupee, History, MessageSquare, Copy, ExternalLink, Tag, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { apiFetch } from '@/lib/api';
 import { CountdownCircleTimer } from 'react-countdown-circle-timer';
@@ -28,6 +28,11 @@ export default function LoanStatus() {
     const [showVerificationLoading, setShowVerificationLoading] = useState(false);
     const [animationDuration, setAnimationDuration] = useState(30000);
     const resolveSubmissionRef = useRef<(() => void) | null>(null);
+
+    // Coupon state
+    const [couponCode, setCouponCode] = useState('');
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponError, setCouponError] = useState('');
 
     const fetchLoan = async () => {
         try {
@@ -468,6 +473,12 @@ export default function LoanStatus() {
                                         <span>Other Fees</span>
                                         <span className="text-slate-900 font-medium"> {(otherFeesCalc || gst).toLocaleString()}</span>
                                     </div>
+                                    {loan.calculations?.coupon_discount > 0 && (
+                                        <div className="flex justify-between text-xs text-emerald-600 font-bold">
+                                            <span>Coupon Discount</span>
+                                            <span>-{Number(loan.calculations.coupon_discount).toLocaleString()}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between text-[11px] font-black text-slate-900 pt-1 border-t border-slate-100">
                                         <span>Total fee & Charges pay</span>
                                         <span> {totalDeductions.toLocaleString()}</span>
@@ -481,7 +492,7 @@ export default function LoanStatus() {
                                     <span className="text-blue-600"> {disbursalAmount.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Interest ({interestRate}%)</span>
+                                    <span>Service Charge({interestRate}%)</span>
                                     <span className="text-slate-900 font-medium"> {totalInterest.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t-2 border-slate-100">
@@ -520,6 +531,87 @@ export default function LoanStatus() {
                             </button>
                         )}
                 </div>
+
+                {/* Coupon Code Section - Show only for active (non-terminal) loans */}
+                {!['DISBURSED', 'CLOSED', 'REJECTED', 'CANCELLED'].includes(loan.status) && (
+                    <div className="bg-white rounded-lg p-4 shadow-xl shadow-blue-900/5">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Tag className="w-4 h-4 text-slate-500" />
+                            <h4 className="font-black text-[10px] uppercase tracking-widest text-slate-400">Coupon Code</h4>
+                        </div>
+                        {loan.loan_coupon_id ? (
+                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                                    <div>
+                                        <p className="font-bold text-sm text-emerald-700">Coupon Applied</p>
+                                        <p className="text-xs text-emerald-500">-₹{Number(loan.coupon_discount || 0).toLocaleString('en-IN')} off total fees</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await apiFetch(`/loans/${loan.id}/remove-coupon`, { method: 'DELETE' });
+                                            toast.success('Coupon removed');
+                                            fetchLoan();
+                                        } catch (e: any) {
+                                            toast.error(e.message || 'Failed to remove coupon');
+                                        }
+                                    }}
+                                    className="p-1.5 hover:bg-emerald-100 rounded-lg transition-colors"
+                                >
+                                    <X className="w-4 h-4 text-emerald-600" />
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={couponCode}
+                                        onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                                        placeholder="Enter coupon code"
+                                        className="flex-1 px-3 py-2.5 border border-slate-200 rounded-lg text-sm font-bold uppercase tracking-wide focus:outline-none focus:border-blue-400 placeholder:text-slate-300 placeholder:normal-case placeholder:tracking-normal placeholder:font-medium"
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            if (!couponCode.trim()) return;
+                                            setCouponLoading(true);
+                                            setCouponError('');
+                                            try {
+                                                const res = await apiFetch(`/loans/${loan.id}/apply-coupon`, {
+                                                    method: 'POST',
+                                                    body: JSON.stringify({ code: couponCode.trim() }),
+                                                });
+                                                if (res.valid) {
+                                                    toast.success(`Coupon applied! -₹${Number(res.discount_amount).toLocaleString('en-IN')} off`);
+                                                    setCouponCode('');
+                                                    setCouponError('');
+                                                    fetchLoan();
+                                                } else {
+                                                    setCouponError(res.message || 'Invalid coupon');
+                                                }
+                                            } catch (e: any) {
+                                                setCouponError(e.message || 'Failed to apply coupon');
+                                            } finally {
+                                                setCouponLoading(false);
+                                            }
+                                        }}
+                                        disabled={!couponCode.trim() || couponLoading}
+                                        className="px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                                    </button>
+                                </div>
+                                {couponError && (
+                                    <p className="text-xs text-rose-500 font-medium mt-2 flex items-center gap-1">
+                                        <AlertCircle className="w-3 h-3" /> {couponError}
+                                    </p>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
 
                 {/* Timeline Stepper */}
                 <div className="bg-white rounded-lg p-4 py-6 shadow-xl shadow-blue-900/5">

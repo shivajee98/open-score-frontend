@@ -98,7 +98,7 @@ export default function EarningsCard({
                         <span>{principal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-slate-400 text-xs">
-                        <span>Interest</span>
+                        <span>Service Charge</span>
                         <span>{estInterest.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-slate-400 text-xs">

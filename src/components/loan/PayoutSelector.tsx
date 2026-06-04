@@ -56,7 +56,7 @@ export default function PayoutSelector({ options, selected, onChange, planAmount
                                         <div className="flex flex-wrap gap-x-3 gap-y-1">
                                             {option.interestRate !== undefined && (
                                                 <p className={cn("text-[10px] font-black uppercase tracking-widest", option.interestRate === 0 ? "text-emerald-500" : "text-slate-400")}>
-                                                    {option.interestRate === 0 ? '0% Interest' : `${option.interestRate}% Interest`}
+                                                    {option.interestRate === 0 ? '0% Service Charge' : `${option.interestRate}% Service Charge`}
                                                 </p>
                                             )}
                                             {option.cashback && (
