@@ -110,7 +110,7 @@ export default function MobileNav() {
                 <span className="text-[9px] font-black uppercase tracking-wider">Cred-out</span>
             </Link>
 
-            <Link href="/customer/qr-payment" prefetch={false} className="flex flex-col items-center gap-1 min-w-[56px] relative -mt-8 group">
+            <Link href="/customer/pay/?scan=true" prefetch={false} className="flex flex-col items-center gap-1 min-w-[56px] relative -mt-8 group">
                 <div className="w-12 h-12 rounded-full bg-violet-600 text-white flex items-center justify-center shadow-xl shadow-violet-600/30 border-4 border-white transition-transform active:scale-95 group-hover:-translate-y-1">
                     <QrCode size={20} strokeWidth={2.5} />
                 </div>

@@ -22,7 +22,7 @@ export default function QuickActionsGrid({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const allActions = [
-    { id: 1, label: 'Scan QR', icon: <Scan size={20} strokeWidth={2.5} />, bg: 'bg-linear-to-br from-violet-500 to-indigo-600 shadow-violet-200/50', href: '/customer/qr-payment' },
+    { id: 1, label: 'Scan QR', icon: <Scan size={20} strokeWidth={2.5} />, bg: 'bg-linear-to-br from-violet-500 to-indigo-600 shadow-violet-200/50', href: '/customer/pay/?scan=true' },
     { id: 2, label: 'Pay ID', icon: <Send size={20} strokeWidth={2.5} />, bg: 'bg-linear-to-br from-blue-500 to-blue-700 shadow-blue-200/50', href: '/customer/transfer' },
     { id: 3, label: 'Send Money', icon: <Repeat size={20} strokeWidth={2.5} />, bg: 'bg-linear-to-br from-emerald-400 to-green-600 shadow-emerald-200/50', href: '/customer/pay' },
     { id: 4, label: 'Show QR', icon: <QrCode size={20} strokeWidth={2.5} />, bg: 'bg-linear-to-br from-orange-400 to-amber-500 shadow-orange-200/50', href: '/customer/qr' },

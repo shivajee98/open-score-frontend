@@ -7,6 +7,7 @@ import MerchantLoanMilestone from "@/components/MerchantLoanMilestone";
 import OutgoingCallModal from "@/components/OutgoingCallModal";
 import { toast } from "@/components/ui/Toast";
 import WelcomeBonusPopup from "@/components/WelcomeBonusPopup";
+import VaultCard from "@/components/VaultCard";
 import { useApi } from "@/hooks/useApi";
 import { apiFetch, clearAuthState } from "@/lib/api";
 import { cn } from "@/lib/loanUtils";
@@ -442,6 +443,7 @@ export default function CustomerHome() {
   const [showVaultCardNumber, setShowVaultCardNumber] = useState(false);
   const [showVaultExpiry, setShowVaultExpiry] = useState(false);
   const [showVaultCvc, setShowVaultCvc] = useState(false);
+  const [isVaultMaximized, setIsVaultMaximized] = useState(false);
 
   // Call Modal State
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
@@ -993,7 +995,45 @@ export default function CustomerHome() {
       <HeroDashboard
         walletBalance={balance}
         vaultBalance={vaultSetupData?.vault?.balance || 0}
+        isVaultEnabled={isVaultEnabledByAdmin}
+        onVaultClick={() => setIsVaultMaximized(true)}
       />
+
+      {isVaultMaximized && (
+        <div 
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl px-4"
+            onClick={() => setIsVaultMaximized(false)}
+        >
+            <div className="w-full max-w-[320px] relative flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                <VaultCard
+                    vault={vaultSetupData?.vault}
+                    rates={vaultSetupData?.rates}
+                    activeDeposit={activeDeposit}
+                    userName={activeUser?.name}
+                    isFlipped={isVaultFlipped}
+                    setIsFlipped={setIsVaultFlipped}
+                    isMaximized={true}
+                    setIsMaximized={setIsVaultMaximized}
+                    showCardNumber={showVaultCardNumber}
+                    setShowCardNumber={setShowVaultCardNumber}
+                    showCvc={showVaultCvc}
+                    setShowCvc={setShowVaultCvc}
+                />
+                {/* Hint Overlay */}
+                <div className="mt-8 flex flex-col items-center gap-3 text-center animate-in fade-in z-[110]">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#c5a059] bg-[#c5a059]/10 px-3 py-1 rounded-full border border-[#c5a059]/20">
+                        {isVaultFlipped ? "Tap card to see front" : "Tap card to see CVV & Rates"}
+                    </p>
+                    <button
+                        onClick={() => setIsVaultMaximized(false)}
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-xs font-black text-white transition-all uppercase tracking-widest active:scale-95"
+                    >
+                        Close View
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
 
       {/* Pending Transfer OTP Card */}
       {activeUser?.pending_transfer_otp && (
@@ -1256,7 +1296,8 @@ export default function CustomerHome() {
         />
       )}
 
-      <PromoBannerCard />
+      {/* Promo Banner only shown if bank is not verified (to avoid duplicate cashback offer) */}
+      {!activeUser?.bank_name && <PromoBannerCard />}
 
       {/* Tie User OTP Alert */}
       {activeUser?.pending_tie_otp && (
@@ -1392,7 +1433,7 @@ export default function CustomerHome() {
       )}
 
       {/* Bank Setup Alert - Upfront */}
-      <BankOffersGrid />
+      <BankOffersGrid isBankVerified={!!activeUser?.bank_name} />
       <MarketplaceSection />
       <MoreWaysToEarnSection />
       <SuperSaverZoneCard />
