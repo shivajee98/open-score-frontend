@@ -7,7 +7,7 @@ export default function MoreWaysToEarnSection() {
     { id: 1, title: 'Refer & Earn', sub: 'Earn upto', value: '₹500', image: '/mwe/mwe-1.png', href: '/customer/referral' },
     { id: 2, title: 'Pay Bills', sub: 'Get upto', value: '₹50', image: '/mwe/mwe-2.png', href: '/customer/pay' },
     { id: 3, title: 'Recharge', sub: 'Get upto', value: '₹30', image: '/mwe/mwe-3.png', href: '/customer/pay' },
-    { id: 4, title: 'Scan & Pay', sub: 'Get upto', value: '₹20', image: '/mwe/mwe-4.png', href: '/customer/qr-payment' },
+    { id: 4, title: 'Scan & Pay', sub: 'Get upto', value: '₹20', image: '/mwe/mwe-4.png', href: '/customer/pay/?scan=true' },
   ];
 
   return (
