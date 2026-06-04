@@ -68,7 +68,7 @@ export default function HeroDashboard({ walletBalance, vaultBalance, isVaultEnab
               <span className="text-[5px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 block">ASSET VALUE</span>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-[14px] font-black tracking-tight text-slate-800 leading-none truncate">
-                  ₹{parseFloat(String(vaultBalance)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  {parseFloat(String(vaultBalance)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

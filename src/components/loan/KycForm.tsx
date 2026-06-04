@@ -834,7 +834,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             </h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className={labelClasses}>Annual Income (₹)</label>
+                                    <label className={labelClasses}>Annual Income ()</label>
                                     <input type="number" placeholder="e.g. 500000" {...register('annual_income')} className={inputClasses} />
                                     {errors.annual_income && <p className={errorClasses}>{errors.annual_income.message}</p>}
                                 </div>

@@ -320,16 +320,16 @@ export default function NativeAppGuard({ children }: { children: React.ReactNode
                                     <div className="relative w-full rounded-2xl border border-[#c5a029]/30 bg-gradient-to-br from-[#060c1f] via-[#091535] to-[#040a1c] p-3.5 shadow-inner shadow-[#c5a029]/5 mb-3 overflow-hidden z-10">
                                         <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#c5a029]/10 to-transparent blur-md rounded-full pointer-events-none" />
                                         <p className="font-body font-bold text-[8px] text-indigo-400 uppercase tracking-widest mb-0.5">Total Balance</p>
-                                        <p className="font-display font-black text-lg text-[#c5a029] mb-3">₹ 25,680.00</p>
+                                        <p className="font-display font-black text-lg text-[#c5a029] mb-3"> 25,680.00</p>
                                         
                                         <div className="flex justify-between border-t border-indigo-950/60 pt-2 gap-1">
                                             <div>
                                                 <p className="font-body text-[6px] text-indigo-300/60 leading-none">Wallet Balance</p>
-                                                <p className="font-display font-bold text-[9px] text-white">₹ 15,430.00</p>
+                                                <p className="font-display font-bold text-[9px] text-white"> 15,430.00</p>
                                             </div>
                                             <div className="text-right">
                                                 <p className="font-body text-[6px] text-indigo-300/60 leading-none">Reward Balance</p>
-                                                <p className="font-display font-bold text-[9px] text-[#c5a029]">₹ 10,250.00</p>
+                                                <p className="font-display font-bold text-[9px] text-[#c5a029]"> 10,250.00</p>
                                             </div>
                                         </div>
                                     </div>
@@ -356,13 +356,13 @@ export default function NativeAppGuard({ children }: { children: React.ReactNode
                                         <div className="space-y-1.5 flex-1 overflow-hidden">
                                             <div className="flex items-center justify-between p-1.5 rounded-lg bg-[#060c1f]/80 border border-indigo-950/40">
                                                 <div className="flex items-center gap-1.5">
-                                                    <div className="w-4 h-4 rounded bg-[#c5a029]/10 flex items-center justify-center text-[#c5a029] text-[7px]">₹</div>
+                                                    <div className="w-4 h-4 rounded bg-[#c5a029]/10 flex items-center justify-center text-[#c5a029] text-[7px]"></div>
                                                     <div>
                                                         <p className="font-display font-bold text-[7px] text-white">Bonus Earning</p>
                                                         <p className="font-body text-[5px] text-indigo-300/40">Today, 10:22 AM</p>
                                                     </div>
                                                 </div>
-                                                <span className="font-display font-bold text-[7px] text-emerald-400">+₹500.00</span>
+                                                <span className="font-display font-bold text-[7px] text-emerald-400">+500.00</span>
                                             </div>
                                             
                                             <div className="flex items-center justify-between p-1.5 rounded-lg bg-[#060c1f]/80 border border-indigo-950/40 opacity-70">
@@ -373,7 +373,7 @@ export default function NativeAppGuard({ children }: { children: React.ReactNode
                                                         <p className="font-body text-[5px] text-indigo-300/40">Yesterday, 4:15 PM</p>
                                                     </div>
                                                 </div>
-                                                <span className="font-display font-bold text-[7px] text-indigo-200">-₹2,000.00</span>
+                                                <span className="font-display font-bold text-[7px] text-indigo-200">-2,000.00</span>
                                             </div>
                                         </div>
                                     </div>

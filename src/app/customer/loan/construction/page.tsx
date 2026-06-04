@@ -1191,7 +1191,7 @@ export default function ConstructionLoanWizard() {
                                 </div>
                                 <div className="flex items-center justify-between pb-1">
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Loan Amount Requested</span>
-                                    <span className="text-sm font-black text-emerald-600">₹ {parseFloat(formData.required_loan_amount).toLocaleString('en-IN') || '0'}</span>
+                                    <span className="text-sm font-black text-emerald-600"> {parseFloat(formData.required_loan_amount).toLocaleString('en-IN') || '0'}</span>
                                 </div>
                             </div>
 

@@ -650,7 +650,7 @@ export default function VirtualCardActivationPage() {
                                                     className="w-full max-w-[200px] py-3 px-4 bg-gradient-to-r from-[#00d2ff] to-[#0066ff] hover:from-[#00b0e0] hover:to-[#0055ee] rounded-2xl flex items-center justify-center gap-2 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 transition-all duration-300 mb-6 text-center border border-white/10"
                                                 >
                                                     <Smartphone size={14} className="animate-bounce" />
-                                                    Open UPI App (₹999)
+                                                    Open UPI App (999)
                                                 </a>
                                                 <div className="w-full p-4 bg-white/5 rounded-2xl flex items-center justify-between border border-white/10">
                                                     <div className="flex flex-col text-left">
@@ -844,7 +844,7 @@ export default function VirtualCardActivationPage() {
                                 className="w-full py-3 px-4 bg-gradient-to-r from-[#00d2ff] to-[#0066ff] hover:from-[#00b0e0] hover:to-[#0055ee] rounded-2xl flex items-center justify-center gap-2 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-95 transition-all duration-300 mb-2 text-center border border-white/10"
                             >
                                 <Smartphone size={14} className="animate-bounce" />
-                                Open UPI App (₹999)
+                                Open UPI App (999)
                             </a>
 
                             <div className="flex flex-col items-center mt-6">

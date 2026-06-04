@@ -174,7 +174,7 @@ function VaultCardPaymentContent() {
                         </div>
                         <div>
                             <h4 className="text-base font-black uppercase tracking-tight">Pay via UPI</h4>
-                            <p className="text-indigo-300 text-[9px] font-bold uppercase tracking-[0.15em]">Step 1: Make Payment of ₹{amount}</p>
+                            <p className="text-indigo-300 text-[9px] font-bold uppercase tracking-[0.15em]">Step 1: Make Payment of {amount}</p>
                         </div>
                     </div>
 
@@ -207,7 +207,7 @@ function VaultCardPaymentContent() {
                             </div>
                             <div className="text-center">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Activation Charge</p>
-                                <p className="text-2xl font-black text-slate-900">₹{amount}</p>
+                                <p className="text-2xl font-black text-slate-900">{amount}</p>
                             </div>
                         </div>
                     </div>
@@ -221,7 +221,7 @@ function VaultCardPaymentContent() {
                         }}
                         className="w-full py-4 bg-white text-indigo-900 font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3 mb-4"
                     >
-                        <QrIcon size={16} /> Pay ₹{amount} with UPI
+                        <QrIcon size={16} /> Pay {amount} with UPI
                     </button>
 
                     <p className="text-[9px] text-indigo-200/60 font-medium text-center italic leading-relaxed">

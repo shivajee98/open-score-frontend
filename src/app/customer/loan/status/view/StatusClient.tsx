@@ -545,7 +545,7 @@ export default function LoanStatus() {
                                     <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                                     <div>
                                         <p className="font-bold text-sm text-emerald-700">Coupon Applied</p>
-                                        <p className="text-xs text-emerald-500">-₹{Number(loan.coupon_discount || 0).toLocaleString('en-IN')} off total fees</p>
+                                        <p className="text-xs text-emerald-500">-{Number(loan.coupon_discount || 0).toLocaleString('en-IN')} off total fees</p>
                                     </div>
                                 </div>
                                 <button
@@ -584,7 +584,7 @@ export default function LoanStatus() {
                                                     body: JSON.stringify({ code: couponCode.trim() }),
                                                 });
                                                 if (res.valid) {
-                                                    toast.success(`Coupon applied! -₹${Number(res.discount_amount).toLocaleString('en-IN')} off`);
+                                                    toast.success(`Coupon applied! -${Number(res.discount_amount).toLocaleString('en-IN')} off`);
                                                     setCouponCode('');
                                                     setCouponError('');
                                                     fetchLoan();

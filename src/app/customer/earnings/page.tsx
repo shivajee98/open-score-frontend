@@ -555,7 +555,7 @@ export default function TeamEarningsPage() {
                                             </div>
                                             <div>
                                                 <p className="text-xs font-black text-slate-900">
-                                                    ₹{parseFloat(w.amount).toLocaleString('en-IN')}
+                                                    {parseFloat(w.amount).toLocaleString('en-IN')}
                                                 </p>
                                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
                                                     {new Date(w.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} • #{w.id}
@@ -669,7 +669,7 @@ export default function TeamEarningsPage() {
                                         </div>
                                         {req.status === 'PENDING_PAYMENT' && req.activation_charge && (
                                             <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                                                <p className="text-xs font-bold text-slate-600">Charge: <span className="text-amber-600 font-black">₹{req.activation_charge}</span></p>
+                                                <p className="text-xs font-bold text-slate-600">Charge: <span className="text-amber-600 font-black">{req.activation_charge}</span></p>
                                                 <button
                                                     onClick={() => router.push(`/customer/virtual-card`)}
                                                     className="px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-900/20 active:scale-95 transition-all"
@@ -732,7 +732,7 @@ export default function TeamEarningsPage() {
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Earned</p>
-                                                    <p className="text-[11px] font-black text-indigo-600">₹{parseFloat(friend.amount || 0).toLocaleString()}</p>
+                                                    <p className="text-[11px] font-black text-indigo-600">{parseFloat(friend.amount || 0).toLocaleString()}</p>
                                                 </div>
                                             </div>
 

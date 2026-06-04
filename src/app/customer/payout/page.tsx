@@ -1130,7 +1130,7 @@ export default function PayoutPage() {
                                                 <span className="text-[8px] font-black uppercase tracking-[0.2em]">Locked Growth</span>
                                             </div>
                                             <div className="mb-1">
-                                                <span className="text-sm opacity-40 font-black mr-1">₹</span>
+                                                <span className="text-sm opacity-40 font-black mr-1"></span>
                                                 <span className="text-2xl font-black tracking-tighter drop-shadow-md">
                                                     {(vaultData?.vault?.locked_balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                                 </span>
@@ -2376,7 +2376,7 @@ export default function PayoutPage() {
                                                 : 'border-white/10 hover:border-white/20 bg-white/5 text-slate-300'
                                             }`}
                                         >
-                                            ₹{val.toLocaleString('en-IN')}
+                                            {val.toLocaleString('en-IN')}
                                         </button>
                                     ))}
                                 </div>

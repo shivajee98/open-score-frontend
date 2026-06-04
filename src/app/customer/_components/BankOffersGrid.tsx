@@ -34,7 +34,7 @@ export default function BankOffersGrid({ isBankVerified = false }: BankOffersGri
           <div className="relative z-10 flex flex-col gap-0.5">
             <p className="text-[8px] font-black text-violet-600 uppercase tracking-widest leading-none">TRANSFER & GET DAILY</p>
             <h3 className="text-lg font-black text-indigo-900 leading-tight">Cashback</h3>
-            <p className="text-[9px] font-bold text-slate-600">Upto <span className="text-violet-600">₹100</span> Cashback Everyday</p>
+            <p className="text-[9px] font-bold text-slate-600">Upto <span className="text-violet-600">100</span> Cashback Everyday</p>
           </div>
           <Link href="/customer/transfer" className="inline-flex items-center gap-1 bg-violet-600 text-white text-[9px] font-black uppercase tracking-wider py-1.5 px-4 rounded-full hover:bg-violet-700 transition-colors shadow-md shadow-violet-600/30 w-fit relative z-10 mt-1">
             TRANSFER NOW <ChevronRight size={12} strokeWidth={3} />

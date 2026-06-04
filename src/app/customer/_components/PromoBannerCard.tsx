@@ -10,7 +10,7 @@ export default function PromoBannerCard() {
         {/* Cashback Pill */}
         <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-md rounded-lg p-0.5 px-1.5 flex flex-col items-center shadow-sm border border-white z-20">
           <div className="text-violet-700 font-black text-[9px] flex items-center gap-0.5">
-            ₹ 100
+             100
           </div>
           <div className="text-[6px] font-black text-slate-600 uppercase tracking-widest mt-[1px] flex items-center gap-0.5">
             Cashback <CheckCircle2 size={7} className="text-emerald-500" />
@@ -23,7 +23,7 @@ export default function PromoBannerCard() {
           <h2 className="text-[13px] font-black text-violet-800 tracking-tight leading-none mb-0.5">
             Cashback
           </h2>
-          <p className="text-[7px] font-bold text-slate-600 mb-1.5">Upto <span className="text-violet-700">₹100</span> Cashback Everyday</p>
+          <p className="text-[7px] font-bold text-slate-600 mb-1.5">Upto <span className="text-violet-700">100</span> Cashback Everyday</p>
 
           <Link href="/customer/transfer" className="inline-flex items-center gap-1 bg-violet-600 text-white text-[8px] font-black uppercase tracking-wider py-1.5 px-3.5 mt-1 rounded-full hover:bg-violet-700 transition-colors shadow-md shadow-violet-600/40 w-fit active:scale-95">
             Transfer Now
