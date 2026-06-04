@@ -84,6 +84,7 @@ export default function PayoutPage() {
     const { data: userData, isLoading: userLoading, mutate: mutateUser } = useApi('/auth/me');
     const { data: walletData, isLoading: walletLoading, mutate: mutateWallet } = useApi('/wallet/balance');
     const { data: rulesData, isLoading: rulesLoading, mutate: mutateRules } = useApi('/wallet/withdrawal-rule');
+    const { data: vaultRuleData, mutate: mutateVaultRule } = useApi('/vault/withdrawal-rule');
     const { data: loans, isLoading: loansLoading } = useApi(userData?.role === 'CUSTOMER' ? '/loans' : null);
 
     // Vault Data
@@ -597,6 +598,39 @@ export default function PayoutPage() {
             return;
         }
 
+        // Enforce spend lock requirement from active loan
+        if (vaultRuleData?.unlock_status && !vaultRuleData.unlock_status.is_unlocked) {
+            toast.error("Withdrawal locked: active loan spend requirements not met.");
+            return;
+        }
+
+        // Enforce minimum limit
+        if (vaultRuleData?.min_withdrawal && amt < vaultRuleData.min_withdrawal) {
+            toast.error(`Minimum withdrawal amount is ₹${Number(vaultRuleData.min_withdrawal).toLocaleString('en-IN')}`);
+            return;
+        }
+
+        // Enforce maximum limit
+        if (vaultRuleData?.max_withdrawal && amt > vaultRuleData.max_withdrawal) {
+            toast.error(`Maximum withdrawal amount is ₹${Number(vaultRuleData.max_withdrawal).toLocaleString('en-IN')}`);
+            return;
+        }
+
+        // Enforce daily transaction count limit
+        if (vaultRuleData?.daily_txn_limit && vaultRuleData.today_txns_count >= vaultRuleData.daily_txn_limit) {
+            toast.error(`Daily transaction limit reached (${vaultRuleData.daily_txn_limit} allowed)`);
+            return;
+        }
+
+        // Enforce daily amount limit
+        if (vaultRuleData?.daily_limit) {
+            const remaining = Math.max(0, vaultRuleData.daily_limit - vaultRuleData.today_withdrawals);
+            if (amt > remaining) {
+                toast.error(`Daily limit exceeded. Remaining limit today: ₹${remaining.toLocaleString('en-IN')}`);
+                return;
+            }
+        }
+
         setIsProcessing(true);
         try {
             await apiFetch('/vault/withdraw-to-wallet', {
@@ -607,8 +641,12 @@ export default function PayoutPage() {
             mutateWallet();
             fetchVault();
             fetchVaultLogs();
-        } catch (e: any) {
-            toast.error(e.message || 'Vault withdrawal failed');
+            if (mutateVaultRule) {
+                mutateVaultRule();
+            }
+                } catch (error: unknown) {
+            const err = error as { message?: string };
+            toast.error(err.message || 'Vault withdrawal failed');
         } finally {
             setIsProcessing(false);
         }
@@ -1084,7 +1122,7 @@ export default function PayoutPage() {
                                     </div>
 
                                     {/* Locked Vault Balance Card */}
-                                    {vaultData?.vault && (
+                                    {/* {vaultData?.vault && (
                                         <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-black rounded-2xl p-4 text-white shadow-lg shadow-slate-900/20 relative overflow-hidden group h-32 flex flex-col justify-between col-span-2 lg:col-span-1 border border-slate-700/50">
                                             <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform duration-700"></div>
                                             <div className="flex items-center gap-2 mb-1 opacity-60">
@@ -1103,7 +1141,7 @@ export default function PayoutPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
+                                    )} */}
                                 </div>
 
 
