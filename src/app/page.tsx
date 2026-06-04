@@ -659,7 +659,7 @@ function HomeContent() {
                     This mobile is registered with this number. You can't register a new account on this mobile.
                   </p>
                 </div>
-                
+
                 <div className="border-t border-amber-200/50 pt-2.5">
                   <h3 className="text-[11px] font-black tracking-wider text-amber-900 uppercase">डिवाइस दूसरे नंबर से लिंक है</h3>
                   <p className="text-[11px] text-amber-800 leading-normal font-bold mt-0.5">
@@ -690,7 +690,7 @@ function HomeContent() {
         {flow === 'mobile_entry' && (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 
+              <h2
                 className="text-2xl font-black mb-2 cursor-pointer select-none hover:text-blue-600 transition-colors"
                 onClick={() => {
                   const randomTestNumber = '999' + Math.floor(1000000 + Math.random() * 9000000);
@@ -933,7 +933,7 @@ function HomeContent() {
 
         {flow === 'otp_verify' && (
           <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/5 relative overflow-hidden animate-in slide-in-from-right-8 duration-500 border border-slate-100/50">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-600 to-blue-600"></div>
+            <div className="absolute top-0 left-0 w-full h-2 bg-linear-to-r from-emerald-600 to-blue-600"></div>
 
             <div className="text-center space-y-8">
               <div>
@@ -1011,7 +1011,7 @@ function HomeContent() {
 
         {flow === 'role_select' && (
           <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/5 relative overflow-hidden animate-in slide-in-from-right-8 duration-500">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-purple-600"></div>
+            <div className="absolute top-0 left-0 w-full h-2 bg-linear-to-r from-blue-600 to-purple-600"></div>
 
             <div className="space-y-6">
               <div className="text-center mb-8">

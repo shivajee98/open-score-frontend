@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Zap, User, LayoutDashboard, QrCode, Landmark, History, CreditCard } from 'lucide-react';
+import { Zap, User, LayoutDashboard, QrCode, Landmark, History, CreditCard, Home, ShoppingBag } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 
@@ -94,37 +94,32 @@ export default function MobileNav() {
     const isProfile = pathname === '/customer/profile';
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-200 p-1.5 md:hidden z-50 flex justify-around items-center pb-safe ring-1 ring-slate-900/5 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-            <Link href="/customer" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[56px] rounded-xl transition-all duration-300 ${isHome ? activeClass : 'text-slate-400 hover:text-slate-600'}`}>
-                <LayoutDashboard size={20} className={isHome ? 'scale-110' : ''} strokeWidth={isHome ? 3 : 2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-end px-2 py-2 pb-safe md:hidden z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
+            <Link href="/customer" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[56px] transition-colors duration-300 ${isHome ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <div className="mb-0.5"><Home size={22} strokeWidth={isHome ? 2.5 : 2} className={isHome ? 'fill-violet-600/20' : ''} /></div>
+                <span className="text-[9px] font-black uppercase tracking-wider">Home</span>
             </Link>
 
-            <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isLoans ? activeClass : 'text-slate-400'}`}>
-                <Zap size={20} className={isLoans ? 'scale-110' : ''} strokeWidth={3} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Loans</span>
+            <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[48px] transition-colors duration-300 ${isLoans ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <div className="mb-0.5"><Zap size={22} strokeWidth={isLoans ? 2.5 : 2} className={isLoans ? 'fill-violet-600/20' : ''} /></div>
+                <span className="text-[9px] font-black uppercase tracking-wider">Loans</span>
             </Link>
 
-            <Link href="/customer/qr" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isQR ? activeClass : 'text-slate-400'}`}>
-                <QrCode size={20} className={isQR ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">My QR</span>
+            <Link href="/customer/qr-payment" prefetch={false} className="flex flex-col items-center gap-1 min-w-[64px] relative -mt-8 group">
+                <div className="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center shadow-xl shadow-violet-600/30 border-4 border-white transition-transform active:scale-95 group-hover:-translate-y-1">
+                    <QrCode size={24} strokeWidth={2.5} />
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-wider text-violet-600 mt-1">Pay / QR</span>
             </Link>
 
-            <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isCredOut ? activeClass : 'text-slate-400'}`}>
-                <Landmark size={20} className={isCredOut ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Cred-Out</span>
+            <Link href="/customer/marketplace" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[48px] transition-colors duration-300 text-slate-400 hover:text-slate-600`}>
+                <div className="mb-0.5"><ShoppingBag size={22} strokeWidth={2} /></div>
+                <span className="text-[9px] font-black uppercase tracking-wider">Marketplace</span>
             </Link>
 
-
-
-            <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isProfile ? activeClass : 'text-slate-400'}`}>
-                <User size={20} className={isProfile ? 'scale-110' : ''} strokeWidth={isProfile ? 3 : 2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Profile</span>
-            </Link>
-
-            <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 p-1.5 min-w-[48px] rounded-xl transition-all duration-300 ${isHistory ? activeClass : 'text-slate-400'}`}>
-                <History size={20} className={isHistory ? 'scale-110' : ''} strokeWidth={2} />
-                <span className="text-[8px] font-black uppercase tracking-widest">{isMerchant ? 'History' : 'History'}</span>
+            <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[48px] transition-colors duration-300 ${isProfile ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <div className="mb-0.5"><User size={22} strokeWidth={isProfile ? 2.5 : 2} className={isProfile ? 'fill-violet-600/20' : ''} /></div>
+                <span className="text-[9px] font-black uppercase tracking-wider">Profile</span>
             </Link>
         </div>
     );
