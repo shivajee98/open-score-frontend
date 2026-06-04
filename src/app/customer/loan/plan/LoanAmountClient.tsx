@@ -118,11 +118,11 @@ export default function LoanDetail() {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: plan.amount,
-                    tenure: tenureDays > 6 ? tenureDays : Math.round(tenureDays / 30), // Backend heuristic: > 6 is days, <= 6 is months
+                    tenure: tenureDays > 6 ? tenureDays : Math.round(tenureDays / 30),
                     payout_frequency: payout.frequency,
                     payout_option_id: payout.id,
                     loan_plan_id: plan.id,
-                    referral_code: localStorage.getItem('referral_code') || localStorage.getItem('loan_referral_code') || localStorage.getItem('referral code')
+                    referral_code: localStorage.getItem('referral_code') || localStorage.getItem('loan_referral_code') || localStorage.getItem('referral code'),
                 })
             });
 

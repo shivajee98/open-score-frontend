@@ -21,6 +21,8 @@ function CustomerPayPage() {
     const [balance, setBalance] = useState(0);
     const [lockedBalance, setLockedBalance] = useState(0);
     const [cashbackBalance, setCashbackBalance] = useState(0);
+    const [vaultBalance, setVaultBalance] = useState(0);
+    const [paymentSource, setPaymentSource] = useState<'MAIN' | 'VAULT'>('MAIN');
     const [useCashback, setUseCashback] = useState(true);
     const [payees, setPayees] = useState([]);
     const [payee, setPayee] = useState<any>(null);
@@ -97,6 +99,7 @@ function CustomerPayPage() {
             setBalance(data.balance || 0);
             setLockedBalance(data.locked_balance || 0);
             setCashbackBalance(data.cashback_balance || 0);
+            setVaultBalance(data.vault_balance || 0);
         });
 
         apiFetch('/wallet/transactions').then(res => {
@@ -312,13 +315,20 @@ function CustomerPayPage() {
 
         const payAmount = parseFloat(amount);
 
-        if (payAmount > balance) {
-            if (payAmount <= (balance + lockedBalance)) {
-                setError('Insufficient available balance. This amount is currently in LOCKED state – Please Contact Agent for release.');
-            } else {
-                setError('Insufficient wallet balance');
+        if (paymentSource === 'VAULT') {
+            if (payAmount > vaultBalance) {
+                setError('Insufficient Vault Card balance');
+                return;
             }
-            return;
+        } else {
+            if (payAmount > balance) {
+                if (payAmount <= (balance + lockedBalance)) {
+                    setError('Insufficient available balance. This amount is currently in LOCKED state – Please Contact Agent for release.');
+                } else {
+                    setError('Insufficient wallet balance');
+                }
+                return;
+            }
         }
         setPinModalOpen(true);
     };
@@ -336,7 +346,8 @@ function CustomerPayPage() {
                         payee_wallet_uuid: payee.payee_wallet_uuid,
                         amount: parseFloat(amount),
                         pin: pin,
-                        use_cashback: useCashback
+                        use_cashback: useCashback,
+                        use_vault: paymentSource === 'VAULT'
                     })
                 }),
                 new Promise(resolve => setTimeout(resolve, 1500))
@@ -634,7 +645,7 @@ function CustomerPayPage() {
                             </div>
 
                             {/* Cashback Usage Preview */}
-                            {amount && parseFloat(amount) > 0 && user?.cashback_usage_percentage > 0 && (
+                            {paymentSource === 'MAIN' && amount && parseFloat(amount) > 0 && user?.cashback_usage_percentage > 0 && (
                                 <div className={`px-4 py-3 rounded-xl border-2 transition-all ${useCashback && !isPayeeMerchant ? 'bg-emerald-50 border-emerald-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-1.5 overflow-hidden">
@@ -700,16 +711,43 @@ function CustomerPayPage() {
                                 </div>
                             )}
 
-                            <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-lg border border-slate-100">
-                                <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Available Balance</span>
-                                <span className="text-sm font-black text-slate-900">{balance.toLocaleString('en-IN')}</span>
+                            <div className="flex flex-col gap-2">
+                                <div 
+                                    onClick={() => setPaymentSource('MAIN')}
+                                    className={`flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${paymentSource === 'MAIN' ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentSource === 'MAIN' ? 'border-blue-600' : 'border-slate-300'}`}>
+                                            {paymentSource === 'MAIN' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold uppercase text-slate-600 tracking-widest">Main Wallet</span>
+                                            {lockedBalance > 0 && paymentSource === 'MAIN' && (
+                                                <span className="text-[9px] font-bold text-amber-500 flex items-center gap-1 mt-0.5">
+                                                    <Lock size={10} /> Locked: {lockedBalance.toLocaleString('en-IN')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className="text-sm font-black text-slate-900">{balance.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div 
+                                    onClick={() => setPaymentSource('VAULT')}
+                                    className={`flex items-center justify-between px-4 py-3 rounded-lg border cursor-pointer transition-all ${paymentSource === 'VAULT' ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentSource === 'VAULT' ? 'border-amber-600' : 'border-slate-300'}`}>
+                                            {paymentSource === 'VAULT' && <div className="w-2 h-2 rounded-full bg-amber-600" />}
+                                        </div>
+                                        <span className="text-[10px] font-bold uppercase text-slate-600 tracking-widest">Vault Card</span>
+                                    </div>
+                                    <span className="text-sm font-black text-slate-900">{vaultBalance.toLocaleString('en-IN')}</span>
+                                </div>
                             </div>
-                            {lockedBalance > 0 && (
-                                <div className="flex justify-between items-center px-4 pt-1 pb-2">
-                                    <span className="text-[9px] font-bold uppercase text-amber-500 flex items-center gap-1">
-                                        <Lock size={10} /> Locked
-                                    </span>
-                                    <span className="text-xs font-bold text-slate-400">{lockedBalance.toLocaleString('en-IN')}</span>
+
+                            {error && (
+                                <div className="text-center p-3 bg-red-50 text-red-600 rounded-lg border border-red-100 text-xs font-bold shadow-sm">
+                                    {error}
                                 </div>
                             )}
 

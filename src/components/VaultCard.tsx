@@ -45,6 +45,7 @@ interface VaultCardProps {
     // Optional Quick Action callbacks
     onDepositClick?: () => void;
     onWithdrawClick?: () => void;
+    onAddMoneyClick?: () => void;
 }
 
 export default function VaultCard({
@@ -62,6 +63,7 @@ export default function VaultCard({
     setShowCvc: controlledSetShowCvc,
     onDepositClick,
     onWithdrawClick,
+    onAddMoneyClick,
 }: VaultCardProps) {
     // Fallback internal states if parent doesn't provide them
     const [internalFlipped, setInternalFlipped] = useState(false);
@@ -221,9 +223,31 @@ export default function VaultCard({
                             {/* Available Balance & Daily Yield Row */}
                             <div className="mt-0.5 mb-1 flex items-end justify-between">
                                 <div className="flex flex-col">
-                                    <span className="text-[7px] font-black uppercase tracking-widest text-[#c5a059]/80 mb-0.5">Available Value</span>
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                        <span className="text-[7px] font-black uppercase tracking-widest text-[#c5a059]/80">Available Value</span>
+                                        <div className="flex gap-1">
+                                            {onAddMoneyClick && (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); onAddMoneyClick(); }}
+                                                    className="w-4 h-4 bg-[#c5a059] rounded-full flex items-center justify-center text-[#0f1113] hover:bg-[#e6c07b] transition-colors shadow-sm"
+                                                    title="Add Money"
+                                                >
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                                                </button>
+                                            )}
+                                            {onWithdrawClick && (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); onWithdrawClick(); }}
+                                                    className="w-4 h-4 bg-[#c5a059]/20 rounded-full flex items-center justify-center text-[#c5a059] hover:bg-[#c5a059]/30 transition-colors shadow-sm border border-[#c5a059]/40"
+                                                    title="Withdraw to Wallet"
+                                                >
+                                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path></svg>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                     <span className="text-xl font-black tracking-tighter text-[#fef9f3] leading-none">
-                                        {Number(Math.max(0, (vault.balance || 0) - (activeDeposit ? Number(activeDeposit.amount) : 0))).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                        {Number(vault.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                     </span>
                                 </div>
                                 <div className="flex flex-col text-right gap-1">
