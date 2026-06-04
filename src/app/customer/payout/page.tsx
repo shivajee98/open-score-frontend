@@ -216,7 +216,7 @@ export default function PayoutPage() {
 
         // Enforce predefined constraint or custom >= 5000
         if (amt < 5000 && ![1000, 2000, 3000, 4000].includes(amt)) {
-            toast.error('Custom amounts must be ₹5,000 or above.');
+            toast.error('Custom amounts must be 5,000 or above.');
             return;
         }
 
@@ -606,13 +606,13 @@ export default function PayoutPage() {
 
         // Enforce minimum limit
         if (vaultRuleData?.min_withdrawal && amt < vaultRuleData.min_withdrawal) {
-            toast.error(`Minimum withdrawal amount is ₹${Number(vaultRuleData.min_withdrawal).toLocaleString('en-IN')}`);
+            toast.error(`Minimum withdrawal amount is ${Number(vaultRuleData.min_withdrawal).toLocaleString('en-IN')}`);
             return;
         }
 
         // Enforce maximum limit
         if (vaultRuleData?.max_withdrawal && amt > vaultRuleData.max_withdrawal) {
-            toast.error(`Maximum withdrawal amount is ₹${Number(vaultRuleData.max_withdrawal).toLocaleString('en-IN')}`);
+            toast.error(`Maximum withdrawal amount is ${Number(vaultRuleData.max_withdrawal).toLocaleString('en-IN')}`);
             return;
         }
 
@@ -626,7 +626,7 @@ export default function PayoutPage() {
         if (vaultRuleData?.daily_limit) {
             const remaining = Math.max(0, vaultRuleData.daily_limit - vaultRuleData.today_withdrawals);
             if (amt > remaining) {
-                toast.error(`Daily limit exceeded. Remaining limit today: ₹${remaining.toLocaleString('en-IN')}`);
+                toast.error(`Daily limit exceeded. Remaining limit today: ${remaining.toLocaleString('en-IN')}`);
                 return;
             }
         }
@@ -2388,11 +2388,11 @@ export default function PayoutPage() {
                                         onChange={(e) => {
                                             setAddMoneyAmount(e.target.value);
                                         }} 
-                                        placeholder="Enter custom amount (Min ₹5,000)"
+                                        placeholder="Enter custom amount (Min 5,000)"
                                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-4 text-xl font-black text-white focus:border-purple-500 outline-none transition-all placeholder:text-white/20 placeholder:text-sm" 
                                     />
                                     {Number(addMoneyAmount) > 0 && Number(addMoneyAmount) < 5000 && ![1000, 2000, 3000, 4000].includes(Number(addMoneyAmount)) && (
-                                        <p className="text-red-400 text-[10px] font-bold mt-1 absolute -bottom-5">Custom amounts must be ₹5,000 or above.</p>
+                                        <p className="text-red-400 text-[10px] font-bold mt-1 absolute -bottom-5">Custom amounts must be 5,000 or above.</p>
                                     )}
                                 </div>
                             </div>
