@@ -10,7 +10,7 @@ export default function DashboardHeader({ user, liveCount }: DashboardHeaderProp
   const name = (user?.name || user?.email?.split('@')[0] || 'FAIZ').split(' ')[0];
 
   return (
-    <header className="flex items-center justify-between px-5 py-4 bg-white sticky top-0 z-50">
+    <header className="flex items-center justify-between px-2 py-4 bg-white sticky top-0 z-50">
 
       {/* Left: User Profile */}
       <div className="flex items-center gap-3">

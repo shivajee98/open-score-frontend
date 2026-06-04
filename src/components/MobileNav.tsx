@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Zap, User, LayoutDashboard, QrCode, Landmark, History, CreditCard, Home, ShoppingBag } from 'lucide-react';
+import { Zap, User, LayoutDashboard, QrCode, Landmark, History, CreditCard, Home, ShoppingBag, ArrowUpRight } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
 
@@ -95,31 +95,41 @@ export default function MobileNav() {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-end px-2 py-2 pb-safe md:hidden z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
-            <Link href="/customer" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[56px] transition-colors duration-300 ${isHome ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                <div className="mb-0.5"><Home size={22} strokeWidth={isHome ? 2.5 : 2} className={isHome ? 'fill-violet-600/20' : ''} /></div>
+            <Link href="/customer" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[44px] transition-colors duration-300 ${isHome ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <div className="mb-0.5"><Home size={20} strokeWidth={isHome ? 2.5 : 2} className={isHome ? 'fill-violet-600/20' : ''} /></div>
                 <span className="text-[9px] font-black uppercase tracking-wider">Home</span>
             </Link>
 
-            <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[48px] transition-colors duration-300 ${isLoans ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                <div className="mb-0.5"><Zap size={22} strokeWidth={isLoans ? 2.5 : 2} className={isLoans ? 'fill-violet-600/20' : ''} /></div>
+            <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[44px] transition-colors duration-300 ${isLoans ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <div className="mb-0.5"><Zap size={20} strokeWidth={isLoans ? 2.5 : 2} className={isLoans ? 'fill-violet-600/20' : ''} /></div>
                 <span className="text-[9px] font-black uppercase tracking-wider">Loans</span>
             </Link>
 
-            <Link href="/customer/qr-payment" prefetch={false} className="flex flex-col items-center gap-1 min-w-[64px] relative -mt-8 group">
-                <div className="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center shadow-xl shadow-violet-600/30 border-4 border-white transition-transform active:scale-95 group-hover:-translate-y-1">
-                    <QrCode size={24} strokeWidth={2.5} />
+            <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[44px] transition-colors duration-300 ${isCredOut ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <div className="mb-0.5"><ArrowUpRight size={20} strokeWidth={isCredOut ? 2.5 : 2} className={isCredOut ? 'fill-violet-600/20' : ''} /></div>
+                <span className="text-[9px] font-black uppercase tracking-wider">Cred-out</span>
+            </Link>
+
+            <Link href="/customer/qr-payment" prefetch={false} className="flex flex-col items-center gap-1 min-w-[56px] relative -mt-8 group">
+                <div className="w-12 h-12 rounded-full bg-violet-600 text-white flex items-center justify-center shadow-xl shadow-violet-600/30 border-4 border-white transition-transform active:scale-95 group-hover:-translate-y-1">
+                    <QrCode size={20} strokeWidth={2.5} />
                 </div>
                 <span className="text-[9px] font-black uppercase tracking-wider text-violet-600 mt-1">Pay / QR</span>
             </Link>
 
-            <Link href="/customer/marketplace" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[48px] transition-colors duration-300 text-slate-400 hover:text-slate-600`}>
-                <div className="mb-0.5"><ShoppingBag size={22} strokeWidth={2} /></div>
-                <span className="text-[9px] font-black uppercase tracking-wider">Marketplace</span>
+            <Link href="/customer/marketplace" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[44px] transition-colors duration-300 text-slate-400 hover:text-slate-600`}>
+                <div className="mb-0.5"><ShoppingBag size={20} strokeWidth={2} /></div>
+                <span className="text-[9px] font-black uppercase tracking-wider">Market</span>
             </Link>
 
-            <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[48px] transition-colors duration-300 ${isProfile ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                <div className="mb-0.5"><User size={22} strokeWidth={isProfile ? 2.5 : 2} className={isProfile ? 'fill-violet-600/20' : ''} /></div>
+            <Link href="/customer/profile" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[44px] transition-colors duration-300 ${isProfile ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <div className="mb-0.5"><User size={20} strokeWidth={isProfile ? 2.5 : 2} className={isProfile ? 'fill-violet-600/20' : ''} /></div>
                 <span className="text-[9px] font-black uppercase tracking-wider">Profile</span>
+            </Link>
+
+            <Link href="/customer/transactions" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[44px] transition-colors duration-300 ${isHistory ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                <div className="mb-0.5"><History size={20} strokeWidth={isHistory ? 2.5 : 2} className={isHistory ? 'fill-violet-600/20' : ''} /></div>
+                <span className="text-[9px] font-black uppercase tracking-wider">History</span>
             </Link>
         </div>
     );

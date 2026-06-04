@@ -1,75 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { apiFetch, clearAuthState } from "@/lib/api";
-import { useApi } from "@/hooks/useApi";
-import { useStore } from "@/store/useStore";
-import {
-  Wallet,
-  Smartphone,
-  Landmark,
-  ScanBarcode,
-  Send,
-  History,
-  Zap,
-  CreditCard,
-  ShieldCheck,
-  QrCode,
-  Flame,
-  Droplets,
-  Wifi,
-  LayoutGrid,
-  Tv,
-  TrendingUp,
-  Lock,
-  Check,
-  CheckCircle2,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  Bell,
-  Headphones,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  Gift,
-  MapPin,
-  Activity,
-  User,
-  Users,
-  ReceiptIndianRupee,
-  MessageSquare,
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  X,
-  Clock,
-  Upload,
-  Phone,
-  Mail,
-  AlertTriangle,
-} from "lucide-react";
-import Link from "next/link";
-import { toast } from "@/components/ui/Toast";
-import { useRouter } from "next/navigation";
-import MerchantClaimModal from "@/components/MerchantClaimModal";
-import SupportModal from "@/components/SupportModal";
-import VaultCard from "@/components/VaultCard";
+import CampaignPopup from "@/components/CampaignPopup";
 import HomeBannerCarousel from "@/components/HomeBannerCarousel";
-import { cn } from "@/lib/loanUtils";
-import WelcomeBonusPopup from "@/components/WelcomeBonusPopup";
+import MerchantClaimModal from "@/components/MerchantClaimModal";
 import MerchantLoanMilestone from "@/components/MerchantLoanMilestone";
 import OutgoingCallModal from "@/components/OutgoingCallModal";
-import CampaignPopup from "@/components/CampaignPopup";
-import SplashScreen from "./_components/SplashScreen";
+import { toast } from "@/components/ui/Toast";
+import WelcomeBonusPopup from "@/components/WelcomeBonusPopup";
+import { useApi } from "@/hooks/useApi";
+import { apiFetch, clearAuthState } from "@/lib/api";
+import { cn } from "@/lib/loanUtils";
+import { useStore } from "@/store/useStore";
+import {
+    ArrowRight,
+    Check,
+    Clock,
+    Gift,
+    History,
+    Landmark,
+    Lock,
+    Mail,
+    MapPin,
+    MessageSquare,
+    Phone,
+    ShieldCheck,
+    Smartphone,
+    Upload,
+    Users,
+    X,
+    Zap
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import BankOffersGrid from "./_components/BankOffersGrid";
 import DashboardHeader from "./_components/DashboardHeader";
 import HeroDashboard from "./_components/HeroDashboard";
-import QuickActionsGrid from "./_components/QuickActionsGrid";
-import PromoBannerCard from "./_components/PromoBannerCard";
-import BankOffersGrid from "./_components/BankOffersGrid";
 import MarketplaceSection from "./_components/MarketplaceSection";
 import MoreWaysToEarnSection from "./_components/MoreWaysToEarnSection";
+import PromoBannerCard from "./_components/PromoBannerCard";
+import QuickActionsGrid from "./_components/QuickActionsGrid";
+import SplashScreen from "./_components/SplashScreen";
 import SuperSaverZoneCard from "./_components/SuperSaverZoneCard";
-import CustomBottomNav from "./_components/CustomBottomNav";
 
 export default function CustomerHome() {
   const {
@@ -953,22 +925,22 @@ export default function CustomerHome() {
 
       {/* Alternate Number Verification Banner */}
       {!activeUser?.is_debug && !activeUser?.has_verified_alternate_number && (
-        <div className="mx-5 mt-4 bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
-              <Smartphone size={16} strokeWidth={2.5} />
+        <div className="mx-3 mt-4 bg-rose-50 border border-rose-200 rounded-lg p-2 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+              <Smartphone size={14} strokeWidth={2.5} />
             </div>
             <div className="flex flex-col justify-center">
               <h4 className="text-[11px] font-black text-rose-600 uppercase tracking-tight leading-tight">
                 Verify Number
               </h4>
               <p className="text-[9px] font-bold text-slate-500 leading-tight">
-                Required for loans
+                Verify alternate number
               </p>
             </div>
           </div>
           <Link href="/customer/profile">
-            <button className="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-rose-600 transition-all active:scale-95 shadow-sm shadow-rose-500/20">
+            <button className="bg-rose-500 text-white px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-rose-600 transition-all active:scale-95 shadow-sm shadow-rose-500/20">
               Verify <ArrowRight size={12} />
             </button>
           </Link>

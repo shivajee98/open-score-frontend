@@ -19,7 +19,7 @@ export default function MarketplaceSection() {
   ];
 
   return (
-    <section className="px-5 py-3">
+    <section className="px-2 py-3">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-[14px] font-black text-slate-800 tracking-tight uppercase">Marketplace</h2>
         <Link href="#" className="text-[10px] font-black text-violet-600 tracking-wider flex items-center hover:text-violet-700 transition-colors bg-violet-50 px-2.5 py-1 rounded-full">

@@ -4,9 +4,9 @@ import Link from 'next/link';
 
 export default function PromoBannerCard() {
   return (
-    <section className="px-5 py-1.5">
+    <section className="px-2 py-1.5">
       <div className="relative rounded-[12px] overflow-hidden p-2.5 flex flex-col justify-center min-h-[70px] shadow-sm shadow-violet-100/50 border border-violet-50 bg-linear-to-r from-indigo-50 to-purple-100">
-        
+
         {/* Cashback Pill */}
         <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-md rounded-lg p-0.5 px-1.5 flex flex-col items-center shadow-sm border border-white z-20">
           <div className="text-violet-700 font-black text-[9px] flex items-center gap-0.5">
@@ -24,7 +24,7 @@ export default function PromoBannerCard() {
             Cashback
           </h2>
           <p className="text-[7px] font-bold text-slate-600 mb-1.5">Upto <span className="text-violet-700">₹100</span> Cashback Everyday</p>
-          
+
           <Link href="/customer/transfer" className="inline-flex items-center gap-1 bg-violet-600 text-white text-[8px] font-black uppercase tracking-wider py-1.5 px-3.5 mt-1 rounded-full hover:bg-violet-700 transition-colors shadow-md shadow-violet-600/40 w-fit active:scale-95">
             Transfer Now
             <ChevronRight size={10} strokeWidth={3} />

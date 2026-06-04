@@ -1,6 +1,4 @@
-import React from 'react';
-import { Info, ArrowRight, Shield, Eye } from 'lucide-react';
-import Image from 'next/image';
+import { ArrowRight, ChevronRight, Info, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 interface HeroDashboardProps {
@@ -10,33 +8,32 @@ interface HeroDashboardProps {
 
 export default function HeroDashboard({ walletBalance, vaultBalance }: HeroDashboardProps) {
   return (
-    <section className="px-5 py-2 grid grid-cols-2 gap-3 ">
+    <section className="px-2 grid grid-cols-2 gap-3 ">
 
       {/* Left Card: Elite Credit Value */}
       <div className="w-full h-[125px] rounded-[16px] p-2 relative overflow-hidden shadow-[0_10px_30px_rgba(138,43,226,0.3)] flex flex-col"
-           style={{ backgroundImage: 'url("/shield_bg.png")', backgroundSize: 'contain', backgroundPosition: 'right' }}>
+           style={{ backgroundImage: 'url("/shield_bg.png")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
         <div className="relative z-10 flex flex-col h-full">
 
-          <h4 className="flex items-center gap-1 text-[6.5px] font-black text-white/90 uppercase tracking-widest leading-tight">
-            ELITE CREDIT
+          <h4 className="flex items-center gap-1 text-[10px] font-black text-white/90 uppercase tracking-widest leading-tight">
+            ELITE VALUE
             <Info size={8} className="opacity-80 shrink-0" />
           </h4>
 
-          <div className="flex flex-col gap-1 mt-1">
-            <div className="flex items-baseline gap-0.5">
-              <h2 className="text-[18px] font-black text-white tracking-tighter leading-none truncate">
+          <div className="flex flex-col items-baseline gap-1 mt-4">
+            <div className="flex items-baseline flex-col gap-0.5">
+              <h2 className="text-[24px] font-bold text-white tracking-tighter leading-none truncate">
                 {Number(walletBalance).toLocaleString('en-IN')}
-                <span className="text-[9px] text-white/90">.82</span>
               </h2>
+              <p className="text-[9px] font-semibold text-white/80 uppercase tracking-tighter">
+                Total Value
+              </p>
             </div>
           </div>
 
-          <div className="mt-auto">
-            <div className="flex flex-col p-1.5 rounded-lg shadow-inner w-full">
-              <span className="text-[5px] font-bold text-white/80 uppercase tracking-widest mb-0.5">TOTAL SPENT</span>
-              <span className="text-[9px] font-black text-white tracking-wider">12,833</span>
-            </div>
-          </div>
+          <Link href="/customer/add-money" className="inline-flex items-center gap-1 bg-white text-violet-600 text-[8px] font-black uppercase tracking-wider py-0.5 px-1 rounded-full hover:bg-slate-50 transition-colors shadow-md relative z-10 w-fit mt-5">
+          View Details <ArrowRight size={10} strokeWidth={3} />
+        </Link>
         </div>
       </div>
 
@@ -49,7 +46,7 @@ export default function HeroDashboard({ walletBalance, vaultBalance }: HeroDashb
               <div className="w-3.5 h-3.5 rounded bg-violet-50 text-[#8A2BE2] flex items-center justify-center border border-violet-100 shadow-sm shrink-0">
                 <Shield size={7} strokeWidth={2.5} />
               </div>
-              <span className="text-[6.5px] font-black text-slate-800 uppercase tracking-widest leading-tight">VAULT CARD</span>
+              <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-tight">VAULT CARD</span>
           </div>
 
           <div className="flex flex-col gap-0.5 pb-1 mt-1">
