@@ -875,16 +875,10 @@ export default function CustomerHome() {
                 withdrawals.
               </p>
 
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <button
-                  onClick={dismissVaultSetupPopup}
-                  className="py-3 rounded-xl border border-slate-200 text-slate-600 text-xs font-black uppercase tracking-wider hover:bg-slate-50 active:scale-95 transition-all"
-                >
-                  Later
-                </button>
+              <div className="mt-5">
                 <button
                   onClick={handleVaultSetupNow}
-                  className="py-3 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider hover:bg-slate-800 active:scale-95 transition-all"
+                  className="w-full py-3.5 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider hover:bg-slate-800 active:scale-95 transition-all"
                 >
                   Set Up Now
                 </button>

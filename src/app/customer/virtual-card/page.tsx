@@ -758,9 +758,9 @@ export default function VirtualCardActivationPage() {
                         {paymentMode === 'WALLET' ? 'Card Activated!' : 'Card Activated!'}
                     </h2>
                     <p className="text-xs font-bold text-slate-400 max-w-[240px] mx-auto leading-relaxed mb-12 italic">
-                        {paymentMode === 'WALLET' ? 'Your Titanium card is now live. Enjoy.' : 'Your Titanium card is now live! Enjoy your rewards.'}
+                        Your Titanium card is now live! Complete your vault setup to start earning rewards.
                     </p>
-                    <button onClick={() => router.push('/customer')} className="w-full h-14 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all italic">Back to Home</button>
+                    <button onClick={() => router.push('/customer/payout')} className="w-full h-14 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all italic">Set Up Vault Card</button>
                 </div>
             )}
 

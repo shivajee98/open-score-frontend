@@ -683,6 +683,23 @@ export default function TeamEarningsPage() {
                                                 {req.rejection_reason}
                                             </div>
                                         )}
+                                        {/* Commission Status Indicator */}
+                                        {req.status === 'ACTIVATED' && (
+                                            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
+                                                <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+                                                    <CheckCircle2 size={12} />
+                                                </div>
+                                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Commission Earned</p>
+                                            </div>
+                                        )}
+                                        {['INITIATED', 'PENDING_CHARGE', 'PENDING_PAYMENT', 'PENDING_APPROVAL'].includes(req.status) && (
+                                            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
+                                                <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                                                    <Clock size={12} />
+                                                </div>
+                                                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Commission Pending</p>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
 
@@ -731,8 +748,11 @@ export default function TeamEarningsPage() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Earned</p>
-                                                    <p className="text-[11px] font-black text-indigo-600">{parseFloat(friend.amount || 0).toLocaleString()}</p>
+                                                    <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{isVerified ? 'Earned' : 'Will Earn'}</p>
+                                                    <p className={`text-[11px] font-black ${isVerified ? 'text-emerald-600' : 'text-indigo-600'}`}>{parseFloat(friend.amount || 0).toLocaleString()}</p>
+                                                    <p className="text-[7px] font-bold text-slate-300 mt-0.5">
+                                                        Rate: {friend.type === 'LOAN' ? (stats?.my_rates?.loan_disbursement_rate || 0) : (stats?.my_rates?.qr_onboarding_rate || 0)}
+                                                    </p>
                                                 </div>
                                             </div>
 
