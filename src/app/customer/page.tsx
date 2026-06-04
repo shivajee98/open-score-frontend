@@ -1056,7 +1056,13 @@ export default function CustomerHome() {
       )}
 
       {/* Quick Actions */}
-      <QuickActionsGrid />
+      <QuickActionsGrid
+        hasActiveLoan={hasActiveLoan}
+        activeLoanId={activeLoan?.id}
+        hasInboxMessages={allAdminMessages.length > 0}
+        onInboxClick={() => setShowAdminMessageHistory(true)}
+        unreadCount={unreadAdminMessages.length}
+      />
 
       {/* KYC Document Re-upload Blocker */}
       {activeUser?.has_pending_kyc_reupload && (
