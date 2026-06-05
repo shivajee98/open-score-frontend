@@ -4,8 +4,8 @@ import Link from 'next/link';
 
 export default function SuperSaverZoneCard() {
   return (
-    <section className="px-2 py-3 mb-6">
-      <div className="relative rounded-[24px] p-4 flex items-center justify-between overflow-hidden shadow-[0_10px_30px_rgba(138,43,226,0.15)] border border-violet-100 bg-linear-to-r from-violet-100 to-indigo-50">
+    <section className="px-2 mb-6">
+      <div className="relative rounded-[24px] p-4 flex items-center justify-between overflow-hidden shadow-[0_10px_30px_rgba(138,43,226,0.15)] border border-violet-100 bg-linear-to-r from-violet-100 to-indigo-50 ">
 
         <div className="relative z-10 w-[75%]">
           <div className="flex items-center gap-1.5 mb-1.5">

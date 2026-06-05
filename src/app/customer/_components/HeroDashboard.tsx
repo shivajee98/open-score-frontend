@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, Info, Shield, Lock } from 'lucide-react';
+import { ArrowRight, ChevronRight, Info, PlusIcon, Shield, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 interface HeroDashboardProps {
@@ -43,7 +43,7 @@ export default function HeroDashboard({ walletBalance, vaultBalance, lockedBalan
           </div>
 
           <Link href="/customer/add-money" className="inline-flex items-center gap-1 bg-white text-violet-600 text-[8px] font-black uppercase tracking-wider py-0.5 px-1 rounded-full hover:bg-slate-50 transition-colors shadow-md relative z-10 w-fit mt-auto">
-            View Details <ArrowRight size={10} strokeWidth={3} />
+            <PlusIcon size={10} strokeWidth={3} /> Value
           </Link>
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function HeroDashboard({ walletBalance, vaultBalance, lockedBalan
       {isVaultEnabled && (
         <div
           className="w-full h-[125px] rounded-[16px] p-2 relative overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-slate-100/60 flex flex-col cursor-pointer hover:shadow-lg transition-shadow active:scale-95"
-          style={{ backgroundImage: 'url("/locker_bg.png")', backgroundSize: 'cover', backgroundPosition: 'center' }}
+          style={{ backgroundImage: 'url("/locker_bg.1.png")', backgroundSize: 'cover', backgroundPosition: 'center' }}
           onClick={onVaultClick}
         >
 
@@ -61,20 +61,17 @@ export default function HeroDashboard({ walletBalance, vaultBalance, lockedBalan
                 <div className="w-3.5 h-3.5 rounded bg-violet-50 text-[#8A2BE2] flex items-center justify-center border border-violet-100 shadow-sm shrink-0">
                   <Shield size={7} strokeWidth={2.5} />
                 </div>
-                <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-tight">VAULT CARD</span>
+                <span className="text-[10px] font-bold text-slate-800 uppercase tracking-widest leading-tight">VAULT CARD</span>
             </div>
 
             <div className="flex flex-col gap-0.5 pb-1 mt-1">
-                <div className="text-[5.5px] font-black text-[#8A2BE2] uppercase w-fit bg-violet-50 px-1.5 py-0.5 rounded-sm">
-                  METAL ASSET
-                </div>
-                <div className="text-[5.5px] font-black text-slate-400 uppercase w-fit px-1.5 py-0.5 rounded-sm">
+                <div className="text-[7px] font-bold text-slate-800 uppercase w-fit px-1.5 py-0.5 rounded-sm">
                   DIGITAL ASSET
                 </div>
             </div>
 
             <div className="mt-auto">
-              <span className="text-[5px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 block">ASSET VALUE</span>
+              <span className="text-[6px] font-bold text-slate-500 uppercase tracking-tighter mb-0.5 block">ASSET VALUE</span>
               <div className="flex items-baseline gap-0.5">
                 <span className="text-[14px] font-black tracking-tight text-slate-800 leading-none truncate">
                   {parseFloat(String(vaultBalance)).toLocaleString('en-IN', { maximumFractionDigits: 2 })}

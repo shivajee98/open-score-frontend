@@ -1208,23 +1208,11 @@ export default function CustomerHome() {
 
       {/* Alternate Number Verification Banner */}
       {!activeUser?.is_debug && !activeUser?.has_verified_alternate_number && (
-        <div className="mx-3 mt-4 bg-rose-50 border border-rose-200 rounded-lg p-2 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
-              <Smartphone size={14} strokeWidth={2.5} />
-            </div>
-            <div className="flex flex-col justify-center">
-              <h4 className="text-[11px] font-black text-rose-600 uppercase tracking-tight leading-tight">
-                Verify Number
-              </h4>
-              <p className="text-[9px] font-bold text-slate-500 leading-tight">
-                Verify alternate number
-              </p>
-            </div>
-          </div>
-          <Link href="/customer/profile">
-            <button className="bg-rose-500 text-white px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-rose-600 transition-all active:scale-95 shadow-sm shadow-rose-500/20">
-              Verify <ArrowRight size={12} />
+        <div className="mx-2 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
+          <Link href="/customer/profile" className="block w-full">
+            <button className="bg-rose-500 w-full text-white px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center justify-between hover:bg-rose-600 transition-all active:scale-95 shadow-sm shadow-rose-500/20">
+              <span>Verify Alternate Number</span>
+              <ArrowRight size={12} />
             </button>
           </Link>
         </div>
@@ -1282,7 +1270,7 @@ export default function CustomerHome() {
       />
 
       {isVaultMaximized && (
-        <div 
+        <div
             className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl px-4"
             onClick={() => setIsVaultMaximized(false)}
         >
