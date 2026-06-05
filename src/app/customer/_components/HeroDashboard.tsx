@@ -41,7 +41,7 @@ export default function HeroDashboard({ walletBalance, vaultBalance, isVaultEnab
 
       {/* Right Card: Vault Card Preview */}
       {isVaultEnabled && (
-        <div 
+        <div
           className="w-full h-[125px] rounded-[16px] p-2 relative overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-slate-100/60 flex flex-col cursor-pointer hover:shadow-lg transition-shadow active:scale-95"
           style={{ backgroundImage: 'url("/locker_bg.png")', backgroundSize: 'cover', backgroundPosition: 'center' }}
           onClick={onVaultClick}
