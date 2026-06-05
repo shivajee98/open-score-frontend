@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import BankOffersGrid from "./_components/BankOffersGrid";
 import DashboardHeader from "./_components/DashboardHeader";
 import HeroDashboard from "./_components/HeroDashboard";
@@ -112,6 +112,12 @@ export default function CustomerHome() {
         l.status === "KYC_SENT" ||
         (Array.isArray(l.reupload_fields) && l.reupload_fields.length > 0),
     ) || null;
+
+  const isAadharPanReupload = useMemo(() => {
+    if (!kycLoan || !Array.isArray(kycLoan.reupload_fields) || kycLoan.reupload_fields.length === 0) return false;
+    const aadharPanFields = ['aadhar_front', 'aadhar_back', 'pan_card', 'aadhar_number', 'pan_number'];
+    return kycLoan.reupload_fields.every((f: string) => aadharPanFields.includes(f));
+  }, [kycLoan]);
 
   const isRefreshing = userValidating || walletValidating || loansValidating;
 
@@ -245,6 +251,14 @@ export default function CustomerHome() {
   const [panDob, setPanDob] = useState("");
   const [panName, setPanName] = useState("");
 
+  const [kycTab, setKycTab] = useState<'aadhaar' | 'pan'>('aadhaar');
+
+  useEffect(() => {
+    if (isAadharVerified && !isPanVerified) {
+      setKycTab('pan');
+    }
+  }, [isAadharVerified, isPanVerified]);
+
   const [aadharFrontUrl, setAadharFrontUrl] = useState("");
   const [aadharBackUrl, setAadharBackUrl] = useState("");
   const [panCardUrl, setPanCardUrl] = useState("");
@@ -297,6 +311,20 @@ export default function CustomerHome() {
     }
   }, [aadharCooldown]);
 
+  const getDailyAttempts = (type: 'aadhaar_otp' | 'aadhaar_verify' | 'pan_verify') => {
+    if (typeof window === 'undefined') return 0;
+    const today = new Date().toISOString().split('T')[0];
+    const data = localStorage.getItem(`kyc_attempts_${type}_${today}`);
+    return data ? parseInt(data, 10) : 0;
+  };
+
+  const incrementDailyAttempts = (type: 'aadhaar_otp' | 'aadhaar_verify' | 'pan_verify') => {
+    if (typeof window === 'undefined') return;
+    const today = new Date().toISOString().split('T')[0];
+    const current = getDailyAttempts(type);
+    localStorage.setItem(`kyc_attempts_${type}_${today}`, (current + 1).toString());
+  };
+
   const handleSendAadharOtp = async () => {
     if (isAadharVerified || aadharCooldown > 0) return;
     if (!aadharNumber || aadharNumber.length !== 12) {
@@ -304,8 +332,25 @@ export default function CustomerHome() {
       return;
     }
 
+    const attempts = getDailyAttempts('aadhaar_otp');
+    if (attempts >= 5) {
+      toast.error("Daily limit of 5 Aadhaar OTP requests reached. Please try again tomorrow.");
+      return;
+    }
+
     setIsAadharVerifying(true);
     try {
+      incrementDailyAttempts('aadhaar_otp');
+      const checkRes = await apiFetch('/loans/check-kyc-uniqueness', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'aadhar', value: aadharNumber }),
+      });
+      if (!checkRes.unique && !checkRes.already_verified) {
+        toast.error("This Aadhaar number is already linked with another account.");
+        setIsAadharVerifying(false);
+        return;
+      }
+
       const res = await apiFetch('/loans/sandbox/aadhaar-otp', {
         method: 'POST',
         body: JSON.stringify({ aadhaar_number: aadharNumber }),
@@ -338,8 +383,14 @@ export default function CustomerHome() {
       toast.error("Please enter 6-digit OTP");
       return;
     }
+    const attempts = getDailyAttempts('aadhaar_verify');
+    if (attempts >= 5) {
+      toast.error("Daily limit of 5 Aadhaar verification attempts reached. Please try again tomorrow.");
+      return;
+    }
     setIsAadharVerifying(true);
     try {
+      incrementDailyAttempts('aadhaar_verify');
       const res = await apiFetch('/loans/sandbox/aadhaar-verify', {
         method: 'POST',
         body: JSON.stringify({ otp: aadharOtp, reference_id: aadharReferenceId }),
@@ -381,9 +432,25 @@ export default function CustomerHome() {
       toast.error("Full name and Date of Birth are required for PAN verification");
       return;
     }
+    const attempts = getDailyAttempts('pan_verify');
+    if (attempts >= 5) {
+      toast.error("Daily limit of 5 PAN verification attempts reached. Please try again tomorrow.");
+      return;
+    }
 
     setIsPanVerifying(true);
     try {
+      incrementDailyAttempts('pan_verify');
+      const checkRes = await apiFetch('/loans/check-kyc-uniqueness', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'pan', value: panNumber }),
+      });
+      if (!checkRes.unique && !checkRes.already_verified) {
+        toast.error("This PAN number is already linked with another account.");
+        setIsPanVerifying(false);
+        return;
+      }
+
       const res = await apiFetch('/loans/sandbox/pan-verify', {
         method: 'POST',
         body: JSON.stringify({
@@ -406,36 +473,6 @@ export default function CustomerHome() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setIsUploadingFile(fieldName);
-    try {
-      const fd = new FormData();
-      fd.append('file', file, file.name);
-      fd.append('type', fieldName);
-      
-      const res = await apiFetch('/loans/upload-kyc-temp', {
-        method: 'POST',
-        body: fd
-      });
-      
-      if (res.url) {
-        if (fieldName === 'aadhar_front') setAadharFrontUrl(res.url);
-        if (fieldName === 'aadhar_back') setAadharBackUrl(res.url);
-        if (fieldName === 'pan_card') setPanCardUrl(res.url);
-        toast.success("Document uploaded successfully!");
-      } else {
-        toast.error("Upload failed. Please try again.");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Upload failed.");
-    } finally {
-      setIsUploadingFile(null);
-    }
-  };
-
   const handleKycSubmit = async () => {
     if (!isAadharVerified) {
       toast.error("Please verify Aadhaar first");
@@ -443,10 +480,6 @@ export default function CustomerHome() {
     }
     if (!isPanVerified) {
       toast.error("Please verify PAN first");
-      return;
-    }
-    if (!aadharFrontUrl || !aadharBackUrl || !panCardUrl) {
-      toast.error("Please upload all document images");
       return;
     }
 
@@ -463,12 +496,6 @@ export default function CustomerHome() {
         is_aadhar_verified: true,
         is_pan_verified: true,
         aadhaar_reference_id: aadharReferenceId,
-        kyc_images: {
-          ...(existingData.kyc_images || {}),
-          aadhar_front: aadharFrontUrl,
-          aadhar_back: aadharBackUrl,
-          pan_card: panCardUrl
-        }
       };
 
       await apiFetch(`/loans/${kycLoan.id}/kyc-data`, {
@@ -1249,6 +1276,7 @@ export default function CustomerHome() {
       <HeroDashboard
         walletBalance={balance}
         vaultBalance={vaultSetupData?.vault?.balance || 0}
+        lockedBalance={lockedBalance}
         isVaultEnabled={isVaultEnabledByAdmin}
         onVaultClick={() => setIsVaultMaximized(true)}
       />
@@ -1359,308 +1387,242 @@ export default function CustomerHome() {
       />
 
       {/* KYC Document Re-upload Blocker */}
-      {activeUser?.has_pending_kyc_reupload && (
-        <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-[#12131a] border border-[#1f2030] rounded-3xl p-6 shadow-2xl relative overflow-hidden group font-sans">
-            {/* Ambient background glow */}
-            <div className="absolute top-0 right-0 w-36 h-36 bg-indigo-500/5 rounded-full blur-[40px] pointer-events-none"></div>
-            
-            <div className="flex flex-col gap-5 relative z-10">
-              {/* Header */}
-              <div className="flex items-center gap-4 pb-4 border-b border-[#1f2030]">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-                  <ShieldCheck size={24} strokeWidth={2} />
+      {activeUser?.has_pending_kyc_reupload && kycLoan && (
+        isAadharPanReupload ? (
+          <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+            <div className="w-full bg-[#fcfdfd] rounded-2xl overflow-hidden shadow-sm flex flex-col border border-teal-100 font-sans">
+              
+              {/* Header & Tabs Row */}
+              <div className="px-4 py-2.5 border-b border-teal-100/80 bg-teal-50/20 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-teal-500/10 rounded-lg border border-teal-500/20 text-teal-600">
+                    <ShieldCheck strokeWidth={2.5} size={14} />
+                  </div>
+                  <div>
+                    <h1 className="text-teal-900 font-bold text-xs tracking-wide leading-none">
+                      Verify Aadhaar & PAN
+                    </h1>
+                    <p className="text-teal-600/70 text-[8px] mt-0.5 font-bold uppercase tracking-wider">
+                      Identity Verification
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none">
-                    Security & Verification
-                  </p>
-                  <h4 className="text-base font-black text-[#f1f5f9] tracking-tight uppercase">
-                    Verify Aadhaar & PAN Details
-                  </h4>
-                  <p className="text-[10px] font-medium text-slate-400 tracking-normal">
-                    Complete the following steps to verify your identity and enable disbursements.
-                  </p>
+
+                {/* Tabs */}
+                <div className="flex p-0.5 bg-teal-50/50 rounded-lg border border-teal-100/60 relative">
+                  <button 
+                    type="button"
+                    onClick={() => setKycTab('aadhaar')}
+                    className={`px-3 py-1.5 text-[9px] font-bold tracking-wider rounded-md transition-all z-10 flex items-center justify-center gap-1.5 ${
+                      kycTab === 'aadhaar' 
+                        ? 'bg-teal-600 text-white shadow-sm' 
+                        : 'text-teal-600/70 hover:text-teal-900 hover:bg-teal-50'
+                    }`}
+                  >
+                    AADHAAR
+                    <span className={`w-1 h-1 rounded-full ${isAadharVerified ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setKycTab('pan')}
+                    className={`px-3 py-1.5 text-[9px] font-bold tracking-wider rounded-md transition-all z-10 flex items-center justify-center gap-1.5 ${
+                      kycTab === 'pan' 
+                        ? 'bg-teal-600 text-white shadow-sm' 
+                        : 'text-teal-600/70 hover:text-teal-900 hover:bg-teal-50'
+                    }`}
+                  >
+                    PAN
+                    <span className={`w-1 h-1 rounded-full ${isPanVerified ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                  </button>
                 </div>
               </div>
 
-              {/* Form Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Step 1: Aadhaar Card */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h5 className="text-xs font-black text-[#e2e8f0] uppercase tracking-wider">
-                      1. Aadhaar Verification
-                    </h5>
-                    {isAadharVerified ? (
-                      <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Pending
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                        Aadhaar Number
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          maxLength={12}
-                          disabled={isAadharVerified}
-                          placeholder="Enter 12-digit Aadhaar"
-                          value={aadharNumber}
-                          onChange={(e) => setAadharNumber(e.target.value.replace(/\D/g, ""))}
-                          className="flex-1 bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] placeholder-slate-600 rounded-xl px-4 py-2.5 text-xs font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
-                        />
-                        {!isAadharVerified && (
-                          <button
+              {/* Tab Content */}
+              <div className="p-4 pt-2 flex-1">
+                {kycTab === 'aadhaar' ? (
+                  isAadharVerified ? (
+                    <div className="flex items-center gap-2 justify-center py-2 text-center animate-in fade-in duration-200">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+                        <Check size={12} strokeWidth={3} />
+                      </div>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Aadhaar Verified Successfully</p>
+                    </div>
+                  ) : (
+                    <div className="animate-in fade-in duration-200 flex flex-col sm:flex-row sm:items-end gap-3">
+                      <div className="flex-1 space-y-1">
+                        <label className="text-[9px] font-bold text-teal-600/80 tracking-wider uppercase px-0.5">
+                          Aadhaar Number
+                        </label>
+                        <div className="relative flex items-center">
+                          <input 
+                            type="text" 
+                            maxLength={12}
+                            placeholder="Enter 12-digit Aadhaar"
+                            value={aadharNumber}
+                            onChange={(e) => setAadharNumber(e.target.value.replace(/\D/g, ""))}
+                            className="w-full bg-white border border-teal-100 rounded-lg pl-3 pr-[76px] py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all font-mono tracking-widest"
+                          />
+                          <button 
                             type="button"
                             disabled={isAadharVerifying || aadharCooldown > 0 || aadharNumber.length !== 12}
                             onClick={handleSendAadharOtp}
-                            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-500 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                            className="absolute right-1 top-1 bottom-1 bg-teal-600 hover:bg-teal-500 active:scale-95 disabled:bg-zinc-100 disabled:text-zinc-400 text-white font-bold px-3 rounded-md text-[9px] tracking-wider transition-all"
                           >
-                            {isAadharVerifying ? "Sending..." : aadharCooldown > 0 ? `Resend (${aadharCooldown}s)` : "Send OTP"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {aadharOtpSent && !isAadharVerified && (
-                      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                          Enter 6-Digit OTP
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            maxLength={6}
-                            placeholder="Enter OTP"
-                            value={aadharOtp}
-                            onChange={(e) => setAadharOtp(e.target.value.replace(/\D/g, ""))}
-                            className="flex-1 bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] placeholder-slate-600 rounded-xl px-4 py-2.5 text-xs font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition-colors"
-                          />
-                          <button
-                            type="button"
-                            disabled={isAadharVerifying || aadharOtp.length !== 6}
-                            onClick={handleVerifyAadharOtp}
-                            className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-800 disabled:text-slate-500 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
-                          >
-                            {isAadharVerifying ? "Verifying..." : "Verify OTP"}
+                            {isAadharVerifying ? "..." : aadharCooldown > 0 ? `${aadharCooldown}s` : "GET OTP"}
                           </button>
                         </div>
                       </div>
-                    )}
 
-                    {/* Aadhaar Images Upload */}
-                    <div className="grid grid-cols-2 gap-3 pt-2">
-                      <div>
-                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                          Aadhaar Front Image
-                        </label>
-                        {aadharFrontUrl ? (
-                          <div className="relative w-full h-24 rounded-2xl overflow-hidden border border-[#2b2d42] bg-[#161722] group/img">
-                            <img src={aadharFrontUrl} className="w-full h-full object-cover" alt="Aadhaar Front" />
-                            <button
+                      {aadharOtpSent && (
+                        <div className="flex-1 space-y-1 animate-in fade-in duration-200">
+                          <label className="text-[9px] font-bold text-teal-600/80 tracking-wider uppercase px-0.5">
+                            Enter 6-Digit OTP
+                          </label>
+                          <div className="relative flex items-center">
+                            <input 
+                              type="text" 
+                              maxLength={6}
+                              placeholder="Enter OTP"
+                              value={aadharOtp}
+                              onChange={(e) => setAadharOtp(e.target.value.replace(/\D/g, ""))}
+                              className="w-full bg-white border border-teal-100 rounded-lg pl-3 pr-[76px] py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all font-mono tracking-widest"
+                            />
+                            <button 
                               type="button"
-                              onClick={() => setAadharFrontUrl("")}
-                              className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all"
+                              disabled={isAadharVerifying || aadharOtp.length !== 6}
+                              onClick={handleVerifyAadharOtp}
+                              className="absolute right-1 top-1 bottom-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:bg-zinc-100 disabled:text-zinc-400 text-white font-bold px-3 rounded-md text-[9px] tracking-wider transition-all"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              {isAadharVerifying ? "..." : "VERIFY"}
                             </button>
                           </div>
-                        ) : (
-                          <label className="flex flex-col items-center justify-center border border-dashed border-[#2b2d42] hover:border-indigo-500/50 rounded-2xl p-4 cursor-pointer transition-all bg-[#161722]/50 hover:bg-[#161722] min-h-[96px]">
-                            {isUploadingFile === 'aadhar_front' ? (
-                              <div className="w-5 h-5 border-2 border-indigo-500 rounded-full animate-spin border-t-transparent" />
-                            ) : (
-                              <>
-                                <Upload className="w-5 h-5 text-slate-500 mb-1.5" />
-                                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 text-center leading-tight">Upload Front</span>
-                              </>
-                            )}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleFileUpload(e, 'aadhar_front')}
-                            />
+                        </div>
+                      )}
+                    </div>
+                  )
+                ) : (
+                  isPanVerified ? (
+                    <div className="flex items-center gap-2 justify-center py-2 text-center animate-in fade-in duration-200">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+                        <Check size={12} strokeWidth={3} />
+                      </div>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">PAN Verified Successfully</p>
+                    </div>
+                  ) : (
+                    <div className="animate-in fade-in duration-200 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="space-y-0.5">
+                          <label className="text-[9px] font-bold text-teal-600/80 tracking-wider uppercase px-0.5">
+                            Pan Number
                           </label>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                          Aadhaar Back Image
-                        </label>
-                        {aadharBackUrl ? (
-                          <div className="relative w-full h-24 rounded-2xl overflow-hidden border border-[#2b2d42] bg-[#161722] group/img">
-                            <img src={aadharBackUrl} className="w-full h-full object-cover" alt="Aadhaar Back" />
-                            <button
-                              type="button"
-                              onClick={() => setAadharBackUrl("")}
-                              className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="flex flex-col items-center justify-center border border-dashed border-[#2b2d42] hover:border-indigo-500/50 rounded-2xl p-4 cursor-pointer transition-all bg-[#161722]/50 hover:bg-[#161722] min-h-[96px]">
-                            {isUploadingFile === 'aadhar_back' ? (
-                              <div className="w-5 h-5 border-2 border-indigo-500 rounded-full animate-spin border-t-transparent" />
-                            ) : (
-                              <>
-                                <Upload className="w-5 h-5 text-slate-500 mb-1.5" />
-                                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 text-center leading-tight">Upload Back</span>
-                              </>
-                            )}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleFileUpload(e, 'aadhar_back')}
-                            />
+                          <input 
+                            type="text" 
+                            maxLength={10}
+                            placeholder="ABCDE1234F"
+                            value={panNumber}
+                            onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
+                            className="w-full bg-white border border-teal-100 rounded-lg px-2.5 py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all font-mono tracking-widest uppercase"
+                          />
+                        </div>
+                        
+                        <div className="space-y-0.5">
+                          <label className="text-[9px] font-bold text-teal-600/80 tracking-wider uppercase px-0.5">
+                            Full Name
                           </label>
-                        )}
+                          <input 
+                            type="text" 
+                            placeholder="Name on PAN card"
+                            value={panName}
+                            onChange={(e) => setPanName(e.target.value)}
+                            className="w-full bg-white border border-teal-100 rounded-lg px-2.5 py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all"
+                          />
+                        </div>
+
+                        <div className="space-y-0.5">
+                          <label className="text-[9px] font-bold text-teal-600/80 tracking-wider uppercase px-0.5">
+                            Date of Birth
+                          </label>
+                          <input 
+                            type="date" 
+                            value={panDob}
+                            onChange={(e) => setPanDob(e.target.value)}
+                            className="w-full bg-white border border-teal-100 rounded-lg px-2.5 py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all font-sans"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Step 2: PAN Card */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h5 className="text-xs font-black text-[#e2e8f0] uppercase tracking-wider">
-                      2. PAN Verification
-                    </h5>
-                    {isPanVerified ? (
-                      <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Pending
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                        PAN Number
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={10}
-                        disabled={isPanVerified}
-                        placeholder="ABCDE1234F"
-                        value={panNumber}
-                        onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
-                        className="w-full bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] placeholder-slate-600 rounded-xl px-4 py-2.5 text-xs font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          disabled={isPanVerified}
-                          placeholder="Name on PAN card"
-                          value={panName}
-                          onChange={(e) => setPanName(e.target.value)}
-                          className="w-full bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] placeholder-slate-600 rounded-xl px-3 py-2.5 text-[11px] font-sans focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                          Date of Birth
-                        </label>
-                        <input
-                          type="date"
-                          disabled={isPanVerified}
-                          value={panDob}
-                          onChange={(e) => setPanDob(e.target.value)}
-                          className="w-full bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] rounded-xl px-3 py-2 text-[11px] font-sans focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
-                        />
-                      </div>
-                    </div>
-
-                    {!isPanVerified && (
-                      <button
+                      <button 
                         type="button"
                         disabled={isPanVerifying || panNumber.length !== 10 || !panName || !panDob}
                         onClick={handleVerifyPan}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-500 text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                        className="w-full bg-teal-600 hover:bg-teal-500 active:scale-[0.98] disabled:bg-zinc-100 disabled:text-zinc-400 text-white font-bold py-1.5 rounded-lg text-[10px] tracking-wider transition-all"
                       >
-                        {isPanVerifying ? "Verifying..." : "Verify PAN details"}
+                        {isPanVerifying ? "VERIFYING..." : "VERIFY PAN"}
                       </button>
-                    )}
-
-                    {/* PAN Image Upload */}
-                    <div className="pt-2">
-                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
-                        PAN Card Image
-                      </label>
-                      {panCardUrl ? (
-                        <div className="relative w-full h-24 rounded-2xl overflow-hidden border border-[#2b2d42] bg-[#161722] group/img">
-                          <img src={panCardUrl} className="w-full h-full object-cover" alt="PAN Card" />
-                          <button
-                            type="button"
-                            onClick={() => setPanCardUrl("")}
-                            className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center border border-dashed border-[#2b2d42] hover:border-indigo-500/50 rounded-2xl p-4 cursor-pointer transition-all bg-[#161722]/50 hover:bg-[#161722] min-h-[96px]">
-                          {isUploadingFile === 'pan_card' ? (
-                            <div className="w-5 h-5 border-2 border-indigo-500 rounded-full animate-spin border-t-transparent" />
-                          ) : (
-                            <>
-                              <Upload className="w-5 h-5 text-slate-500 mb-1.5" />
-                              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 text-center leading-tight">Upload PAN Card</span>
-                            </>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e, 'pan_card')}
-                          />
-                        </label>
-                      )}
                     </div>
-                  </div>
-                </div>
-
+                  )
+                )}
               </div>
 
-              {/* Submit Button */}
-              <div className="pt-4 border-t border-[#1f2030] flex justify-end">
-                <button
+              {/* Footer */}
+              <div className="px-4 py-2 bg-teal-50/20 border-t border-teal-100/80 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    {isAadharVerified && isPanVerified ? (
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    ) : (
+                      <>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                      </>
+                    )}
+                  </span>
+                  <span className="text-[9px] font-bold text-teal-700/80 tracking-wider uppercase mt-px">
+                    {isAadharVerified && isPanVerified ? 'Ready' : 'Pending'}
+                  </span>
+                </div>
+                
+                <button 
                   type="button"
-                  disabled={isSubmitting || !isAadharVerified || !isPanVerified || !aadharFrontUrl || !aadharBackUrl || !panCardUrl}
+                  disabled={isSubmitting || !isAadharVerified || !isPanVerified}
                   onClick={handleKycSubmit}
-                  className="bg-[#10b981] hover:bg-[#059669] disabled:bg-[#1e293b] disabled:text-[#64748b] text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+                  className={`flex items-center gap-1 px-3 py-1 rounded-lg text-[9px] font-bold tracking-wider transition-all ${
+                    isAadharVerified && isPanVerified 
+                      ? 'bg-teal-600 hover:bg-teal-500 text-white border border-teal-500/30' 
+                      : 'bg-zinc-50 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+                  }`}
                 >
-                  {isSubmitting ? "Submitting..." : "Submit Verification Documents"}
-                  <ArrowRight size={14} strokeWidth={3} />
+                  {isSubmitting ? 'SUBMITTING...' : 'SUBMIT'} <ArrowRight size={10} strokeWidth={3} />
                 </button>
               </div>
 
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="mx-4 mb-6 bg-[#181216] border border-[#301f28] rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl shadow-rose-950/10 animate-in fade-in slide-in-from-bottom-4 duration-500 border-l-4 border-l-rose-500">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0 shadow-lg">
+                <Upload size={20} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mb-0.5">
+                  Action Required
+                </p>
+                <h4 className="text-xs font-black text-[#f1f5f9] uppercase tracking-tight">
+                  Document Correction Required
+                </h4>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">
+                  Please re-upload correct documents to resume your loan application
+                </p>
+              </div>
+            </div>
+            <Link href={`/customer/loan/status/view?id=${kycLoan.id}`}>
+              <button className="w-full sm:w-auto bg-[#e11d48] text-white px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#be123c] transition-all active:scale-95 shadow-md">
+                Upload Documents <ArrowRight size={12} />
+              </button>
+            </Link>
+          </div>
+        )
       )}
 
       {activeVaultRequest && (

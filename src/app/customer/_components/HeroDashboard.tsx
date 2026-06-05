@@ -1,14 +1,15 @@
-import { ArrowRight, ChevronRight, Info, Shield } from 'lucide-react';
+import { ArrowRight, ChevronRight, Info, Shield, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 interface HeroDashboardProps {
   walletBalance: string | number;
   vaultBalance: string | number;
+  lockedBalance?: string | number;
   isVaultEnabled?: boolean;
   onVaultClick?: () => void;
 }
 
-export default function HeroDashboard({ walletBalance, vaultBalance, isVaultEnabled = false, onVaultClick }: HeroDashboardProps) {
+export default function HeroDashboard({ walletBalance, vaultBalance, lockedBalance = 0, isVaultEnabled = false, onVaultClick }: HeroDashboardProps) {
   return (
     <section className={`px-2 grid ${isVaultEnabled ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
 
@@ -24,9 +25,17 @@ export default function HeroDashboard({ walletBalance, vaultBalance, isVaultEnab
 
           <div className="flex flex-col items-baseline gap-1 mt-4">
             <div className="flex items-baseline flex-col gap-0.5">
-              <h2 className="text-[24px] font-bold text-white tracking-tighter leading-none truncate">
-                {Number(walletBalance).toLocaleString('en-IN')}
-              </h2>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-[24px] font-bold text-white tracking-tighter leading-none truncate">
+                  {Number(walletBalance).toLocaleString('en-IN')}
+                </h2>
+                {Number(lockedBalance) > 0 && (
+                  <div className="flex items-center gap-1 bg-black/30 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/10 text-white select-none shrink-0" title="Locked Funds">
+                    <Lock size={8} className="text-yellow-400 shrink-0 animate-pulse" />
+                    <span className="text-[8px] font-black tracking-tight">{Number(lockedBalance).toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+              </div>
               <p className="text-[9px] font-semibold text-white/80 uppercase tracking-tighter">
                 Total Value
               </p>
