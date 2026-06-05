@@ -1208,7 +1208,7 @@ export default function CustomerHome() {
 
       {/* Alternate Number Verification Banner */}
       {!activeUser?.is_debug && !activeUser?.has_verified_alternate_number && (
-        <div className="mx-2 mt-2 animate-in fade-in slide-in-from-top-4 duration-500">
+        <div className="mx-2 mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
           <Link href="/customer/profile" className="block w-full">
             <button className="bg-rose-500 w-full text-white px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center justify-between hover:bg-rose-600 transition-all active:scale-95 shadow-sm shadow-rose-500/20">
               <span>Verify Alternate Number</span>
