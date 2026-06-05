@@ -1,4 +1,5 @@
-import React from 'react';
+'use client';
+import React, { useEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -7,66 +8,89 @@ interface BankOffersGridProps {
 }
 
 export default function BankOffersGrid({ isBankVerified = false }: BankOffersGridProps) {
+  const carouselRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!isBankVerified || !carouselRef.current) return;
+
+    let index = 0;
+    const interval = setInterval(() => {
+      index++;
+      const el = carouselRef.current;
+      if (el) {
+        el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' });
+
+        if (index === 3) {
+          setTimeout(() => {
+            if (!carouselRef.current) return;
+            index = 0;
+            carouselRef.current.scrollTo({ left: 0, behavior: 'auto' });
+          }, 500);
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isBankVerified]);
+
   return (
-    <section className={`px-2 py-2 grid ${isBankVerified ? 'grid-cols-1' : 'grid-cols-2'} gap-3 pb-2`}>
+    <section
+      ref={carouselRef}
+      className={`px-2 py-2 gap-3 pb-2 ${isBankVerified ? 'flex overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' : 'grid grid-cols-2'}`}
+    >
 
       {isBankVerified ? (
         <>
           {/* Card 1: Cashback Card */}
           <div
-            className="w-full rounded-2xl relative overflow-hidden shadow-sm flex flex-col justify-end p-4 sm:p-5"
+            className="min-w-full snap-center rounded-2xl relative overflow-hidden shadow-sm flex flex-col justify-end p-4 sm:p-5"
             style={{
-              aspectRatio: '700/255',
-              backgroundImage: 'url("/card-image/cd-1.png")',
-              backgroundSize: 'cover',
+              aspectRatio: '700/230',
+              backgroundImage: 'url("/card-image/cd-1.1.png")',
+              backgroundSize: '100% 100%',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
             }}
           >
-            <Link
-              href="/customer/transfer"
-              className="inline-flex items-center gap-1 bg-[#0a8060] hover:bg-[#086b50] text-white text-[9px] sm:text-xs font-black uppercase tracking-wider py-1.5 px-4 rounded-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-[#0a8060]/30 w-fit relative z-10 -mb-2"
-            >
-              Transfer Now <ChevronRight size={12} strokeWidth={3} />
-            </Link>
           </div>
 
           {/* Card 2: Secure Transactions Card */}
           <div
-            className="w-full rounded-2xl relative overflow-hidden shadow-sm flex flex-col justify-end p-4 sm:p-5"
+            className="min-w-full snap-center rounded-2xl relative overflow-hidden shadow-sm flex flex-col justify-end p-4 sm:p-5"
             style={{
-              aspectRatio: '700/226',
-              backgroundImage: 'url("/card-image/cd-2.png")',
-              backgroundSize: 'cover',
+              aspectRatio: '700/230',
+              backgroundImage: 'url("/card-image/cd-2.1.png")',
+              backgroundSize: '100% 100%',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
             }}
           >
-            <Link
-              href="/customer/about"
-              className="inline-flex items-center gap-1 bg-transparent hover:bg-white/10 text-white text-[9px] sm:text-xs font-black uppercase tracking-wider py-1.5 px-4 rounded-full border border-white/40 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] w-fit relative z-10 -mb-2"
-            >
-              Learn More <ChevronRight size={12} strokeWidth={3} />
-            </Link>
           </div>
 
           {/* Card 3: Experience Premium Card */}
           <div
-            className="w-full rounded-2xl relative overflow-hidden shadow-sm flex flex-col justify-end p-4 sm:p-5"
+            className="min-w-full snap-center rounded-2xl relative overflow-hidden shadow-sm flex flex-col justify-end p-4 sm:p-5"
             style={{
-              aspectRatio: '700/255',
-              backgroundImage: 'url("/card-image/cd-3.png")',
-              backgroundSize: 'cover',
+              aspectRatio: '700/230',
+              backgroundImage: 'url("/card-image/cd-3.1.png")',
+              backgroundSize: '100% 100%',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
             }}
           >
-            <Link
-              href="/customer/marketplace"
-              className="inline-flex items-center gap-1 bg-transparent hover:bg-white/10 text-white text-[9px] sm:text-xs font-black uppercase tracking-wider py-1.5 px-4 rounded-full border border-white/40 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] w-fit relative z-10 -mb-2"
-            >
-              Explore Benefits <ChevronRight size={12} strokeWidth={3} />
-            </Link>
+          </div>
+
+          {/* Clone of Card 1 for seamless loop */}
+          <div
+            className="min-w-full snap-center rounded-2xl relative overflow-hidden shadow-sm flex flex-col justify-end p-4 sm:p-5"
+            style={{
+              aspectRatio: '700/230',
+              backgroundImage: 'url("/card-image/cd-1.1.png")',
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
+          >
           </div>
         </>
       ) : (
