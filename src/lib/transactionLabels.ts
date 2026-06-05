@@ -60,6 +60,11 @@ export function getTransactionLabel(tx: any): string {
     if (srcType === 'BANK_TRANSFER') return 'Bulk Paid';
     if (srcType === 'BANK_TRANSFER_REFUND') return 'Reverted';
 
+    // ── Vault Card ─────────────────────────────────────────────
+    if (srcType === 'VAULT_ADD_MONEY') return 'Vault Top Up';
+    if (srcType === 'VAULT_ADD_MONEY_REFUND') return 'Vault Top Up Refund';
+    if (srcType === 'VAULT_DEPOSIT') return 'Vault Growth Plan';
+
     if (srcType === 'TEAM_EARNING_TRANSFER') {
         const match = tx.description?.match(/^\[(.*?)\]/);
         if (match) return match[1];
@@ -93,6 +98,9 @@ export function getTransactionSubtitle(tx: any): string {
         if (srcType === 'PLATFORM_FEE') return 'System Fee';
         
         if (srcType === 'AUDIT_CORRECTION') return 'Wallet Recovery';
+        if (srcType === 'VAULT_ADD_MONEY' || srcType === 'VAULT_DEPOSIT') return 'Vault Transfer';
+        if (srcType === 'VAULT_ADD_MONEY_REFUND') return 'Vault Refund';
+        
         if (tx.type === 'DEBIT') return 'Withdrawal';
         return 'Increment Value';
     }
