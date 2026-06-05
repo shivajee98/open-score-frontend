@@ -106,6 +106,12 @@ export default function CustomerHome() {
   const activeLoans =
     (loans ? (Array.isArray(loans) ? loans : loans.data || []) : cachedLoans) ||
     [];
+  const kycLoan =
+    activeLoans?.find(
+      (l: any) =>
+        l.status === "KYC_SENT" ||
+        (Array.isArray(l.reupload_fields) && l.reupload_fields.length > 0),
+    ) || null;
 
   const isRefreshing = userValidating || walletValidating || loansValidating;
 
@@ -222,6 +228,266 @@ export default function CustomerHome() {
   const handleCloseSplash = () => {
     setShowSplashScreen(false);
     sessionStorage.setItem("customer_splash_seen", "true");
+  };
+
+  // KYC soft form states
+  const [aadharNumber, setAadharNumber] = useState("");
+  const [aadharOtpSent, setAadharOtpSent] = useState(false);
+  const [aadharReferenceId, setAadharReferenceId] = useState<string | null>(null);
+  const [aadharOtp, setAadharOtp] = useState("");
+  const [isAadharVerified, setIsAadharVerified] = useState(false);
+  const [isAadharVerifying, setIsAadharVerifying] = useState(false);
+  const [aadharCooldown, setAadharCooldown] = useState(0);
+
+  const [panNumber, setPanNumber] = useState("");
+  const [isPanVerified, setIsPanVerified] = useState(false);
+  const [isPanVerifying, setIsPanVerifying] = useState(false);
+  const [panDob, setPanDob] = useState("");
+  const [panName, setPanName] = useState("");
+
+  const [aadharFrontUrl, setAadharFrontUrl] = useState("");
+  const [aadharBackUrl, setAadharBackUrl] = useState("");
+  const [panCardUrl, setPanCardUrl] = useState("");
+  const [isUploadingFile, setIsUploadingFile] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (activeUser) {
+      if (activeUser.aadhar_number) setAadharNumber(activeUser.aadhar_number);
+      if (activeUser.pan_number) setPanNumber(activeUser.pan_number);
+      if (activeUser.is_aadhar_verified) setIsAadharVerified(true);
+      if (activeUser.is_pan_verified) setIsPanVerified(true);
+      if (activeUser.name) setPanName(activeUser.name);
+      
+      if (activeUser.date_of_birth) {
+        const dobStr = activeUser.date_of_birth;
+        if (dobStr.includes('T')) {
+          setPanDob(dobStr.split('T')[0]);
+        } else {
+          setPanDob(dobStr);
+        }
+      }
+      
+      if (activeUser.aadhar_image) setAadharFrontUrl(activeUser.aadhar_image);
+      if (activeUser.aadhar_back_image) setAadharBackUrl(activeUser.aadhar_back_image);
+      if (activeUser.pan_image) setPanCardUrl(activeUser.pan_image);
+    }
+    
+    if (kycLoan?.form_data) {
+      const fd = kycLoan.form_data;
+      if (fd.aadhar_number) setAadharNumber(fd.aadhar_number);
+      if (fd.pan_number) setPanNumber(fd.pan_number);
+      if (fd.date_of_birth) setPanDob(fd.date_of_birth);
+      if (fd.first_name) setPanName(fd.first_name);
+      if (fd.is_aadhar_verified) setIsAadharVerified(true);
+      if (fd.is_pan_verified) setIsPanVerified(true);
+      
+      if (fd.kyc_images) {
+        if (fd.kyc_images.aadhar_front) setAadharFrontUrl(fd.kyc_images.aadhar_front);
+        if (fd.kyc_images.aadhar_back) setAadharBackUrl(fd.kyc_images.aadhar_back);
+        if (fd.kyc_images.pan_card) setPanCardUrl(fd.kyc_images.pan_card);
+      }
+    }
+  }, [activeUser, kycLoan]);
+
+  useEffect(() => {
+    if (aadharCooldown > 0) {
+      const timer = setTimeout(() => setAadharCooldown(aadharCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [aadharCooldown]);
+
+  const handleSendAadharOtp = async () => {
+    if (isAadharVerified || aadharCooldown > 0) return;
+    if (!aadharNumber || aadharNumber.length !== 12) {
+      toast.error("Please enter a valid 12-digit Aadhaar number");
+      return;
+    }
+
+    setIsAadharVerifying(true);
+    try {
+      const res = await apiFetch('/loans/sandbox/aadhaar-otp', {
+        method: 'POST',
+        body: JSON.stringify({ aadhaar_number: aadharNumber }),
+      });
+
+      if (res.cooldown) {
+        setAadharCooldown(60);
+        toast.error(res.message || "Please wait before resending OTP");
+        return;
+      }
+
+      const refId = res?.data?.reference_id ?? res?.reference_id;
+      if (refId) {
+        setAadharReferenceId(refId);
+        setAadharOtpSent(true);
+        setAadharCooldown(60);
+        toast.success("OTP sent to your Aadhaar-linked mobile number");
+      } else {
+        toast.error(res?.message || "Failed to send OTP. Try again.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send OTP.");
+    } finally {
+      setIsAadharVerifying(false);
+    }
+  };
+
+  const handleVerifyAadharOtp = async () => {
+    if (!aadharOtp || aadharOtp.length !== 6 || !aadharReferenceId) {
+      toast.error("Please enter 6-digit OTP");
+      return;
+    }
+    setIsAadharVerifying(true);
+    try {
+      const res = await apiFetch('/loans/sandbox/aadhaar-verify', {
+        method: 'POST',
+        body: JSON.stringify({ otp: aadharOtp, reference_id: aadharReferenceId }),
+      });
+      const kyc = res?.data?.kyc_result ?? res?.data ?? {};
+
+      if ((res?.code === 200 || res?.status === 200) && kyc?.aadhaar_number) {
+        setIsAadharVerified(true);
+        toast.success("Aadhaar verified successfully!");
+        
+        if (kyc.name || kyc.full_name) {
+          setPanName(kyc.name || kyc.full_name);
+        }
+        if (kyc.dob || kyc.date_of_birth) {
+          const kycDob = kyc.dob || kyc.date_of_birth;
+          const parts = kycDob.split(/[-/]/);
+          const isoDate = parts.length === 3
+            ? (parts[2].length === 4 ? `${parts[2]}-${parts[1]}-${parts[0]}` : kycDob)
+            : kycDob;
+          setPanDob(isoDate);
+        }
+      } else {
+        toast.error(res?.message || "Aadhaar verification failed.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "OTP verification failed.");
+    } finally {
+      setIsAadharVerifying(false);
+    }
+  };
+
+  const handleVerifyPan = async () => {
+    if (isPanVerified) return;
+    if (!panNumber || panNumber.length !== 10) {
+      toast.error("Please enter a valid 10-character PAN number");
+      return;
+    }
+    if (!panName || !panDob) {
+      toast.error("Full name and Date of Birth are required for PAN verification");
+      return;
+    }
+
+    setIsPanVerifying(true);
+    try {
+      const res = await apiFetch('/loans/sandbox/pan-verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          pan: panNumber,
+          name: panName.trim(),
+          dob: panDob
+        }),
+      });
+
+      if (res?.data?.status === 'VALID' || res?.status === 'VALID' || res?.valid || res?.data?.valid) {
+        setIsPanVerified(true);
+        toast.success("PAN card verified successfully!");
+      } else {
+        toast.error(res?.message || "PAN verification failed. Ensure name matches your documents.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "PAN verification failed.");
+    } finally {
+      setIsPanVerifying(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploadingFile(fieldName);
+    try {
+      const fd = new FormData();
+      fd.append('file', file, file.name);
+      fd.append('type', fieldName);
+      
+      const res = await apiFetch('/loans/upload-kyc-temp', {
+        method: 'POST',
+        body: fd
+      });
+      
+      if (res.url) {
+        if (fieldName === 'aadhar_front') setAadharFrontUrl(res.url);
+        if (fieldName === 'aadhar_back') setAadharBackUrl(res.url);
+        if (fieldName === 'pan_card') setPanCardUrl(res.url);
+        toast.success("Document uploaded successfully!");
+      } else {
+        toast.error("Upload failed. Please try again.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed.");
+    } finally {
+      setIsUploadingFile(null);
+    }
+  };
+
+  const handleKycSubmit = async () => {
+    if (!isAadharVerified) {
+      toast.error("Please verify Aadhaar first");
+      return;
+    }
+    if (!isPanVerified) {
+      toast.error("Please verify PAN first");
+      return;
+    }
+    if (!aadharFrontUrl || !aadharBackUrl || !panCardUrl) {
+      toast.error("Please upload all document images");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const existingData = kycLoan?.form_data || {};
+      
+      const payload = {
+        ...existingData,
+        aadhar_number: aadharNumber,
+        pan_number: panNumber,
+        date_of_birth: panDob,
+        first_name: panName || activeUser?.name || "",
+        is_aadhar_verified: true,
+        is_pan_verified: true,
+        aadhaar_reference_id: aadharReferenceId,
+        kyc_images: {
+          ...(existingData.kyc_images || {}),
+          aadhar_front: aadharFrontUrl,
+          aadhar_back: aadharBackUrl,
+          pan_card: panCardUrl
+        }
+      };
+
+      await apiFetch(`/loans/${kycLoan.id}/kyc-data`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      await apiFetch(`/loans/${kycLoan.id}/confirm`, {
+        method: 'POST'
+      });
+
+      toast.success("Verification details submitted successfully!");
+      await mutateUser();
+      await mutateLoans();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit verification details.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const allAdminMessages = Array.isArray(adminMessages) ? adminMessages : [];
@@ -368,12 +634,6 @@ export default function CustomerHome() {
       : activeWallet?.locked_balance || "0"
     : 0;
 
-  const kycLoan =
-    loansList?.find(
-      (l: any) =>
-        l.status === "KYC_SENT" ||
-        (Array.isArray(l.reupload_fields) && l.reupload_fields.length > 0),
-    ) || null;
   const activeLoan = loansList?.find(
     (l: any) => l.status === "DISBURSED" || l.status === "OVERDUE",
   );
@@ -1100,62 +1360,304 @@ export default function CustomerHome() {
 
       {/* KYC Document Re-upload Blocker */}
       {activeUser?.has_pending_kyc_reupload && (
-        <div className="px-4 mb-4">
-          <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 shadow-lg shadow-rose-500/5 animate-in fade-in slide-in-from-bottom-4 duration-500 border-l-4 border-l-rose-500 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-200/10 rounded-full blur-2xl -mr-12 -mt-12"></div>
-
-            <div className="flex flex-col gap-3 relative z-10">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-rose-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20 group-hover:scale-105 transition-transform">
-                    <Lock size={22} strokeWidth={2.5} />
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest leading-none mb-1">
-                      Account Restricted
-                    </p>
-                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-                      KYC Action Required
-                    </h4>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter opacity-80 italic">
-                      Payments currently locked
-                    </p>
-                  </div>
+        <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-[#12131a] border border-[#1f2030] rounded-3xl p-6 shadow-2xl relative overflow-hidden group font-sans">
+            {/* Ambient background glow */}
+            <div className="absolute top-0 right-0 w-36 h-36 bg-indigo-500/5 rounded-full blur-[40px] pointer-events-none"></div>
+            
+            <div className="flex flex-col gap-5 relative z-10">
+              {/* Header */}
+              <div className="flex items-center gap-4 pb-4 border-b border-[#1f2030]">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                  <ShieldCheck size={24} strokeWidth={2} />
                 </div>
-                <Link
-                  href={
-                    kycLoan
-                      ? `/customer/loan/status/view?id=${kycLoan.id}`
-                      : "/customer/loan"
-                  }
-                  className="shrink-0"
-                >
-                  <button className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 group/btn">
-                    FIX KYC{" "}
-                    <ArrowRight
-                      size={14}
-                      strokeWidth={3}
-                      className="group-hover/btn:translate-x-1 transition-transform"
-                    />
-                  </button>
-                </Link>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none">
+                    Security & Verification
+                  </p>
+                  <h4 className="text-base font-black text-[#f1f5f9] tracking-tight uppercase">
+                    Verify Aadhaar & PAN Details
+                  </h4>
+                  <p className="text-[10px] font-medium text-slate-400 tracking-normal">
+                    Complete the following steps to verify your identity and enable disbursements.
+                  </p>
+                </div>
               </div>
 
-              {kycLoan?.reupload_fields?.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-1 border-t border-rose-200/50 mt-1">
-                  <p className="w-full text-[8px] font-black text-rose-500 uppercase tracking-widest mb-1">
-                    Items requiring update:
-                  </p>
-                  {kycLoan.reupload_fields.map((field: string, idx: number) => (
-                    <span
-                      key={idx}
-                      className="bg-rose-500 text-white text-[7px] font-black uppercase px-2 py-1 rounded-md shadow-sm"
-                    >
-                      {field.replace(/_/g, " ")}
-                    </span>
-                  ))}
+              {/* Form Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Step 1: Aadhaar Card */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="text-xs font-black text-[#e2e8f0] uppercase tracking-wider">
+                      1. Aadhaar Verification
+                    </h5>
+                    {isAadharVerified ? (
+                      <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        Pending
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                        Aadhaar Number
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          maxLength={12}
+                          disabled={isAadharVerified}
+                          placeholder="Enter 12-digit Aadhaar"
+                          value={aadharNumber}
+                          onChange={(e) => setAadharNumber(e.target.value.replace(/\D/g, ""))}
+                          className="flex-1 bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] placeholder-slate-600 rounded-xl px-4 py-2.5 text-xs font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+                        />
+                        {!isAadharVerified && (
+                          <button
+                            type="button"
+                            disabled={isAadharVerifying || aadharCooldown > 0 || aadharNumber.length !== 12}
+                            onClick={handleSendAadharOtp}
+                            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-500 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                          >
+                            {isAadharVerifying ? "Sending..." : aadharCooldown > 0 ? `Resend (${aadharCooldown}s)` : "Send OTP"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {aadharOtpSent && !isAadharVerified && (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                          Enter 6-Digit OTP
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            maxLength={6}
+                            placeholder="Enter OTP"
+                            value={aadharOtp}
+                            onChange={(e) => setAadharOtp(e.target.value.replace(/\D/g, ""))}
+                            className="flex-1 bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] placeholder-slate-600 rounded-xl px-4 py-2.5 text-xs font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition-colors"
+                          />
+                          <button
+                            type="button"
+                            disabled={isAadharVerifying || aadharOtp.length !== 6}
+                            onClick={handleVerifyAadharOtp}
+                            className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-800 disabled:text-slate-500 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                          >
+                            {isAadharVerifying ? "Verifying..." : "Verify OTP"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Aadhaar Images Upload */}
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div>
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                          Aadhaar Front Image
+                        </label>
+                        {aadharFrontUrl ? (
+                          <div className="relative w-full h-24 rounded-2xl overflow-hidden border border-[#2b2d42] bg-[#161722] group/img">
+                            <img src={aadharFrontUrl} className="w-full h-full object-cover" alt="Aadhaar Front" />
+                            <button
+                              type="button"
+                              onClick={() => setAadharFrontUrl("")}
+                              className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center border border-dashed border-[#2b2d42] hover:border-indigo-500/50 rounded-2xl p-4 cursor-pointer transition-all bg-[#161722]/50 hover:bg-[#161722] min-h-[96px]">
+                            {isUploadingFile === 'aadhar_front' ? (
+                              <div className="w-5 h-5 border-2 border-indigo-500 rounded-full animate-spin border-t-transparent" />
+                            ) : (
+                              <>
+                                <Upload className="w-5 h-5 text-slate-500 mb-1.5" />
+                                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 text-center leading-tight">Upload Front</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(e, 'aadhar_front')}
+                            />
+                          </label>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                          Aadhaar Back Image
+                        </label>
+                        {aadharBackUrl ? (
+                          <div className="relative w-full h-24 rounded-2xl overflow-hidden border border-[#2b2d42] bg-[#161722] group/img">
+                            <img src={aadharBackUrl} className="w-full h-full object-cover" alt="Aadhaar Back" />
+                            <button
+                              type="button"
+                              onClick={() => setAadharBackUrl("")}
+                              className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center border border-dashed border-[#2b2d42] hover:border-indigo-500/50 rounded-2xl p-4 cursor-pointer transition-all bg-[#161722]/50 hover:bg-[#161722] min-h-[96px]">
+                            {isUploadingFile === 'aadhar_back' ? (
+                              <div className="w-5 h-5 border-2 border-indigo-500 rounded-full animate-spin border-t-transparent" />
+                            ) : (
+                              <>
+                                <Upload className="w-5 h-5 text-slate-500 mb-1.5" />
+                                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 text-center leading-tight">Upload Back</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload(e, 'aadhar_back')}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              )}
+
+                {/* Step 2: PAN Card */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="text-xs font-black text-[#e2e8f0] uppercase tracking-wider">
+                      2. PAN Verification
+                    </h5>
+                    {isPanVerified ? (
+                      <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        Pending
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                        PAN Number
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        disabled={isPanVerified}
+                        placeholder="ABCDE1234F"
+                        value={panNumber}
+                        onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
+                        className="w-full bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] placeholder-slate-600 rounded-xl px-4 py-2.5 text-xs font-mono tracking-widest focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          disabled={isPanVerified}
+                          placeholder="Name on PAN card"
+                          value={panName}
+                          onChange={(e) => setPanName(e.target.value)}
+                          className="w-full bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] placeholder-slate-600 rounded-xl px-3 py-2.5 text-[11px] font-sans focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                          Date of Birth
+                        </label>
+                        <input
+                          type="date"
+                          disabled={isPanVerified}
+                          value={panDob}
+                          onChange={(e) => setPanDob(e.target.value)}
+                          className="w-full bg-[#161722] border border-[#2b2d42] text-[#f1f5f9] rounded-xl px-3 py-2 text-[11px] font-sans focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
+
+                    {!isPanVerified && (
+                      <button
+                        type="button"
+                        disabled={isPanVerifying || panNumber.length !== 10 || !panName || !panDob}
+                        onClick={handleVerifyPan}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-500 text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                      >
+                        {isPanVerifying ? "Verifying..." : "Verify PAN details"}
+                      </button>
+                    )}
+
+                    {/* PAN Image Upload */}
+                    <div className="pt-2">
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1.5">
+                        PAN Card Image
+                      </label>
+                      {panCardUrl ? (
+                        <div className="relative w-full h-24 rounded-2xl overflow-hidden border border-[#2b2d42] bg-[#161722] group/img">
+                          <img src={panCardUrl} className="w-full h-full object-cover" alt="PAN Card" />
+                          <button
+                            type="button"
+                            onClick={() => setPanCardUrl("")}
+                            className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center border border-dashed border-[#2b2d42] hover:border-indigo-500/50 rounded-2xl p-4 cursor-pointer transition-all bg-[#161722]/50 hover:bg-[#161722] min-h-[96px]">
+                          {isUploadingFile === 'pan_card' ? (
+                            <div className="w-5 h-5 border-2 border-indigo-500 rounded-full animate-spin border-t-transparent" />
+                          ) : (
+                            <>
+                              <Upload className="w-5 h-5 text-slate-500 mb-1.5" />
+                              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 text-center leading-tight">Upload PAN Card</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleFileUpload(e, 'pan_card')}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-4 border-t border-[#1f2030] flex justify-end">
+                <button
+                  type="button"
+                  disabled={isSubmitting || !isAadharVerified || !isPanVerified || !aadharFrontUrl || !aadharBackUrl || !panCardUrl}
+                  onClick={handleKycSubmit}
+                  className="bg-[#10b981] hover:bg-[#059669] disabled:bg-[#1e293b] disabled:text-[#64748b] text-white px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Verification Documents"}
+                  <ArrowRight size={14} strokeWidth={3} />
+                </button>
+              </div>
+
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee, MessageSquare, Eye, ChevronDown, Info, CreditCard, TrendingUp, ArrowDownToLine, ArrowUpFromLine, Plus, X, Upload, Copy, Award, ChevronRight, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Wallet, Landmark, ArrowRight, CheckCircle2, AlertCircle, Lock, Loader2, ArrowRightLeft, Clock, XCircle, Gift, ReceiptIndianRupee, MessageSquare, Eye, ChevronDown, Info, CreditCard, TrendingUp, ArrowDownToLine, ArrowUpFromLine, Plus, X, Upload, Copy, Award, ChevronRight, ShieldCheck, Shield } from 'lucide-react';
 import { toast } from '@/components/ui/Toast';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 import PinModal from '@/components/PinModal';
@@ -201,6 +201,9 @@ export default function PayoutPage() {
     const [isVaultMaximized, setIsVaultMaximized] = useState(false);
     const [showVaultCardNumber, setShowVaultCardNumber] = useState(false);
     const [isAddMoneyModalOpen, setIsAddMoneyModalOpen] = useState(false);
+    const [isVaultToWalletModalOpen, setIsVaultToWalletModalOpen] = useState(false);
+    const [vaultToWalletAmount, setVaultToWalletAmount] = useState('');
+    const [vaultToWalletError, setVaultToWalletError] = useState<string | null>(null);
     const [addMoneyAmount, setAddMoneyAmount] = useState('');
     const [addMoneySource, setAddMoneySource] = useState<'WALLET' | 'UPI' | 'HYBRID' | null>(null);
     const [addMoneyProof, setAddMoneyProof] = useState<File | null>(null);
@@ -269,7 +272,7 @@ export default function PayoutPage() {
     const [growthPlanStep, setGrowthPlanStep] = useState(1);
     const [selectedPlanId, setSelectedPlanId] = useState<any>('starter');
     const [growthPlanAmount, setGrowthPlanAmount] = useState<number>(2000);
-    const [growthPaymentMethod, setGrowthPaymentMethod] = useState<'WALLET' | 'UPI'>('WALLET');
+    const [growthPaymentMethod, setGrowthPaymentMethod] = useState<'WALLET' | 'UPI' | 'VAULT'>('WALLET');
     const [growthProofScreenshot, setGrowthProofScreenshot] = useState<File | null>(null);
     const [growthProofPreview, setGrowthProofPreview] = useState<string | null>(null);
 
@@ -411,7 +414,23 @@ export default function PayoutPage() {
         setIsVaultSubmitting(true);
         try {
             const planDetails = currentPlan;
-            if (growthPaymentMethod === 'WALLET') {
+            if (growthPaymentMethod === 'VAULT') {
+                // Pay directly from vault balance — no wallet debit needed
+                await apiFetch('/vault/deposit', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        tenure_days: planDetails.tenure_days,
+                        amount: growthPlanAmount,
+                        pay_from_wallet: false,
+                        growth_plan_id: planDetails.id
+                    }),
+                });
+                toast.success(`Success! ${planDetails.title} activated using your Vault balance`);
+                setIsSettlementTenureOpen(false);
+                setGrowthPlanStep(1);
+                fetchVault();
+                fetchVaultLogs();
+            } else if (growthPaymentMethod === 'WALLET') {
                 await apiFetch('/vault/deposit', {
                     method: 'POST',
                     body: JSON.stringify({
@@ -586,50 +605,98 @@ export default function PayoutPage() {
         executeWithdrawal();
     };
 
-    const handleVaultWithdrawToWallet = async () => {
-        const amtStr = window.prompt(`Enter amount to withdraw from Vault to Wallet (Max: ${vaultData?.vault?.balance || 0}):`);
-        if (!amtStr) return;
-        
-        const amt = parseFloat(amtStr);
+    const handleVaultWithdrawToWallet = () => {
+        setVaultToWalletAmount('');
+        setVaultToWalletError(null);
+        setIsVaultToWalletModalOpen(true);
+    };
+
+    const handleVaultToWalletAmountChange = (val: string) => {
+        setVaultToWalletAmount(val);
+        const amt = parseFloat(val);
+        if (!val) {
+            setVaultToWalletError(null);
+            return;
+        }
         if (isNaN(amt) || amt <= 0) {
-            toast.error("Invalid amount");
+            setVaultToWalletError("Please enter a valid amount");
+            return;
+        }
+        if (amt > parseFloat(vaultData?.vault?.balance || 0)) {
+            setVaultToWalletError("Insufficient vault balance");
             return;
         }
 
-        if (amt > (vaultData?.vault?.balance || 0)) {
-            toast.error("Insufficient vault balance");
-            return;
-        }
-
-        // Enforce spend lock requirement from active loan
+        // Real-time validations
         if (vaultRuleData?.unlock_status && !vaultRuleData.unlock_status.is_unlocked) {
-            toast.error("Withdrawal locked: active loan spend requirements not met.");
+            setVaultToWalletError("Withdrawal locked: active loan spend requirements not met.");
             return;
         }
 
-        // Enforce minimum limit
         if (vaultRuleData?.min_withdrawal && amt < vaultRuleData.min_withdrawal) {
-            toast.error(`Minimum withdrawal amount is ${Number(vaultRuleData.min_withdrawal).toLocaleString('en-IN')}`);
+            setVaultToWalletError(`Minimum withdrawal amount is ${Number(vaultRuleData.min_withdrawal).toLocaleString('en-IN')}`);
             return;
         }
 
-        // Enforce maximum limit
-        if (vaultRuleData?.max_withdrawal && amt > vaultRuleData.max_withdrawal) {
-            toast.error(`Maximum withdrawal amount is ${Number(vaultRuleData.max_withdrawal).toLocaleString('en-IN')}`);
+        const maxLimit = vaultRuleData?.max_withdrawal || 1800;
+        if (amt > maxLimit) {
+            setVaultToWalletError(`Maximum withdrawal amount is ${Number(maxLimit).toLocaleString('en-IN')}`);
             return;
         }
 
-        // Enforce daily transaction count limit
         if (vaultRuleData?.daily_txn_limit && vaultRuleData.today_txns_count >= vaultRuleData.daily_txn_limit) {
-            toast.error(`Daily transaction limit reached (${vaultRuleData.daily_txn_limit} allowed)`);
+            setVaultToWalletError(`Daily transaction limit reached (${vaultRuleData.daily_txn_limit} allowed)`);
             return;
         }
 
-        // Enforce daily amount limit
         if (vaultRuleData?.daily_limit) {
             const remaining = Math.max(0, vaultRuleData.daily_limit - vaultRuleData.today_withdrawals);
             if (amt > remaining) {
-                toast.error(`Daily limit exceeded. Remaining limit today: ${remaining.toLocaleString('en-IN')}`);
+                setVaultToWalletError(`Daily limit exceeded. Remaining limit today: ${remaining.toLocaleString('en-IN')}`);
+                return;
+            }
+        }
+
+        setVaultToWalletError(null);
+    };
+
+    const submitVaultToWalletWithdrawal = async () => {
+        const amt = parseFloat(vaultToWalletAmount);
+        if (isNaN(amt) || amt <= 0) {
+            setVaultToWalletError("Please enter a valid amount");
+            return;
+        }
+
+        if (amt > parseFloat(vaultData?.vault?.balance || 0)) {
+            setVaultToWalletError("Insufficient vault balance");
+            return;
+        }
+
+        if (vaultRuleData?.unlock_status && !vaultRuleData.unlock_status.is_unlocked) {
+            setVaultToWalletError("Withdrawal locked: active loan spend requirements not met.");
+            return;
+        }
+
+        if (vaultRuleData?.min_withdrawal && amt < vaultRuleData.min_withdrawal) {
+            setVaultToWalletError(`Minimum withdrawal amount is ${Number(vaultRuleData.min_withdrawal).toLocaleString('en-IN')}`);
+            return;
+        }
+
+        const maxLimit = vaultRuleData?.max_withdrawal || 1800;
+        if (amt > maxLimit) {
+            setVaultToWalletError(`Maximum withdrawal amount is ${Number(maxLimit).toLocaleString('en-IN')}`);
+            return;
+        }
+
+        if (vaultRuleData?.daily_txn_limit && vaultRuleData.today_txns_count >= vaultRuleData.daily_txn_limit) {
+            setVaultToWalletError(`Daily transaction limit reached (${vaultRuleData.daily_txn_limit} allowed)`);
+            return;
+        }
+
+        if (vaultRuleData?.daily_limit) {
+            const remaining = Math.max(0, vaultRuleData.daily_limit - vaultRuleData.today_withdrawals);
+            if (amt > remaining) {
+                setVaultToWalletError(`Daily limit exceeded. Remaining limit: ${remaining.toLocaleString('en-IN')}`);
                 return;
             }
         }
@@ -641,15 +708,16 @@ export default function PayoutPage() {
                 body: JSON.stringify({ amount: amt }),
             });
             toast.success(`Successfully withdrawn ${amt} to Wallet`);
+            setIsVaultToWalletModalOpen(false);
             mutateWallet();
             fetchVault();
             fetchVaultLogs();
             if (mutateVaultRule) {
                 mutateVaultRule();
             }
-                } catch (error: unknown) {
+        } catch (error: unknown) {
             const err = error as { message?: string };
-            toast.error(err.message || 'Vault withdrawal failed');
+            setVaultToWalletError(err.message || 'Vault withdrawal failed');
         } finally {
             setIsProcessing(false);
         }
@@ -1022,17 +1090,17 @@ export default function PayoutPage() {
                                                                     <p className="text-[8px] font-bold text-slate-500 mt-0.5">T{activeDeposit.tenure_days} Plan Active</p>
                                                                 </div>
                                                             </div>
-                                                                 <div className="text-right">
-                                                                    <p className="text-xs font-black text-emerald-600 leading-none">
-                                                                        +{(() => {
-                                                                            const rate = Number(activeDeposit.interest_rate);
-                                                                            const amt = Number(activeDeposit.amount);
-                                                                            const daily = (amt * rate) / 100 / 30;
-                                                                            return daily.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-                                                                        })()}
-                                                                    </p>
-                                                                    <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daily Increment Flat</p>
-                                                                </div>
+                                                            <div className="text-right">
+                                                                <p className="text-xs font-black text-emerald-600 leading-none">
+                                                                    +{(() => {
+                                                                        const rate = Number(activeDeposit.interest_rate);
+                                                                        const amt = Number(activeDeposit.amount);
+                                                                        const daily = (amt * rate) / 100 / 30;
+                                                                        return daily.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+                                                                    })()}
+                                                                </p>
+                                                                <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daily Increment Flat</p>
+                                                            </div>
                                                         </div>
                                                     );
                                                 }
@@ -2003,8 +2071,8 @@ export default function PayoutPage() {
                                                         setGrowthPlanAmount(Math.round(parseFloat(plan.min_amount)));
                                                     }}
                                                     className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between h-[104px] transition-all duration-300 relative overflow-hidden ${isSelected
-                                                            ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
-                                                            : 'border-white/5 hover:border-white/15 bg-white/5'
+                                                        ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                        : 'border-white/5 hover:border-white/15 bg-white/5'
                                                         }`}
                                                 >
                                                     <div className="flex justify-between items-start w-full">
@@ -2053,8 +2121,8 @@ export default function PayoutPage() {
                                                             type="button"
                                                             onClick={() => setGrowthPlanAmount(amt)}
                                                             className={`px-4 py-2.5 rounded-xl text-[11px] font-black transition-all active:scale-95 duration-200 ${isAmtSelected
-                                                                    ? 'bg-purple-500 text-white shadow-[0_4px_12px_rgba(168,85,247,0.25)]'
-                                                                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5'
+                                                                ? 'bg-purple-500 text-white shadow-[0_4px_12px_rgba(168,85,247,0.25)]'
+                                                                : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5'
                                                                 }`}
                                                         >
                                                             {amt.toLocaleString('en-IN')}
@@ -2142,6 +2210,13 @@ export default function PayoutPage() {
                                                 toast.error(`Please enter an amount between ${Math.round(parseFloat(currentPlan.min_amount)).toLocaleString('en-IN')} and ${Math.round(parseFloat(currentPlan.max_amount)).toLocaleString('en-IN')}`);
                                                 return;
                                             }
+                                            // Auto-select best payment method
+                                            const vaultBal = parseFloat(vaultData?.vault?.balance || 0);
+                                            if (vaultBal >= growthPlanAmount) {
+                                                setGrowthPaymentMethod('VAULT');
+                                            } else {
+                                                setGrowthPaymentMethod('WALLET');
+                                            }
                                             setGrowthPlanStep(2);
                                         }}
                                         className="w-full py-4 bg-purple-500 hover:bg-purple-600 active:scale-95 text-black font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-[0_8px_24px_rgba(168,85,247,0.25)] transition-all flex items-center justify-center gap-2"
@@ -2182,11 +2257,31 @@ export default function PayoutPage() {
                                     </div>
 
                                     {/* Payment Source Selection */}
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className={`grid gap-3 ${parseFloat(vaultData?.vault?.balance || 0) > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                                        {/* Pay from Vault Card */}
+                                        {parseFloat(vaultData?.vault?.balance || 0) > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setGrowthPaymentMethod('VAULT')}
+                                                className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${growthPaymentMethod === 'VAULT'
+                                                        ? 'border-[#c5a059] bg-[#c5a059]/10 shadow-[0_0_20px_rgba(197,160,89,0.15)]'
+                                                        : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                    }`}
+                                            >
+                                                <div className="p-1.5 bg-[#c5a059]/10 border border-[#c5a059]/20 rounded-lg w-fit text-[#c5a059]">
+                                                    <Shield className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest">Vault Card</p>
+                                                    <p className="text-[11px] font-black text-[#c5a059] mt-0.5">{parseFloat(vaultData?.vault?.balance || 0).toLocaleString('en-IN')}</p>
+                                                </div>
+                                            </button>
+                                        )}
+
                                         <button
                                             type="button"
                                             onClick={() => setGrowthPaymentMethod('WALLET')}
-                                            className={`p-4 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${growthPaymentMethod === 'WALLET'
+                                            className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${growthPaymentMethod === 'WALLET'
                                                     ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
                                                     : 'border-white/5 hover:border-white/10 bg-white/5'
                                                 }`}
@@ -2195,7 +2290,7 @@ export default function PayoutPage() {
                                                 <Wallet className="w-4 h-4" />
                                             </div>
                                             <div>
-                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Pay from Wallet</p>
+                                                <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest">Wallet</p>
                                                 <p className="text-[11px] font-black text-white mt-0.5">{(walletData?.balance || 0).toLocaleString('en-IN')}</p>
                                             </div>
                                         </button>
@@ -2203,7 +2298,7 @@ export default function PayoutPage() {
                                         <button
                                             type="button"
                                             onClick={() => setGrowthPaymentMethod('UPI')}
-                                            className={`p-4 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${growthPaymentMethod === 'UPI'
+                                            className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${growthPaymentMethod === 'UPI'
                                                     ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
                                                     : 'border-white/5 hover:border-white/10 bg-white/5'
                                                 }`}
@@ -2212,14 +2307,51 @@ export default function PayoutPage() {
                                                 <CreditCard className="w-4 h-4" />
                                             </div>
                                             <div>
-                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Add Money / UPI</p>
-                                                <p className="text-[11px] font-black text-purple-400 mt-0.5 italic">Instant Transfer</p>
+                                                <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest">UPI</p>
+                                                <p className="text-[11px] font-black text-purple-400 mt-0.5 italic">Transfer</p>
                                             </div>
                                         </button>
                                     </div>
 
                                     {/* Conditional Payment UI */}
-                                    {growthPaymentMethod === 'WALLET' ? (
+                                    {growthPaymentMethod === 'VAULT' ? (
+                                        <div className="space-y-4">
+                                            {parseFloat(vaultData?.vault?.balance || 0) < growthPlanAmount ? (
+                                                <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl flex gap-3 text-left">
+                                                    <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Insufficient Vault Balance</p>
+                                                        <p className="text-[9px] text-slate-400 leading-normal font-semibold">
+                                                            You need{' '}
+                                                            <span className="text-white font-bold">
+                                                                {(growthPlanAmount - parseFloat(vaultData?.vault?.balance || 0)).toLocaleString('en-IN')}
+                                                            </span>{' '}
+                                                            more in your vault card. Top up first or use UPI.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-[#c5a059]/5 border border-[#c5a059]/10 p-4 rounded-2xl flex gap-3 text-left">
+                                                    <CheckCircle2 className="w-5 h-5 text-[#c5a059] shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-[#c5a059] uppercase tracking-widest mb-1">Vault Card Funds Available</p>
+                                                        <p className="text-[9px] text-slate-400 leading-normal font-semibold">
+                                                            {growthPlanAmount.toLocaleString('en-IN')} will be locked from your vault card balance of {parseFloat(vaultData?.vault?.balance || 0).toLocaleString('en-IN')} to activate this growth plan.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                onClick={handleGrowthPlanSubmit}
+                                                disabled={isVaultSubmitting || parseFloat(vaultData?.vault?.balance || 0) < growthPlanAmount}
+                                                className="w-full py-4 bg-[#c5a059] hover:bg-[#b8933f] active:scale-95 disabled:bg-white/5 disabled:text-slate-500 disabled:border disabled:border-white/5 text-black font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-[0_8px_24px_rgba(197,160,89,0.25)] transition-all flex items-center justify-center gap-2"
+                                            >
+                                                {isVaultSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-black" /> : 'Activate from Vault Card'}
+                                            </button>
+                                        </div>
+                                    ) : growthPaymentMethod === 'WALLET' ? (
                                         <div className="space-y-4">
                                             {parseFloat(walletData?.balance || 0) < growthPlanAmount ? (
                                                 <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl flex gap-3 text-left">
@@ -2367,17 +2499,16 @@ export default function PayoutPage() {
 
                             <div className="mb-6 space-y-3">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Amount to Add</label>
-                                
+
                                 <div className="grid grid-cols-3 gap-2">
                                     {[1000, 2000, 3000, 4000, 5000].map(val => (
                                         <button
                                             key={val}
                                             onClick={() => setAddMoneyAmount(val.toString())}
-                                            className={`py-2 px-3 rounded-xl border text-[12px] font-black tracking-widest transition-all ${
-                                                addMoneyAmount === val.toString() 
-                                                ? 'border-purple-500 bg-purple-500/20 text-white' 
-                                                : 'border-white/10 hover:border-white/20 bg-white/5 text-slate-300'
-                                            }`}
+                                            className={`py-2 px-3 rounded-xl border text-[12px] font-black tracking-widest transition-all ${addMoneyAmount === val.toString()
+                                                    ? 'border-purple-500 bg-purple-500/20 text-white'
+                                                    : 'border-white/10 hover:border-white/20 bg-white/5 text-slate-300'
+                                                }`}
                                         >
                                             {val.toLocaleString('en-IN')}
                                         </button>
@@ -2385,14 +2516,14 @@ export default function PayoutPage() {
                                 </div>
 
                                 <div className="relative mt-2">
-                                    <input 
-                                        type="number" 
-                                        value={addMoneyAmount} 
+                                    <input
+                                        type="number"
+                                        value={addMoneyAmount}
                                         onChange={(e) => {
                                             setAddMoneyAmount(e.target.value);
-                                        }} 
+                                        }}
                                         placeholder="Enter custom amount (Min 5,000)"
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-4 text-xl font-black text-white focus:border-purple-500 outline-none transition-all placeholder:text-white/20 placeholder:text-sm" 
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-4 text-xl font-black text-white focus:border-purple-500 outline-none transition-all placeholder:text-white/20 placeholder:text-sm"
                                     />
                                     {Number(addMoneyAmount) > 0 && Number(addMoneyAmount) < 5000 && ![1000, 2000, 3000, 4000].includes(Number(addMoneyAmount)) && (
                                         <p className="text-red-400 text-[10px] font-bold mt-1 absolute -bottom-5">Custom amounts must be 5,000 or above.</p>
@@ -2403,14 +2534,14 @@ export default function PayoutPage() {
                             {Number(addMoneyAmount) > 0 && (
                                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Select Payment Source</label>
-                                    
+
                                     <div className="grid grid-cols-3 gap-3">
                                         <button
                                             type="button"
                                             onClick={() => setAddMoneySource('WALLET')}
                                             className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${addMoneySource === 'WALLET'
-                                                    ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
-                                                    : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                : 'border-white/5 hover:border-white/10 bg-white/5'
                                                 }`}
                                         >
                                             <div className="p-1.5 bg-white/5 border border-white/10 rounded-lg w-fit text-slate-300">
@@ -2426,8 +2557,8 @@ export default function PayoutPage() {
                                             type="button"
                                             onClick={() => setAddMoneySource('UPI')}
                                             className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${addMoneySource === 'UPI'
-                                                    ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
-                                                    : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                : 'border-white/5 hover:border-white/10 bg-white/5'
                                                 }`}
                                         >
                                             <div className="p-1.5 bg-white/5 border border-white/10 rounded-lg w-fit text-slate-300">
@@ -2443,8 +2574,8 @@ export default function PayoutPage() {
                                             type="button"
                                             onClick={() => setAddMoneySource('HYBRID')}
                                             className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${addMoneySource === 'HYBRID'
-                                                    ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
-                                                    : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                : 'border-white/5 hover:border-white/10 bg-white/5'
                                                 }`}
                                         >
                                             <div className="p-1.5 bg-white/5 border border-white/10 rounded-lg w-fit text-slate-300">
@@ -2491,7 +2622,7 @@ export default function PayoutPage() {
                                                     <div>
                                                         <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest mb-1">Split Payment</p>
                                                         <p className="text-[9px] text-slate-400 font-semibold">
-                                                            Wallet Balance (<span className="text-white font-bold">{parseFloat(walletData?.balance || 0).toLocaleString('en-IN')}</span>) will be used. 
+                                                            Wallet Balance (<span className="text-white font-bold">{parseFloat(walletData?.balance || 0).toLocaleString('en-IN')}</span>) will be used.
                                                             Please pay the remaining <span className="text-purple-400 font-bold">{(Number(addMoneyAmount) - parseFloat(walletData?.balance || 0)).toLocaleString('en-IN')}</span> via UPI below.
                                                         </p>
                                                     </div>
@@ -2628,7 +2759,6 @@ export default function PayoutPage() {
                 )}
                 */}
 
-                {/* Vault Withdraw Modal — Bank Settlement (No Fees) */}
                 {isVaultWithdrawOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
                         <div className="bg-white w-full max-w-sm rounded-[2rem] p-7 shadow-2xl relative">
@@ -2697,6 +2827,82 @@ export default function PayoutPage() {
                     </div>
                 )}
             </div>
+
+            {/* Vault to Wallet Withdrawal Modal */}
+            {isVaultToWalletModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white border border-[#e2e8f0] w-full max-w-sm rounded-[2rem] p-5 shadow-2xl relative text-slate-800 animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 className="text-sm font-extrabold uppercase tracking-wider text-[#0f766e]">Vault Withdrawal</h3>
+                                <p className="text-[10px] text-slate-500 font-semibold tracking-wide mt-0.5">Transfer funds to your active wallet balance</p>
+                            </div>
+                            <button 
+                                onClick={() => setIsVaultToWalletModalOpen(false)} 
+                                className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-full border border-slate-100 transition-colors"
+                            >
+                                <X className="w-4 h-4 text-slate-400" />
+                            </button>
+                        </div>
+
+                        {/* Balance Info */}
+                        <div className="bg-[#f0fdfa] border border-[#ccfbf1] p-3 rounded-2xl mb-4 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-[#0f766e]/70 uppercase tracking-widest">Available Balance</span>
+                            <span className="text-sm font-black text-[#0f766e]">{parseFloat(vaultData?.vault?.balance || 0).toLocaleString('en-IN')}</span>
+                        </div>
+
+                        {/* Amount Input */}
+                        <div className="mb-4">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Amount to Withdraw</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={vaultToWalletAmount}
+                                    onChange={(e) => handleVaultToWalletAmountChange(e.target.value)}
+                                    placeholder="Enter amount"
+                                    className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl py-3 px-4 text-lg font-black text-slate-800 focus:border-[#0d9488] focus:ring-1 focus:ring-[#0d9488] outline-none transition-all placeholder:text-slate-400 placeholder:text-sm placeholder:font-medium"
+                                />
+                                {vaultRuleData?.max_withdrawal && (
+                                    <p className="text-[9px] text-[#0f766e] font-semibold mt-1.5 flex items-center gap-1">
+                                        <Info size={10} className="shrink-0" /> Max limit rule: {Number(vaultRuleData.max_withdrawal).toLocaleString('en-IN')}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Inline Error Message Box instead of upper toast */}
+                        {vaultToWalletError && (
+                            <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl mb-4 flex items-start gap-2 animate-in slide-in-from-top-2 duration-200">
+                                <AlertCircle className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
+                                <div className="space-y-0.5">
+                                    <h5 className="text-[9px] font-bold text-rose-700 uppercase tracking-wider">Validation Error</h5>
+                                    <p className="text-[10px] font-medium text-rose-600 leading-normal">
+                                        {vaultToWalletError}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setIsVaultToWalletModalOpen(false)}
+                                className="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={submitVaultToWalletWithdrawal}
+                                disabled={isProcessing || !vaultToWalletAmount || !!vaultToWalletError}
+                                className="w-2/3 py-3 bg-[#0d9488] hover:bg-[#0f766e] disabled:bg-slate-100 disabled:text-slate-300 text-white rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#0d9488]/10"
+                            >
+                                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Confirm Transfer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Late Withdrawal Error Minimalist Dialogue */}
             {lateWithdrawalError && (
