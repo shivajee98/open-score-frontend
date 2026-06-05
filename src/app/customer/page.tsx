@@ -7,7 +7,7 @@ import MerchantLoanMilestone from "@/components/MerchantLoanMilestone";
 import OutgoingCallModal from "@/components/OutgoingCallModal";
 import { toast } from "@/components/ui/Toast";
 import WelcomeBonusPopup from "@/components/WelcomeBonusPopup";
-import VaultCard from "@/components/VaultCard";
+import VaultCard from "@/app/customer/payout/_components/VaultCard";
 import { useApi } from "@/hooks/useApi";
 import { apiFetch, clearAuthState } from "@/lib/api";
 import { cn } from "@/lib/loanUtils";
