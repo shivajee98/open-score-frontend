@@ -60,7 +60,7 @@ export default function BankOffersGrid({ isBankVerified = false }: BankOffersGri
             style={{
               aspectRatio: '700/230',
               backgroundImage: 'url("/card-image/cd-2.1.png")',
-              backgroundSize: '100% 100%',
+              backgroundSize: '100% 110%',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
             }}
