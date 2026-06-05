@@ -751,7 +751,7 @@ export default function TeamEarningsPage() {
                                                     <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{isVerified ? 'Earned' : 'Will Earn'}</p>
                                                     <p className={`text-[11px] font-black ${isVerified ? 'text-emerald-600' : 'text-indigo-600'}`}>{parseFloat(friend.amount || 0).toLocaleString()}</p>
                                                     <p className="text-[7px] font-bold text-slate-300 mt-0.5">
-                                                        Rate: {friend.type === 'LOAN' ? (stats?.my_rates?.loan_disbursement_rate || 0) : (stats?.my_rates?.qr_onboarding_rate || 0)}
+                                                        Rate: {friend.type === 'LOAN' ? (stats?.my_rates?.loan_disbursement_rate || 0) : friend.type === 'VAULT_CARD' ? (stats?.my_rates?.vault_card_commission || 0) : (stats?.my_rates?.qr_onboarding_rate || 0)}
                                                     </p>
                                                 </div>
                                             </div>
@@ -772,7 +772,7 @@ export default function TeamEarningsPage() {
                                                             )}
                                                         </div>
                                                         <div className="flex items-center gap-1">
-                                                            <span className="text-[7px] font-black text-slate-900 uppercase">{friend.type === 'LOAN' ? 'LOAN' : 'QR Mapping'}</span>
+                                                            <span className="text-[7px] font-black text-slate-900 uppercase">{friend.type === 'LOAN' ? 'LOAN' : friend.type === 'VAULT_CARD' ? 'VAULT CARD' : 'QR Mapping'}</span>
                                                         </div>
                                                     </div>
 
@@ -781,10 +781,10 @@ export default function TeamEarningsPage() {
                                                             ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100'
                                                             : 'bg-white border-slate-200 text-slate-300'
                                                             }`}>
-                                                            {friend.type === 'LOAN' ? <History size={11} /> : <QrCode size={11} />}
+                                                            {friend.type === 'LOAN' ? <History size={11} /> : friend.type === 'VAULT_CARD' ? <CreditCard size={11} /> : <QrCode size={11} />}
                                                         </div>
                                                         <span className={`text-[7px] font-black uppercase ${(friend.type === 'LOAN' && friend.has_applied_loan) || (friend.type !== 'LOAN') ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                                            {friend.type === 'LOAN' ? 'Applied' : 'Onboarded'}
+                                                            {friend.type === 'LOAN' ? 'Applied' : friend.type === 'VAULT_CARD' ? 'Initiated' : 'Onboarded'}
                                                         </span>
                                                     </div>
 
@@ -860,7 +860,10 @@ export default function TeamEarningsPage() {
                                     if (activeTab === 'DECLINED') return f.status === 'DECLINED';
                                     if (f.status === 'DECLINED') return false;
 
-                                    const matchTab = activeTab === 'QR' ? (f.type !== 'LOAN') : (f.type === 'LOAN');
+                                    let matchTab = false;
+                                    if (activeTab === 'QR') matchTab = (f.type !== 'LOAN' && f.type !== 'VAULT_CARD');
+                                    else if (activeTab === 'LOAN') matchTab = (f.type === 'LOAN');
+                                    else if (activeTab === 'CARD') matchTab = (f.type === 'VAULT_CARD');
                                     const matchSearch = (() => {
                                         if (!searchQuery) return true;
                                         const q = searchQuery.toLowerCase();

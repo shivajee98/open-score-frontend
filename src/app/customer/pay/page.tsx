@@ -22,6 +22,7 @@ function CustomerPayPage() {
     const [lockedBalance, setLockedBalance] = useState(0);
     const [cashbackBalance, setCashbackBalance] = useState(0);
     const [vaultBalance, setVaultBalance] = useState(0);
+    const [vaultLockedBalance, setVaultLockedBalance] = useState(0);
     const [paymentSource, setPaymentSource] = useState<'MAIN' | 'VAULT'>('MAIN');
     const [useCashback, setUseCashback] = useState(true);
     const [payees, setPayees] = useState([]);
@@ -100,6 +101,7 @@ function CustomerPayPage() {
             setLockedBalance(data.locked_balance || 0);
             setCashbackBalance(data.cashback_balance || 0);
             setVaultBalance(data.vault_balance || 0);
+            setVaultLockedBalance(data.vault_locked_balance || 0);
         });
 
         apiFetch('/wallet/transactions').then(res => {
@@ -317,7 +319,11 @@ function CustomerPayPage() {
 
         if (paymentSource === 'VAULT') {
             if (payAmount > vaultBalance) {
-                setError('Insufficient Vault Card balance');
+                if (payAmount <= (vaultBalance + vaultLockedBalance)) {
+                    setError('Insufficient available balance. This amount is currently in LOCKED state in your Vault.');
+                } else {
+                    setError('Insufficient Vault Card balance');
+                }
                 return;
             }
         } else {
@@ -739,7 +745,14 @@ function CustomerPayPage() {
                                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentSource === 'VAULT' ? 'border-amber-600' : 'border-slate-300'}`}>
                                             {paymentSource === 'VAULT' && <div className="w-2 h-2 rounded-full bg-amber-600" />}
                                         </div>
-                                        <span className="text-[10px] font-bold uppercase text-slate-600 tracking-widest">Vault Card</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold uppercase text-slate-600 tracking-widest">Vault Card</span>
+                                            {vaultLockedBalance > 0 && paymentSource === 'VAULT' && (
+                                                <span className="text-[9px] font-bold text-amber-500 flex items-center gap-1 mt-0.5">
+                                                    <Lock size={10} /> Locked: {vaultLockedBalance.toLocaleString('en-IN')}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                     <span className="text-sm font-black text-slate-900">{vaultBalance.toLocaleString('en-IN')}</span>
                                 </div>

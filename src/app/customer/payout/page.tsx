@@ -202,7 +202,7 @@ export default function PayoutPage() {
     const [showVaultCardNumber, setShowVaultCardNumber] = useState(false);
     const [isAddMoneyModalOpen, setIsAddMoneyModalOpen] = useState(false);
     const [addMoneyAmount, setAddMoneyAmount] = useState('');
-    const [addMoneySource, setAddMoneySource] = useState<'WALLET' | 'UPI' | null>(null);
+    const [addMoneySource, setAddMoneySource] = useState<'WALLET' | 'UPI' | 'HYBRID' | null>(null);
     const [addMoneyProof, setAddMoneyProof] = useState<File | null>(null);
     const [isAddingMoney, setIsAddingMoney] = useState(false);
     const upiId = process.env.NEXT_PUBLIC_UPI_ID || "flipflops@upi";
@@ -234,7 +234,10 @@ export default function PayoutPage() {
             const formData = new FormData();
             formData.append('amount', addMoneyAmount);
             formData.append('payment_mode', addMoneySource);
-            if (addMoneySource === 'UPI' && addMoneyProof) {
+            if (addMoneySource === 'HYBRID') {
+                formData.append('wallet_amount', walletData?.balance || '0');
+            }
+            if ((addMoneySource === 'UPI' || addMoneySource === 'HYBRID') && addMoneyProof) {
                 formData.append('proof_image', addMoneyProof);
             }
 
@@ -2193,7 +2196,7 @@ export default function PayoutPage() {
                                             </div>
                                             <div>
                                                 <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Pay from Wallet</p>
-                                                <p className="text-[11px] font-black text-white mt-0.5">{(walletData?.wallet?.balance || 0).toLocaleString('en-IN')}</p>
+                                                <p className="text-[11px] font-black text-white mt-0.5">{(walletData?.balance || 0).toLocaleString('en-IN')}</p>
                                             </div>
                                         </button>
 
@@ -2218,7 +2221,7 @@ export default function PayoutPage() {
                                     {/* Conditional Payment UI */}
                                     {growthPaymentMethod === 'WALLET' ? (
                                         <div className="space-y-4">
-                                            {parseFloat(walletData?.wallet?.balance || 0) < growthPlanAmount ? (
+                                            {parseFloat(walletData?.balance || 0) < growthPlanAmount ? (
                                                 <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl flex gap-3 text-left">
                                                     <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                                     <div>
@@ -2226,7 +2229,7 @@ export default function PayoutPage() {
                                                         <p className="text-[9px] text-slate-400 leading-normal font-semibold">
                                                             You need{' '}
                                                             <span className="text-white font-bold">
-                                                                {(growthPlanAmount - parseFloat(walletData?.wallet?.balance || 0)).toLocaleString('en-IN')}
+                                                                {(growthPlanAmount - parseFloat(walletData?.balance || 0)).toLocaleString('en-IN')}
                                                             </span>{' '}
                                                             more to activate this plan directly from your wallet balance. Please select UPI to pay.
                                                         </p>
@@ -2247,7 +2250,7 @@ export default function PayoutPage() {
                                             <button
                                                 type="button"
                                                 onClick={handleGrowthPlanSubmit}
-                                                disabled={isVaultSubmitting || parseFloat(walletData?.wallet?.balance || 0) < growthPlanAmount}
+                                                disabled={isVaultSubmitting || parseFloat(walletData?.balance || 0) < growthPlanAmount}
                                                 className="w-full py-4 bg-purple-500 hover:bg-purple-600 active:scale-95 disabled:bg-white/5 disabled:text-slate-500 disabled:border disabled:border-white/5 text-black font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-[0_8px_24px_rgba(168,85,247,0.25)] transition-all flex items-center justify-center gap-2"
                                             >
                                                 {isVaultSubmitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-black" /> : 'Confirm & Activate Plan'}
@@ -2401,7 +2404,7 @@ export default function PayoutPage() {
                                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Select Payment Source</label>
                                     
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-3 gap-3">
                                         <button
                                             type="button"
                                             onClick={() => setAddMoneySource('WALLET')}
@@ -2435,17 +2438,34 @@ export default function PayoutPage() {
                                                 <p className="text-[11px] font-black text-purple-400 mt-0.5 italic">Instant Transfer</p>
                                             </div>
                                         </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setAddMoneySource('HYBRID')}
+                                            className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-24 transition-all duration-300 relative overflow-hidden ${addMoneySource === 'HYBRID'
+                                                    ? 'border-purple-500 bg-purple-950/20 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                                                    : 'border-white/5 hover:border-white/10 bg-white/5'
+                                                }`}
+                                        >
+                                            <div className="p-1.5 bg-white/5 border border-white/10 rounded-lg w-fit text-slate-300">
+                                                <Wallet className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Wallet + UPI</p>
+                                                <p className="text-[11px] font-black text-amber-400 mt-0.5 italic">Split Payment</p>
+                                            </div>
+                                        </button>
                                     </div>
 
                                     {addMoneySource === 'WALLET' && (
                                         <div className="mt-4 animate-in fade-in duration-300">
-                                            {parseFloat(walletData?.wallet?.balance || 0) < Number(addMoneyAmount) ? (
+                                            {parseFloat(walletData?.balance || 0) < Number(addMoneyAmount) ? (
                                                 <div className="bg-red-500/5 border border-red-500/10 p-4 rounded-2xl flex gap-3 text-left">
                                                     <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                                     <div>
                                                         <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Insufficient Balance</p>
                                                         <p className="text-[9px] text-slate-400 font-semibold">
-                                                            You need <span className="text-white font-bold">{(Number(addMoneyAmount) - parseFloat(walletData?.wallet?.balance || 0)).toLocaleString('en-IN')}</span> more to add directly from your wallet. Please use UPI.
+                                                            You need <span className="text-white font-bold">{(Number(addMoneyAmount) - parseFloat(walletData?.balance || 0)).toLocaleString('en-IN')}</span> more to add directly from your wallet. Please use UPI.
                                                         </p>
                                                     </div>
                                                 </div>
@@ -2463,12 +2483,24 @@ export default function PayoutPage() {
                                         </div>
                                     )}
 
-                                    {addMoneySource === 'UPI' && (
+                                    {(addMoneySource === 'UPI' || addMoneySource === 'HYBRID') && (
                                         <div className="space-y-4 pt-4 border-t border-white/5 animate-in fade-in duration-300">
+                                            {addMoneySource === 'HYBRID' && (
+                                                <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl flex gap-3 text-left mb-2">
+                                                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest mb-1">Split Payment</p>
+                                                        <p className="text-[9px] text-slate-400 font-semibold">
+                                                            Wallet Balance (<span className="text-white font-bold">{parseFloat(walletData?.balance || 0).toLocaleString('en-IN')}</span>) will be used. 
+                                                            Please pay the remaining <span className="text-purple-400 font-bold">{(Number(addMoneyAmount) - parseFloat(walletData?.balance || 0)).toLocaleString('en-IN')}</span> via UPI below.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
                                             <div className="flex flex-col items-center">
                                                 <div className="p-3 bg-white rounded-2xl shadow-xl mb-3">
                                                     <QRCodeSVG
-                                                        value={`upi://pay?pa=${upiId}&pn=Flip%20Flops&am=${addMoneyAmount}&tn=Vault%20Card%20TopUp`}
+                                                        value={`upi://pay?pa=${upiId}&pn=Flip%20Flops&am=${addMoneySource === 'HYBRID' ? (Number(addMoneyAmount) - parseFloat(walletData?.balance || 0)) : addMoneyAmount}&tn=Vault%20Card%20TopUp`}
                                                         size={120}
                                                         level="M"
                                                     />
@@ -2536,7 +2568,7 @@ export default function PayoutPage() {
                                     <button
                                         type="button"
                                         onClick={handleAddMoney}
-                                        disabled={isAddingMoney || !addMoneySource || (addMoneySource === 'WALLET' && parseFloat(walletData?.wallet?.balance || 0) < Number(addMoneyAmount)) || (addMoneySource === 'UPI' && !addMoneyProof)}
+                                        disabled={isAddingMoney || !addMoneySource || (addMoneySource === 'WALLET' && parseFloat(walletData?.balance || 0) < Number(addMoneyAmount)) || ((addMoneySource === 'UPI' || addMoneySource === 'HYBRID') && !addMoneyProof)}
                                         className="w-full py-4 mt-2 bg-purple-500 hover:bg-purple-600 active:scale-95 disabled:bg-white/5 disabled:text-slate-500 disabled:border disabled:border-white/5 text-black font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-[0_8px_24px_rgba(168,85,247,0.25)] transition-all flex items-center justify-center gap-2"
                                     >
                                         {isAddingMoney ? <Loader2 className="w-5 h-5 animate-spin mx-auto text-black" /> : 'Confirm & Add Money'}
