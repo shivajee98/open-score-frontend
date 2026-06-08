@@ -766,7 +766,7 @@ export default function LoanStatus() {
 
                 {/* Special Action: Complete KYC / Correction */}
                 {(loan.status === 'KYC_SENT' || loan.reupload_fields?.length > 0) && 
-                 !(loan.reupload_fields && loan.reupload_fields.length > 0 && loan.reupload_fields.every((f: string) => ['aadhar_front', 'aadhar_back', 'pan_card', 'aadhar_number', 'pan_number'].includes(f))) && (
+                 !(loan.reupload_fields && loan.reupload_fields.length > 0 && loan.reupload_fields.every((f: string) => ['aadhar_number', 'pan_number', 'aadhar_pan'].includes(f))) && (
                     <div className="bg-blue-600 rounded-lg p-4 text-white shadow-xl shadow-blue-600/20 flex flex-col items-center text-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                             <Check className="w-6 h-6" />

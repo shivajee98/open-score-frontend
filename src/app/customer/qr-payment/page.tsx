@@ -23,6 +23,7 @@ import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 import { useStore } from '@/store/useStore';
 import { QRCodeSVG } from 'qrcode.react';
+import { compressImage } from '@/lib/imageUtils';
 
 const SECURITY_AMOUNTS = [
     { value: '1000', label: 'Basic', desc: '1 Bunch' },
@@ -111,7 +112,9 @@ export default function QrPaymentPage() {
             formData.append('city', form.city);
             formData.append('state', form.state);
             formData.append('security_amount', form.security_amount);
-            formData.append('payment_screenshot', screenshot);
+            
+            const compressed = await compressImage(screenshot);
+            formData.append('payment_screenshot', compressed, screenshot.name);
             
             // Add configuration payload
             const selectedConfig = SECURITY_AMOUNTS.find(a => a.value === form.security_amount);

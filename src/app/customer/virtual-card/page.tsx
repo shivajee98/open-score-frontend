@@ -36,6 +36,7 @@ import {
 import { toast } from '@/components/ui/Toast';
 import { cn } from '@/lib/loanUtils';
 import { QRCodeSVG } from 'qrcode.react';
+import { compressImage } from '@/lib/imageUtils';
 
 export default function VirtualCardActivationPage() {
     const router = useRouter();
@@ -90,7 +91,10 @@ export default function VirtualCardActivationPage() {
         try {
             const fd = new FormData();
             fd.append('payment_mode', paymentMode);
-            if (proofImage) fd.append('proof_image', proofImage);
+            if (proofImage) {
+                const compressed = await compressImage(proofImage);
+                fd.append('proof_image', compressed, proofImage.name);
+            }
 
             await apiFetch(`/vault-cards/${activeRequest.id}/activate`, {
                 method: 'POST',
@@ -116,7 +120,8 @@ export default function VirtualCardActivationPage() {
         setIsSubmitting(true);
         try {
             const fd = new FormData();
-            fd.append('proof_image', proofImage);
+            const compressed = await compressImage(proofImage);
+            fd.append('proof_image', compressed, proofImage.name);
             await apiFetch(`/vault-cards/${activeRequest.id}/reupload-proof`, {
                 method: 'POST',
                 body: fd

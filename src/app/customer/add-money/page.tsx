@@ -20,6 +20,7 @@ import {
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 import QRCode from 'react-qr-code';
+import { compressImage } from '@/lib/imageUtils';
 
 const QUICK_AMOUNTS = [100, 500, 1000, 2000, 5000, 10000];
 
@@ -120,7 +121,8 @@ export default function AddMoneyPage() {
             formData.append('message', ticketMessage);
             formData.append('priority', 'high');
             formData.append('payment_amount', amount);
-            formData.append('attachment', screenshot);
+            const compressed = await compressImage(screenshot);
+            formData.append('attachment', compressed, screenshot.name);
 
             await apiFetch('/support/tickets', {
                 method: 'POST',

@@ -170,11 +170,17 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
     }
 
     const fetchPromise = (async () => {
+        const controller = new AbortController();
+        const timeoutMs = isFormData ? 120000 : 30000; // 120s for uploads, 30s for normal
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
         try {
             const response = await fetch(url, {
                 ...fetchOptions,
                 headers,
+                signal: controller.signal,
             });
+            clearTimeout(timeoutId);
 
             if (response.status === 401 && !skipAuthCheck) {
                 handleUnauthorized();
@@ -207,6 +213,10 @@ export const apiFetch = async (endpoint: string, options: ApiOptions = {}) => {
 
             return response.json();
         } catch (error: any) {
+            if (error?.name === 'AbortError') {
+                const timeoutContext = isFormData ? 'uploading file' : 'requesting data';
+                throw new Error(`Timeout while ${timeoutContext}. Please check your connection and try again.`);
+            }
             if (error?.message === 'Failed to fetch' || error?.message?.includes('NetworkError') || error?.name === 'TypeError') {
                 const browserContext = typeof window !== 'undefined' ? ` on ${window.location.hostname}` : '';
                 const detailedMsg = `Network error (${error.name}: ${error.message})${browserContext}. Please check your connection.`;

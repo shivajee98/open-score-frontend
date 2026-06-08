@@ -12,6 +12,7 @@ import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 import { useStore } from '@/store/useStore';
 import { QRCodeSVG } from 'qrcode.react';
+import { compressImage } from '@/lib/imageUtils';
 
 function VaultCardPaymentContent() {
     const router = useRouter();
@@ -76,7 +77,8 @@ function VaultCardPaymentContent() {
         setUploading(true);
         try {
             const formData = new FormData();
-            formData.append('proof_image', screenshot);
+            const compressed = await compressImage(screenshot);
+            formData.append('proof_image', compressed, screenshot.name);
             formData.append('payment_mode', 'UPI');
 
             await apiFetch(`/vault-cards/${id}/activate`, {

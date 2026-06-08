@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "@/components/ui/Toast";
+import { compressImage } from "@/lib/imageUtils";
 
 interface AddMoneyModalProps {
   isOpen: boolean;
@@ -69,7 +70,13 @@ export default function AddMoneyModal({
       return;
     }
 
-    await onSubmit(amountNum, addMoneySource, addMoneyProof);
+    let proofToSubmit = addMoneyProof;
+    if (proofToSubmit) {
+      const compressedBlob = await compressImage(proofToSubmit);
+      proofToSubmit = new File([compressedBlob], proofToSubmit.name, { type: compressedBlob.type });
+    }
+
+    await onSubmit(amountNum, addMoneySource, proofToSubmit);
     handleClose();
   };
 

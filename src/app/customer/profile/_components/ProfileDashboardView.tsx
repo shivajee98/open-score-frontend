@@ -496,6 +496,29 @@ export default function ProfileDashboardView({
               <ChevronRight size={16} strokeWidth={2.5} className="text-white/80" />
             </div>
 
+            {/* Become a Partner */}
+            {!user?.is_vendor && (
+              <div
+                onClick={() => router.push("/customer/partner")}
+                className="col-span-2 bg-white p-3 rounded-[16px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border border-slate-50 active:scale-95"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 bg-blue-50 rounded-[10px] flex items-center justify-center text-blue-500 shadow-sm">
+                    <Plus size={18} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <span className="text-[11px] block font-black text-slate-800 tracking-tight leading-tight">
+                      Become a Partner
+                    </span>
+                    <span className="text-[8px] font-bold text-slate-500 mt-0.5">
+                      Join our partner program
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight size={16} strokeWidth={2.5} className="text-slate-400" />
+              </div>
+            )}
+
             {/* Switch to Partner Panel */}
             {user?.is_vendor && (
               <div

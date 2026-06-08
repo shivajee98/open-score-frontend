@@ -18,6 +18,7 @@ import {
   Shield,
 } from "lucide-react";
 import { toast } from "@/components/ui/Toast";
+import { compressImage } from "@/lib/imageUtils";
 
 interface GrowthPlanModalProps {
   isOpen: boolean;
@@ -79,7 +80,14 @@ export default function GrowthPlanModal({
       toast.error("Please upload your payment screenshot proof.");
       return;
     }
-    await onSubmit(currentPlan, growthPlanAmount, growthPaymentMethod!, growthProofScreenshot);
+
+    let proofToSubmit = growthProofScreenshot;
+    if (proofToSubmit) {
+      const compressedBlob = await compressImage(proofToSubmit);
+      proofToSubmit = new File([compressedBlob], proofToSubmit.name, { type: compressedBlob.type });
+    }
+    
+    await onSubmit(currentPlan, growthPlanAmount, growthPaymentMethod!, proofToSubmit);
     handleClose();
   };
 

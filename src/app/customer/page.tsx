@@ -109,14 +109,24 @@ export default function CustomerHome() {
   const kycLoan =
     activeLoans?.find(
       (l: any) =>
-        l.status === "KYC_SENT" ||
-        (Array.isArray(l.reupload_fields) && l.reupload_fields.length > 0),
+        !['DISBURSED', 'ACTIVE', 'OVERDUE', 'CLOSED', 'CANCELLED', 'REJECTED'].includes(l.status) &&
+        (l.status === "KYC_SENT" || (Array.isArray(l.reupload_fields) && l.reupload_fields.length > 0)),
     ) || null;
 
   const isAadharPanReupload = useMemo(() => {
     if (!kycLoan || !Array.isArray(kycLoan.reupload_fields) || kycLoan.reupload_fields.length === 0) return false;
-    const aadharPanFields = ['aadhar_front', 'aadhar_back', 'pan_card', 'aadhar_number', 'pan_number'];
+    const aadharPanFields = ['aadhar_number', 'pan_number', 'aadhar_pan'];
     return kycLoan.reupload_fields.every((f: string) => aadharPanFields.includes(f));
+  }, [kycLoan]);
+
+  const isAadharReuploadRequired = useMemo(() => {
+    if (!kycLoan || !Array.isArray(kycLoan.reupload_fields)) return false;
+    return kycLoan.reupload_fields.some((f: string) => ['aadhar_number', 'aadhar_pan'].includes(f));
+  }, [kycLoan]);
+
+  const isPanReuploadRequired = useMemo(() => {
+    if (!kycLoan || !Array.isArray(kycLoan.reupload_fields)) return false;
+    return kycLoan.reupload_fields.some((f: string) => ['pan_number', 'aadhar_pan'].includes(f));
   }, [kycLoan]);
 
   const isRefreshing = userValidating || walletValidating || loansValidating;
@@ -265,6 +275,23 @@ export default function CustomerHome() {
   const [isUploadingFile, setIsUploadingFile] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const isAadharPanReuploadComplete = useMemo(() => {
+    if (!isAadharPanReupload) return false;
+    const aadharOk = !isAadharReuploadRequired || isAadharVerified || !!activeUser?.is_aadhar_verified;
+    const panOk = !isPanReuploadRequired || isPanVerified || !!activeUser?.is_pan_verified;
+    return aadharOk && panOk;
+  }, [isAadharPanReupload, isAadharReuploadRequired, isAadharVerified, activeUser?.is_aadhar_verified, isPanReuploadRequired, isPanVerified, activeUser?.is_pan_verified]);
+
+  const isAadharPanVerified = useMemo(() => {
+    return !!((activeUser?.is_aadhar_verified || isAadharVerified) && (activeUser?.is_pan_verified || isPanVerified));
+  }, [activeUser?.is_aadhar_verified, isAadharVerified, activeUser?.is_pan_verified, isPanVerified]);
+
+  const hasPendingDisbursalLoan = useMemo(() => {
+    return activeLoans?.some((l: any) =>
+      ['APPLIED', 'VETTING', 'KYC_SENT', 'KYC_SUBMITTED', 'APPROVED'].includes(l.status)
+    );
+  }, [activeLoans]);
+
   useEffect(() => {
     if (activeUser) {
       if (activeUser.aadhar_number) setAadharNumber(activeUser.aadhar_number);
@@ -333,8 +360,8 @@ export default function CustomerHome() {
     }
 
     const attempts = getDailyAttempts('aadhaar_otp');
-    if (attempts >= 5) {
-      toast.error("Daily limit of 5 Aadhaar OTP requests reached. Please try again tomorrow.");
+    if (attempts >= 20) {
+      toast.error("Daily limit of 20 Aadhaar OTP requests reached. Please try again tomorrow.");
       return;
     }
 
@@ -384,8 +411,8 @@ export default function CustomerHome() {
       return;
     }
     const attempts = getDailyAttempts('aadhaar_verify');
-    if (attempts >= 5) {
-      toast.error("Daily limit of 5 Aadhaar verification attempts reached. Please try again tomorrow.");
+    if (attempts >= 20) {
+      toast.error("Daily limit of 20 Aadhaar verification attempts reached. Please try again tomorrow.");
       return;
     }
     setIsAadharVerifying(true);
@@ -433,8 +460,8 @@ export default function CustomerHome() {
       return;
     }
     const attempts = getDailyAttempts('pan_verify');
-    if (attempts >= 5) {
-      toast.error("Daily limit of 5 PAN verification attempts reached. Please try again tomorrow.");
+    if (attempts >= 20) {
+      toast.error("Daily limit of 20 PAN verification attempts reached. Please try again tomorrow.");
       return;
     }
 
@@ -474,11 +501,11 @@ export default function CustomerHome() {
   };
 
   const handleKycSubmit = async () => {
-    if (!isAadharVerified) {
+    if (isAadharReuploadRequired && !isAadharVerified && !activeUser?.is_aadhar_verified) {
       toast.error("Please verify Aadhaar first");
       return;
     }
-    if (!isPanVerified) {
+    if (isPanReuploadRequired && !isPanVerified && !activeUser?.is_pan_verified) {
       toast.error("Please verify PAN first");
       return;
     }
@@ -498,14 +525,21 @@ export default function CustomerHome() {
         aadhaar_reference_id: aadharReferenceId,
       };
 
-      await apiFetch(`/loans/${kycLoan.id}/kyc-data`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
+      if (kycLoan.status === 'KYC_SENT') {
+        await apiFetch(`/loans/${kycLoan.id}/submit-form`, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+      } else {
+        await apiFetch(`/loans/${kycLoan.id}/kyc-data`, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
 
-      await apiFetch(`/loans/${kycLoan.id}/confirm`, {
-        method: 'POST'
-      });
+        await apiFetch(`/loans/${kycLoan.id}/confirm`, {
+          method: 'POST'
+        });
+      }
 
       toast.success("Verification details submitted successfully!");
       await mutateUser();
@@ -516,6 +550,25 @@ export default function CustomerHome() {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (
+      activeUser?.has_pending_kyc_reupload &&
+      kycLoan &&
+      isAadharPanReupload &&
+      isAadharPanReuploadComplete &&
+      !isSubmitting &&
+      kycLoan.status !== 'KYC_SUBMITTED'
+    ) {
+      handleKycSubmit();
+    }
+  }, [
+    isAadharPanReuploadComplete,
+    activeUser?.has_pending_kyc_reupload,
+    kycLoan,
+    isAadharPanReupload,
+    isSubmitting
+  ]);
 
   const allAdminMessages = Array.isArray(adminMessages) ? adminMessages : [];
   const unreadAdminMessages = allAdminMessages.filter((m: any) => !m.is_read);
@@ -653,18 +706,19 @@ export default function CustomerHome() {
     lockRelevantLoanStatuses.has(l.status),
   );
 
+  const activeLoan = loansList?.find(
+    (l: any) => l.status === "DISBURSED" || l.status === "OVERDUE",
+  );
+  const hasActiveLoan = !!activeLoan;
+
   // Show lock amount only while there is an active pre-disbursal loan lock
-  // (cancelled/rejected flows should not show this badge).
-  const lockedBalance = hasLockRelevantLoan
+  // or if an active loan's funds are locked.
+  const lockedBalance = (hasLockRelevantLoan || activeLoan?.is_funds_locked)
     ? (activeUser?.active_locked_balance || 0) > 0
       ? activeUser.active_locked_balance
       : activeWallet?.locked_balance || "0"
     : 0;
 
-  const activeLoan = loansList?.find(
-    (l: any) => l.status === "DISBURSED" || l.status === "OVERDUE",
-  );
-  const hasActiveLoan = !!activeLoan;
   const loading = !activeUser && (userLoading || walletLoading);
 
   const isVaultEnabledByAdmin = !!vaultSetupData?.vault;
@@ -1374,8 +1428,64 @@ export default function CustomerHome() {
         unreadCount={unreadAdminMessages.length}
       />
 
+      {/* Sticky Note for Verified Identity / Pending Disbursal */}
+      {isAadharPanVerified && hasPendingDisbursalLoan && (
+        <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+          <div className="w-full bg-emerald-50/60 backdrop-blur-sm rounded-2xl p-4 flex items-start gap-3 border border-emerald-100/80 shadow-md relative overflow-hidden group">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-200/20 rounded-full blur-xl pointer-events-none group-hover:bg-emerald-200/30 transition-all duration-500" />
+            
+            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-600">
+              <Clock strokeWidth={2.5} size={16} className="animate-pulse" />
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
+                  Identity Verified
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              </div>
+              <h2 className="text-emerald-950 font-bold text-xs mt-1 leading-snug">
+                KYC Verification Completed Successfully
+              </h2>
+              <p className="text-emerald-800/80 text-[10px] mt-1 font-medium leading-relaxed font-sans">
+                Your Aadhaar and PAN have been verified. Your loan application is currently under review by our credit team and the funds will be disbursed to your wallet shortly. Thank you for your patience.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Frozen Loan Notification */}
+      {Number(lockedBalance) > 0 && activeLoan?.is_funds_locked && (
+        <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+          <div className="w-full bg-sky-50/80 backdrop-blur-sm rounded-2xl p-4 flex items-start gap-3 border border-sky-200/80 shadow-md relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-sky-200/30 rounded-full blur-xl pointer-events-none" />
+            
+            <div className="p-2 bg-sky-500/10 rounded-xl border border-sky-500/20 text-sky-600">
+              <Lock strokeWidth={2.5} size={16} className="animate-pulse" />
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-black text-sky-600 uppercase tracking-widest">
+                  Amount Frozen
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+              </div>
+              <h2 className="text-sky-950 font-bold text-xs mt-1 leading-snug">
+                Your disbursed loan is temporarily frozen
+              </h2>
+              <p className="text-sky-800/80 text-[10px] mt-1 font-medium leading-relaxed font-sans">
+                Don't panic! This is standard procedure. Your granted loan of <span className="font-bold text-sky-900">₹{Number(lockedBalance).toLocaleString('en-IN')}</span> is safely locked while our admins finalize your account setup. It will be available for use shortly.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* KYC Document Re-upload Blocker */}
-      {activeUser?.has_pending_kyc_reupload && kycLoan && (
+      {activeUser?.has_pending_kyc_reupload && kycLoan && kycLoan.status !== 'KYC_SUBMITTED' && !(isAadharPanReupload && isAadharPanReuploadComplete) && (
         isAadharPanReupload ? (
           <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
             <div className="w-full bg-[#fcfdfd] rounded-2xl overflow-hidden shadow-sm flex flex-col border border-teal-100 font-sans">
@@ -1408,7 +1518,7 @@ export default function CustomerHome() {
                     }`}
                   >
                     AADHAAR
-                    <span className={`w-1 h-1 rounded-full ${isAadharVerified ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
+                    <span className={`w-1 h-1 rounded-full ${(isAadharVerified || activeUser?.is_aadhar_verified) ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
                   </button>
                   <button 
                     type="button"
@@ -1420,7 +1530,7 @@ export default function CustomerHome() {
                     }`}
                   >
                     PAN
-                    <span className={`w-1 h-1 rounded-full ${isPanVerified ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                    <span className={`w-1 h-1 rounded-full ${(isPanVerified || activeUser?.is_pan_verified) ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                   </button>
                 </div>
               </div>
@@ -1428,7 +1538,7 @@ export default function CustomerHome() {
               {/* Tab Content */}
               <div className="p-4 pt-2 flex-1">
                 {kycTab === 'aadhaar' ? (
-                  isAadharVerified ? (
+                  (isAadharVerified || activeUser?.is_aadhar_verified) ? (
                     <div className="flex items-center gap-2 justify-center py-2 text-center animate-in fade-in duration-200">
                       <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
                         <Check size={12} strokeWidth={3} />
@@ -1452,7 +1562,7 @@ export default function CustomerHome() {
                           />
                           <button 
                             type="button"
-                            disabled={isAadharVerifying || aadharCooldown > 0 || aadharNumber.length !== 12}
+                            disabled={isAadharVerifying || isPanVerifying || aadharCooldown > 0 || aadharNumber.length !== 12}
                             onClick={handleSendAadharOtp}
                             className="absolute right-1 top-1 bottom-1 bg-teal-600 hover:bg-teal-500 active:scale-95 disabled:bg-zinc-100 disabled:text-zinc-400 text-white font-bold px-3 rounded-md text-[9px] tracking-wider transition-all"
                           >
@@ -1477,7 +1587,7 @@ export default function CustomerHome() {
                             />
                             <button 
                               type="button"
-                              disabled={isAadharVerifying || aadharOtp.length !== 6}
+                              disabled={isAadharVerifying || isPanVerifying || aadharOtp.length !== 6}
                               onClick={handleVerifyAadharOtp}
                               className="absolute right-1 top-1 bottom-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:bg-zinc-100 disabled:text-zinc-400 text-white font-bold px-3 rounded-md text-[9px] tracking-wider transition-all"
                             >
@@ -1489,7 +1599,7 @@ export default function CustomerHome() {
                     </div>
                   )
                 ) : (
-                  isPanVerified ? (
+                  (isPanVerified || activeUser?.is_pan_verified) ? (
                     <div className="flex items-center gap-2 justify-center py-2 text-center animate-in fade-in duration-200">
                       <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
                         <Check size={12} strokeWidth={3} />
@@ -1541,7 +1651,7 @@ export default function CustomerHome() {
 
                       <button 
                         type="button"
-                        disabled={isPanVerifying || panNumber.length !== 10 || !panName || !panDob}
+                        disabled={isPanVerifying || isAadharVerifying || panNumber.length !== 10 || !panName || !panDob}
                         onClick={handleVerifyPan}
                         className="w-full bg-teal-600 hover:bg-teal-500 active:scale-[0.98] disabled:bg-zinc-100 disabled:text-zinc-400 text-white font-bold py-1.5 rounded-lg text-[10px] tracking-wider transition-all"
                       >
@@ -1556,7 +1666,7 @@ export default function CustomerHome() {
               <div className="px-4 py-2 bg-teal-50/20 border-t border-teal-100/80 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className="relative flex h-1.5 w-1.5">
-                    {isAadharVerified && isPanVerified ? (
+                    {isAadharPanReuploadComplete ? (
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                     ) : (
                       <>
@@ -1566,16 +1676,16 @@ export default function CustomerHome() {
                     )}
                   </span>
                   <span className="text-[9px] font-bold text-teal-700/80 tracking-wider uppercase mt-px">
-                    {isAadharVerified && isPanVerified ? 'Ready' : 'Pending'}
+                    {isAadharPanReuploadComplete ? 'Ready' : 'Pending'}
                   </span>
                 </div>
                 
                 <button 
                   type="button"
-                  disabled={isSubmitting || !isAadharVerified || !isPanVerified}
+                  disabled={isSubmitting || !isAadharPanReuploadComplete}
                   onClick={handleKycSubmit}
                   className={`flex items-center gap-1 px-3 py-1 rounded-lg text-[9px] font-bold tracking-wider transition-all ${
-                    isAadharVerified && isPanVerified 
+                    isAadharPanReuploadComplete 
                       ? 'bg-teal-600 hover:bg-teal-500 text-white border border-teal-500/30' 
                       : 'bg-zinc-50 text-zinc-400 border border-zinc-200 cursor-not-allowed'
                   }`}
@@ -2083,6 +2193,25 @@ export default function CustomerHome() {
             />
           </button>
         )}
+        {activeLoans?.some((l: any) => l.nach_link && !l.is_nach_added) && (() => {
+          const nachLoan = activeLoans.find((l: any) => l.nach_link && !l.is_nach_added);
+          return (
+            <button
+              onClick={() => window.open(nachLoan.nach_link, "_blank")}
+              className="w-16 h-16 rounded-4xl bg-amber-500 border border-amber-300/30 flex items-center justify-center shadow-[0_25px_50px_rgba(245,158,11,0.4)] active:scale-90 transition-all cursor-pointer text-white hover:bg-amber-600 font-black animate-bounce group relative overflow-hidden"
+              title="Complete NACH"
+            >
+              <div className="absolute inset-0 bg-linear-to-tr from-amber-600/0 via-white/20 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ShieldCheck
+                size={28}
+                strokeWidth={2.5}
+                className="group-hover:scale-110 transition-transform relative z-10"
+              />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full animate-ping" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full" />
+            </button>
+          );
+        })()}
         {activeUser?.support_number && (
           <button
             onClick={() =>

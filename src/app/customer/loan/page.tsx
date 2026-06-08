@@ -186,8 +186,8 @@ export default function LoanList() {
             alert("Application cancelled successfully.");
             setActiveLoan(null);
             fetchLoans();
-        } catch (e) {
-            alert("Failed to cancel application.");
+        } catch (e: any) {
+            alert(e.message || "Failed to cancel application.");
         }
     };
 

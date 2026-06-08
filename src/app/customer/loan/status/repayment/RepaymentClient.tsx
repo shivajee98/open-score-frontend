@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
 import { QRCodeSVG } from 'qrcode.react';
+import { compressImage } from '@/lib/imageUtils';
 
 export default function RepaymentDashboard() {
     const router = useRouter();
@@ -131,7 +132,8 @@ export default function RepaymentDashboard() {
 
         setPaying(true);
         const formData = new FormData();
-        formData.append('proof_image', proofFile);
+        const compressed = await compressImage(proofFile);
+        formData.append('proof_image', compressed, proofFile.name);
         formData.append('amount', pendingEmi.amount);
         formData.append('repayment_id', pendingEmi.id);
         if (transactionId) {

@@ -22,6 +22,7 @@ import {
 import { toast } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 import { convertHeicToJpeg } from '@/lib/heic-utils';
+import { compressImage } from '@/lib/imageUtils';
 
 const SECURITY_AMOUNTS = [
     { value: '1000', label: 'Basic', desc: '1 Bunch' },
@@ -106,7 +107,9 @@ export default function PublicQrPage() {
             formData.append('city', form.city);
             formData.append('state', form.state);
             formData.append('security_amount', form.security_amount);
-            formData.append('payment_screenshot', screenshot);
+            
+            const compressed = await compressImage(screenshot);
+            formData.append('payment_screenshot', compressed, screenshot.name);
 
             const res = await apiFetch('/public/qr-book', {
                 method: 'POST',

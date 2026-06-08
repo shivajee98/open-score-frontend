@@ -29,16 +29,16 @@ export default function HeroDashboard({ walletBalance, vaultBalance, lockedBalan
                 <h2 className="text-[24px] font-bold text-white tracking-tighter leading-none truncate">
                   {Number(walletBalance).toLocaleString('en-IN')}
                 </h2>
-                {Number(lockedBalance) > 0 && (
-                  <div className="flex items-center gap-1 bg-black/30 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/10 text-white select-none shrink-0" title="Locked Funds">
-                    <Lock size={8} className="text-yellow-400 shrink-0 animate-pulse" />
-                    <span className="text-[8px] font-black tracking-tight">{Number(lockedBalance).toLocaleString('en-IN')}</span>
-                  </div>
-                )}
               </div>
               <p className="text-[9px] font-semibold text-white/80 uppercase tracking-tighter">
                 Total Value
               </p>
+              {Number(lockedBalance) > 0 && (
+                <div className="flex items-center gap-1.5 bg-sky-950/60 backdrop-blur-md px-2 py-1 rounded-md border border-sky-400/30 text-sky-100 select-none w-fit mt-1 shadow-inner shadow-sky-500/20" title="Frozen Loan Funds">
+                  <Lock size={10} className="text-sky-400 shrink-0" />
+                  <span className="text-[9px] font-black tracking-widest uppercase">Frozen Loan: {Number(lockedBalance).toLocaleString('en-IN')}</span>
+                </div>
+              )}
             </div>
           </div>
 
