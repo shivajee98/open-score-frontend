@@ -202,8 +202,8 @@ export default function LoanStatus() {
         if (hasShownAny) return;
 
         // Step 1: Proceed (VETTING/PROCEEDED)
-        if (['VETTING', 'PROCEEDED'].includes(status) && !shownStages.proceed) {
-            const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 30000;
+        if (!loan.auto_pilot_enabled && ['VETTING', 'PROCEEDED'].includes(status) && !shownStages.proceed) {
+            const duration = 30000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
 
@@ -218,8 +218,8 @@ export default function LoanStatus() {
         }
 
         // Step 2: KYC Link (KYC_SENT)
-        if (status === 'KYC_SENT' && !shownStages.kyc_link) {
-            const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 30000;
+        if (!loan.auto_pilot_enabled && status === 'KYC_SENT' && !shownStages.kyc_link) {
+            const duration = 30000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
 
@@ -234,8 +234,8 @@ export default function LoanStatus() {
         }
 
         // Step 3: Approval / Approve (KYC_SUBMITTED / APPROVED)
-        if ((status === 'APPROVED' || (loan.auto_pilot_enabled && status === 'KYC_SUBMITTED')) && !shownStages.approve) {
-            const duration = (loan.auto_pilot_enabled && timerInfo?.remaining) ? timerInfo.remaining * 1000 : 15000;
+        if (!loan.auto_pilot_enabled && (status === 'APPROVED' || status === 'KYC_SUBMITTED') && !shownStages.approve) {
+            const duration = 15000;
             setAnimationDuration(duration);
             setShowVerificationLoading(true);
 
@@ -620,7 +620,7 @@ export default function LoanStatus() {
                             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 to-transparent pointer-events-none" />
 
                             <div className="relative z-10 flex flex-col items-center gap-4">
-                                {timerInfo && timerInfo.remaining > 0 ? (
+                                {timerInfo ? (
                                     <CountdownCircleTimer
                                         key={`${loan.status}-${loan.auto_pilot_next_step_at}`}
                                         isPlaying
@@ -634,7 +634,6 @@ export default function LoanStatus() {
                                         onComplete={() => {
                                             fetchLoan();
                                             fetchUserData();
-                                            window.location.reload();
                                         }}
                                     >
                                         {({ remainingTime }) => (
@@ -643,7 +642,11 @@ export default function LoanStatus() {
                                                 <span className="text-xl font-black text-slate-900 tabular-nums tracking-tighter leading-none">
                                                     {formatTimerLabel(remainingTime)}
                                                 </span>
-                                                <span className="text-[9px] font-bold text-blue-500 mt-1 uppercase tracking-widest animate-pulse">Syncing</span>
+                                                {remainingTime === 0 ? (
+                                                    <span className="text-[9px] font-bold text-amber-500 mt-1 uppercase tracking-widest animate-pulse">Processing</span>
+                                                ) : (
+                                                    <span className="text-[9px] font-bold text-blue-500 mt-1 uppercase tracking-widest animate-pulse">Syncing</span>
+                                                )}
                                             </div>
                                         )}
                                     </CountdownCircleTimer>

@@ -1428,33 +1428,62 @@ export default function CustomerHome() {
         unreadCount={unreadAdminMessages.length}
       />
 
-      {/* Sticky Note for Verified Identity / Pending Disbursal */}
-      {isAadharPanVerified && hasPendingDisbursalLoan && (
-        <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
-          <div className="w-full bg-emerald-50/60 backdrop-blur-sm rounded-2xl p-4 flex items-start gap-3 border border-emerald-100/80 shadow-md relative overflow-hidden group">
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-200/20 rounded-full blur-xl pointer-events-none group-hover:bg-emerald-200/30 transition-all duration-500" />
-            
-            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-600">
-              <Clock strokeWidth={2.5} size={16} className="animate-pulse" />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
-                  Identity Verified
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+      {/* NACH Banner */}
+      {activeLoans?.some((l: any) => l.nach_link && !l.is_nach_added) && (() => {
+        const nachLoan = activeLoans.find((l: any) => l.nach_link && !l.is_nach_added);
+        return (
+          <div className="mx-2 mt-4 flex justify-center animate-in fade-in slide-in-from-top-4 duration-500">
+            <button 
+              onClick={() => window.open(nachLoan.nach_link, "_blank")}
+              className="bg-linear-to-r from-amber-300 via-yellow-100 to-white text-amber-900 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-4 border border-amber-200/60 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95 shadow-md relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-linear-to-tr from-white/0 via-white/40 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
+              <div className="flex items-center gap-2 relative z-10">
+                <ShieldCheck size={16} className="text-amber-600" strokeWidth={2.5} />
+                <span>Complete (NACH)</span>
               </div>
-              <h2 className="text-emerald-950 font-bold text-xs mt-1 leading-snug">
-                KYC Verification Completed Successfully
-              </h2>
-              <p className="text-emerald-800/80 text-[10px] mt-1 font-medium leading-relaxed font-sans">
-                Your Aadhaar and PAN have been verified. Your loan application is currently under review by our credit team and the funds will be disbursed to your wallet shortly. Thank you for your patience.
-              </p>
+              <div className="flex items-center gap-1.5 relative z-10">
+                <span className="bg-rose-500 w-2 h-2 rounded-full animate-pulse shadow-sm shadow-rose-500/50" />
+                <ArrowRight size={14} className="text-amber-600 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
+          </div>
+        );
+      })()}
+
+      {/* Sticky Note for Verified Identity / Pending Disbursal */}
+      {isAadharPanVerified && hasPendingDisbursalLoan && (() => {
+        const isSandboxVerified = activeUser?.aadhar_verified_at && activeUser?.pan_verified_at;
+        
+        if (!isSandboxVerified) return null;
+
+        return (
+          <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+            <div className="w-full bg-emerald-50/60 border-emerald-100/80 backdrop-blur-sm rounded-2xl p-4 flex items-start gap-3 border shadow-md relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-200/20 group-hover:bg-emerald-200/30 rounded-full blur-xl pointer-events-none transition-all duration-500" />
+              
+              <div className="p-2 bg-emerald-500/10 border-emerald-500/20 text-emerald-600 rounded-xl border">
+                <Clock strokeWidth={2.5} size={16} className="animate-pulse" />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
+                    Identity Verified
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                </div>
+                <h2 className="text-emerald-950 font-bold text-xs mt-1 leading-snug">
+                  KYC Verification Completed Successfully
+                </h2>
+                <p className="text-emerald-800/80 text-[10px] mt-1 font-medium leading-relaxed font-sans">
+                  Your Aadhaar and PAN have been verified. Your loan application is currently under review by our credit team and the funds will be disbursed to your wallet shortly. Thank you for your patience.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Frozen Loan Notification */}
       {Number(lockedBalance) > 0 && activeLoan?.is_funds_locked && (
@@ -2193,25 +2222,7 @@ export default function CustomerHome() {
             />
           </button>
         )}
-        {activeLoans?.some((l: any) => l.nach_link && !l.is_nach_added) && (() => {
-          const nachLoan = activeLoans.find((l: any) => l.nach_link && !l.is_nach_added);
-          return (
-            <button
-              onClick={() => window.open(nachLoan.nach_link, "_blank")}
-              className="w-16 h-16 rounded-4xl bg-amber-500 border border-amber-300/30 flex items-center justify-center shadow-[0_25px_50px_rgba(245,158,11,0.4)] active:scale-90 transition-all cursor-pointer text-white hover:bg-amber-600 font-black animate-bounce group relative overflow-hidden"
-              title="Complete NACH"
-            >
-              <div className="absolute inset-0 bg-linear-to-tr from-amber-600/0 via-white/20 to-white/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <ShieldCheck
-                size={28}
-                strokeWidth={2.5}
-                className="group-hover:scale-110 transition-transform relative z-10"
-              />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full animate-ping" />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 border-2 border-white rounded-full" />
-            </button>
-          );
-        })()}
+
         {activeUser?.support_number && (
           <button
             onClick={() =>

@@ -228,14 +228,39 @@ export default function ConstructionLoanWizard() {
         }
     };
 
-    // Simulate Camera Capture
+    // Real Camera Capture via device camera
     const triggerCameraSelfie = () => {
-        setCameraActive(true);
-        setTimeout(() => {
-            setFormData((prev: any) => ({ ...prev, selfie_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80' }));
-            setCameraActive(false);
-            toast.success('Selfie captured successfully!');
-        }, 1500);
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'user'; // front camera
+        input.onchange = async (e: any) => {
+            const file = e.target?.files?.[0];
+            if (!file) return;
+
+            setCameraActive(true);
+            const formPayload = new FormData();
+            formPayload.append('file', file);
+
+            try {
+                const response = await apiFetch('/construction-loans/upload', {
+                    method: 'POST',
+                    body: formPayload
+                });
+
+                if (response && response.url) {
+                    setFormData((prev: any) => ({ ...prev, selfie_url: response.url }));
+                    toast.success('Selfie captured & uploaded successfully!');
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error: any) {
+                toast.error(error.message || 'Selfie upload failed. Please try again.');
+            } finally {
+                setCameraActive(false);
+            }
+        };
+        input.click();
     };
 
     // Handle input field change
