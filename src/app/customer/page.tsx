@@ -526,7 +526,7 @@ export default function CustomerHome() {
         aadhaar_reference_id: aadharReferenceId,
       };
 
-      if (kycLoan.status === 'KYC_SENT') {
+      if (kycLoan.status === 'KYC_SENT' || (Array.isArray(kycLoan.reupload_fields) && kycLoan.reupload_fields.length > 0)) {
         await apiFetch(`/loans/${kycLoan.id}/submit-form`, {
           method: 'POST',
           body: JSON.stringify(payload)
