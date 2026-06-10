@@ -13,23 +13,23 @@ import { apiFetch, clearAuthState } from "@/lib/api";
 import { cn } from "@/lib/loanUtils";
 import { useStore } from "@/store/useStore";
 import {
-    ArrowRight,
-    Check,
-    Clock,
-    Gift,
-    History,
-    Landmark,
-    Lock,
-    Mail,
-    MapPin,
-    MessageSquare,
-    Phone,
-    ShieldCheck,
-    Smartphone,
-    Upload,
-    Users,
-    X,
-    Zap
+  ArrowRight,
+  Check,
+  Clock,
+  Gift,
+  History,
+  Landmark,
+  Lock,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Phone,
+  ShieldCheck,
+  Smartphone,
+  Upload,
+  Users,
+  X,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -110,7 +110,8 @@ export default function CustomerHome() {
     activeLoans?.find(
       (l: any) =>
         !['DISBURSED', 'ACTIVE', 'OVERDUE', 'CLOSED', 'CANCELLED', 'REJECTED'].includes(l.status) &&
-        (l.status === "KYC_SENT" || (Array.isArray(l.reupload_fields) && l.reupload_fields.length > 0)),
+        (l.status === "KYC_SENT" || (Array.isArray(l.reupload_fields) && l.reupload_fields.length > 0)) &&
+        !l.kyc_submitted_at,
     ) || null;
 
   const isAadharPanReupload = useMemo(() => {
@@ -299,7 +300,7 @@ export default function CustomerHome() {
       if (activeUser.is_aadhar_verified) setIsAadharVerified(true);
       if (activeUser.is_pan_verified) setIsPanVerified(true);
       if (activeUser.name) setPanName(activeUser.name);
-      
+
       if (activeUser.date_of_birth) {
         const dobStr = activeUser.date_of_birth;
         if (dobStr.includes('T')) {
@@ -308,12 +309,12 @@ export default function CustomerHome() {
           setPanDob(dobStr);
         }
       }
-      
+
       if (activeUser.aadhar_image) setAadharFrontUrl(activeUser.aadhar_image);
       if (activeUser.aadhar_back_image) setAadharBackUrl(activeUser.aadhar_back_image);
       if (activeUser.pan_image) setPanCardUrl(activeUser.pan_image);
     }
-    
+
     if (kycLoan?.form_data) {
       const fd = kycLoan.form_data;
       if (fd.aadhar_number) setAadharNumber(fd.aadhar_number);
@@ -322,7 +323,7 @@ export default function CustomerHome() {
       if (fd.first_name) setPanName(fd.first_name);
       if (fd.is_aadhar_verified) setIsAadharVerified(true);
       if (fd.is_pan_verified) setIsPanVerified(true);
-      
+
       if (fd.kyc_images) {
         if (fd.kyc_images.aadhar_front) setAadharFrontUrl(fd.kyc_images.aadhar_front);
         if (fd.kyc_images.aadhar_back) setAadharBackUrl(fd.kyc_images.aadhar_back);
@@ -427,7 +428,7 @@ export default function CustomerHome() {
       if ((res?.code === 200 || res?.status === 200) && kyc?.aadhaar_number) {
         setIsAadharVerified(true);
         toast.success("Aadhaar verified successfully!");
-        
+
         if (kyc.name || kyc.full_name) {
           setPanName(kyc.name || kyc.full_name);
         }
@@ -513,7 +514,7 @@ export default function CustomerHome() {
     setIsSubmitting(true);
     try {
       const existingData = kycLoan?.form_data || {};
-      
+
       const payload = {
         ...existingData,
         aadhar_number: aadharNumber,
@@ -640,23 +641,23 @@ export default function CustomerHome() {
   // Merchant-only promotional cards
   const merchantBanners = isMerchant
     ? [
-        {
-          title: "Unlimited Transfer",
-          sub: "On Zero Cost",
-          color: "bg-linear-to-br from-violet-700 via-purple-800 to-indigo-900",
-          accent: "bg-violet-500",
-          amount: "No Hidden Charge",
-          label: "Available",
-        },
-        {
-          title: "Wallet UPTO 2 Lakh  Daily",
-          sub: "Daily Increment  2 %",
-          color: "bg-linear-to-br from-amber-600 via-orange-700 to-red-800",
-          accent: "bg-amber-500",
-          amount: "Increament Upto 2% Daily",
-          label: "",
-        },
-      ]
+      {
+        title: "Unlimited Transfer",
+        sub: "On Zero Cost",
+        color: "bg-linear-to-br from-violet-700 via-purple-800 to-indigo-900",
+        accent: "bg-violet-500",
+        amount: "No Hidden Charge",
+        label: "Available",
+      },
+      {
+        title: "Wallet UPTO 2 Lakh  Daily",
+        sub: "Daily Increment  2 %",
+        color: "bg-linear-to-br from-amber-600 via-orange-700 to-red-800",
+        accent: "bg-amber-500",
+        amount: "Increament Upto 2% Daily",
+        label: "",
+      },
+    ]
     : [];
 
   const banners = [...baseBanners, ...merchantBanners];
@@ -1110,11 +1111,10 @@ export default function CustomerHome() {
                   <button
                     onClick={handleSendOtp}
                     disabled={isSendingOtp || !email}
-                    className={`w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all shadow-xl ${
-                      isMerchant
+                    className={`w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest text-white transition-all shadow-xl ${isMerchant
                         ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-950/30"
                         : "bg-indigo-600 hover:bg-indigo-500 shadow-indigo-950/30"
-                    } disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] flex items-center justify-center gap-2`}
+                      } disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] flex items-center justify-center gap-2`}
                   >
                     {isSendingOtp ? (
                       <>
@@ -1325,37 +1325,37 @@ export default function CustomerHome() {
 
       {isVaultMaximized && (
         <div
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl px-4"
-            onClick={() => setIsVaultMaximized(false)}
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-xl px-4"
+          onClick={() => setIsVaultMaximized(false)}
         >
-            <div className="w-full max-w-[320px] relative flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-                <VaultCard
-                    vault={vaultSetupData?.vault}
-                    rates={vaultSetupData?.rates}
-                    activeDeposit={activeDeposit}
-                    userName={activeUser?.name}
-                    isFlipped={isVaultFlipped}
-                    setIsFlipped={setIsVaultFlipped}
-                    isMaximized={true}
-                    setIsMaximized={setIsVaultMaximized}
-                    showCardNumber={showVaultCardNumber}
-                    setShowCardNumber={setShowVaultCardNumber}
-                    showCvc={showVaultCvc}
-                    setShowCvc={setShowVaultCvc}
-                />
-                {/* Hint Overlay */}
-                <div className="mt-8 flex flex-col items-center gap-3 text-center animate-in fade-in z-[110]">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#c5a059] bg-[#c5a059]/10 px-3 py-1 rounded-full border border-[#c5a059]/20">
-                        {isVaultFlipped ? "Tap card to see front" : "Tap card to see CVV & Rates"}
-                    </p>
-                    <button
-                        onClick={() => setIsVaultMaximized(false)}
-                        className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-xs font-black text-white transition-all uppercase tracking-widest active:scale-95"
-                    >
-                        Close View
-                    </button>
-                </div>
+          <div className="w-full max-w-[320px] relative flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <VaultCard
+              vault={vaultSetupData?.vault}
+              rates={vaultSetupData?.rates}
+              activeDeposit={activeDeposit}
+              userName={activeUser?.name}
+              isFlipped={isVaultFlipped}
+              setIsFlipped={setIsVaultFlipped}
+              isMaximized={true}
+              setIsMaximized={setIsVaultMaximized}
+              showCardNumber={showVaultCardNumber}
+              setShowCardNumber={setShowVaultCardNumber}
+              showCvc={showVaultCvc}
+              setShowCvc={setShowVaultCvc}
+            />
+            {/* Hint Overlay */}
+            <div className="mt-8 flex flex-col items-center gap-3 text-center animate-in fade-in z-[110]">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#c5a059] bg-[#c5a059]/10 px-3 py-1 rounded-full border border-[#c5a059]/20">
+                {isVaultFlipped ? "Tap card to see front" : "Tap card to see CVV & Rates"}
+              </p>
+              <button
+                onClick={() => setIsVaultMaximized(false)}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-full text-xs font-black text-white transition-all uppercase tracking-widest active:scale-95"
+              >
+                Close View
+              </button>
             </div>
+          </div>
         </div>
       )}
 
@@ -1433,7 +1433,7 @@ export default function CustomerHome() {
         const nachLoan = activeLoans.find((l: any) => l.nach_link && !l.is_nach_added);
         return (
           <div className="mx-2 mt-4 flex justify-center animate-in fade-in slide-in-from-top-4 duration-500">
-            <button 
+            <button
               onClick={() => window.open(nachLoan.nach_link, "_blank")}
               className="bg-linear-to-r from-amber-300 via-yellow-100 to-white text-amber-900 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-4 border border-amber-200/60 hover:shadow-lg hover:shadow-amber-500/20 transition-all active:scale-95 shadow-md relative overflow-hidden group"
             >
@@ -1454,18 +1454,18 @@ export default function CustomerHome() {
       {/* Sticky Note for Verified Identity / Pending Disbursal */}
       {isAadharPanVerified && hasPendingDisbursalLoan && (() => {
         const isSandboxVerified = activeUser?.aadhar_verified_at && activeUser?.pan_verified_at;
-        
+
         if (!isSandboxVerified) return null;
 
         return (
           <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
             <div className="w-full bg-emerald-50/60 border-emerald-100/80 backdrop-blur-sm rounded-2xl p-4 flex items-start gap-3 border shadow-md relative overflow-hidden group">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-200/20 group-hover:bg-emerald-200/30 rounded-full blur-xl pointer-events-none transition-all duration-500" />
-              
+
               <div className="p-2 bg-emerald-500/10 border-emerald-500/20 text-emerald-600 rounded-xl border">
                 <Clock strokeWidth={2.5} size={16} className="animate-pulse" />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
@@ -1490,11 +1490,11 @@ export default function CustomerHome() {
         <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
           <div className="w-full bg-sky-50/80 backdrop-blur-sm rounded-2xl p-4 flex items-start gap-3 border border-sky-200/80 shadow-md relative overflow-hidden">
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-sky-200/30 rounded-full blur-xl pointer-events-none" />
-            
+
             <div className="p-2 bg-sky-500/10 rounded-xl border border-sky-500/20 text-sky-600">
               <Lock strokeWidth={2.5} size={16} className="animate-pulse" />
             </div>
-            
+
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-black text-sky-600 uppercase tracking-widest">
@@ -1518,7 +1518,7 @@ export default function CustomerHome() {
         isAadharPanReupload ? (
           <div className="px-4 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
             <div className="w-full bg-[#fcfdfd] rounded-2xl overflow-hidden shadow-sm flex flex-col border border-teal-100 font-sans">
-              
+
               {/* Header & Tabs Row */}
               <div className="px-4 py-2.5 border-b border-teal-100/80 bg-teal-50/20 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -1537,26 +1537,24 @@ export default function CustomerHome() {
 
                 {/* Tabs */}
                 <div className="flex p-0.5 bg-teal-50/50 rounded-lg border border-teal-100/60 relative">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setKycTab('aadhaar')}
-                    className={`px-3 py-1.5 text-[9px] font-bold tracking-wider rounded-md transition-all z-10 flex items-center justify-center gap-1.5 ${
-                      kycTab === 'aadhaar' 
-                        ? 'bg-teal-600 text-white shadow-sm' 
+                    className={`px-3 py-1.5 text-[9px] font-bold tracking-wider rounded-md transition-all z-10 flex items-center justify-center gap-1.5 ${kycTab === 'aadhaar'
+                        ? 'bg-teal-600 text-white shadow-sm'
                         : 'text-teal-600/70 hover:text-teal-900 hover:bg-teal-50'
-                    }`}
+                      }`}
                   >
                     AADHAAR
                     <span className={`w-1 h-1 rounded-full ${(isAadharVerified || activeUser?.is_aadhar_verified) ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`} />
                   </button>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setKycTab('pan')}
-                    className={`px-3 py-1.5 text-[9px] font-bold tracking-wider rounded-md transition-all z-10 flex items-center justify-center gap-1.5 ${
-                      kycTab === 'pan' 
-                        ? 'bg-teal-600 text-white shadow-sm' 
+                    className={`px-3 py-1.5 text-[9px] font-bold tracking-wider rounded-md transition-all z-10 flex items-center justify-center gap-1.5 ${kycTab === 'pan'
+                        ? 'bg-teal-600 text-white shadow-sm'
                         : 'text-teal-600/70 hover:text-teal-900 hover:bg-teal-50'
-                    }`}
+                      }`}
                   >
                     PAN
                     <span className={`w-1 h-1 rounded-full ${(isPanVerified || activeUser?.is_pan_verified) ? 'bg-emerald-400' : 'bg-amber-400'}`} />
@@ -1581,15 +1579,15 @@ export default function CustomerHome() {
                           Aadhaar Number
                         </label>
                         <div className="relative flex items-center">
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             maxLength={12}
                             placeholder="Enter 12-digit Aadhaar"
                             value={aadharNumber}
                             onChange={(e) => setAadharNumber(e.target.value.replace(/\D/g, ""))}
                             className="w-full bg-white border border-teal-100 rounded-lg pl-3 pr-[76px] py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all font-mono tracking-widest"
                           />
-                          <button 
+                          <button
                             type="button"
                             disabled={isAadharVerifying || isPanVerifying || aadharCooldown > 0 || aadharNumber.length !== 12}
                             onClick={handleSendAadharOtp}
@@ -1606,15 +1604,15 @@ export default function CustomerHome() {
                             Enter 6-Digit OTP
                           </label>
                           <div className="relative flex items-center">
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               maxLength={6}
                               placeholder="Enter OTP"
                               value={aadharOtp}
                               onChange={(e) => setAadharOtp(e.target.value.replace(/\D/g, ""))}
                               className="w-full bg-white border border-teal-100 rounded-lg pl-3 pr-[76px] py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all font-mono tracking-widest"
                             />
-                            <button 
+                            <button
                               type="button"
                               disabled={isAadharVerifying || isPanVerifying || aadharOtp.length !== 6}
                               onClick={handleVerifyAadharOtp}
@@ -1642,8 +1640,8 @@ export default function CustomerHome() {
                           <label className="text-[9px] font-bold text-teal-600/80 tracking-wider uppercase px-0.5">
                             Pan Number
                           </label>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             maxLength={10}
                             placeholder="ABCDE1234F"
                             value={panNumber}
@@ -1651,13 +1649,13 @@ export default function CustomerHome() {
                             className="w-full bg-white border border-teal-100 rounded-lg px-2.5 py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all font-mono tracking-widest uppercase"
                           />
                         </div>
-                        
+
                         <div className="space-y-0.5">
                           <label className="text-[9px] font-bold text-teal-600/80 tracking-wider uppercase px-0.5">
                             Full Name
                           </label>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             placeholder="Name on PAN card"
                             value={panName}
                             onChange={(e) => setPanName(e.target.value)}
@@ -1669,8 +1667,8 @@ export default function CustomerHome() {
                           <label className="text-[9px] font-bold text-teal-600/80 tracking-wider uppercase px-0.5">
                             Date of Birth
                           </label>
-                          <input 
-                            type="date" 
+                          <input
+                            type="date"
                             value={panDob}
                             onChange={(e) => setPanDob(e.target.value)}
                             className="w-full bg-white border border-teal-100 rounded-lg px-2.5 py-1.5 text-teal-950 text-xs focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 transition-all font-sans"
@@ -1678,7 +1676,7 @@ export default function CustomerHome() {
                         </div>
                       </div>
 
-                      <button 
+                      <button
                         type="button"
                         disabled={isPanVerifying || isAadharVerifying || panNumber.length !== 10 || !panName || !panDob}
                         onClick={handleVerifyPan}
@@ -1708,16 +1706,15 @@ export default function CustomerHome() {
                     {isAadharPanReuploadComplete ? 'Ready' : 'Pending'}
                   </span>
                 </div>
-                
-                <button 
+
+                <button
                   type="button"
                   disabled={isSubmitting || !isAadharPanReuploadComplete}
                   onClick={handleKycSubmit}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-lg text-[9px] font-bold tracking-wider transition-all ${
-                    isAadharPanReuploadComplete 
-                      ? 'bg-teal-600 hover:bg-teal-500 text-white border border-teal-500/30' 
+                  className={`flex items-center gap-1 px-3 py-1 rounded-lg text-[9px] font-bold tracking-wider transition-all ${isAadharPanReuploadComplete
+                      ? 'bg-teal-600 hover:bg-teal-500 text-white border border-teal-500/30'
                       : 'bg-zinc-50 text-zinc-400 border border-zinc-200 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   {isSubmitting ? 'SUBMITTING...' : 'SUBMIT'} <ArrowRight size={10} strokeWidth={3} />
                 </button>

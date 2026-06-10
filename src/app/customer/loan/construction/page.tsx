@@ -114,7 +114,25 @@ export default function ConstructionLoanWizard() {
 
     // Populate user profile info where possible
     useEffect(() => {
-        apiFetch('/auth/me')
+        // Check if user already applied
+        apiFetch('/construction-loans/my')
+            .then(res => {
+                if (res && res.loans && res.loans.length > 0) {
+                    const loan = res.loans[0];
+                    if (loan.status === 'RE_EDIT') {
+                        // Pre-fill form with existing data and allow editing
+                        setFormData((prev: any) => ({
+                            ...prev,
+                            ...(loan.form_data || {}),
+                            required_loan_amount: loan.amount || prev.required_loan_amount
+                        }));
+                        toast.error('Your application requires re-editing. Please update the requested details.');
+                    } else {
+                        setIsSubmitted(true);
+                    }
+                } else {
+                    // Fetch profile info if no existing application
+                    apiFetch('/auth/me')
             .then(data => {
                 if (data) {
                     const u = data.user || data;
@@ -180,7 +198,10 @@ export default function ConstructionLoanWizard() {
                 }
             })
             .catch(() => {});
-    }, []);
+        }
+    })
+    .catch(() => {});
+}, []);
 
     // Get live Geo location
     const handleGetLocation = () => {
@@ -266,13 +287,43 @@ export default function ConstructionLoanWizard() {
     // Handle input field change
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev: any) => ({ ...prev, [name]: value }));
+        
+        let sanitizedValue = value;
+        if (name === 'mobile' || name === 'alternate_mobile') {
+            sanitizedValue = value.replace(/\D/g, '').slice(0, 10);
+        } else if (name === 'aadhar_number') {
+            sanitizedValue = value.replace(/\D/g, '').slice(0, 12);
+        } else if (name === 'pan_number') {
+            sanitizedValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+        }
+
+        setFormData((prev: any) => ({ ...prev, [name]: sanitizedValue }));
     };
 
     // Submit complete form
     const handleSubmitForm = async () => {
         setSubmitting(true);
         try {
+            // Frontend validation before submission
+            if (formData.mobile && formData.mobile.length !== 10) {
+                toast.error('Mobile number must be exactly 10 digits');
+                setCurrentStep(1);
+                setSubmitting(false);
+                return;
+            }
+            if (formData.aadhar_number && formData.aadhar_number.length !== 12) {
+                toast.error('Aadhaar number must be exactly 12 digits');
+                setCurrentStep(1);
+                setSubmitting(false);
+                return;
+            }
+            if (formData.pan_number && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan_number)) {
+                toast.error('Invalid PAN number format');
+                setCurrentStep(1);
+                setSubmitting(false);
+                return;
+            }
+
             const amount = parseFloat(formData.required_loan_amount) || 0;
             if (amount <= 0) {
                 toast.error('Please enter a valid required loan amount in Step 3');
@@ -428,7 +479,9 @@ export default function ConstructionLoanWizard() {
                                 <div>
                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Mobile Number</label>
                                     <input 
-                                        type="text" 
+                                        type="tel" 
+                                        inputMode="numeric"
+                                        maxLength={10}
                                         name="mobile" 
                                         value={formData.mobile} 
                                         onChange={handleChange}
@@ -439,7 +492,9 @@ export default function ConstructionLoanWizard() {
                                 <div>
                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Alternate Mobile Number</label>
                                     <input 
-                                        type="text" 
+                                        type="tel" 
+                                        inputMode="numeric"
+                                        maxLength={10}
                                         name="alternate_mobile" 
                                         value={formData.alternate_mobile} 
                                         onChange={handleChange}
@@ -518,22 +573,25 @@ export default function ConstructionLoanWizard() {
                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Aadhaar Number</label>
                                     <input 
                                         type="text" 
+                                        inputMode="numeric"
+                                        maxLength={12}
                                         name="aadhar_number" 
                                         value={formData.aadhar_number} 
                                         onChange={handleChange}
                                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-slate-400 transition-colors"
-                                        placeholder="12 digit Aadhaar Number"
+                                        placeholder="12-digit Aadhaar"
                                     />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">PAN Number</label>
                                     <input 
                                         type="text" 
+                                        maxLength={10}
                                         name="pan_number" 
                                         value={formData.pan_number} 
                                         onChange={handleChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-slate-400 transition-colors"
-                                        placeholder="10 digit PAN Number"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold uppercase focus:outline-none focus:border-slate-400 transition-colors"
+                                        placeholder="ABCDE1234F"
                                     />
                                 </div>
                             </div>
