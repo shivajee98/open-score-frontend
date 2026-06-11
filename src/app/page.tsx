@@ -42,7 +42,7 @@ function HomeContent() {
 
   // Auto-fill OTP and toast notification for test/magic numbers
   useEffect(() => {
-    if (flow === 'otp_verify' && mobile.startsWith('99999') && otp !== '123456') {
+    if (flow === 'otp_verify' && mobile.startsWith('99999999') && otp !== '123456') {
       setOtp('123456');
       toast.success("Magic number detected! Bypassing OTP with '123456'");
     }

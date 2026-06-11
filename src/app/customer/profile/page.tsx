@@ -1059,7 +1059,7 @@ export default function Profile() {
       });
       if (res.error) throw new Error(res.error);
       setAltOtpSent(true);
-      if (alternatePhone.startsWith("99999")) {
+      if (alternatePhone.startsWith("99999999")) {
         setAltOtp("123456");
         toast.success("Magic number detected! Bypassing OTP with '123456'");
       } else {
