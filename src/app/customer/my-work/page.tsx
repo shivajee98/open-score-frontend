@@ -473,23 +473,23 @@ export default function MyWorkDashboard() {
 
                         {/* Digital I-Card Summary */}
 
-                        {profile ? (
+                        {(profile || user?.is_independent || !user?.sub_user_id) ? (
                             <div className="bg-white rounded-3xl p-6 shadow-md border border-slate-100">
-                                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Employee Details</h3>
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">{!profile ? 'System Partner Details' : 'Employee Details'}</h3>
                                 <div className="flex items-center gap-4 mb-4">
                                     <div className="w-16 h-16 bg-slate-100 rounded-2xl border border-slate-200 overflow-hidden flex items-center justify-center">
                                         {user?.kyc_verification?.live_selfie ? (
                                             <img src={`https://api.msmeloan.sbs${user.kyc_verification.live_selfie}`} className="w-full h-full object-cover" />
-                                        ) : profile.photo_path ? (
+                                        ) : profile?.photo_path ? (
                                             <img src={`https://api.msmeloan.sbs${profile.photo_path}`} className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="text-slate-400 font-black text-2xl">{profile.profile_name?.charAt(0)}</div>
+                                            <div className="text-slate-400 font-black text-2xl">{(profile?.name || user?.name || '?').charAt(0)}</div>
                                         )}
                                     </div>
                                     <div>
-                                        <p className="text-lg font-black text-slate-900 leading-tight">{profile.name}</p>
+                                        <p className="text-lg font-black text-slate-900 leading-tight">{profile?.name || user?.name}</p>
                                         <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mt-1">
-                                            {profile.working_location || 'Remote'} 
+                                            {profile?.working_location || 'Remote'} 
                                             {user?.kyc_verification?.state && ` • ${user.kyc_verification.state}`}
                                         </p>
                                     </div>
@@ -497,11 +497,11 @@ export default function MyWorkDashboard() {
                                 <div className="grid grid-cols-2 gap-4 mt-6">
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                         <p className="text-[10px] uppercase font-bold text-slate-400">Joining Date</p>
-                                        <p className="text-sm font-black text-slate-900">{formatDate(profile.joining_date)}</p>
+                                        <p className="text-sm font-black text-slate-900">{formatDate(profile?.joining_date || user?.created_at)}</p>
                                     </div>
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                         <p className="text-[10px] uppercase font-bold text-slate-400">Alt Contact</p>
-                                        <p className="text-sm font-black text-slate-900">{profile.alternate_number || 'N/A'}</p>
+                                        <p className="text-sm font-black text-slate-900">{profile?.alternate_number || user?.alternate_number?.phone || 'N/A'}</p>
                                     </div>
                                 </div>
 

@@ -42,14 +42,6 @@ export default function AuthEntry({ onMobileLogin, onEmailLogin }: AuthEntryProp
                         Continue with Mobile
                     </button>
 
-                    <button
-                        onClick={onEmailLogin}
-                        className="w-full bg-white text-blue-600 border-2 border-slate-100 font-bold py-5 rounded-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
-                    >
-                        <LogIn className="w-5 h-5" />
-                        Continue With Phone Number
-                    </button>
-
                     <p className="text-center text-slate-400 text-xs px-4 mt-8 leading-relaxed">
                         By continuing, you agree to our <span className="underline">Terms of Service</span> & <span className="underline">Privacy Policy</span>
                     </p>

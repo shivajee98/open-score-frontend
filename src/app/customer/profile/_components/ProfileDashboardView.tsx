@@ -497,7 +497,7 @@ export default function ProfileDashboardView({
             </div>
 
             {/* Become a Partner */}
-            {!user?.is_vendor && (
+            {!user?.is_vendor && user?.role !== 'AGENT' && (
               <div
                 onClick={() => router.push("/customer/partner")}
                 className="col-span-2 bg-white p-3 rounded-[16px] shadow-[0_2px_10px_rgb(0,0,0,0.04)] flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-all border border-slate-50 active:scale-95"

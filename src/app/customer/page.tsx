@@ -1281,7 +1281,7 @@ export default function CustomerHome() {
       />
 
       <div className="fixed bottom-24 right-4 z-40 flex flex-col gap-3 items-end">
-        {activeUser?.sub_user_id && (
+        {(activeUser?.sub_user_id || (activeUser?.role === 'AGENT' && !activeUser?.is_independent)) && (
           <Link href="/customer/my-work">
             <button
               className="relative rounded-full w-12 h-12  bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-all active:scale-90 border-4 border-white shadow-[0_0_15px_rgba(79,70,229,0.5)] animate-[pulse_2s_ease-in-out_infinite]"

@@ -642,9 +642,30 @@ function HomeContent() {
     );
   }
 
+  if (error === 'Try login again after sometimes' || conflictMessage === 'Try login again after sometimes') {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in duration-700">
+        <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-rose-500/20">
+          <AlertCircle className="w-10 h-10 text-rose-600" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Service Unavailable</h2>
+        <p className="text-slate-500 font-medium max-w-xs leading-relaxed">
+          Try login again after sometimes
+        </p>
+        <button
+          onClick={() => { setError(''); setMobile(''); }}
+          className="mt-8 px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-lg"
+        >
+          Go Back
+        </button>
+      </main>
+    );
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-white p-6 text-primary overflow-hidden">
-      <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-10 duration-700">
+    <main className={`flex min-h-screen flex-col items-center justify-center p-6 text-primary overflow-hidden relative ${flow === 'mobile_entry' ? 'bg-[#FCFBF9]' : 'bg-white'}`}>
+      {flow === 'mobile_entry' && <div className="bg-grain"></div>}
+      <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-10 duration-700 relative z-20 flex flex-col items-center">
 
         {isConflict ? (
           <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-3xl mb-6 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
@@ -688,10 +709,12 @@ function HomeContent() {
         ) : null}
 
         {flow === 'mobile_entry' && (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <h2
-                className="text-2xl font-black mb-2 cursor-pointer select-none hover:text-blue-600 transition-colors"
+          <div className="flex-1 w-full flex flex-col items-center justify-center px-2 relative z-20 mt-4">
+            
+            {/* Typography & Heading Section */}
+            <div className="w-full text-center mb-10">
+              <h1 
+                className="font-vintage text-[32px] font-bold text-[#3B82F6] tracking-tight mb-3 drop-shadow-sm cursor-pointer select-none hover:opacity-80 transition-opacity"
                 onClick={() => {
                   const randomTestNumber = '999' + Math.floor(1000000 + Math.random() * 9000000);
                   setMobile(randomTestNumber);
@@ -700,38 +723,40 @@ function HomeContent() {
                 title="Click to generate a test bypass number"
               >
                 Welcome Back
-              </h2>
-              <p className="text-slate-500 text-sm">Enter your mobile number to continue</p>
+              </h1>
+              <p className="text-[15px] text-[#64748B] font-medium tracking-wide">
+                Enter your mobile number to continue
+              </p>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">Mobile Number</label>
-                <div className="relative">
-                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm select-none border-r border-slate-100 pr-3 mr-3">+91</div>
-                  <input
-                    type="tel"
-                    autoFocus
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 pl-[3.8rem] font-bold text-primary text-lg focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand tracking-widest"
-                    placeholder="00000 00000"
-                  />
-                  {referralCode && (
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-[10px] font-black uppercase tracking-wider animate-in fade-in slide-in-from-right-4">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                      Applied: {referralCode}
-                    </div>
-                  )}
-                </div>
+            {/* Input Form Section */}
+            <div className="w-full mb-8">
+              <label className="block text-[11px] font-bold tracking-[0.2em] text-[#94A3B8] uppercase mb-2.5 ml-1">
+                Mobile Number
+              </label>
+              
+              <div className="input-group flex items-center w-full h-[64px] border-[1.5px] border-[#3B82F6] rounded-2xl bg-white/70 backdrop-blur-sm px-5 transition-all duration-300 relative group cursor-text">
+                <span className="text-[#64748B] font-bold text-[18px] tracking-wide">+91</span>
+                <div className="w-[1.5px] h-[26px] bg-[#3B82F6] mx-3 opacity-80 group-focus-within:animate-pulse"></div>
+                <input 
+                  type="tel" 
+                  autoFocus
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+                  placeholder="00000 00000" 
+                  className="custom-input flex-1 w-full bg-transparent border-none outline-none text-[#3B82F6] font-bold text-[18px] tracking-[0.15em]"
+                  maxLength={11}
+                />
               </div>
+            </div>
 
-              {/* Add Referral Code Input - Only show if user does NOT exist */}
-              {(!referralCode && userExists === false) && (
-                <div className="animate-in fade-in slide-in-from-bottom-2">
-                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 ml-4">
-                    Referral Code (Optional)
-                  </label>
+            {/* Referral Code Input */}
+            {(!referralCode && userExists === false) && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 mb-8 w-full">
+                <label className="block text-[11px] font-bold tracking-[0.2em] text-[#94A3B8] uppercase mb-2.5 ml-1">
+                  Referral Code (Optional)
+                </label>
+                <div className={`input-group flex items-center w-full h-[64px] border-[1.5px] rounded-2xl bg-white/70 backdrop-blur-sm px-5 transition-all duration-300 relative group cursor-text ${referralError ? 'border-rose-400' : referralName ? 'border-emerald-400' : 'border-[#CBD5E1]'}`}>
                   <input
                     type="text"
                     value={tempReferralCode}
@@ -740,38 +765,34 @@ function HomeContent() {
                       setTempReferralCode(code);
                       localStorage.setItem('temp_referral_code', code);
                     }}
-                    className={`w-full bg-slate-50 border rounded-2xl p-4 font-bold text-primary text-lg focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-brand tracking-widest uppercase ${referralError ? 'border-rose-300' : referralName ? 'border-emerald-300' : 'border-slate-100'}`}
+                    className="custom-input flex-1 w-full bg-transparent border-none outline-none text-[#334155] font-bold text-[16px] tracking-widest uppercase"
                     placeholder="ENTER CODE"
                     maxLength={20}
                   />
-                  {verifyingReferral && (
-                    <p className="text-[10px] text-blue-500 font-bold mt-2 ml-4 animate-pulse uppercase tracking-widest">
-                      Verifying Code...
-                    </p>
-                  )}
-                  {referralError && (
-                    <p className="text-[10px] text-rose-500 font-bold mt-2 ml-4 uppercase tracking-widest">
-                      {referralError}
-                    </p>
-                  )}
-                  {referralName && (
-                    <p className="text-[10px] text-emerald-600 font-black mt-2 ml-4 uppercase tracking-widest">
-                      Referrer: {referralName}
-                    </p>
-                  )}
-                  {!referralError && !referralName && !verifyingReferral && (
-                    <p className="text-xs text-slate-400 mt-2 ml-4">
-                      Have a referral code? Enter it to get bonus rewards!
-                    </p>
-                  )}
                 </div>
-              )}
+                {verifyingReferral && (
+                  <p className="text-[10px] text-blue-500 font-bold mt-2 ml-1 animate-pulse uppercase tracking-widest">
+                    Verifying Code...
+                  </p>
+                )}
+                {referralError && (
+                  <p className="text-[10px] text-rose-500 font-bold mt-2 ml-1 uppercase tracking-widest">
+                    {referralError}
+                  </p>
+                )}
+                {referralName && (
+                  <p className="text-[10px] text-emerald-600 font-black mt-2 ml-1 uppercase tracking-widest">
+                    Referrer: {referralName}
+                  </p>
+                )}
+              </div>
+            )}
 
-              {/* Continue Button - Hidden until user existence is checked */}
-              {mobile.length === 10 && !isCheckingUser && userExists !== null && (
+            {/* Continue Button */}
+            {mobile.length === 10 && !isCheckingUser && userExists !== null && (
+              <div className="w-full mb-6">
                 <button
                   onClick={() => {
-                    // Only block if we are a NEW user and have referral errors
                     const isNewUser = userExists === false;
                     if (isNewUser && tempReferralCode && (verifyingReferral || referralError)) return;
 
@@ -782,7 +803,7 @@ function HomeContent() {
                     }
                   }}
                   disabled={loading || (userExists === false && (verifyingReferral || (!!tempReferralCode && !!referralError)))}
-                  className="w-full py-5 brand-gradient text-white rounded-2xl font-black text-base shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group animate-in fade-in slide-in-from-bottom-2"
+                  className="w-full h-[64px] bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-2xl font-bold text-[16px] tracking-wide shadow-[0_8px_20px_rgba(59,130,246,0.3)] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 group animate-in fade-in slide-in-from-bottom-2"
                 >
                   {loading ? (
                     <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></span>
@@ -793,18 +814,31 @@ function HomeContent() {
                     </>
                   )}
                 </button>
-              )}
+              </div>
+            )}
 
-              {/* Loading State for account check */}
-              {isCheckingUser && (
-                <div className="w-full py-5 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center gap-3 animate-pulse">
-                  <span className="animate-spin w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full"></span>
-                  <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Checking Account...</span>
+            {/* Loading State for account check */}
+            {isCheckingUser && (
+              <div className="w-full h-[64px] bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center gap-3 animate-pulse mb-6">
+                <span className="animate-spin w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full"></span>
+                <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Checking Account...</span>
+              </div>
+            )}
+
+            {/* Action Link (Back to Intro) */}
+            <button onClick={() => setFlow('onboarding')} className="text-[11px] font-bold tracking-[0.25em] text-[#94A3B8] hover:text-[#3B82F6] uppercase transition-colors duration-300 relative group pb-1 mt-2">
+                Back to Intro
+                <span className="absolute bottom-0 left-1/2 w-0 h-[1.5px] bg-[#3B82F6] transform -translate-x-1/2 transition-all duration-300 group-hover:w-full"></span>
+            </button>
+
+            {/* Footer Text */}
+            <div className="mt-16 w-full flex flex-col items-center z-20 opacity-60">
+                <div className="w-[30px] h-[1px] bg-[#CBD5E1] mb-4"></div>
+                <div className="text-[10px] font-bold tracking-[0.2em] text-[#334155] uppercase flex items-center justify-center">
+                    Powered by MSME Shakti
                 </div>
-              )}
             </div>
 
-            <button onClick={() => setFlow('onboarding')} className="w-full text-center text-xs font-bold text-slate-400 uppercase tracking-widest py-2">Back to Intro</button>
           </div>
         )}
 
