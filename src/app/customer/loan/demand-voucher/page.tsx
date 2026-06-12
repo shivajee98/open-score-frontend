@@ -1,14 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronRight, Zap, Clock, ShieldCheck, MapPin, ArrowRight, Smartphone, Landmark, User, TrendingUp, HardHat } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Zap, Clock, ShieldCheck, Lock, Check, MapPin, ArrowRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
-import { toast } from '@/components/ui/Toast';
+import { cn } from '@/lib/loanUtils';
 
-export default function LoanList() {
+export default function DemandVoucherPage() {
     const router = useRouter();
 
     const { data: userData } = useApi('/auth/me');
@@ -20,6 +20,7 @@ export default function LoanList() {
     const [closedAmounts, setClosedAmounts] = useState<Set<number>>(new Set());
     const [isAddressVerified, setIsAddressVerified] = useState(false);
     const [addressWaitTime, setAddressWaitTime] = useState<number | null>(null);
+    const [loanPlans, setLoanPlans] = useState<any[]>([]);
 
     useEffect(() => {
         const u = localStorage.getItem('user');
@@ -29,7 +30,6 @@ export default function LoanList() {
     useEffect(() => {
         if (userData) {
             setUser(userData);
-            
             const isKycVerified = ['FIELD_VERIFIED', 'FULL_VERIFIED'].includes(userData.kyc_status);
             
             if (isKycVerified) {
@@ -132,6 +132,33 @@ export default function LoanList() {
         fetchLoans();
     }, []);
 
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const data = await apiFetch('/loan-plans', { cache: 'no-store' });
+                const mapped = data.map((p: any) => {
+                    const firstConfig = p.configurations && p.configurations.length > 0 ? p.configurations[0] : null;
+                    return {
+                        id: p.id,
+                        amount: parseFloat(p.amount),
+                        title: p.tag_text || 'Standard Loan',
+                        description: firstConfig
+                            ? `${firstConfig.tenure_days} Days • ${firstConfig.interest_rate}% Interest`
+                            : 'Details Pending',
+                        color: p.plan_color ? p.plan_color.replace('bg-', 'from-').replace('500', '400') + ' to-' + p.plan_color.replace('bg-', '').replace('500', '600') : 'from-indigo-400 to-indigo-600',
+                        rawColor: p.plan_color,
+                        is_locked: p.is_locked,
+                    };
+                });
+                const sorted = mapped.sort((a: any, b: any) => a.amount - b.amount);
+                setLoanPlans(sorted);
+            } catch (e) {
+                console.error("Failed to fetch plans", e);
+            }
+        };
+        fetchPlans();
+    }, []);
+
     const handleCancel = async (id: string) => {
         if (!confirm("Are you sure you want to cancel this loan application?")) return;
         try {
@@ -144,36 +171,32 @@ export default function LoanList() {
         }
     };
 
-    const handleComingSoon = (type: string) => {
-        toast.info(`${type} is coming soon to your region! Stay tuned.`);
-    };
+    const isLockedAndBlur = !user?.pincode || !isAddressVerified;
 
     return (
-        <div className="min-h-screen bg-slate-50 relative pb-28 font-sans selection:bg-indigo-150 selection:text-indigo-900">
-            {/* Themed Header */}
+        <div className="min-h-screen bg-slate-50 relative pb-24 font-sans selection:bg-indigo-150 selection:text-indigo-900">
+            {/* Header */}
             <div className={`bg-gradient-to-br ${isMerchant ? 'from-emerald-950 via-green-900 to-teal-950' : 'from-slate-900 via-indigo-950 to-violet-950'} pt-8 pb-14 px-4 relative overflow-hidden shadow-2xl`}>
-                <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/20' : 'bg-blue-600/20'} rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse`}></div>
-                <div className="relative z-10 max-w-2xl mx-auto font-sans">
-                    <button onClick={() => router.push('/customer')} className="mb-4 flex items-center gap-2 text-white/50 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
-                        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+                <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/20' : 'bg-indigo-600/20'} rounded-full blur-[100px] -mr-32 -mt-32 animate-pulse`}></div>
+                <div className="relative z-10 max-w-2xl mx-auto">
+                    <button onClick={() => router.push('/customer/loan')} className="mb-4 flex items-center gap-2 text-white/50 font-bold text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
+                        <ArrowLeft className="w-4 h-4" /> Back to Categories
                     </button>
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-black text-white tracking-tight">Credit Marketplace</h1>
-                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Allocation Protocol</p>
+                            <h1 className="text-2xl font-black text-white tracking-tight">Demand Vouchers</h1>
+                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">Instant App-to-App Credit</p>
                         </div>
-                        <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center text-white shadow-lg">
+                        <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center text-white">
                             <Zap className="w-5 h-5 text-indigo-300" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-2xl mx-auto px-4 -mt-10 relative z-20 space-y-6">
-                
-                {/* Timer/Verification Alert */}
+            <div className="max-w-2xl mx-auto px-4 -mt-10 relative z-20">
                 {!isAddressVerified && (
-                    <div className="animate-in fade-in zoom-in duration-500">
+                    <div className="mb-8 animate-in fade-in zoom-in duration-500">
                         <div className="bg-white rounded-3xl p-8 shadow-2xl border border-amber-100 text-center relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-16 -mt-16 blur-2xl opacity-50"></div>
                             
@@ -218,7 +241,7 @@ export default function LoanList() {
 
                 {/* Active Loan Alert */}
                 {activeLoan && (
-                    <div className="animate-in fade-in slide-in-from-top-4">
+                    <div className="mb-8 animate-in fade-in slide-in-from-top-4">
                         <div className={`${isMerchant ? 'bg-emerald-950 border border-emerald-900/50' : 'bg-slate-900'} rounded-2xl p-5 text-white shadow-2xl relative overflow-hidden`}>
                             <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-500/20' : 'bg-emerald-500/10'} rounded-full blur-[80px] -mr-20 -mt-20`}></div>
 
@@ -258,7 +281,7 @@ export default function LoanList() {
 
                 {/* KYC Action Required */}
                 {kycLoan && !activeLoan && (
-                    <div className="animate-in fade-in slide-in-from-top-4">
+                    <div className="mb-8 animate-in fade-in slide-in-from-top-4">
                         <Link href={`/customer/loan/status/view?id=${kycLoan.id}`}>
                             <div className="p-3 rounded-2xl bg-indigo-50 border-2 border-indigo-100 flex items-center gap-3 active:scale-[0.98] transition-all">
                                 <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0">
@@ -274,150 +297,157 @@ export default function LoanList() {
                     </div>
                 )}
 
-                {/* Category Header Label */}
-                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Loan Solutions</span>
-                    <span className="text-[10px] font-bold text-slate-400">Trusted • Secure • Instant</span>
+                {/* Virtual Credit (10k) Option */}
+                <div className="mb-6">
+                    {loanPlans.filter((p: any) => p.amount === 10000).map((plan: any) => (
+                        <div
+                            key={plan.id}
+                            onClick={() => {
+                                if (!isAddressVerified) {
+                                    alert("Profile Finalising: Your address details are currently being processed for security. Please wait for the 3-minute verification window to complete.");
+                                    return;
+                                }
+                                if (activeLoan) {
+                                    alert("Application Under Process: You already have a virtual credit application in progress. Please cancel it to apply for a new one.");
+                                    return;
+                                }
+                                if (cooldown.active) {
+                                    alert(`Cool-down Period: You can apply for new credit in ${cooldown.daysRemaining} days.`);
+                                    return;
+                                }
+                                router.push(`/customer/loan/plan?amount=${plan.amount}&planId=${plan.id}`);
+                            }}
+                            className={cn(
+                                "bg-slate-900 rounded-[2rem] p-5 relative overflow-hidden group cursor-pointer shadow-xl active:scale-[0.98] transition-all flex items-center justify-between mx-auto w-full",
+                                (activeLoan || cooldown.active) && "opacity-75 grayscale-[0.5]"
+                            )}
+                        >
+                            <div className={`absolute top-0 right-0 w-64 h-64 ${isMerchant ? 'bg-emerald-600/15' : 'bg-indigo-600/15'} rounded-full blur-[85px] -mr-20 -mt-20`}></div>
+
+                            <div className="relative z-10 flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className={`${isMerchant ? 'bg-emerald-500' : 'bg-indigo-600'} p-1 rounded-md shadow-sm`}>
+                                        <Zap size={10} className="text-white fill-white" />
+                                    </div>
+                                    <span className={`text-[9px] font-black ${isMerchant ? 'text-emerald-400' : 'text-indigo-400'} uppercase tracking-[0.2em]`}>Priority Fast-Track</span>
+                                </div>
+
+                                <h2 className="text-xl font-black text-white leading-none">Virtual Credit</h2>
+                                <div className="flex items-center gap-2 mt-3">
+                                    <span className="text-3xl font-black text-white tracking-tighter leading-none">10,000</span>
+                                    <div className="bg-white/5 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-white/10">
+                                        <span className={`text-[9px] font-black ${isMerchant ? 'text-emerald-300' : 'text-indigo-300'} uppercase tracking-widest`}>Instant</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="relative z-10 flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10 text-white group-hover:bg-white group-hover:text-slate-900 transition-all shadow-sm">
+                                    {cooldown.active ? <Lock size={16} /> : <ChevronRight size={20} />}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
-                {/* Categories Cards List */}
-                <div className="flex flex-col gap-4">
-                    
-                    {/* 1. Demand Voucher */}
-                    <div 
-                        onClick={() => router.push('/customer/loan/demand-voucher')}
-                        className="bg-white rounded-3xl p-5 border border-slate-100 shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-between cursor-pointer group"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-cyan-50 rounded-2xl flex items-center justify-center text-cyan-600 border border-cyan-100/50 shrink-0">
-                                <div className="relative">
-                                    <Smartphone size={24} className="stroke-[2]" />
-                                    <Smartphone size={16} className="absolute -bottom-1 -right-2 bg-cyan-50 rounded-md border border-cyan-100 stroke-[2] p-[1px]" />
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <h3 className="font-black text-slate-900 text-base leading-snug tracking-tight">1. Demand Voucher</h3>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">App to App</p>
-                                <div className="flex items-center gap-1.5 pt-1.5 flex-wrap">
-                                    <span className="text-[9px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md uppercase tracking-wider">No Cable Required</span>
-                                    <span className="text-[9px] font-black text-white bg-blue-600 px-2 py-0.5 rounded-md uppercase tracking-wider">@0%</span>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">T&C Apply</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
-                            <ChevronRight size={18} />
-                        </div>
+                {/* Demand Voucher List Section */}
+                <div className={cn("relative transition-all duration-700", isLockedAndBlur && "blur-xl grayscale pointer-events-none")}>
+                    <div className="flex justify-between items-end mb-4 px-2">
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Demand Vouchers</h3>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fixed Tenure</span>
                     </div>
 
-                    {/* 2. Business Loan */}
-                    <div 
-                        onClick={() => router.push('/customer/loan/business')}
-                        className="bg-white rounded-3xl p-5 border border-slate-100 shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-between cursor-pointer group"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100/50 shrink-0">
-                                <Landmark size={24} className="stroke-[2]" />
-                            </div>
-                            <div className="space-y-1">
-                                <h3 className="font-black text-slate-900 text-base leading-snug tracking-tight">2. Business Loan</h3>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Bank Transfer Loan (Low Cibil)</p>
-                                <div className="flex items-center gap-1.5 pt-1.5">
-                                    <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full tracking-wider">
-                                        ₹50,000 to ₹10,00,000
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
-                            <ChevronRight size={18} />
-                        </div>
-                    </div>
+                    <div className="flex flex-col gap-3">
+                        {loanPlans.filter((p: any) => p.amount > 10000).map((plan: any) => {
+                            const isLocked = plan.is_locked;
+                            const fullIndex = loanPlans.findIndex(lp => lp.id === plan.id);
+                            const prevPlan = fullIndex > 0 ? loanPlans[fullIndex - 1] : null;
 
-                    {/* 3. Personal Loan (Coming Soon) */}
-                    <div 
-                        onClick={() => handleComingSoon('Personal Loan')}
-                        className="bg-white rounded-3xl p-5 border border-slate-100 shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-between cursor-pointer group relative overflow-hidden"
-                    >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-8 -mt-8 blur-xl opacity-50"></div>
-                        <div className="flex items-center gap-4 relative z-10">
-                            <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center text-violet-600 border border-violet-100/50 shrink-0">
-                                <User size={24} className="stroke-[2]" />
-                            </div>
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="font-black text-slate-900 text-base leading-snug tracking-tight">3. Personal Loan</h3>
-                                    <span className="text-[8px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded uppercase tracking-widest">Coming Soon</span>
-                                </div>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Bank Transfer Loan (Low Cibil)</p>
-                                <div className="flex items-center gap-1.5 pt-1.5">
-                                    <span className="text-[9px] font-black text-violet-700 bg-violet-50 border border-violet-100 px-2.5 py-0.5 rounded-full tracking-wider">
-                                        ₹50,000 to ₹10,00,000
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-350 shrink-0">
-                            <ChevronRight size={18} />
-                        </div>
-                    </div>
+                            const sourceColor = plan.rawColor || plan.color || '';
+                            let colorName = 'blue';
 
-                    {/* 4. Startup Funding (Coming Soon) */}
-                    <div 
-                        onClick={() => handleComingSoon('Startup Funding')}
-                        className="bg-white rounded-3xl p-5 border border-slate-100 shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-between cursor-pointer group relative overflow-hidden"
-                    >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-8 -mt-8 blur-xl opacity-50"></div>
-                        <div className="flex items-center gap-4 relative z-10">
-                            <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600 border border-orange-100/50 shrink-0">
-                                <TrendingUp size={24} className="stroke-[2]" />
-                            </div>
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="font-black text-slate-900 text-base leading-snug tracking-tight">4. Startup Funding</h3>
-                                    <span className="text-[8px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded uppercase tracking-widest">Coming Soon</span>
-                                </div>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Stock Purchase</p>
-                                <div className="flex items-center gap-1.5 pt-1.5">
-                                    <span className="text-[9px] font-black text-orange-700 bg-orange-50 border border-orange-100 px-2.5 py-0.5 rounded-full tracking-wider">
-                                        Upto ₹50,00,000
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-355 shrink-0">
-                            <ChevronRight size={18} />
-                        </div>
-                    </div>
+                            if (sourceColor) {
+                                const match = sourceColor.match(/(?:bg|from|text)-([a-z]+)-/);
+                                if (match) {
+                                    colorName = match[1];
+                                }
+                            }
 
-                    {/* 5. Construction Loan */}
-                    <div 
-                        onClick={() => router.push('/customer/loan/construction')}
-                        className="bg-white rounded-3xl p-5 border border-slate-100 shadow-md hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-between cursor-pointer group"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100/50 shrink-0">
-                                <HardHat size={24} className="stroke-[2]" />
-                            </div>
-                            <div className="space-y-1">
-                                <h3 className="font-black text-slate-900 text-base leading-snug tracking-tight">5. Construction Loan</h3>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">On Collateral (Girvi par ye loan Hai)</p>
-                                <div className="flex items-center gap-1.5 pt-1.5">
-                                    <span className="text-[9px] font-black text-blue-750 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full tracking-wider">
-                                        Upto ₹1,00,00,000
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
-                            <ChevronRight size={18} />
-                        </div>
-                    </div>
+                            let solidColorClass = 'bg-indigo-600';
+                            let badgeClasses = 'bg-indigo-50 text-indigo-600 border border-indigo-150';
 
+                            switch (colorName) {
+                                case 'emerald': solidColorClass = 'bg-emerald-600'; badgeClasses = 'bg-emerald-50 text-emerald-600 border border-emerald-150'; break;
+                                case 'green': solidColorClass = 'bg-green-600'; badgeClasses = 'bg-green-50 text-green-600 border border-green-150'; break;
+                                case 'teal': solidColorClass = 'bg-teal-600'; badgeClasses = 'bg-teal-50 text-teal-600 border border-teal-150'; break;
+                                case 'cyan': solidColorClass = 'bg-cyan-600'; badgeClasses = 'bg-cyan-50 text-cyan-600 border border-cyan-150'; break;
+                                case 'amber': solidColorClass = 'bg-amber-600'; badgeClasses = 'bg-amber-50 text-amber-600 border border-amber-150'; break;
+                                case 'orange': solidColorClass = 'bg-orange-600'; badgeClasses = 'bg-orange-50 text-orange-600 border border-orange-150'; break;
+                                case 'rose': solidColorClass = 'bg-rose-600'; badgeClasses = 'bg-rose-50 text-rose-600 border border-rose-150'; break;
+                                case 'purple': solidColorClass = 'bg-purple-600'; badgeClasses = 'bg-purple-50 text-purple-600 border border-purple-150'; break;
+                                case 'violet': solidColorClass = 'bg-violet-600'; badgeClasses = 'bg-violet-50 text-violet-600 border border-violet-150'; break;
+                            }
+
+                            return (
+                                <div
+                                    key={plan.id}
+                                    onClick={() => {
+                                        if (activeLoan) {
+                                            alert("Application Under Process: You already have a virtual credit application in progress. Please cancel it to apply for a new one.");
+                                            return;
+                                        }
+                                        if (cooldown.active) {
+                                            alert(`Cool-down Period: You can apply for new credit in ${cooldown.daysRemaining} days.`);
+                                            return;
+                                        }
+                                        if (isLocked) {
+                                            alert(`Eligibility Required: You're currently not eligible for the ${plan.amount >= 100000 ? `${plan.amount / 100000} Lakh` : plan.amount} credit. Please build your eligibility by successfully repaying your previous ${prevPlan?.amount.toLocaleString()} loan.`);
+                                            return;
+                                        }
+                                        router.push(`/customer/loan/plan?amount=${plan.amount}&planId=${plan.id}`);
+                                    }}
+                                    className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-slate-100 relative overflow-hidden group cursor-pointer transition-all active:scale-[0.98] flex items-center justify-between hover:border-indigo-200"
+                                >
+                                    <div className={`absolute top-0 left-0 bottom-0 w-1.5 ${solidColorClass}`}></div>
+
+                                    <div className="flex items-center gap-4 flex-1 ml-2">
+                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors shrink-0 border-2 ${isLocked
+                                            ? "bg-amber-50 border-amber-100 text-amber-500"
+                                            : "bg-slate-50 border-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white"
+                                            }`}>
+                                            {isLocked ? <Lock size={18} strokeWidth={2.5} /> : <Zap size={18} className="fill-current" />}
+                                        </div>
+
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <span className={cn(
+                                                    "text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 w-fit",
+                                                    badgeClasses
+                                                )}>
+                                                    {plan.title.replace('Standard Loan', 'Growth Pro')}
+                                                </span>
+                                                {isLocked && <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Locked</span>}
+                                            </div>
+                                            <h3 className="text-xl font-black text-slate-900 tracking-tighter leading-none">
+                                                {plan.amount.toLocaleString()}
+                                            </h3>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-1.5">
+                                                {isLocked ? 'Building Eligibility...' : plan.description}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="ml-4 w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-slate-900 group-hover:text-white transition-all shrink-0">
+                                        <ChevronRight size={18} />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
-            {/* Force PIN Overlay - Mandatory Regional Setup */}
+            {/* Force PIN Overlay */}
             {!user?.pincode && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-500">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"></div>

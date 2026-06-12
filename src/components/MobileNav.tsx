@@ -102,7 +102,7 @@ export default function MobileNav() {
 
             <Link href="/customer/loan" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[44px] transition-colors duration-300 ${isLoans ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
                 <div className="mb-0.5"><Zap size={20} strokeWidth={isLoans ? 2.5 : 2} className={isLoans ? 'fill-violet-600/20' : ''} /></div>
-                <span className="text-[9px] font-black uppercase tracking-wider">Loans</span>
+                <span className="text-[9px] font-black uppercase tracking-wider">V Cred</span>
             </Link>
 
             <Link href="/customer/payout" prefetch={false} className={`flex flex-col items-center gap-1 min-w-[44px] transition-colors duration-300 ${isCredOut ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'}`}>
