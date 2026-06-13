@@ -37,7 +37,7 @@ const RemarkModal = ({ isOpen, onClose, loan }: { isOpen: boolean, onClose: () =
                     </h2>
                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <p className="text-sm font-medium text-slate-600 leading-relaxed italic">
-                            "{loan.remarks || loan.reason || 'No additional administrative notes provided for this status change.'}"
+                            "{loan.remarks || loan.reason || 'No additional notes provided for this status change.'}"
                         </p>
                     </div>
                 </div>

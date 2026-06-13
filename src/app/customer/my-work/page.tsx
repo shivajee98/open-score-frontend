@@ -139,15 +139,24 @@ export default function MyWorkDashboard() {
         window.addEventListener('focus', handleFocus);
         window.addEventListener('keydown', handleKeyDown);
 
-        // Prevent context menu globally while letter is open
+        // Prevent context menu, copy, and drag globally while letter is open
         const preventDefault = (e: any) => e.preventDefault();
+        const preventCopy = (e: ClipboardEvent) => {
+            e.preventDefault();
+            toast.error("Copying text is disabled for this document.");
+        };
+        
         document.addEventListener('contextmenu', preventDefault);
+        document.addEventListener('copy', preventCopy);
+        document.addEventListener('dragstart', preventDefault);
 
         return () => {
             window.removeEventListener('blur', handleBlur);
             window.removeEventListener('focus', handleFocus);
             window.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('contextmenu', preventDefault);
+            document.removeEventListener('copy', preventCopy);
+            document.removeEventListener('dragstart', preventDefault);
         };
     }, [showAuthLetter]);
 
@@ -1063,7 +1072,7 @@ export default function MyWorkDashboard() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Security Overlay */}
-                            <div className="absolute inset-0 z-[115] bg-transparent cursor-default" onContextMenu={(e) => e.preventDefault()}></div>
+                            <div className="absolute inset-0 z-[115] bg-transparent cursor-default pointer-events-none"></div>
 
                             {!isFocused && (
                                 <div className="absolute inset-0 z-[116] flex items-center justify-center p-20 text-center">
@@ -1208,14 +1217,14 @@ export default function MyWorkDashboard() {
                             <style dangerouslySetInnerHTML={{
                                 __html: `
                             @media print {
-                                body * { visibility: hidden !important; background: none !important; }
-                                html, body { background: #fff !important; }
-                                .no-print-msg { visibility: visible !important; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: block !important; }
+                                body { visibility: hidden !important; background: white !important; }
+                                .no-print-msg { visibility: visible !important; position: fixed; inset: 0; display: flex !important; flex-direction: column; align-items: center; justify-content: center; background: white !important; z-index: 999999 !important; }
+                                .no-print-msg * { visibility: visible !important; }
                             }
                         `}} />
-                            <div className="no-print-msg hidden fixed inset-0 flex items-center justify-center bg-white z-[1000] text-center p-20">
-                                <div className="max-w-md">
-                                    <ShieldAlert size={64} className="text-rose-600 mx-auto mb-6" />
+                            <div className="no-print-msg hidden fixed inset-0 items-center justify-center bg-white z-[1000] text-center p-20">
+                                <div className="max-w-md flex flex-col items-center">
+                                    <ShieldAlert size={64} className="text-rose-600 mb-6" />
                                     <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-4">Print Restricted</h1>
                                     <p className="text-slate-500 font-medium">This document contains sensitive associate information. To maintain system security, standard browser printing has been disabled.</p>
                                 </div>

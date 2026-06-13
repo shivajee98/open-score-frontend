@@ -24,7 +24,7 @@ export default function AdminPreviewBanner() {
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 leading-none mb-1">System Insight</span>
-                        <p className="text-xs font-bold leading-none">Admin Preview Active</p>
+                        <p className="text-xs font-bold leading-none">OpenScore Preview Active</p>
                     </div>
                 </div>
                 

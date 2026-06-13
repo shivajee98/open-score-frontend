@@ -347,7 +347,7 @@ export default function RepaymentDashboard() {
                                         <div className="w-6 h-6 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
                                             <FileText size={12} />
                                         </div>
-                                        <h5 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Admin Feedback</h5>
+                                        <h5 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">OpenScore Feedback</h5>
                                     </div>
                                     <p className="text-xs font-bold text-amber-700 leading-relaxed italic">
                                         "{pendingEmi.admin_note || 'Please re-upload a clear screenshot of your payment.'}"
@@ -364,7 +364,7 @@ export default function RepaymentDashboard() {
                                         {(pendingEmi.status === 'PENDING_VERIFICATION' || pendingEmi.status === 'MANUAL_VERIFICATION') ? (
                                             pendingEmi.agent_approved_by ? (
                                                 <>
-                                                    <CheckCircle2 size={16} className="text-emerald-400" /> Verified: Waiting Admin
+                                                    <CheckCircle2 size={16} className="text-emerald-400" /> Verified: Awaiting Approval
                                                 </>
                                             ) : (
                                                 <>

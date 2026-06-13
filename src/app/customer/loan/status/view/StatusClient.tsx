@@ -423,7 +423,7 @@ export default function LoanStatus() {
                                             </div>
                                             <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Application Cancelled</span>
                                         </div>
-                                        <p className="text-sm text-slate-600 font-medium leading-relaxed pl-8">{loan.remarks || 'This application has been cancelled by the administration.'}</p>
+                                        <p className="text-sm text-slate-600 font-medium leading-relaxed pl-8">{loan.remarks || 'This application has been cancelled by the OpenScore team.'}</p>
                                     </div>
                                 )}
 
@@ -780,7 +780,7 @@ export default function LoanStatus() {
                             </h3>
                             <p className="text-blue-100 text-xs font-medium mt-1">
                                 {loan.reupload_fields?.length > 0
-                                    ? 'Your loan is processed, all you need is to re-upload these fields required by admin.'
+                                    ? 'Your loan is processed, all you need is to re-upload these fields required by the OpenScore team.'
                                     : 'We need a few more details to finalize your application.'}
                             </p>
 

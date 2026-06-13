@@ -177,7 +177,7 @@ export default function TransferPage() {
                     <p className="text-xs font-bold text-slate-400 mb-1">Batch: <span className="font-mono text-slate-600">{lastBatchId}</span></p>
                     <p className="text-sm font-bold text-slate-500 mb-2">{totalAmount.toLocaleString('en-IN')} deducted from wallet</p>
                     <p className="text-xs font-medium text-slate-400 mb-6 max-w-xs mx-auto leading-relaxed">
-                        Your transfer request has been submitted and is under review. You will be notified once admin approves or rejects it.
+                        Your transfer request has been submitted and is under review. You will be notified once the OpenScore team approves or rejects it.
                     </p>
 
                     <button

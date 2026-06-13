@@ -143,7 +143,7 @@ export default function VirtualCardProcessModal({ isOpen, onClose }: VirtualCard
                     <div className="mt-8 pt-8 border-t border-slate-100 text-center">
                         <p className="text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-tight">
                             By submitting, you initiate a virtual card activation request. <br />
-                            <span className="text-indigo-400">Final activation requires admin approval.</span>
+                            <span className="text-indigo-400">Final activation requires OpenScore team approval.</span>
                         </p>
                     </div>
                 </div>

@@ -1461,7 +1461,7 @@ export default function KycForm({ onSubmit, onCancel, loanAmount, loading, initi
                             </div>
                             <div>
                                 <h4 className="text-[10px] font-black text-rose-900 uppercase tracking-widest">Correction Required</h4>
-                                <p className="text-[11px] font-bold text-rose-600/80 leading-tight">Admin has requested updates to certain fields.</p>
+                                <p className="text-[11px] font-bold text-rose-600/80 leading-tight">The OpenScore team has requested updates to certain fields.</p>
                             </div>
                         </div>
                         {(initialData as any)?.reupload_summary && (

@@ -992,7 +992,7 @@ export default function PayoutPage() {
                   }`}
                   title={
                     !transferEnabled
-                      ? "Transfer is not enabled for your account. Contact admin."
+                      ? "Transfer is not enabled for your account. Contact OpenScore team."
                       : "Transfer to bank accounts"
                   }
                 >

@@ -263,7 +263,7 @@ export default function DashboardLayout({
                             </div>
                             <h2 className="text-2xl font-black text-slate-900 mb-2">Account Suspended</h2>
                             <p className="text-slate-500 font-bold mb-8 leading-relaxed">
-                                Your access has been restricted by the administrator. Please contact your supervisor to resolve this.
+                                Your access has been restricted by the OpenScore team. Please contact support to resolve this.
                             </p>
                             <button
                                 onClick={handleLogout}

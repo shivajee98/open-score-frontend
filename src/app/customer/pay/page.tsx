@@ -472,7 +472,7 @@ function CustomerPayPage() {
                         <div>
                             <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 uppercase">Payment Restricted</h3>
                             <p className="text-slate-500 font-medium text-sm leading-relaxed px-4">
-                                Your payment access is temporarily restricted due to a pending KYC document re-upload request. Please re-upload the required documents and wait for admin approval to restore access.
+                                Your payment access is temporarily restricted due to a pending KYC document re-upload request. Please re-upload the required documents and wait for OpenScore team approval to restore access.
                             </p>
                         </div>
                         <button

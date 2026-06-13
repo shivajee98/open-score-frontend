@@ -378,7 +378,7 @@ export default function TeamEarningsPage() {
                         </button>
 
                         <p className="text-[9px] text-center text-slate-400 mt-4 font-bold uppercase tracking-widest">
-                            Transfer requests are reviewed by the Admin.
+                            Transfer requests are reviewed by the OpenScore team.
                         </p>
                     </div>
                 ) : (
