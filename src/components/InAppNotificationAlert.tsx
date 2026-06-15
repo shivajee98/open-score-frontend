@@ -13,6 +13,9 @@ export default function InAppNotificationAlert() {
     const pollIntervalRef = useRef<any>(null);
 
     const fetchNotifications = async () => {
+        if (typeof window !== 'undefined' && localStorage.getItem('admin_preview') === 'true') {
+            return;
+        }
         const token = localStorage.getItem('token');
         if (!token) return;
 

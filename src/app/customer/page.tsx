@@ -139,6 +139,13 @@ export default function CustomerHome() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
+  const [isAdminPreview, setIsAdminPreview] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsAdminPreview(localStorage.getItem('admin_preview') === 'true');
+    }
+  }, []);
 
   // Sync email from user profile
   useEffect(() => {
@@ -973,7 +980,7 @@ export default function CustomerHome() {
       </div>
     );
 
-  if (activeUser && !activeUser.email_verified_at) {
+  if (activeUser && !activeUser.email_verified_at && !isAdminPreview) {
     return (
       <div
         className={`min-h-screen ${isMerchant ? "bg-slate-950" : "bg-slate-900"} flex flex-col justify-between relative overflow-hidden p-6`}
